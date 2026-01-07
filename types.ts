@@ -110,7 +110,9 @@ export interface CalculatorState {
   pensao: number;
 
   // 13th and Vacation
+  ferias1: number; // Placeholder/Deprecated?
   ferias1_3: number;
+  feriasDesc: number; // Debit for advanced vacation
   manualFerias: boolean; // Checkbox to not auto-calc/zero vacation
   feriasAntecipadas: boolean;
   ir13?: number;
@@ -209,7 +211,9 @@ export const INITIAL_STATE: CalculatorState = {
   planoSaude: 0,
   pensao: 0,
 
+  ferias1: 0,
   ferias1_3: 0,
+  feriasDesc: 0,
   manualFerias: false,
   feriasAntecipadas: false,
   ir13: 0,

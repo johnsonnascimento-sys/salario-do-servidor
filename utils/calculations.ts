@@ -472,8 +472,12 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     // Por enquanto, vamos manter a lógica simples: se Nov, calcula IR 13º e exibe.
     // MAS, para o IR 13º aparecer, precisa estar no Total Descontos.
 
+    // Ferias Antecipadas Debit
+    const finalFerias1_3 = state.manualFerias ? state.ferias1_3 : ferias1_3;
+    const feriasDesc = state.feriasAntecipadas ? finalFerias1_3 : 0;
+
     const totalDescontos = pssMensal + valFunpresp + irMensal + irEA + irFerias + ir13 + pss13 +
-        state.emprestimos + state.planoSaude + state.pensao + auxTranspDeb + totalRubricasDeb;
+        state.emprestimos + state.planoSaude + state.pensao + auxTranspDeb + totalRubricasDeb + feriasDesc;
 
     return {
         ...state,
@@ -503,7 +507,8 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
         totalBruto,
         totalDescontos,
         liquido: totalBruto - totalDescontos,
-        ferias1_3: state.manualFerias ? state.ferias1_3 : ferias1_3,
+        ferias1_3: finalFerias1_3,
+        feriasDesc, // Return calculated debit
         adiant13Venc: state.manualAdiant13 ? state.adiant13Venc : adiant13Venc,
         adiant13FC: state.manualAdiant13 ? state.adiant13FC : adiant13FC,
     };

@@ -223,6 +223,7 @@ export default function App() {
     if (state.irMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC', value: state.irMensal, type: 'D' });
     if (state.irEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA', value: state.irEA, type: 'D' });
     if (state.irFerias > 0) rows.push({ label: 'IMPOSTO DE RENDA (FÉRIAS)', value: state.irFerias, type: 'D' });
+    if (state.feriasDesc && state.feriasDesc > 0) rows.push({ label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', value: state.feriasDesc, type: 'D' });
     if (state.pss13 && state.pss13 > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC', value: state.pss13, type: 'D' });
     if (state.ir13 && state.ir13 > 0) rows.push({ label: 'IMPOSTO DE RENDA-GN(13º) EC', value: state.ir13, type: 'D' });
 
@@ -488,7 +489,7 @@ export default function App() {
                 {/* 2. Adicional de Qualificação Block (Cyan) */}
                 <div className="bg-cyan-50/50 rounded-lg p-3 border border-cyan-100">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-xs font-bold text-cyan-800 uppercase">Adicional de Qualificação</h4>
+                    <h4 className="text-sm font-bold text-cyan-800">Adicional de Qualificação</h4>
                     <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${isNovoAQ ? 'bg-orange-100 text-orange-800' : 'bg-teal-100 text-teal-800'}`}>
                       {isNovoAQ ? 'NOVO AQ (2026+)' : 'REGRA 2025'}
                     </span>
@@ -547,7 +548,7 @@ export default function App() {
 
                 {/* 3. Gratificação (Amber) - Moved Up */}
                 <Accordion
-                  title={<h4 className="text-xs font-bold text-amber-800">Gratificação Específica (GAE / GAS)</h4>}
+                  title={<h4 className="text-sm font-bold text-amber-800">Gratificação Específica (GAE / GAS)</h4>}
                   className="bg-amber-50/50 rounded-lg border border-amber-100"
                   headerClassName="p-3"
                   contentClassName="p-3 pt-0 border-t border-amber-100/50"
@@ -567,7 +568,7 @@ export default function App() {
 
                 {/* 4. Vantagens Pessoais (Rose) - Moved Up */}
                 <Accordion
-                  title={<h4 className="text-xs font-bold text-rose-800">Vantagens Pessoais (Ref. Holerite)</h4>}
+                  title={<h4 className="text-sm font-bold text-rose-800">Vantagens Pessoais (Ref. Holerite)</h4>}
                   className="bg-rose-50/50 rounded-lg border border-rose-100"
                   headerClassName="p-3"
                   contentClassName="p-3 pt-0 border-t border-rose-100/50"
@@ -624,7 +625,7 @@ export default function App() {
 
                 {/* 5. Abono de Permanência (Green) - Moved to End */}
                 <Accordion
-                  title={<h4 className="text-xs font-bold text-green-800">Abono de Permanência</h4>}
+                  title={<h4 className="text-sm font-bold text-green-800">Abono de Permanência</h4>}
                   className="bg-green-50/50 rounded-lg border border-green-100"
                   headerClassName="p-3"
                   contentClassName="p-3 pt-0 border-t border-green-100/50"
@@ -775,7 +776,7 @@ export default function App() {
                 </div>
               </Accordion>
               <Accordion
-                title={<h4 className="text-sm font-bold text-purple-800">Cálculo de Horas Extras (Divisor 175)</h4>}
+                title={<h4 className="text-sm font-bold text-purple-800">Horas Extras</h4>}
                 className="border border-purple-200 rounded-lg bg-purple-50/50"
                 headerClassName="p-4"
                 contentClassName="p-4 pt-0 border-t border-purple-100/50"
@@ -834,7 +835,7 @@ export default function App() {
 
               {/* Substitution Grid */}
               <Accordion
-                title={<h4 className="text-sm font-bold text-orange-800">Cálculo de Substituição (Diferença)</h4>}
+                title={<h4 className="text-sm font-bold text-orange-800">Substituição</h4>}
                 className="border border-orange-200 rounded-lg bg-orange-50/50"
                 headerClassName="p-4"
                 contentClassName="p-4 pt-0 border-t border-orange-100/50"
@@ -1096,6 +1097,12 @@ export default function App() {
                     <label className="text-[10px] text-gray-500 font-bold block mb-1">Cota-Parte Transporte</label>
                     <span className="text-sm font-bold text-red-600 block">{formatCurrency(state.auxTransporteDesc)}</span>
                   </div>
+                  {state.feriasDesc > 0 && (
+                    <div className="col-span-2 bg-red-50 p-2 rounded border border-red-200 shadow-sm">
+                      <label className="text-[10px] text-red-800 font-bold block mb-1">Adicional 1/3 de Férias (Antecipado)</label>
+                      <span className="text-sm font-bold text-red-700 block">{formatCurrency(state.feriasDesc)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
