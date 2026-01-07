@@ -117,6 +117,7 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     let aqTreinoVal = 0;
     if (state.periodo >= 1) {
         aqTituloVal = valorVR * state.aqTituloVR;
+        aqTreinoVal = valorVR * state.aqTreinoVR;
     } else {
         aqTituloVal = round2(baseVencimento * state.aqTituloPerc);
         aqTreinoVal = round2(baseVencimento * state.aqTreinoPerc);

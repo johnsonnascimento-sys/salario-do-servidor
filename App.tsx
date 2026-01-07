@@ -3,8 +3,9 @@ import { INITIAL_STATE, CalculatorState, Rubrica } from './types';
 import { calculateAll, formatCurrency, getTablesForPeriod, calculateBaseFixa } from './utils/calculations';
 import { Card, SectionTitle } from './components/Card';
 import { Input, Select } from './components/Inputs';
-import { DollarSign, Clock, Scissors, Settings, FileText, Table, Calendar, Calculator, Moon, Sun, Plus, Trash2 } from 'lucide-react';
+import { DollarSign, Clock, Scissors, Settings, FileText, Table, Calendar, Calculator, Moon, Sun, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { BASES_2025 } from './data';
+import { Accordion } from './components/Accordion';
 
 // Declare standard libs for export logic
 declare const jspdf: any;
@@ -545,8 +546,13 @@ export default function App() {
                 </div>
 
                 {/* 3. Gratificação (Amber) - Moved Up */}
-                <div className="bg-amber-50/50 rounded-lg p-3 border border-amber-100">
-                  <h4 className="text-xs font-bold text-amber-800 mb-2">Gratificação Específica (GAE / GAS)</h4>
+                <Accordion
+                  title={<h4 className="text-xs font-bold text-amber-800">Gratificação Específica (GAE / GAS)</h4>}
+                  className="bg-amber-50/50 rounded-lg border border-amber-100"
+                  headerClassName="p-3"
+                  contentClassName="p-3 pt-0 border-t border-amber-100/50"
+                  defaultOpen={false}
+                >
                   <Select label="" value={state.gratEspecificaTipo} onChange={e => update('gratEspecificaTipo', e.target.value)} className="mb-2 bg-white">
                     <option value="0">Nenhuma</option>
                     <option value="gae">GAE (Oficial de Justiça)</option>
@@ -557,11 +563,16 @@ export default function App() {
                     <input type="checkbox" checked={state.incidirPSSGrat} onChange={e => update('incidirPSSGrat', e.target.checked)} className="rounded text-amber-600 focus:ring-amber-500" />
                     <label className="text-xs text-gray-600">Incidir PSS sobre GAE/GAS</label>
                   </div>
-                </div>
+                </Accordion>
 
                 {/* 4. Vantagens Pessoais (Rose) - Moved Up */}
-                <div className="bg-rose-50/50 rounded-lg p-3 border border-rose-100">
-                  <h4 className="text-xs font-bold text-rose-800 mb-2">Vantagens Pessoais (Ref. Holerite)</h4>
+                <Accordion
+                  title={<h4 className="text-xs font-bold text-rose-800">Vantagens Pessoais (Ref. Holerite)</h4>}
+                  className="bg-rose-50/50 rounded-lg border border-rose-100"
+                  headerClassName="p-3"
+                  contentClassName="p-3 pt-0 border-t border-rose-100/50"
+                  defaultOpen={false}
+                >
                   <div className="space-y-3">
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500">VPNI - Lei 9.527/97 (Parc. não absorvível)</label>
@@ -609,11 +620,16 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Accordion>
 
                 {/* 5. Abono de Permanência (Green) - Moved to End */}
-                <div className="bg-green-50/50 rounded-lg p-3 border border-green-100">
-                  <h4 className="text-xs font-bold text-green-800 mb-2">Abono de Permanência</h4>
+                <Accordion
+                  title={<h4 className="text-xs font-bold text-green-800">Abono de Permanência</h4>}
+                  className="bg-green-50/50 rounded-lg border border-green-100"
+                  headerClassName="p-3"
+                  contentClassName="p-3 pt-0 border-t border-green-100/50"
+                  defaultOpen={false}
+                >
                   <div className="flex items-start gap-2 mb-2">
                     <input type="checkbox" className="mt-1 rounded text-green-600 focus:ring-green-500" checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
                     <div>
@@ -622,27 +638,38 @@ export default function App() {
                     </div>
                   </div>
                   <Input label="" value={formatCurrency(state.abonoPermanencia)} readOnly className="!bg-white !text-green-700 !font-bold" />
-                </div>
+                </Accordion>
 
               </div>
             </Card>
+          </div>
 
-            {/* FERIAS */}
-            <div className="bg-white rounded-xl shadow-sm border border-orange-200 overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-2">
-                <button
-                  onClick={handleCalcFerias}
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded shadow-sm transition-colors uppercase"
-                >
-                  Calcular 1/3
-                </button>
-              </div>
 
-              <div className="p-6 pt-4">
-                <h3 className="text-lg font-bold text-blue-500 flex items-center gap-2 mb-4">
-                  Férias
-                </h3>
 
+
+
+          {/* Column 2: Variáveis, HE e Licença */}
+          <div className="space-y-6">
+            <Card
+              title="Rendimentos Variáveis"
+              icon={<Clock className="h-5 w-5" />}
+              headerColorClass="bg-purple-50 border-purple-100"
+              borderColorClass="border-purple-100"
+              iconColorClass="text-purple-600"
+              titleColorClass="text-purple-800"
+            >
+              {/* FERIAS */}
+              <Accordion
+                title={
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-blue-500">Férias</h3>
+                  </div>
+                }
+                className="bg-white rounded-lg border border-orange-200 overflow-hidden relative mb-4"
+                headerClassName="p-4"
+                contentClassName="p-4 pt-0 border-t border-orange-50"
+                defaultOpen={false}
+              >
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-1">
                     <label className="text-xs font-medium text-gray-700">Adicional 1/3 Férias</label>
@@ -654,7 +681,7 @@ export default function App() {
                       /> Editar manualmente
                     </label>
                   </div>
-                  <div className="relative">
+                  <div className="relative mb-2">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">R$</span>
                     <input
                       type="text"
@@ -668,7 +695,12 @@ export default function App() {
                       readOnly={!state.manualFerias}
                     />
                   </div>
-
+                  <button
+                    onClick={handleCalcFerias}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold px-3 py-1.5 rounded shadow-sm transition-colors uppercase"
+                  >
+                    Calcular 1/3 Automático
+                  </button>
                 </div>
 
                 <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
@@ -677,20 +709,23 @@ export default function App() {
                     Recebi o dinheiro no mês passado?
                   </label>
                 </div>
-              </div>
-            </div>
+              </Accordion>
 
-            {/* 13 SALARIO */}
-            <div className="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden relative mt-6">
-              <div className="p-6 pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-blue-500 flex items-center gap-2">13º Salário</h3>
-                  <button onClick={handleCalc13Manual} className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold py-1 px-3 rounded shadow-sm transition-colors uppercase">
-                    Calcular 13º
+              {/* 13 SALARIO */}
+              <Accordion
+                title={<h3 className="text-sm font-bold text-blue-500">13º Salário</h3>}
+                className="bg-white rounded-lg border border-blue-200 overflow-hidden relative mb-4"
+                headerClassName="p-4"
+                contentClassName="p-4 pt-0 border-t border-blue-50"
+                defaultOpen={false}
+              >
+                <div className="flex justify-end mb-4">
+                  <button onClick={handleCalc13Manual} className="w-full bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold py-1.5 px-3 rounded shadow-sm transition-colors uppercase">
+                    Calcular 13º Automático
                   </button>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-0">
                   <div className="flex justify-between items-center mb-2">
                     <h5 className="text-xs font-bold text-blue-800">Adiantamento 13º (Janeiro/Junho)</h5>
                     <label className="flex items-center gap-1 text-[10px] text-red-500 font-bold cursor-pointer">
@@ -737,25 +772,15 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-
-
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Column 2: Variáveis, HE e Licença */}
-          <div className="space-y-6">
-            <Card
-              title="Rendimentos Variáveis"
-              icon={<Clock className="h-5 w-5" />}
-              headerColorClass="bg-purple-50 border-purple-100"
-              borderColorClass="border-purple-100"
-              iconColorClass="text-purple-600"
-              titleColorClass="text-purple-800"
-            >
-              <div className="border border-purple-200 rounded-lg p-4 bg-purple-50/50">
-                <h4 className="text-sm font-bold text-purple-800 mb-3">Cálculo de Horas Extras (Divisor 175)</h4>
+              </Accordion>
+              <Accordion
+                title={<h4 className="text-sm font-bold text-purple-800">Cálculo de Horas Extras (Divisor 175)</h4>}
+                className="border border-purple-200 rounded-lg bg-purple-50/50"
+                headerClassName="p-4"
+                contentClassName="p-4 pt-0 border-t border-purple-100/50"
+                defaultOpen={false}
+              >
                 <div className="flex items-center justify-between mb-3">
                   <label className="flex items-center gap-2 text-xs">
                     <input type="checkbox" checked={state.heIsEA} onChange={e => update('heIsEA', e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500" />
@@ -763,7 +788,7 @@ export default function App() {
                   </label>
                   <label className="flex items-center gap-2 text-xs">
                     <input type="checkbox" checked={state.manualBaseHE} onChange={e => update('manualBaseHE', e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500" />
-                    <span className="text-gray-700">Não atualizar</span>
+                    <span className="text-gray-700">Editar manualmente</span>
                   </label>
                 </div>
 
@@ -793,28 +818,7 @@ export default function App() {
                     }}
                     readOnly={!state.manualBaseHE}
                   />
-                  <button
-                    onClick={() => {
-                      // O botão só funciona se a checkbox MANUAL estiver *DESMARCADA*? 
-                      // Não, user pediu: "Quando marcada, deve desabilitar o botão".
-                      // Então botão funciona quando DESMARCADA? Mas desmarcada é Auto...
-                      // Talvez o botão seja para "Re-calcular" manual?
-                      // Mas seguindo estritamente: Marcada -> Disabled.
 
-                      if (!state.manualBaseHE) {
-                        // Logic if needed for "Auto" mode refresh? Likely redundant but enabled.
-                        const calculated = calculateAll(state);
-                        update('heBase', calculated.heBase);
-                      }
-                    }}
-                    disabled={state.manualBaseHE}
-                    className={`mt-2 w-full text-xs font-bold py-1.5 rounded transition-colors flex items-center justify-center gap-1 ${!state.manualBaseHE
-                      ? 'bg-[#8e44ad] hover:bg-[#7d3c98] text-white cursor-pointer'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
-                  >
-                    Setar valor calculado (Reset)
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-1">
@@ -826,11 +830,16 @@ export default function App() {
                   <Input label="Valor 100%" value={formatCurrency(state.heVal100)} readOnly className="bg-gray-50 text-gray-600" />
                 </div>
                 <div className="text-right text-xs font-bold text-purple-700 bg-purple-100 p-2 rounded">Total HE: {formatCurrency(state.heTotal)}</div>
-              </div>
+              </Accordion>
 
               {/* Substitution Grid */}
-              <div className="border border-orange-200 rounded-lg p-4 bg-orange-50/50">
-                <h4 className="text-sm font-bold text-orange-800 mb-3">Cálculo de Substituição (Diferença)</h4>
+              <Accordion
+                title={<h4 className="text-sm font-bold text-orange-800">Cálculo de Substituição (Diferença)</h4>}
+                className="border border-orange-200 rounded-lg bg-orange-50/50"
+                headerClassName="p-4"
+                contentClassName="p-4 pt-0 border-t border-orange-100/50"
+                defaultOpen={false}
+              >
                 <label className="flex items-center gap-2 text-xs mb-3">
                   <input type="checkbox" checked={state.substIsEA} onChange={e => update('substIsEA', e.target.checked)} className="rounded text-orange-500 focus:ring-orange-500" />
                   <span className="text-gray-700">Pagamento como EA?</span>
@@ -854,12 +863,15 @@ export default function App() {
                   ))}
                 </div>
                 <div className="text-right text-xs font-bold text-orange-600 mt-3">Total Subst.: {formatCurrency(state.substTotal)}</div>
-              </div>
+              </Accordion>
 
-              <div className="border border-teal-200 rounded-lg p-4 bg-teal-50/50">
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-sm font-bold text-teal-800">Licença Compensatória</h4>
-                </div>
+              <Accordion
+                title={<h4 className="text-sm font-bold text-teal-800">Licença Compensatória</h4>}
+                className="border border-teal-200 rounded-lg bg-teal-50/50"
+                headerClassName="p-4"
+                contentClassName="p-4 pt-0 border-t border-teal-100/50"
+                defaultOpen={false}
+              >
                 <p className="text-[10px] text-gray-500 mb-3 italic leading-tight">
                   Pago a ocupantes de CJ-2 a CJ-4. Art. 4º Ato Normativo 899.
                 </p>
@@ -885,13 +897,18 @@ export default function App() {
                   <span className="text-xs font-medium text-teal-800">Valor Estimado (Isento IR/PSS)</span>
                   <span className="text-sm font-bold text-teal-700">{formatCurrency(state.licencaValor)}</span>
                 </div>
-              </div>
+              </Accordion>
 
               {/* Auxilio Alimentacao & Transporte - New Design */}
               <div className="space-y-4 pt-2">
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                  <h4 className="text-xs font-bold text-blue-700 mb-2">Auxílio Alimentação</h4>
+                <Accordion
+                  title={<h4 className="text-sm font-bold text-blue-700">Auxílio Alimentação</h4>}
+                  className="bg-white rounded-lg border border-gray-200 shadow-sm"
+                  headerClassName="p-4"
+                  contentClassName="p-4 pt-0 border-t border-gray-100"
+                  defaultOpen={false}
+                >
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">R$</span>
                     {/* Select mimicking input style */}
@@ -906,11 +923,15 @@ export default function App() {
                       <option value={1235.77}>1.235,77</option>
                     </select>
                   </div>
-                </div>
+                </Accordion>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                  <h4 className="text-xs font-bold text-blue-700 mb-2">Auxílio Pré-Escolar</h4>
-
+                <Accordion
+                  title={<h4 className="text-sm font-bold text-blue-700">Auxílio Pré-Escolar</h4>}
+                  className="bg-white rounded-lg border border-gray-200 shadow-sm"
+                  headerClassName="p-4"
+                  contentClassName="p-4 pt-0 border-t border-gray-100"
+                  defaultOpen={false}
+                >
                   <div className="mb-3">
                     <label className="text-[10px] text-gray-500 block mb-1">Cota Base (p/ Dep.)</label>
                     <div className="relative">
@@ -945,10 +966,15 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Accordion>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                  <h4 className="text-xs font-bold text-blue-700 mb-2">Auxílio Transporte</h4>
+                <Accordion
+                  title={<h4 className="text-sm font-bold text-blue-700">Auxílio Transporte</h4>}
+                  className="bg-white rounded-lg border border-gray-200 shadow-sm"
+                  headerClassName="p-4"
+                  contentClassName="p-4 pt-0 border-t border-gray-100"
+                  defaultOpen={false}
+                >
                   <div className="mb-2">
                     <label className="text-[10px] text-gray-500 block mb-1">Valor Mensal do Transporte (Gasto Total)</label>
                     <div className="relative">
@@ -961,13 +987,10 @@ export default function App() {
                       />
                     </div>
                   </div>
-
-
-
                   {state.auxTransporteGasto > 0 && state.auxTransporteValor === 0 && (
                     <p className="text-[10px] text-red-500 mt-1 font-bold">Benefício cancelado (Desconto &gt; Gasto).</p>
                   )}
-                </div>
+                </Accordion>
               </div>
             </Card>
           </div>
