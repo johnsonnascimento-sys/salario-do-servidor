@@ -434,7 +434,7 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     const isJun = state.tipoCalculo === 'jun';
 
     // Credit: Adiantamento (Jun) OR Integral (Nov)
-    const credito13 = isNov ? gratNatalinaTotal : (isJun ? adiant13Total : 0);
+    const credito13 = isNov ? gratNatalinaTotal : adiant13Total;
 
     // Debit: Adiantamento (Nov)
     let debito13 = 0;
