@@ -151,7 +151,7 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
         // Add Abono Estimado if checked (pois integra a base de cálculo)
         if (state.recebeAbono) {
             let baseForPSS = baseHE;
-            if (!state.pssSobreAQTreino) baseForPSS -= aqTreinoVal;
+            baseForPSS -= aqTreinoVal;
             if (!state.pssSobreFC) baseForPSS -= funcaoValor;
             if (!state.incidirPSSGrat) baseForPSS -= gratVal;
 
@@ -201,18 +201,23 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     // 5. Total Base for PSS
     let basePSS = baseVencimento + gaj + aqTituloVal + state.vpni_lei + state.vpni_decisao + state.ats;
 
+
+
     if (state.incidirPSSGrat) {
         basePSS += gratVal;
     }
 
     if (state.pssSobreFC) basePSS += funcaoValor;
-    if (state.pssSobreAQTreino) basePSS += aqTreinoVal;
+    // AQ Treino never enters PSS base
 
     // HE e Subst entram na base PSS se NÃO forem EA (Indenizatórias/EA não incidem PSS normalmente no simulador padrão, mas aqui segue regra do usuário)
     // Nota: Geralmente HE incide PSS. Se for EA, pode não incidir. 
     // No código original (JS): "SE NÃO FOR EA, ENTRA NA BASE PSS."
-    if (!state.heIsEA) basePSS += heTotal;
-    if (!state.substIsEA) basePSS += substTotalCalc;
+    // Update: User rules dictate HE does NOT enter PSS base (Not incorporated).
+    // if (!state.heIsEA) basePSS += heTotal; 
+
+    // Substitution removed from PSS base by user request
+
 
     // Teto Logic
     const teto = HISTORICO_PSS[state.tabelaPSS].teto_rgps;
@@ -252,49 +257,11 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
         // Base Calculation
         let base13 = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal + state.vpni_lei + state.vpni_decisao + state.ats;
 
-        // --- DYNAMIC RECALCULATION LOGIC FOR MANUAL INPUTS ---
-        if (state.manualAdiant13 && state.adiant13Venc > 0) {
-            // If manual, override the calculated 'base13' with (AdiantVB * 2) + (AdiantFC * 2) 
-            // to respect the user's intent that manual inputs should reflect in the taxes.
-            base13 = (state.adiant13Venc * 2) + (state.adiant13FC * 2);
-        }
-
-        // --- DYNAMIC RECALCULATION LOGIC FOR MANUAL INPUTS ---
-        // User requested: "When I alter Adiant. Ativo EC (Base)... it is not reflecting in Taxes".
-        // This implies the user wants the Gross 13th (which generates the tax) to be derived from the Manual Advance input * 2.
-        // If manual mode is active, we should try to infer the "Effective Base" from the manual advance input.
-
-        if (state.manualAdiant13 && state.adiant13Venc > 0) {
-            // If the user manually set the Advance (Adiant. Ativo EC), we assume the Total Gross Base was 2x that amount?
-            // Or at least, the "part" related to Base.
-            // Let's assume the user wants the "Base do 13º" to follow the manual input logic:
-            // Gross Base ~= (AdiantVB * 2) + Other components? 
-            // Simplification: If manual, override the calculated 'base13' with (AdiantVB * 2) to respect the user's "Base" intent.
-            // EXCEPT: Abono and other things might still apply.
-            // Let's replace 'base13' with (state.adiant13Venc * 2) IF it's significantly different?
-            // Or just use it directly.
-            base13 = state.adiant13Venc * 2;
-
-            // Same for FC?
-            // If AdiantFC is manual, then FC component of Base is AdiantFC * 2.
-            // But 'funcaoValor' is already separate. 
-            // If we use (AdiantVB * 2) as 'base13' (which includes VB+GAJ+AQ...), we might be double counting or missing things.
-            // BUT base13 definition above includes 'funcaoValor'.
-            // Let's refine:
-            // base13 above = Sum(Components).
-            // adiant13Venc (Standard) = (Components - FC) / 2.
-            // So (adiant13Venc * 2) = (Components - FC).
-            // Thus, Effective Base13 = (state.adiant13Venc * 2) + (state.adiant13FC * 2) + Grat + VPNI... ?
-            // No, adiant13FC follows function.
-
-            // SAFEST LOGIC FOR USER INTENT:
-            // Total Gross 13th = (Manual Adiant VB * 2) + (Manual Adiant FC * 2).
-            // This ensures that if they lower the Advance, they lower the Gross, and thus lower the Tax.
-            // We will recalculate 'base13' as just the sum of these two double parts, plus potential Abono.
-
-            // Recalculating base13 using manual inputs:
-            base13 = (state.adiant13Venc * 2) + (state.adiant13FC * 2);
-        }
+        // [FIXED] Do NOT override base13 with manual advance * 2.
+        // The 13th Integral (Credit) should be the Full Monthly Salary (calculated above in line 253).
+        // The Manual Advance input should ONLY be used for the Debit (discount).
+        // If we override base13 here, we artificially lower the PSS/IR base if the advance was small.
+        // base13 = ... (Removed)
 
         // Ajuste da Base do 13º (Gross) para incluir Abono se aplicável (Mirroring ui.js behavior)
         // ui.js adds 'valAbonoEstimado' to 'baseGN' if recebeAbono is true.
@@ -304,7 +271,7 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
 
         // Remove items from PSS Base if unchecked (Refining the base for PSS calc)
         if (!state.pssSobreFC) base13PSS_Estimada -= funcaoValor;
-        if (!state.pssSobreAQTreino) base13PSS_Estimada -= aqTreinoVal;
+        base13PSS_Estimada -= aqTreinoVal;
 
         if (state.recebeAbono) {
             if (usaTeto) {
@@ -324,7 +291,7 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
         let baseParaPSS13 = base13; // Start fresh
         // Apply exclusions again for safety
         if (!state.pssSobreFC) baseParaPSS13 -= funcaoValor;
-        if (!state.pssSobreAQTreino) baseParaPSS13 -= aqTreinoVal;
+        baseParaPSS13 -= aqTreinoVal;
 
         // If Abono is included in Gross, does it enter PSS Base?
         // ui.js: 'basePSS13 = baseStandard'. baseStandard DOES NOT include abono. 
@@ -463,21 +430,33 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     });
 
     // Totals
+    const isNov = state.tipoCalculo === 'nov';
+    const isJun = state.tipoCalculo === 'jun';
+
+    // Credit: Adiantamento (Jun) OR Integral (Nov)
+    const credito13 = isNov ? gratNatalinaTotal : (isJun ? adiant13Total : 0);
+
+    // Debit: Adiantamento (Nov)
+    let debito13 = 0;
+    if (isNov) {
+        if (state.manualDecimoTerceiroNov) {
+            debito13 = state.decimoTerceiroNovVenc + state.decimoTerceiroNovFC;
+        } else {
+            debito13 = adiant13Total;
+        }
+    }
+
     const totalBruto = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
         state.vpni_lei + state.vpni_decisao + state.ats + abonoPerm +
         heTotal + substTotalCalc + licencaVal +
-        state.auxAlimentacao + preEscolarVal + auxTranspCred + ferias1_3 + adiant13Total + totalRubricasCred;
-
-    // Se for Novembro, adiciona Gratificação Natalina Integral na soma bruta (se implementarmos como linha separada)
-    // Por enquanto, vamos manter a lógica simples: se Nov, calcula IR 13º e exibe.
-    // MAS, para o IR 13º aparecer, precisa estar no Total Descontos.
+        state.auxAlimentacao + preEscolarVal + auxTranspCred + ferias1_3 + totalRubricasCred + credito13;
 
     // Ferias Antecipadas Debit
     const finalFerias1_3 = state.manualFerias ? state.ferias1_3 : ferias1_3;
     const feriasDesc = state.feriasAntecipadas ? finalFerias1_3 : 0;
 
     const totalDescontos = pssMensal + valFunpresp + irMensal + irEA + irFerias + ir13 + pss13 +
-        state.emprestimos + state.planoSaude + state.pensao + auxTranspDeb + totalRubricasDeb + feriasDesc;
+        state.emprestimos + state.planoSaude + state.pensao + auxTranspDeb + totalRubricasDeb + feriasDesc + debito13;
 
     return {
         ...state,

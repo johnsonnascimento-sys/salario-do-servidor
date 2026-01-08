@@ -120,9 +120,15 @@ export interface CalculatorState {
   gratNatalinaTotal?: number;
 
   // 13th Breakdown (Manual Calculation Support)
-  adiant13Venc: number; // Adiantamento Ativo EC (Base)
-  adiant13FC: number;   // Adiantamento FC/CJ (Função)
-  manualAdiant13: boolean; // Checkbox to not auto-calc 13th
+  adiant13Venc: number; // Adiantamento Ativo EC (Base) - Used for JAN/JUN logic
+  adiant13FC: number;   // Adiantamento FC/CJ (Função) - Used for JAN/JUN logic
+  manualAdiant13: boolean; // Checkbox to not auto-calc 13th (JAN/JUN)
+
+  // Specific for November Override (Debit Correction)
+  manualDecimoTerceiroNov: boolean;
+  decimoTerceiroNovVenc: number;
+  decimoTerceiroNovFC: number;
+
   integral13: number;   // Calculated automatically for Nov
 
   // Computed Results
@@ -223,6 +229,11 @@ export const INITIAL_STATE: CalculatorState = {
   adiant13Venc: 0,
   adiant13FC: 0,
   manualAdiant13: false,
+
+  manualDecimoTerceiroNov: false,
+  decimoTerceiroNovVenc: 0,
+  decimoTerceiroNovFC: 0,
+
   integral13: 0,
 
   pssMensal: 0,

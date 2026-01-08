@@ -798,18 +798,8 @@ export default function App() {
                       : formatCurrency(state.heBase).replace('R$', '').trim()}
                     onChange={e => {
                       if (state.manualBaseHE) {
-                        // Allow editing just the number part
-                        let raw = e.target.value.replace(/[^0-9,]/g, '');
-                        // Check if multiple commas
-                        const parts = raw.split(',');
-                        if (parts.length > 2) raw = parts[0] + ',' + parts.slice(1).join('');
-
-                        // Parse to store in state, but keep input controlled by formatted value if needed? 
-                        // Actually simpler to just parse and store. 
-                        // Issue is re-render formatting might jump cursor. 
-                        // For now, simple parse.
-                        let val = Number(raw.replace('.', '').replace(',', '.')); // Remove thousands separator if any? No, regex removed dots.
-                        if (!isNaN(val)) update('heBase', val);
+                        const raw = e.target.value.replace(/\D/g, '');
+                        update('heBase', Number(raw) / 100);
                       }
                     }}
                     readOnly={!state.manualBaseHE}
@@ -1038,10 +1028,7 @@ export default function App() {
                     <input type="checkbox" checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} className="rounded border-gray-300 text-orange-500" />
                     <span className="text-gray-600">Incidir PSS sobre FC/CJ</span>
                   </label>
-                  <label className="flex items-center gap-2 text-[10px]">
-                    <input type="checkbox" checked={state.pssSobreAQTreino} onChange={e => update('pssSobreAQTreino', e.target.checked)} className="rounded border-gray-300 text-orange-500" />
-                    <span className="text-gray-600">Incidir PSS sobre AQ Treinamento</span>
-                  </label>
+
                 </div>
 
                 {state.regimePrev !== 'antigo' && (
@@ -1053,6 +1040,28 @@ export default function App() {
                       <option value={0.085}>8,5%</option>
                     </Select>
                     <Input label="Facultativa (%)" type="number" value={state.funprespFacul} onChange={e => update('funprespFacul', Number(e.target.value))} className="bg-white" />
+                  </div>
+                )}
+              </div>
+
+              {/* Configuração do 13º Salário (Adiantamento) */}
+              <div className="bg-sky-50/50 rounded-lg p-3 border border-sky-100 mt-3 mb-3">
+                <h4 className="text-xs font-bold text-sky-800 mb-2">Décimo Terceiro (Novembro)</h4>
+                <label className="flex items-center gap-2 text-[10px] mb-2">
+                  <input type="checkbox" checked={state.manualDecimoTerceiroNov} onChange={e => update('manualDecimoTerceiroNov', e.target.checked)} className="rounded border-gray-300 text-sky-600" />
+                  <span className="text-gray-600">Editar Primeira Parcela do 13º?</span>
+                </label>
+
+                {state.manualDecimoTerceiroNov && (
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <Input label="1ª Parc. Vencimento" type="number" value={state.decimoTerceiroNovVenc} onChange={e => update('decimoTerceiroNovVenc', Number(e.target.value))} className="bg-white" />
+                    <Input label="1ª Parc. FC/CJ" type="number" value={state.decimoTerceiroNovFC} onChange={e => update('decimoTerceiroNovFC', Number(e.target.value))} className="bg-white" />
+                  </div>
+                )}
+
+                {!state.manualAdiant13 && (
+                  <div className="text-[10px] text-gray-400 italic mb-2">
+                    * Automático (50%)
                   </div>
                 )}
               </div>
