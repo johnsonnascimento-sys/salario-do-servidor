@@ -465,8 +465,68 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     const finalFerias1_3 = state.manualFerias ? state.ferias1_3 : ferias1_3;
     const feriasDesc = state.feriasAntecipadas ? finalFerias1_3 : 0;
 
+    // --- CÁLCULO DE DIÁRIAS (Novo Módulo) ---
+    // 1. Determinar Valor Base
+    let valorDiaria = 0;
+    // Se Função começa com 'cj' (CJ-1 a CJ-4), usa valor de CJ
+    // Nota: O código da função é tipo 'cj1', 'cj2'...
+    if (state.funcao && state.funcao.toLowerCase().startsWith('cj')) {
+        valorDiaria = 880.17; // Valor para CJ
+    } else if (state.cargo === 'analista') {
+        valorDiaria = 806.82; // Valor Analista
+    } else {
+        valorDiaria = 660.13; // Valor Técnico (Default se tec ou nenhum)
+    }
+
+    // 2. Adicional Embarque
+    let adicionalEmbarque = 0;
+    if (state.diariasEmbarque === 'completo') adicionalEmbarque = 586.78;
+    else if (state.diariasEmbarque === 'metade') adicionalEmbarque = 293.39;
+
+    // 3. Bruto Diárias (Indenizatório)
+    const diariasBruto = (state.diariasQtd * valorDiaria) + (state.diariasMeiaQtd * (valorDiaria / 2)) + adicionalEmbarque;
+
+    // 4. Deduções (Alimentação e Transporte) e Art. 4º (Benefício Externo)
+    let deducaoAlimentacao = 0;
+    let deducaoTransporte = 0;
+    let glosaExterno = 0; // Dedução do Art. 4º
+    const totalDiasViagem = state.diariasQtd + state.diariasMeiaQtd; // Considera total de dias afastados
+
+    // Dedução por Benefício Externo (Art. 4º Parágrafo Único)
+    // Cumulativo: 55% Hospedagem, 25% Alimentação, 20% Transporte
+    const baseGlosa = (state.diariasQtd * valorDiaria) + (state.diariasMeiaQtd * (valorDiaria / 2));
+    let percentGlosa = 0;
+
+    if (state.diariasExtHospedagem) percentGlosa += 0.55;
+    if (state.diariasExtAlimentacao) percentGlosa += 0.25;
+    if (state.diariasExtTransporte) percentGlosa += 0.20;
+
+    glosaExterno = baseGlosa * percentGlosa;
+
+    if (state.diariasDescontarAlimentacao && totalDiasViagem > 0) {
+        // Se já recebeu alimentação externa (glosa 25%), ainda desconta o auxílio do órgão?
+        // Sim, pois são coisas distintas: 
+        // 1. Glosa: Você não gasta com comida lá, então a diária diminui.
+        // 2. Restituição: Você recebeu auxílio para comer aqui, mas viajou, então devolve.
+        deducaoAlimentacao = (state.auxAlimentacao / 30) * totalDiasViagem;
+    }
+
+    if (state.diariasDescontarTransporte && totalDiasViagem > 0) {
+        const baseTransp = auxTranspCred > 0 ? auxTranspCred : 0;
+        if (baseTransp > 0) {
+            deducaoTransporte = (baseTransp / 30) * totalDiasViagem;
+        }
+    }
+
+    const diariasLiquido = Math.max(0, diariasBruto - deducaoAlimentacao - deducaoTransporte - glosaExterno);
+
+    // Diárias entram no total líquido mas NÃO no Rendimento Tributável (Total Bruto Padrão geralmente é tributável?)
+    // O 'totalBruto' atual soma tudo (inclusive auxílios indenizatórios).
+    // Se o usuário quer separadamente: BRUTO entra no Total Bruto, e DESCONTOS no Total Descontos.
+
     const totalDescontos = pssMensal + valFunpresp + irMensal + irEA + irFerias + ir13 + pss13 +
-        state.emprestimos + state.planoSaude + state.pensao + auxTranspDeb + totalRubricasDeb + feriasDesc + debito13;
+        state.emprestimos + state.planoSaude + state.pensao + auxTranspDeb + totalRubricasDeb + feriasDesc + debito13 +
+        deducaoAlimentacao + deducaoTransporte + glosaExterno; // Include Diarias Deductions
 
     return {
         ...state,
@@ -493,13 +553,20 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
         auxTransporteValor: auxTranspCred,
         auxTransporteDesc: auxTranspDeb,
         licencaValor: licencaVal,
-        totalBruto: finalTotalBruto,
+        totalBruto: finalTotalBruto + diariasBruto, // Add Gross Diarias to Total Received
         totalDescontos,
-        liquido: finalTotalBruto - totalDescontos,
+        liquido: finalTotalBruto + diariasBruto - totalDescontos,
         ferias1_3: finalFerias1_3,
         feriasDesc, // Return calculated debit
         adiant13Venc: state.manualAdiant13 ? state.adiant13Venc : adiant13Venc,
         adiant13FC: state.manualAdiant13 ? state.adiant13FC : adiant13FC,
         abonoPerm13, // Return calculated Abono 13
+        diariasValorTotal: diariasLiquido, // Keep liquid for Accordion Total
+        diariasBruto, // Return calculated Gross
+        diariasDescAlim: deducaoAlimentacao,
+        diariasDescTransp: deducaoTransporte,
+        diariasExtHospedagem: state.diariasExtHospedagem,
+        diariasExtAlimentacao: state.diariasExtAlimentacao,
+        diariasExtTransporte: state.diariasExtTransporte
     };
 };

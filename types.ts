@@ -141,6 +141,21 @@ export interface CalculatorState {
   totalBruto: number;
   totalDescontos: number;
   liquido: number;
+
+  // Diarias
+  diariasQtd: number;
+  diariasMeiaQtd: number;
+  diariasEmbarque: 'nao' | 'metade' | 'completo';
+  diariasMotivo: string;
+  diariasDescontarAlimentacao: boolean;
+  diariasDescontarTransporte: boolean;
+  diariasValorTotal: number;
+  diariasBruto: number;
+  diariasDescAlim: number;
+  diariasDescTransp: number;
+  diariasExtHospedagem: boolean;
+  diariasExtAlimentacao: boolean;
+  diariasExtTransporte: boolean;
 }
 
 export const INITIAL_STATE: CalculatorState = {
@@ -245,5 +260,19 @@ export const INITIAL_STATE: CalculatorState = {
   valFunpresp: 0,
   totalBruto: 0,
   totalDescontos: 0,
-  liquido: 0
+  liquido: 0,
+
+  diariasQtd: 0,
+  diariasMeiaQtd: 0,
+  diariasEmbarque: 'nao',
+  diariasMotivo: '',
+  diariasDescontarAlimentacao: false,
+  diariasDescontarTransporte: false,
+  diariasValorTotal: 0,
+  diariasBruto: 0,
+  diariasDescAlim: 0,
+  diariasDescTransp: 0,
+  diariasExtHospedagem: false,
+  diariasExtAlimentacao: false,
+  diariasExtTransporte: false
 };

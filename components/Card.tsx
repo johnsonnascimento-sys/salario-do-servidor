@@ -10,14 +10,14 @@ interface CardProps {
   children: React.ReactNode;
 }
 
-export const Card: React.FC<CardProps> = ({ 
-  title, 
-  icon, 
-  headerColorClass, 
-  borderColorClass, 
-  iconColorClass, 
-  titleColorClass, 
-  children 
+export const Card: React.FC<CardProps> = ({
+  title,
+  icon,
+  headerColorClass,
+  borderColorClass,
+  iconColorClass,
+  titleColorClass,
+  children
 }) => {
   return (
     <div className={`bg-white rounded-xl shadow-sm border ${borderColorClass} overflow-hidden`}>
@@ -34,6 +34,6 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
-export const SectionTitle: React.FC<{title: string}> = ({title}) => (
+export const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
   <h4 className="text-xs font-bold text-gray-700 uppercase mb-3 pt-4 border-t border-gray-100">{title}</h4>
 );

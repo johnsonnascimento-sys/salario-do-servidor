@@ -32,7 +32,10 @@ export default function App() {
     state.vpni_lei, state.vpni_decisao, state.ats,
     state.ferias1_3, state.feriasAntecipadas, state.manualFerias,
     state.adiant13Venc, state.adiant13FC, state.manualAdiant13,
-    state.incidirPSSGrat
+    state.incidirPSSGrat,
+    state.diariasQtd, state.diariasMeiaQtd, state.diariasEmbarque,
+    state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
+    state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte
   ]);
 
   const update = (field: keyof CalculatorState, value: any) => {
@@ -236,6 +239,26 @@ export default function App() {
     if (state.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: state.planoSaude, type: 'D' });
     if (state.pensao > 0) rows.push({ label: 'PENSÃO ALIMENTÍCIA', value: state.pensao, type: 'D' });
 
+    // Diárias (Credit - Indenizatório - Expandido)
+    if (state.diariasBruto > 0) {
+      rows.push({ label: 'DIÁRIAS', value: state.diariasBruto, type: 'C' });
+    }
+    if (state.diariasDescAlim > 0) {
+      rows.push({ label: 'RESTITUIÇÃO AUX. ALIM. (DIÁRIAS)', value: state.diariasDescAlim, type: 'D' });
+    }
+    if (state.diariasDescTransp > 0) {
+      rows.push({ label: 'RESTITUIÇÃO AUX. TRANSP. (DIÁRIAS)', value: state.diariasDescTransp, type: 'D' });
+    }
+    // Calculate Glosa on the fly here or check if we need to return it from calc?  
+    // We already calculated Liquid but didn't explicitly store 'glosaExterno' in state.
+    // However, we can infer it: Bruto - Liq - Alim - Transp.
+    // Better to have it explicit or calculate it here for display?
+    // Let's rely on consistency. (Bruto - Liq - Alim - Transp) = Glosa.
+    const glosaEst = state.diariasBruto - state.diariasValorTotal - state.diariasDescAlim - state.diariasDescTransp;
+    if (glosaEst > 0.01) { // Floating point safety
+      rows.push({ label: 'ABATIMENTO BENEF. EXTERNO (ART. 4)', value: glosaEst, type: 'D' });
+    }
+
     // Rubricas Extras
     state.rubricasExtras.forEach(r => {
       if (r.valor > 0 && r.descricao) {
@@ -362,7 +385,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Calculator className="text-primary h-8 w-8" />
-            <h1 className="text-xl font-bold text-gray-900">Simulador JMU</h1>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Simulador JMU</h1>
+              <p className="text-[10px] text-gray-500 font-medium">Criado por Johnson Teixeira (2ª Aud da 2ª CJM)</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <input
@@ -978,6 +1004,186 @@ export default function App() {
                   </div>
                   {state.auxTransporteGasto > 0 && state.auxTransporteValor === 0 && (
                     <p className="text-[10px] text-red-500 mt-1 font-bold">Benefício cancelado (Desconto &gt; Gasto).</p>
+                  )}
+                </Accordion>
+
+                {/* Diárias de Viagem (Novo Módulo) */}
+                <Accordion
+                  title={<h4 className="text-sm font-bold text-indigo-700">Diárias de Viagem (Simulação)</h4>}
+                  className="bg-white rounded-lg border border-indigo-200 shadow-sm"
+                  headerClassName="p-4"
+                  contentClassName="p-4 pt-0 border-t border-indigo-100"
+                  defaultOpen={false}
+                >
+                  {/* Info Header */}
+                  <div className="bg-indigo-50 p-2 rounded mb-3 border border-indigo-100">
+                    <p className="text-[10px] text-indigo-800 font-medium">
+                      Valor Base: <span className="font-bold">
+                        {state.funcao && state.funcao.toLowerCase().startsWith('cj')
+                          ? 'R$ 880,17 (CJ)'
+                          : state.cargo === 'analista'
+                            ? 'R$ 806,82 (Analista)'
+                            : 'R$ 660,13 (Técnico)'}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <Input
+                      label="Qtd. Diárias (Com pernoite)"
+                      labelClassName="min-h-[2.5em] flex items-end justify-center"
+                      type="number"
+                      value={state.diariasQtd}
+                      onChange={e => update('diariasQtd', Number(e.target.value))}
+                      className="bg-white text-center"
+                    />
+                    <Input
+                      label="Meias Diárias (Retorno)"
+                      labelClassName="min-h-[2.5em] flex items-end justify-center"
+                      type="number"
+                      value={state.diariasMeiaQtd}
+                      onChange={e => update('diariasMeiaQtd', Number(e.target.value))}
+                      className="bg-white text-center"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="text-[10px] text-gray-500 block mb-1">Adicional de Embarque</label>
+                    <Select
+                      label=""
+                      value={state.diariasEmbarque}
+                      onChange={e => update('diariasEmbarque', e.target.value)}
+                      className="bg-white"
+                    >
+                      <option value="nao">Não (R$ 0,00)</option>
+                      <option value="metade">Ida OU Volta (50% - R$ 293,39)</option>
+                      <option value="completo">Ida E Volta (100% - R$ 586,78)</option>
+                    </Select>
+                  </div>
+
+                  {/* Benefício Externo (Art. 4) */}
+                  <div className="mb-4 bg-gray-50 p-2 rounded border border-gray-100 space-y-2">
+                    <p className="text-[11px] text-gray-700 font-medium leading-tight">
+                      Recebi para este deslocamento hospedagem, alimentação ou alimentação e transporte? (art. 4º do Ato Normativo 799/2024)
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="beneficioExterno"
+                          checked={state.diariasExtHospedagem || state.diariasExtAlimentacao || state.diariasExtTransporte}
+                          onChange={() => {/* No-op or auto-focus? */ }}
+                          className="text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-xs text-gray-700">Sim</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="beneficioExterno"
+                          checked={!state.diariasExtHospedagem && !state.diariasExtAlimentacao && !state.diariasExtTransporte}
+                          onChange={() => {
+                            update('diariasExtHospedagem', false);
+                            update('diariasExtAlimentacao', false);
+                            update('diariasExtTransporte', false);
+                          }}
+                          className="text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-xs text-gray-700">Não</span>
+                      </label>
+                    </div>
+
+                    <div className="mt-2 pl-2 border-l-2 border-indigo-200 space-y-1">
+                      <p className="text-[10px] text-indigo-700 font-bold mb-1">Qual benefício recebi? (Marque todos que se aplicam)</p>
+                      <div className="space-y-1">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={state.diariasExtHospedagem}
+                            onChange={e => update('diariasExtHospedagem', e.target.checked)}
+                            className="rounded text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span className="text-xs text-gray-600">Hospedagem (Abate 55%)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={state.diariasExtAlimentacao}
+                            onChange={e => update('diariasExtAlimentacao', e.target.checked)}
+                            className="rounded text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span className="text-xs text-gray-600">Alimentação (Abate 25%)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={state.diariasExtTransporte}
+                            onChange={e => update('diariasExtTransporte', e.target.checked)}
+                            className="rounded text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span className="text-xs text-gray-600">Transporte (Abate 20%)</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 bg-gray-50 p-2 rounded border border-gray-100">
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={state.diariasDescontarAlimentacao}
+                        onChange={e => update('diariasDescontarAlimentacao', e.target.checked)}
+                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-gray-700">Descontar Aux. Alimentação proporcional?</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={state.diariasDescontarTransporte}
+                        onChange={e => update('diariasDescontarTransporte', e.target.checked)}
+                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-gray-700">Descontar Aux. Transporte proporcional?</span>
+                    </label>
+                  </div>
+
+                  {state.diariasValorTotal > 0 && (
+                    <div className="mt-4 bg-indigo-50/50 rounded-lg p-3 border border-indigo-100">
+                      <h5 className="text-xs font-bold text-indigo-800 mb-2 uppercase border-b border-indigo-200 pb-1">Extrato Estimado</h5>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between text-gray-700">
+                          <span>(+) Diárias (Bruto)</span>
+                          <span>{formatCurrency(state.diariasBruto - (state.diariasEmbarque === 'completo' ? 586.78 : state.diariasEmbarque === 'metade' ? 293.39 : 0))}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-700">
+                          <span>(+) Adicional de Deslocamento</span>
+                          <span>{formatCurrency(state.diariasEmbarque === 'completo' ? 586.78 : state.diariasEmbarque === 'metade' ? 293.39 : 0)}</span>
+                        </div>
+                        {(state.diariasExtHospedagem || state.diariasExtAlimentacao || state.diariasExtTransporte) && (
+                          <div className="flex justify-between text-red-600">
+                            <span>(-) Abatimento Benef. Externo</span>
+                            <span>- {formatCurrency(state.diariasBruto - state.diariasValorTotal - state.diariasDescAlim - state.diariasDescTransp).replace('R$', '').trim() /* Quick calc estimate for display */}</span>
+                          </div>
+                        )}
+                        {state.diariasDescontarAlimentacao && (
+                          <div className="flex justify-between text-red-600">
+                            <span>(-) Restituição Aux. Alimentação</span>
+                            <span>- {formatCurrency(state.diariasDescAlim)}</span>
+                          </div>
+                        )}
+                        {state.diariasDescontarTransporte && (
+                          <div className="flex justify-between text-red-600">
+                            <span>(-) Restituição Aux. Transporte</span>
+                            <span>- {formatCurrency(state.diariasDescTransp)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-indigo-900 font-bold pt-2 border-t border-indigo-200 mt-2 text-sm">
+                          <span>(=) Total Líquido a Receber</span>
+                          <span>{formatCurrency(state.diariasValorTotal)}</span>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </Accordion>
               </div>
