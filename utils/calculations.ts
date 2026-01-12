@@ -484,17 +484,18 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     else if (state.diariasEmbarque === 'metade') adicionalEmbarque = 293.39;
 
     // 3. Bruto Diárias (Indenizatório)
-    const diariasBruto = (state.diariasQtd * valorDiaria) + (state.diariasMeiaQtd * (valorDiaria / 2)) + adicionalEmbarque;
+    // Agora aceita-se apenas uma entrada "diariasQtd" que representa o valor total em unidades de diária (ex: 1.5)
+    const diariasBruto = (state.diariasQtd * valorDiaria) + adicionalEmbarque;
 
     // 4. Deduções (Alimentação e Transporte) e Art. 4º (Benefício Externo)
     let deducaoAlimentacao = 0;
     let deducaoTransporte = 0;
     let glosaExterno = 0; // Dedução do Art. 4º
-    const totalDiasViagem = state.diariasQtd + state.diariasMeiaQtd; // Considera total de dias afastados
+    const totalDiasViagem = state.diariasQtd; // Simplificação: Qtde de Diárias (Valor) = Qtde Dias para dedução (Proporcional)
 
     // Dedução por Benefício Externo (Art. 4º Parágrafo Único)
     // Cumulativo: 55% Hospedagem, 25% Alimentação, 20% Transporte
-    const baseGlosa = (state.diariasQtd * valorDiaria) + (state.diariasMeiaQtd * (valorDiaria / 2));
+    const baseGlosa = (state.diariasQtd * valorDiaria);
     let percentGlosa = 0;
 
     if (state.diariasExtHospedagem) percentGlosa += 0.55;
@@ -504,10 +505,6 @@ export const calculateAll = (state: CalculatorState): CalculatorState => {
     glosaExterno = baseGlosa * percentGlosa;
 
     if (state.diariasDescontarAlimentacao && totalDiasViagem > 0) {
-        // Se já recebeu alimentação externa (glosa 25%), ainda desconta o auxílio do órgão?
-        // Sim, pois são coisas distintas: 
-        // 1. Glosa: Você não gasta com comida lá, então a diária diminui.
-        // 2. Restituição: Você recebeu auxílio para comer aqui, mas viajou, então devolve.
         deducaoAlimentacao = (state.auxAlimentacao / 30) * totalDiasViagem;
     }
 
