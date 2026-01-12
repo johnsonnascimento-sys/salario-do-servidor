@@ -388,12 +388,12 @@ export default function App() {
             <Calculator className="text-primary h-8 w-8" />
             <div>
               <h1 className="text-xl font-bold text-gray-900">Simulador JMU</h1>
-              <p className="text-[10px] text-gray-500 font-medium">Criado por Johnson Teixeira (2ª Aud da 2ª CJM)</p>
+              <p className="text-[10px] text-gray-500 font-medium hidden sm:block">Criado por Johnson Teixeira (2ª Aud da 2ª CJM)</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <input
-              className="form-input rounded-md border-gray-200 bg-gray-50 text-sm py-1.5 px-3 focus:ring-primary focus:border-primary w-40 sm:w-64"
+              className="form-input rounded-md border-gray-200 bg-gray-50 text-sm py-1.5 px-3 focus:ring-primary focus:border-primary w-32 sm:w-64"
               placeholder="Digite seu Nome (Opcional)"
               value={state.nome}
               onChange={e => {
