@@ -1205,8 +1205,9 @@ export default function App() {
                 <h4 className="text-xs font-bold text-red-700 mb-2">Tabelas de Tributação (Vigência)</h4>
                 <div className="grid grid-cols-2 gap-3 mb-2">
                   <Select label="Tabela PSS" value={state.tabelaPSS} onChange={e => update('tabelaPSS', e.target.value)}>
-                    <option value="2025">Portaria MPS/MF 6/...</option>
-                    <option value="2024">Portaria MPS/MF 2/2024</option>
+                    <option value="2026">Portaria MPS/MF 13/26</option>
+                    <option value="2025">Portaria MPS/MF 6/25</option>
+                    <option value="2024">Portaria MPS/MF 4/24</option>
                   </Select>
                   <Select label="Tabela IR (Lei 11.482)" value={state.tabelaIR} onChange={e => update('tabelaIR', e.target.value)}>
                     <option value="2025_maio">Maio/2025</option>

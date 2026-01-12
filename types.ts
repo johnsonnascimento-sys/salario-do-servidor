@@ -94,7 +94,7 @@ export interface CalculatorState {
   auxTransporteDesc: number; // Debit
 
   // Discounts
-  tabelaPSS: '2025' | '2024';
+  tabelaPSS: '2026' | '2025' | '2024';
   tabelaIR: '2025_maio' | '2024_fev';
   dependentes: number;
   regimePrev: 'antigo' | 'migrado' | 'novo_antigo' | 'rpc';
@@ -220,7 +220,7 @@ export const INITIAL_STATE: CalculatorState = {
   auxTransporteValor: 0,
   auxTransporteDesc: 0,
 
-  tabelaPSS: '2025',
+  tabelaPSS: '2026',
   tabelaIR: '2025_maio',
   dependentes: 0,
   regimePrev: 'antigo',
