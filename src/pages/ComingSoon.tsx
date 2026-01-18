@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Calculator, TrendingUp, Shield } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 export default function ComingSoon() {
     return (
@@ -16,7 +17,7 @@ export default function ComingSoon() {
                 <div className="text-center mb-12 animate-fade-in">
                     <div className="inline-flex items-center justify-center mb-6">
                         <img
-                            src="/logo.png"
+                            src={logo}
                             alt="Salário do Servidor"
                             className="w-24 h-24 sm:w-32 sm:h-32 drop-shadow-2xl"
                         />
