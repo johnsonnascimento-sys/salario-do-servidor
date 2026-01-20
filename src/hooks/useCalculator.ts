@@ -8,6 +8,7 @@ import { getTablesForPeriod } from '../utils/calculations'; // Still needed for 
 import { exportToPDF, exportToExcel } from '../services/exportService';
 import { supabase } from '../lib/supabase';
 import { JmuService, IJmuCalculationParams } from '../services/agency/implementations/JmuService';
+import { mapStateToJmuParams } from '../services/agency/adapters/stateToParams';
 
 // Instance of the service (could be memoized or inside hook)
 // Moved inside hook for dynamic loading
@@ -94,83 +95,101 @@ export const useCalculator = () => {
 
     // Recalculate whenever inputs change or config loads
     useEffect(() => {
-        // START: Migration to JmuService
-        // 1. Map State to Params
-        const params: IJmuCalculationParams = {
-            grossSalary: 0, // Ignored by JMU Service which calculates from cargo/padrao
-            dependents: state.dependentes,
-            discounts: state.emprestimos + state.planoSaude + state.pensao,
-            otherDeductions: 0,
+        if (!agencyService) return;
 
-            periodo: state.periodo,
-            cargo: state.cargo,
-            padrao: state.padrao,
-            funcao: state.funcao,
-            aqTituloPerc: state.aqTituloPerc,
-            aqTreinoPerc: state.aqTreinoPerc,
-            aqTituloVR: state.aqTituloVR,
-            aqTreinoVR: state.aqTreinoVR,
-            recebeAbono: state.recebeAbono,
-            gratEspecificaTipo: state.gratEspecificaTipo,
-            gratEspecificaValor: state.gratEspecificaValor,
-            vpni_lei: state.vpni_lei,
-            vpni_decisao: state.vpni_decisao,
-            ats: state.ats,
-            regimePrev: state.regimePrev,
-            tabelaPSS: state.tabelaPSS,
-            pssSobreFC: state.pssSobreFC,
-            incidirPSSGrat: state.incidirPSSGrat,
-            funprespAliq: state.funprespAliq,
-            funprespFacul: state.funprespFacul,
-            auxAlimentacao: state.auxAlimentacao,
-            auxPreEscolarQtd: state.auxPreEscolarQtd,
-            auxTransporteGasto: state.auxTransporteGasto,
-        };
+        // Usar o adaptador centralizado para mapear State → Params
+        const params = mapStateToJmuParams(state);
 
-        // 2. Execute Calculation
-        if (agencyService) {
-            const result = agencyService.calculateTotal(params);
+        // Executar cálculo completo
+        const result = agencyService.calculateTotal(params);
 
-            // 3. Map Result back to State
-            setState(prev => {
-                const bd = result.breakdown;
-                return {
-                    ...prev,
-                    vencimento: bd.vencimento,
-                    gaj: bd.gaj,
-                    aqTituloValor: bd.aqTitulo,
-                    aqTreinoValor: bd.aqTreino,
-                    gratEspecificaValor: bd.gratEspecifica,
-                    pssMensal: bd.pssMensal,
-                    valFunpresp: bd.valFunpresp || 0,
-                    irMensal: bd.irMensal,
-                    abonoPermanencia: bd.abonoPermanencia,
-                    auxAlimentacao: bd.auxAlimentacao,
-                    auxPreEscolarValor: bd.auxPreEscolar,
-                    auxTransporteValor: bd.auxTransporte,
-                    auxTransporteDesc: bd.auxTransporteDebito,
-                    totalBruto: result.netSalary + result.totalDeductions,
-                    totalDescontos: result.totalDeductions,
-                    liquido: result.netSalary,
-                };
-            });
-        }
+        // Mapear resultado de volta ao estado
+        setState(prev => {
+            const bd = result.breakdown;
+            return {
+                ...prev,
 
+                // Componentes Base Individuais (Fase 10)
+                vencimento: bd.vencimento || 0,
+                gaj: bd.gaj || 0,
+                aqTituloValor: bd.aqTitulo || 0,
+                aqTreinoValor: bd.aqTreino || 0,
+                gratEspecificaValor: bd.gratEspecifica || 0,
 
+                // Deduções
+                pssMensal: bd.pss || 0,
+                valFunpresp: bd.funpresp || 0,
+                irMensal: bd.irrf || 0,
+
+                // Benefícios
+                abonoPermanencia: bd.abono || 0,
+                auxAlimentacao: bd.auxAlimentacao || 0,
+                auxPreEscolarValor: bd.auxPreEscolar || 0,
+                auxTransporteValor: bd.auxTransporte || 0,
+                auxTransporteDesc: bd.auxTransporteDebito || 0,
+
+                // Férias (Fase 7)
+                ferias1_3: bd.feriasConstitucional || 0,
+                irFerias: bd.impostoFerias || 0,
+
+                // 13º Salário (Fase 7)
+                gratNatalinaTotal: bd.gratificacaoNatalina || 0,
+                abonoPerm13: bd.abono13 || 0,
+                pss13: bd.pss13 || 0,
+                ir13: bd.imposto13 || 0,
+                // adiant13Venc e adiant13FC já estão no state e são usados como input
+
+                // Hora Extra (Fase 8)
+                heVal50: bd.heVal50 || 0,
+                heVal100: bd.heVal100 || 0,
+                heTotal: bd.heTotal || 0,
+
+                // Substituição (Fase 8)
+                substTotal: bd.substituicao || 0,
+
+                // Diárias (Fase 9)
+                diariasValorTotal: bd.diariasValor || 0,
+                diariasBruto: bd.diariasBruto || 0,
+                diariasDescAlim: bd.diariasDeducoes || 0, // Simplificado
+                diariasDescTransp: 0, // Calculado internamente no service
+
+                // Licença (Fase 9)
+                licencaValor: bd.licencaCompensatoria || 0,
+
+                // Totais
+                totalBruto: result.netSalary + result.totalDeductions,
+                totalDescontos: result.totalDeductions,
+                liquido: result.netSalary,
+            };
+        });
     }, [
-        agencyService, // Dependency added
+        agencyService,
+        // Dependências completas (todos os inputs usados pelo adaptador)
         state.periodo, state.cargo, state.padrao, state.funcao,
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
         state.vpni_lei, state.vpni_decisao, state.ats,
         state.dependentes, state.regimePrev, state.funprespAliq, state.funprespFacul,
         state.tabelaPSS, state.tabelaIR,
-        state.pssSobreFC, state.pssSobreAQTreino, state.incidirPSSGrat,
+        state.pssSobreFC, state.incidirPSSGrat,
         state.auxAlimentacao, state.auxPreEscolarQtd, state.auxTransporteGasto,
         state.emprestimos, state.planoSaude, state.pensao,
+
+        // Férias e 13º (Fase 7)
+        state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
+        state.manualAdiant13, state.adiant13Venc, state.adiant13FC,
+
+        // HE e Substituição (Fase 8)
+        state.heQtd50, state.heQtd100, state.substDias,
+
+        // Diárias e Licença (Fase 9)
+        state.diariasQtd, state.diariasEmbarque,
+        state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
+        state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
+        state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
+
         courtConfig
     ]);
-
 
     const update = useCallback((field: keyof CalculatorState, value: any) => {
         setState(prev => ({ ...prev, [field]: value }));

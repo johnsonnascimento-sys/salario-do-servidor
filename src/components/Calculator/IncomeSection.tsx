@@ -67,22 +67,22 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                     {isNovoAQ ? (
                         <div className="space-y-3">
                             <div>
-                                <label className={styles.label}>Títulos (Base: VR)</label>
+                                <label className={styles.label}>Títulos (Base: VR = R$ 714,39)</label>
                                 <select className={styles.input} value={state.aqTituloVR} onChange={e => update('aqTituloVR', Number(e.target.value))}>
                                     <option value={0}>Nenhum</option>
-                                    <option value={1}>Espec. (2%)</option>
-                                    <option value={2}>Mestrado (3%)</option>
-                                    <option value={3}>Doutorado (5%)</option>
-                                    <option value={4}>Pós-Doc (5%)</option>
+                                    <option value={1.0}>Especialização (1.0x VR)</option>
+                                    <option value={2.0}>2x Especialização (2.0x VR)</option>
+                                    <option value={3.5}>Mestrado (3.5x VR)</option>
+                                    <option value={5.0}>Doutorado (5.0x VR)</option>
                                 </select>
                             </div>
                             <div>
                                 <label className={styles.label}>Treinamento (Base: VR)</label>
                                 <select className={styles.input} value={state.aqTreinoVR} onChange={e => update('aqTreinoVR', Number(e.target.value))}>
                                     <option value={0}>Nenhum</option>
-                                    <option value={1}>1% (120h)</option>
-                                    <option value={2}>2% (240h)</option>
-                                    <option value={3}>3% (360h)</option>
+                                    <option value={0.2}>120h (0.2x VR)</option>
+                                    <option value={0.4}>240h (0.4x VR)</option>
+                                    <option value={0.6}>360h (0.6x VR)</option>
                                 </select>
                             </div>
                         </div>
@@ -93,10 +93,9 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                                     <label className={styles.label}>Títulos %</label>
                                     <select className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
                                         <option value={0}>0%</option>
-                                        <option value={5}>5% (Pós)</option>
-                                        <option value={7.5}>7.5% (Mest)</option>
-                                        <option value={10}>10% (Dout)</option>
-                                        <option value={12.5}>12.5% (Dout+)</option>
+                                        <option value={0.075}>7.5% (Especialização)</option>
+                                        <option value={0.10}>10% (Mestrado)</option>
+                                        <option value={0.125}>12.5% (Doutorado)</option>
                                     </select>
                                 </div>
                                 <div>

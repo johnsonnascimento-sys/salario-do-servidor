@@ -164,7 +164,7 @@ export interface CalculatorState {
   // Diarias
   diariasQtd: number;
   diariasMeiaQtd: number;
-  diariasEmbarque: 'nao' | 'metade' | 'completo';
+  diariasEmbarque: 'nenhum' | 'metade' | 'completo';
   diariasMotivo: string;
   diariasDescontarAlimentacao: boolean;
   diariasDescontarTransporte: boolean;
@@ -283,7 +283,7 @@ export const INITIAL_STATE: CalculatorState = {
 
   diariasQtd: 0,
   diariasMeiaQtd: 0,
-  diariasEmbarque: 'nao',
+  diariasEmbarque: 'nenhum',
   diariasMotivo: '',
   diariasDescontarAlimentacao: true,
   diariasDescontarTransporte: true,

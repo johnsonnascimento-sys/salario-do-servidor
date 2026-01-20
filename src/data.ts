@@ -11,8 +11,24 @@ export const BASES_2025: { salario: SalaryTable; funcoes: FuncoesTable } = {
   }
 };
 
-// CJ1 Integral Base for calculating VR dynamically (Lei 15.292)
+// CJ1 Integral Base for calculating VR dynamically (Lei 15.292/2025)
+// VR = CJ1_INTEGRAL_BASE * 0.065
 export const CJ1_INTEGRAL_BASE = 10990.74;
+
+// Multiplicadores do Novo AQ (Lei 15.292/2025)
+// VR = CJ1_INTEGRAL_BASE * 0.065 = R$ 714,39
+export const AQ_MULTIPLIERS = {
+  // Títulos (com regra de absorção - pega o maior)
+  DOUTORADO: 5.0,      // 5.0 x VR = R$ 3.571,95
+  MESTRADO: 3.5,       // 3.5 x VR = R$ 2.500,37
+  ESPECIALIZACAO: 1.0, // 1.0 x VR = R$ 714,39
+  NENHUM: 0,
+
+  // Treinamento (acumulável, não absorvido)
+  TREINAMENTO_120H: 0.2,  // 0.2 x VR = R$ 142,88
+  TREINAMENTO_240H: 0.4,  // 0.4 x VR = R$ 285,76
+  TREINAMENTO_360H: 0.6,  // 0.6 x VR = R$ 428,63
+};
 
 export const HISTORICO_PSS: Record<string, TaxTable> = {
   '2026': {

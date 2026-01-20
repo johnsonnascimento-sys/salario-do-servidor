@@ -13,6 +13,8 @@ import { ExtraRubrics } from '../components/Calculator/ExtraRubrics';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
 import DonationModal from '../components/DonationModal';
+import { SeasonalIncomeSection } from '../components/Calculator/SeasonalIncomeSection';
+import { IndemnitySection } from '../components/Calculator/IndemnitySection';
 
 export default function Calculator() {
     const {
@@ -85,11 +87,21 @@ export default function Calculator() {
                         updateSubstDays={updateSubstDays}
                         styles={styles}
                     />
+                    <SeasonalIncomeSection
+                        state={state}
+                        update={update}
+                        styles={styles}
+                    />
                 </div>
 
                 {/* Column 2: Benefits & Deductions */}
                 <div className="space-y-8">
                     <DeductionsSection
+                        state={state}
+                        update={update}
+                        styles={styles}
+                    />
+                    <IndemnitySection
                         state={state}
                         update={update}
                         styles={styles}
