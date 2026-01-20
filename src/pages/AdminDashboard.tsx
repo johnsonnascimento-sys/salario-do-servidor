@@ -3,12 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Court, getAllCourts, updateCourt, getAvailablePowers, getAvailableSpheres } from '../services/courtService';
 import { getPixKey, updatePixKey, getPixQrCode, uploadPixQrCode } from '../services/settingsService';
-import { LogOut, Layout, Edit, Save, Plus, X, Eye, EyeOff, Settings, Heart, Check, Upload, Image } from 'lucide-react';
+import { LogOut, Layout, Edit, Save, Plus, X, Eye, EyeOff, Settings, Heart, Check, Upload, Image, Building2 } from 'lucide-react';
+import AgencyList from './Admin/Agencies/AgencyList';
 
 export default function AdminDashboard() {
     const { signOut } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'regimes' | 'courts' | 'settings'>('regimes');
+    const [activeTab, setActiveTab] = useState<'regimes' | 'courts' | 'settings' | 'agencies'>('regimes');
     const [courts, setCourts] = useState<Court[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -168,7 +169,16 @@ export default function AdminDashboard() {
                     >
                         <Settings className="h-4 w-4" /> Configurações
                     </button>
+                    <button
+                        onClick={() => setActiveTab('agencies')}
+                        className={`pb-3 px-1 text-sm font-medium border-b-2 transition flex items-center gap-1 ${activeTab === 'agencies' ? 'border-indigo-500 text-indigo-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                    >
+                        <Building2 className="h-4 w-4" /> Órgãos (Novo)
+                    </button>
                 </div>
+
+                {/* Agencies Content */}
+                {activeTab === 'agencies' && <AgencyList />}
 
                 {/* Content */}
                 {loading ? (

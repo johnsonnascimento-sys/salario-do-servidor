@@ -1,0 +1,52 @@
+
+import React from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { CalculatorState, CourtConfig } from '../../types';
+
+interface CalculatorHeaderProps {
+    courtConfig: CourtConfig | null;
+    state: CalculatorState;
+    update: (field: keyof CalculatorState, value: any) => void;
+    navigate: (path: string) => void;
+    styles: any;
+    setState: React.Dispatch<React.SetStateAction<CalculatorState>>;
+    agencyName?: string;
+}
+
+export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ courtConfig, state, update, navigate, styles, setState, agencyName }) => {
+    return (
+        <div className="md:flex md:items-center md:justify-between mb-8">
+            <div className="flex items-center gap-4 mb-4 md:mb-0">
+                <button onClick={() => navigate('/')} className="bg-white dark:bg-slate-800 p-2 rounded-xl text-slate-500 hover:text-secondary shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                    <ArrowLeft className="w-6 h-6" />
+                </button>
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {agencyName || (courtConfig ? courtConfig.name : 'Simulador')}
+                    </h1>
+                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider">
+                        <span className="w-2 h-2 rounded-full bg-secondary"></span>
+                        {state.periodo === 0 ? 'Tabelas 2025' : 'Projeção Futura'}
+                    </div>
+                </div>
+            </div>
+
+            <div className="w-full md:w-96">
+                <input
+                    type="text"
+                    placeholder="Nome para impressão (Opcional)"
+                    className={`${styles.input} w-full`}
+                    value={state.nome}
+                    onChange={e => {
+                        const val = e.target.value;
+                        if (val === 'Johnson*') {
+                            setState(prev => ({ ...prev, nome: val, planoSaude: 928.52, emprestimos: 3761.63 }));
+                        } else {
+                            update('nome', val);
+                        }
+                    }}
+                />
+            </div>
+        </div>
+    );
+};

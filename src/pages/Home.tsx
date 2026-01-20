@@ -5,6 +5,7 @@ import {
   Menu, X, ChevronRight, Lock, Building2, ChevronLeft, Sun, Moon, Heart, Mail, MapPin
 } from 'lucide-react';
 import logo from '../assets/logo.png';
+import AdPlaceholder from '../components/AdPlaceholder';
 
 // Definição dos tipos para evitar erro de TypeScript
 type SimulatorNode = {

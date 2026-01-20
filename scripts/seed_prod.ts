@@ -84,12 +84,30 @@ const MENUS = {
     ]
 }
 
-// Supabase client uses HTTP unless we use Postgres Client. 
-// For seed, it's easier to use Supabase Client if we have URL/KEY, but here we only have Connection String easily.
-// Let's use PG Client for seeding too, it's safer given we have the connection string.
+// Manually parse .env.local
+const envPath = path.resolve(process.cwd(), '.env.local');
+let envVars: Record<string, string> = {};
+if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    envVars = envContent.split('\n').reduce((acc, line) => {
+        const match = line.match(/^([^#=]+)=(.*)$/);
+        if (match) {
+            let value = match[2].trim();
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+            }
+            acc[match[1].trim()] = value;
+        }
+        return acc;
+    }, {} as Record<string, string>);
+}
 
-const RAW_CONNECTION_STRING = "postgresql://postgres:[qgJOlmk3pEBr3XXo]@db.govzmfpwrbsmqgzjtfmt.supabase.co:5432/postgres";
-const connectionString = RAW_CONNECTION_STRING.replace(/:\[(.*?)\]@/, ':$1@');
+const connectionString = envVars.DATABASE_URL_PROD || process.env.DATABASE_URL_PROD;
+
+if (!connectionString) {
+    console.error('DATABASE_URL_PROD not found in .env.local or process.env');
+    process.exit(1);
+}
 
 const client = new pg.Pool({
     connectionString: connectionString,

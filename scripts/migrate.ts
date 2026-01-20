@@ -5,19 +5,32 @@ import path from 'path';
 
 const { Client } = pg;
 
-// Connection String provided by user
-// Warning: If password contains special chars it might need encoding, but usually works.
-// Detailed parsing might be needed if the brackets are literal.
-// User inputs: "postgresql://postgres:[TYeDN3JhvglQsQtu]@db.fdzuykiwqzzmlzjtnbfi.supabase.co:5432/postgres"
+// Manually parse .env.local
+const envPath = path.resolve(process.cwd(), '.env.local');
+let envVars: Record<string, string> = {};
+if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    envVars = envContent.split('\n').reduce((acc, line) => {
+        const match = line.match(/^([^#=]+)=(.*)$/);
+        if (match) {
+            let value = match[2].trim();
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+            }
+            acc[match[1].trim()] = value;
+        }
+        return acc;
+    }, {} as Record<string, string>);
+}
 
-const RAW_CONNECTION_STRING = "postgresql://postgres:[TYeDN3JhvglQsQtu]@db.fdzuykiwqzzmlzjtnbfi.supabase.co:5432/postgres";
+const connectionString = envVars.DATABASE_URL || process.env.DATABASE_URL;
 
-// Fix: Remove brackets from password if present.
-// Regex to capture password between : and @
-const connectionString = RAW_CONNECTION_STRING.replace(/:\[(.*?)\]@/, ':$1@');
+if (!connectionString) {
+    console.error('DATABASE_URL not found in .env.local or process.env');
+    process.exit(1);
+}
 
 console.log('Connecting to database...');
-// console.log('Using connection string:', connectionString); // Don't log credentials
 
 const client = new Client({
     connectionString: connectionString,

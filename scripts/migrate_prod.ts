@@ -5,12 +5,30 @@ import path from 'path';
 
 const { Client } = pg;
 
-// User inputs: "postgresql://postgres:[qgJOlmk3pEBr3XXo]@db.govzmfpwrbsmqgzjtfmt.supabase.co:5432/postgres"
+// Manually parse .env.local
+const envPath = path.resolve(process.cwd(), '.env.local');
+let envVars: Record<string, string> = {};
+if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    envVars = envContent.split('\n').reduce((acc, line) => {
+        const match = line.match(/^([^#=]+)=(.*)$/);
+        if (match) {
+            let value = match[2].trim();
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+            }
+            acc[match[1].trim()] = value;
+        }
+        return acc;
+    }, {} as Record<string, string>);
+}
 
-const RAW_CONNECTION_STRING = "postgresql://postgres:[qgJOlmk3pEBr3XXo]@db.govzmfpwrbsmqgzjtfmt.supabase.co:5432/postgres";
+const connectionString = envVars.DATABASE_URL_PROD || process.env.DATABASE_URL_PROD;
 
-// Remove brackets from password if present.
-const connectionString = RAW_CONNECTION_STRING.replace(/:\[(.*?)\]@/, ':$1@');
+if (!connectionString) {
+    console.error('DATABASE_URL_PROD not found in .env.local or process.env');
+    process.exit(1);
+}
 
 const client = new Client({
     connectionString: connectionString,
