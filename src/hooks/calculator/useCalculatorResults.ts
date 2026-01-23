@@ -17,52 +17,57 @@ export const useCalculatorResults = (
     state: CalculatorState,
     setState: React.Dispatch<React.SetStateAction<CalculatorState>>,
     agencyService: JmuService | null,
-    courtConfig: CourtConfig | null
+    courtConfig: CourtConfig | null,
+    agency: { name: string; type: string; slug: string } | null
 ) => {
     // Recalculate whenever inputs change
     useEffect(() => {
         if (!agencyService) return;
 
-        const params = mapStateToJmuParams(state);
-        const result = agencyService.calculateTotal(params);
+        // Wrap in async IIFE to await the calculation
+        (async () => {
+            const orgSlug = agency?.slug || 'jmu';
+            const params = mapStateToJmuParams(state, orgSlug);
+            const result = await agencyService.calculateTotal(params);
 
-        setState(prev => {
-            const bd = result.breakdown;
-            return {
-                ...prev,
-                vencimento: bd.vencimento || 0,
-                gaj: bd.gaj || 0,
-                aqTituloValor: bd.aqTitulo || 0,
-                aqTreinoValor: bd.aqTreino || 0,
-                gratEspecificaValor: bd.gratEspecifica || 0,
-                pssMensal: bd.pss || 0,
-                valFunpresp: bd.funpresp || 0,
-                irMensal: bd.irrf || 0,
-                abonoPermanencia: bd.abono || 0,
-                auxAlimentacao: bd.auxAlimentacao || 0,
-                auxPreEscolarValor: bd.auxPreEscolar || 0,
-                auxTransporteValor: bd.auxTransporte || 0,
-                auxTransporteDesc: bd.auxTransporteDebito || 0,
-                ferias1_3: bd.feriasConstitucional || 0,
-                irFerias: bd.impostoFerias || 0,
-                gratNatalinaTotal: bd.gratificacaoNatalina || 0,
-                abonoPerm13: bd.abono13 || 0,
-                pss13: bd.pss13 || 0,
-                ir13: bd.imposto13 || 0,
-                heVal50: bd.heVal50 || 0,
-                heVal100: bd.heVal100 || 0,
-                heTotal: bd.heTotal || 0,
-                substTotal: bd.substituicao || 0,
-                diariasValorTotal: bd.diariasValor || 0,
-                diariasBruto: bd.diariasBruto || 0,
-                diariasDescAlim: bd.diariasDeducoes || 0,
-                diariasDescTransp: 0,
-                licencaValor: bd.licencaCompensatoria || 0,
-                totalBruto: result.netSalary + result.totalDeductions,
-                totalDescontos: result.totalDeductions,
-                liquido: result.netSalary,
-            };
-        });
+            setState(prev => {
+                const bd = result.breakdown;
+                return {
+                    ...prev,
+                    vencimento: bd.vencimento || 0,
+                    gaj: bd.gaj || 0,
+                    aqTituloValor: bd.aqTitulo || 0,
+                    aqTreinoValor: bd.aqTreino || 0,
+                    gratEspecificaValor: bd.gratEspecifica || 0,
+                    pssMensal: bd.pss || 0,
+                    valFunpresp: bd.funpresp || 0,
+                    irMensal: bd.irrf || 0,
+                    abonoPermanencia: bd.abono || 0,
+                    auxAlimentacao: bd.auxAlimentacao || 0,
+                    auxPreEscolarValor: bd.auxPreEscolar || 0,
+                    auxTransporteValor: bd.auxTransporte || 0,
+                    auxTransporteDesc: bd.auxTransporteDebito || 0,
+                    ferias1_3: bd.feriasConstitucional || 0,
+                    irFerias: bd.impostoFerias || 0,
+                    gratNatalinaTotal: bd.gratificacaoNatalina || 0,
+                    abonoPerm13: bd.abono13 || 0,
+                    pss13: bd.pss13 || 0,
+                    ir13: bd.imposto13 || 0,
+                    heVal50: bd.heVal50 || 0,
+                    heVal100: bd.heVal100 || 0,
+                    heTotal: bd.heTotal || 0,
+                    substTotal: bd.substituicao || 0,
+                    diariasValorTotal: bd.diariasValor || 0,
+                    diariasBruto: bd.diariasBruto || 0,
+                    diariasDescAlim: bd.diariasDeducoes || 0,
+                    diariasDescTransp: 0,
+                    licencaValor: bd.licencaCompensatoria || 0,
+                    totalBruto: result.netSalary + result.totalDeductions,
+                    totalDescontos: result.totalDeductions,
+                    liquido: result.netSalary,
+                };
+            });
+        })();
     }, [
         agencyService,
         state.periodo, state.cargo, state.padrao, state.funcao,

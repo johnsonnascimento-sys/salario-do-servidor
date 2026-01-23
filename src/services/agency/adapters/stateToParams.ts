@@ -1,19 +1,23 @@
 import { CalculatorState } from '../../../types';
-import { IJmuCalculationParams } from '../implementations/JmuService';
+import { IJmuCalculationParams } from '../implementations/jmu/types';
 
 /**
  * Adaptador: Converte estado React para parâmetros do JmuService
  * 
  * @param state - Estado completo da calculadora React
+ * @param orgSlug - Slug da agência (pju, jmu, stm)
  * @returns Parâmetros formatados para o JmuService
  */
-export function mapStateToJmuParams(state: CalculatorState): IJmuCalculationParams {
+export function mapStateToJmuParams(state: CalculatorState, orgSlug: string = 'jmu'): IJmuCalculationParams {
     return {
         // Base (ICalculationParams)
         grossSalary: 0, // Ignorado pelo JMU (calcula de cargo/padrao)
         dependents: state.dependentes,
         discounts: state.emprestimos + state.planoSaude + state.pensao,
         otherDeductions: 0,
+
+        // Agency Slug
+        orgSlug: orgSlug,
 
         // Core Params
         periodo: state.periodo,

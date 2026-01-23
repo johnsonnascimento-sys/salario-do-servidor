@@ -9,9 +9,11 @@
  * - Abono sobre 13º
  * 
  * Baseado em LEGACY_FORMULAS.md seção 8 (L227-265, L319-331)
+ * 
+ * REFATORADO: Agora usa ConfigService para buscar dados do banco
  */
 
-import { DEDUCAO_DEP, HISTORICO_IR, HISTORICO_PSS } from '../../../../../data';
+import { configService } from '../../../../config';
 import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -28,8 +30,9 @@ export interface ThirteenthResult {
 /**
  * Calcula 13º Salário / Gratificação Natalina
  */
-export function calculateThirteenth(params: IJmuCalculationParams): ThirteenthResult {
-    const { salario, funcoes, valorVR } = getDataForPeriod(params.periodo);
+export async function calculateThirteenth(params: IJmuCalculationParams): Promise<ThirteenthResult> {
+    const config = await configService.getEffectiveConfig(params.orgSlug);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
     const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
@@ -68,11 +71,19 @@ export function calculateThirteenth(params: IJmuCalculationParams): ThirteenthRe
         base13PSS_Estimada -= aqTreinoVal;
         if (!params.pssSobreFC) base13PSS_Estimada -= funcaoValor;
 
-        const pssTable = HISTORICO_PSS[params.tabelaPSS];
-        const teto = pssTable.teto_rgps;
+        const pssTableConfig = config.pss_tables?.[params.tabelaPSS];
+        const pssTable = pssTableConfig ? {
+            teto_rgps: pssTableConfig.ceiling,
+            faixas: pssTableConfig.rates.map(rate => ({
+                min: rate.min,
+                max: rate.max,
+                rate: rate.rate
+            }))
+        } : null;
+        const teto = pssTable?.teto_rgps || 0;
         const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
-        if (params.recebeAbono) {
+        if (params.recebeAbono && pssTable) {
             if (usaTeto) {
                 const baseLimitada = Math.min(base13PSS_Estimada, teto);
                 abono13 = calculatePss(baseLimitada, pssTable);
@@ -88,10 +99,10 @@ export function calculateThirteenth(params: IJmuCalculationParams): ThirteenthRe
         if (!params.pssSobreFC) baseParaPSS13 -= funcaoValor;
         baseParaPSS13 -= aqTreinoVal;
 
-        if (usaTeto) {
+        if (usaTeto && pssTable) {
             const baseLimitada13 = Math.min(baseParaPSS13, teto);
             pss13 = calculatePss(baseLimitada13, pssTable);
-        } else {
+        } else if (pssTable) {
             pss13 = calculatePss(baseParaPSS13, pssTable);
         }
 
@@ -101,8 +112,8 @@ export function calculateThirteenth(params: IJmuCalculationParams): ThirteenthRe
             ? baseFunpresp * params.funprespAliq + (baseFunpresp * (params.funprespFacul / 100))
             : 0;
 
-        const baseIR13 = gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * DEDUCAO_DEP);
-        const deductionVal = HISTORICO_IR[params.tabelaIR] || 896.00;
+        const baseIR13 = gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * (config.dependent_deduction || 0));
+        const deductionVal = config.ir_deduction?.[params.tabelaIR]?.deduction || 896.00;
         ir13 = calculateIrrf(baseIR13, 0.275, deductionVal);
     }
 

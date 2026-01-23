@@ -7,9 +7,11 @@
  * - Total de Hora Extra
  * 
  * Baseado em LEGACY_FORMULAS.md seção 5 (L147-182)
+ * 
+ * REFATORADO: Agora usa ConfigService
  */
 
-import { HISTORICO_PSS } from '../../../../../data';
+import { configService } from '../../../../config';
 import { calculatePss } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -23,8 +25,9 @@ export interface OvertimeResult {
 /**
  * Calcula Hora Extra (50% e 100%)
  */
-export function calculateOvertime(params: IJmuCalculationParams): OvertimeResult {
-    const { salario, funcoes, valorVR } = getDataForPeriod(params.periodo);
+export async function calculateOvertime(params: IJmuCalculationParams): Promise<OvertimeResult> {
+    const config = await configService.getEffectiveConfig(params.orgSlug);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
     const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
@@ -56,15 +59,25 @@ export function calculateOvertime(params: IJmuCalculationParams): OvertimeResult
         if (!params.pssSobreFC) baseForPSS -= funcaoValor;
         if (!params.incidirPSSGrat) baseForPSS -= gratVal;
 
-        const pssTable = HISTORICO_PSS[params.tabelaPSS];
-        const teto = pssTable.teto_rgps;
+        const pssTableConfig = config.pss_tables?.[params.tabelaPSS];
+        const pssTable = pssTableConfig ? {
+            teto_rgps: pssTableConfig.ceiling,
+            faixas: pssTableConfig.rates.map(rate => ({
+                min: rate.min,
+                max: rate.max,
+                rate: rate.rate
+            }))
+        } : null;
+        const teto = pssTable?.teto_rgps || 0;
         const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
         if (usaTeto) {
             baseForPSS = Math.min(baseForPSS, teto);
         }
-        const abonoEstimado = calculatePss(baseForPSS, pssTable);
-        baseHE += abonoEstimado;
+        if (pssTable) {
+            const abonoEstimado = calculatePss(baseForPSS, pssTable);
+            baseHE += abonoEstimado;
+        }
     }
 
     // Valor da hora = Base / 175

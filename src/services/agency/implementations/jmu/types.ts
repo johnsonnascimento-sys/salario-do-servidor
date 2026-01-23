@@ -7,6 +7,7 @@
 import { ICalculationParams } from '../../types';
 
 export interface IJmuCalculationParams extends ICalculationParams {
+    orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
     periodo: number;
     cargo: 'analista' | 'tec';
     padrao: string;

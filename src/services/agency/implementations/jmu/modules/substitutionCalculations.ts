@@ -13,11 +13,9 @@ import { getDataForPeriod } from './baseCalculations';
 /**
  * Calcula Substituição de Função
  */
-export function calculateSubstitution(params: IJmuCalculationParams): number {
-    const { funcoes } = getDataForPeriod(params.periodo);
+export async function calculateSubstitution(params: IJmuCalculationParams): Promise<number> {
+    const { funcoes, salario } = await getDataForPeriod(params.periodo, params.orgSlug);
     const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
-
-    const { salario } = getDataForPeriod(params.periodo);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
 
     let gratVal = 0;

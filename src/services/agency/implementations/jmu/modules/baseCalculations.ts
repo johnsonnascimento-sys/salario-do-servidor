@@ -8,42 +8,57 @@
  * - AQ (Adicional de Qualificação) - Sistema antigo e novo
  * - Gratificações Específicas (GAE/GAS)
  * - VPNI e ATS
+ * 
+ * REFATORADO: Agora usa ConfigService para buscar dados do banco
+ * ao invés de valores hardcoded.
  */
 
-import { BASES_2025, CJ1_INTEGRAL_BASE } from '../../../../../data';
+import { configService, type EffectiveConfig } from '../../../../config';
 import { calcReajuste } from '../../../../../utils/calculations';
 import { IJmuCalculationParams } from '../types';
 
 /**
  * Obtém dados ajustados para o período (bases salariais e VR)
+ * Busca do banco de dados via ConfigService
  */
-export function getDataForPeriod(periodo: number) {
+export async function getDataForPeriod(periodo: number, orgSlug: string = 'jmu') {
+    // Buscar configuração efetiva do banco
+    const config = await configService.getEffectiveConfig(orgSlug);
+
     const steps = periodo >= 2 ? periodo - 1 : 0;
 
-    // Deep copy and adjust bases
-    const sal = JSON.parse(JSON.stringify(BASES_2025.salario));
-    for (let cargo in sal) {
-        for (let padrao in sal[cargo]) {
-            sal[cargo][padrao] = calcReajuste(sal[cargo][padrao], steps);
-        }
+    // Deep copy and adjust bases from config
+    const sal = JSON.parse(JSON.stringify(config.salary_bases?.analista || {}));
+    const salTecnico = JSON.parse(JSON.stringify(config.salary_bases?.tecnico || {}));
+
+    // Aplicar reajustes
+    const salario: any = { analista: {}, tecnico: {} };
+    for (let padrao in sal) {
+        salario.analista[padrao] = calcReajuste(sal[padrao], steps);
+    }
+    for (let padrao in salTecnico) {
+        salario.tecnico[padrao] = calcReajuste(salTecnico[padrao], steps);
     }
 
-    const func = JSON.parse(JSON.stringify(BASES_2025.funcoes));
+    const func = JSON.parse(JSON.stringify(config.salary_bases?.funcoes || {}));
+    const funcoes: any = {};
     for (let key in func) {
-        func[key] = calcReajuste(func[key], steps);
+        funcoes[key] = calcReajuste(func[key], steps);
     }
 
-    const cj1Adjusted = calcReajuste(CJ1_INTEGRAL_BASE, steps);
+    // CJ1 base do banco
+    const cj1Base = config.cj1_integral_base || 0;
+    const cj1Adjusted = calcReajuste(cj1Base, steps);
     const valorVR = Math.round(cj1Adjusted * 0.065 * 100) / 100;
 
-    return { salario: sal, funcoes: func, valorVR };
+    return { salario, funcoes, valorVR };
 }
 
 /**
  * Calcula a remuneração base total
  */
-export function calculateBase(params: IJmuCalculationParams): number {
-    const { salario, funcoes, valorVR } = getDataForPeriod(params.periodo);
+export async function calculateBase(params: IJmuCalculationParams): Promise<number> {
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40; // JMU Rule: GAJ is 140%
@@ -92,8 +107,8 @@ export function calculateBase(params: IJmuCalculationParams): number {
  * Calcula componentes individuais da base para breakdown detalhado
  * IMPORTANTE: Usado para mapear de volta para o React state
  */
-export function calculateBaseComponents(params: IJmuCalculationParams) {
-    const { salario, funcoes, valorVR } = getDataForPeriod(params.periodo);
+export async function calculateBaseComponents(params: IJmuCalculationParams) {
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;

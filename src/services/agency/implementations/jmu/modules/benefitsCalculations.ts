@@ -20,7 +20,7 @@ export interface BenefitsResult {
 /**
  * Calcula benefícios (auxílios)
  */
-export function calculateBenefits(params: IJmuCalculationParams): BenefitsResult {
+export async function calculateBenefits(params: IJmuCalculationParams): Promise<BenefitsResult> {
     // Valores de benefícios variam conforme o período
     // Período 0 (2025): valores antigos
     // Período >= 1 (2026+): valores novos
@@ -46,7 +46,7 @@ export function calculateBenefits(params: IJmuCalculationParams): BenefitsResult
         auxTranspCred = params.auxTransporteGasto;
 
         // Debit logic depends on base salary
-        const { salario, funcoes } = getDataForPeriod(params.periodo);
+        const { salario, funcoes } = await getDataForPeriod(params.periodo, params.orgSlug);
         const baseVenc = salario[params.cargo]?.[params.padrao] || 0;
         const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
 

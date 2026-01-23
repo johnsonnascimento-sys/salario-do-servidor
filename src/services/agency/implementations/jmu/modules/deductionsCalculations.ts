@@ -7,9 +7,11 @@
  * - Funpresp (Fundação de Previdência Complementar)
  * 
  * Baseado nas regras de tributação do PJU
+ * 
+ * REFATORADO: Agora usa ConfigService para buscar tabelas do banco
  */
 
-import { DEDUCAO_DEP, HISTORICO_IR, HISTORICO_PSS } from '../../../../../data';
+import { configService } from '../../../../config';
 import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -23,9 +25,13 @@ export interface DeductionsResult {
 
 /**
  * Calcula Deduções (PSS, IRRF, Funpresp)
+ * Busca tabelas de PSS e IR do banco via ConfigService
  */
-export function calculateDeductions(grossValue: number, params: IJmuCalculationParams): DeductionsResult {
-    const { salario, funcoes, valorVR } = getDataForPeriod(params.periodo);
+export async function calculateDeductions(grossValue: number, params: IJmuCalculationParams): Promise<DeductionsResult> {
+    // Buscar configuração do banco
+    const config = await configService.getEffectiveConfig(params.orgSlug);
+
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
 
@@ -46,18 +52,30 @@ export function calculateDeductions(grossValue: number, params: IJmuCalculationP
     if (params.incidirPSSGrat) basePSS += gratVal;
     if (params.pssSobreFC) basePSS += funcaoValor;
 
-    const pssTable = HISTORICO_PSS[params.tabelaPSS];
-    const teto = pssTable.teto_rgps;
+    // Buscar tabela PSS do banco
+    const pssTableConfig = config.pss_tables?.[params.tabelaPSS];
+
+    // Adaptar formato do banco para o formato esperado por calculatePss
+    const pssTable = pssTableConfig ? {
+        teto_rgps: pssTableConfig.ceiling,
+        faixas: pssTableConfig.rates.map(rate => ({
+            min: rate.min,
+            max: rate.max,
+            aliq: rate.rate
+        }))
+    } : null;
+
+    const teto = pssTable?.teto_rgps || 0;
     const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
     let pssMensal = 0;
     let baseFunpresp = 0;
 
-    if (usaTeto) {
+    if (usaTeto && pssTable) {
         const baseLimitada = Math.min(basePSS, teto);
         pssMensal = calculatePss(baseLimitada, pssTable);
         baseFunpresp = Math.max(0, basePSS - teto);
-    } else {
+    } else if (pssTable) {
         pssMensal = calculatePss(basePSS, pssTable);
     }
 
@@ -79,9 +97,11 @@ export function calculateDeductions(grossValue: number, params: IJmuCalculationP
     let totalTrib = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
         (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0) + abonoPerm;
 
-    const baseIR = totalTrib - pssMensal - valFunpresp - (params.dependents * DEDUCAO_DEP);
+    // Buscar dedução de dependente e tabela IR do banco
+    const deducaoDep = config.dependent_deduction || 0;
+    const baseIR = totalTrib - pssMensal - valFunpresp - (params.dependents * deducaoDep);
 
-    const deductionVal = HISTORICO_IR[params.tabelaIR] || 896.00;
+    const deductionVal = config.ir_deduction?.[params.tabelaIR]?.deduction || 896.00;
     const irMensal = calculateIrrf(baseIR, 0.275, deductionVal);
 
     return {

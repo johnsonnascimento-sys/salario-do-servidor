@@ -47,25 +47,27 @@ export class JmuService implements IAgencyCalculator {
      * 3. Rendimentos variáveis (férias, 13º, HE, substituição, diárias, licença)
      * 4. Deduções (PSS, IRRF, Funpresp)
      * 5. Total líquido
+     * 
+     * REFATORADO: Agora é async para suportar ConfigService
      */
-    calculateTotal(params: IJmuCalculationParams): ICalculationResult {
-        // 1. Calcular Base Salarial
-        const base = calculateBase(params);
-        const baseComponents = calculateBaseComponents(params);
+    async calculateTotal(params: IJmuCalculationParams): Promise<ICalculationResult> {
+        // 1. Calcular Base Salarial (agora async)
+        const base = await calculateBase(params);
+        const baseComponents = await calculateBaseComponents(params);
 
         // 2. Calcular Benefícios
-        const benefits = calculateBenefits(params);
+        const benefits = await calculateBenefits(params);
 
-        // 3. Calcular Rendimentos Variáveis
-        const vacation = calculateVacation(params);
-        const thirteenth = calculateThirteenth(params);
-        const overtime = calculateOvertime(params);
-        const substitution = calculateSubstitution(params);
+        // 3. Calcular Rendimentos Variáveis (alguns agora async)
+        const vacation = await calculateVacation(params);
+        const thirteenth = await calculateThirteenth(params);
+        const overtime = await calculateOvertime(params);
+        const substitution = await calculateSubstitution(params);
         const dailies = calculateDailies(params);
-        const compensatoryLeave = calculateCompensatoryLeave(params);
+        const compensatoryLeave = await calculateCompensatoryLeave(params);
 
-        // 4. Calcular Deduções
-        const deductions = calculateDeductions(base, params);
+        // 4. Calcular Deduções (agora async)
+        const deductions = await calculateDeductions(base, params);
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
 
         // 5. Calcular Totais

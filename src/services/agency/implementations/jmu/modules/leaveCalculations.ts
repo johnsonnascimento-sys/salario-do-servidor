@@ -6,9 +6,11 @@
  * - Abono sobre licença (opcional)
  * 
  * Baseado em LEGACY_FORMULAS.md seção 9 (L314-337)
+ * 
+ * REFATORADO: Agora usa ConfigService
  */
 
-import { HISTORICO_PSS } from '../../../../../data';
+import { configService } from '../../../../config';
 import { calculatePss } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -16,8 +18,9 @@ import { getDataForPeriod } from './baseCalculations';
 /**
  * Calcula Licença Compensatória
  */
-export function calculateCompensatoryLeave(params: IJmuCalculationParams): number {
-    const { salario, funcoes, valorVR } = getDataForPeriod(params.periodo);
+export async function calculateCompensatoryLeave(params: IJmuCalculationParams): Promise<number> {
+    const config = await configService.getEffectiveConfig(params.orgSlug);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
 
@@ -53,8 +56,18 @@ export function calculateCompensatoryLeave(params: IJmuCalculationParams): numbe
     // Abono sobre licença (opcional)
     let abonoEstimadoLicenca = 0;
     if (params.incluirAbonoLicenca) {
-        const pssTable = HISTORICO_PSS[params.tabelaPSS];
-        abonoEstimadoLicenca = calculatePss(baseLicencaTotal, pssTable);
+        const pssTableConfig = config.pss_tables?.[params.tabelaPSS];
+        const pssTable = pssTableConfig ? {
+            teto_rgps: pssTableConfig.ceiling,
+            faixas: pssTableConfig.rates.map(rate => ({
+                min: rate.min,
+                max: rate.max,
+                rate: rate.rate
+            }))
+        } : null;
+        if (pssTable) {
+            abonoEstimadoLicenca = calculatePss(baseLicencaTotal, pssTable);
+        }
     }
 
     // Valor da Licença = (Base + Abono) / 30 * Dias

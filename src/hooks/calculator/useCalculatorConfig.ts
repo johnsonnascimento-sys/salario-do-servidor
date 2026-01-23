@@ -51,7 +51,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                 setAgency(data);
 
                 // Instantiate Service
-                if (data.slug === 'stm' || data.slug === 'jmu') {
+                if (data.slug === 'stm' || data.slug === 'jmu' || data.slug === 'pju') {
                     setAgencyService(new JmuService());
                 } else {
                     console.warn("Service not implemented for slug:", slug);

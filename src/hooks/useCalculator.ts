@@ -54,7 +54,8 @@ export const useCalculator = () => {
         state,
         setState,
         agencyService,
-        courtConfig
+        courtConfig,
+        agency
     );
 
     // Wrapper para handleDonationComplete com parâmetros corretos
