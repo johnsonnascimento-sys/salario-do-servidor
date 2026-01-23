@@ -29,12 +29,15 @@ export interface ICalculationResult {
 
 /**
  * Main contract for Agency-specific calculator implementations.
+ * 
+ * REFATORADO: Métodos agora suportam operações assíncronas
+ * para buscar configurações do banco de dados.
  */
 export interface IAgencyCalculator {
     /**
      * Calculates the base salary based on input tables/params.
      */
-    calculateBase(params: ICalculationParams): number;
+    calculateBase(params: ICalculationParams): number | Promise<number>;
 
     /**
      * Calculates deductions (Tax, Pension, Custom).
@@ -50,6 +53,7 @@ export interface IAgencyCalculator {
 
     /**
      * Orchestrates the full calculation flow.
+     * REFATORADO: Agora retorna Promise para suportar ConfigService
      */
-    calculateTotal(params: ICalculationParams): ICalculationResult;
+    calculateTotal(params: ICalculationParams): ICalculationResult | Promise<ICalculationResult>;
 }

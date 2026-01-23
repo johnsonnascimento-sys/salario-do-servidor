@@ -1,3 +1,29 @@
+/**
+ * @deprecated ESTE ARQUIVO ESTÁ SENDO DESCONTINUADO
+ * 
+ * ⚠️ ATENÇÃO: Não use mais este arquivo para novos desenvolvimentos!
+ * 
+ * Os dados deste arquivo foram migrados para o banco de dados e devem ser
+ * acessados via ConfigService:
+ * 
+ * ```typescript
+ * import { configService } from './services/config';
+ * 
+ * const config = await configService.getEffectiveConfig('jmu');
+ * const bases = config.salary_bases;
+ * const pssTable = config.pss_tables['2025'];
+ * ```
+ * 
+ * Hierarquia de configuração:
+ * - global_config: Regras federais (PSS, IR, deduções)
+ * - power_config: Regras do poder (PJU - bases salariais, gratificações)
+ * - org_config: Regras do órgão (JMU - configurações específicas)
+ * 
+ * Migração SQL: migrations/002_migrate_hardcoded_data.sql
+ * 
+ * Este arquivo será removido em versões futuras.
+ */
+
 import { SalaryTable, FuncoesTable, TaxTable } from './types';
 
 export const BASES_2025: { salario: SalaryTable; funcoes: FuncoesTable } = {
