@@ -105,6 +105,8 @@ export class ConfigService {
             throw new Error(`Falha ao carregar configuração do poder ${powerName}`);
         }
 
+
+
         // Transformar array de registros em objeto estruturado
         const config: Partial<PowerConfig> = {};
 

@@ -23,6 +23,7 @@ import { IJmuCalculationParams } from '../types';
  */
 export async function getDataForPeriod(periodo: number, orgSlug: string = 'jmu') {
     // Buscar configuração efetiva do banco
+    // Buscar configuração efetiva do banco
     const config = await configService.getEffectiveConfig(orgSlug);
 
     const steps = periodo >= 2 ? periodo - 1 : 0;

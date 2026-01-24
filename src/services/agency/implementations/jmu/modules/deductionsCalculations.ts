@@ -61,7 +61,7 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
         faixas: pssTableConfig.rates.map(rate => ({
             min: rate.min,
             max: rate.max,
-            aliq: rate.rate
+            rate: rate.rate
         }))
     } : null;
 
@@ -103,6 +103,8 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
 
     const deductionVal = config.ir_deduction?.[params.tabelaIR]?.deduction || 896.00;
     const irMensal = calculateIrrf(baseIR, 0.275, deductionVal);
+
+
 
     return {
         pss: pssMensal,
