@@ -12,6 +12,7 @@ import { ObservationsSection } from '../components/Calculator/ObservationsSectio
 import { ExtraRubrics } from '../components/Calculator/ExtraRubrics';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
+import { ResultsSidebar } from '../components/Calculator/ResultsSidebar';
 import DonationModal from '../components/DonationModal';
 import { SeasonalIncomeSection } from '../components/Calculator/SeasonalIncomeSection';
 import { IndemnitySection } from '../components/Calculator/IndemnitySection';
@@ -69,10 +70,11 @@ export default function Calculator() {
                 styles={styles}
             />
 
-            {/* Main Grid: Inputs */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Layout: 2 Columns (Inputs | Sidebar) */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
 
-                {/* Column 1: Income (Fixed & Variable) */}
+
+                {/* Left Column: All Inputs */}
                 <div className="space-y-8">
                     <IncomeSection
                         state={state}
@@ -92,10 +94,6 @@ export default function Calculator() {
                         update={update}
                         styles={styles}
                     />
-                </div>
-
-                {/* Column 2: Benefits & Deductions */}
-                <div className="space-y-8">
                     <DeductionsSection
                         state={state}
                         update={update}
@@ -111,10 +109,6 @@ export default function Calculator() {
                         update={update}
                         styles={styles}
                     />
-                </div>
-
-                {/* Column 3: Extras & Observations */}
-                <div className="space-y-6">
                     <ExtraRubrics
                         state={state}
                         addRubrica={addRubrica}
@@ -126,6 +120,18 @@ export default function Calculator() {
                         state={state}
                         update={update}
                         styles={styles}
+                    />
+                </div>
+
+                {/* Right Column: Sidebar (Desktop sticky) */}
+                <div className="hidden lg:block">
+                    <ResultsSidebar
+                        bruto={state.bruto}
+                        pss={state.totalPss}
+                        irrf={state.totalIrrf}
+                        liquido={state.liquido}
+                        onExportPDF={initiateExportPDF}
+                        onExportExcel={initiateExportExcel}
                     />
                 </div>
             </div>
