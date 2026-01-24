@@ -27,7 +27,7 @@ export const ResultsSidebar: React.FC<ResultsSidebarProps> = ({
                     Líquido
                 </p>
                 <p className="text-4xl font-black text-slate-800 dark:text-white tracking-tight brand-gradient-text">
-                    {formatCurrency(liquido)}
+                    {formatCurrency(liquido || 0)}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                     Estimativa mensal
@@ -43,19 +43,19 @@ export const ResultsSidebar: React.FC<ResultsSidebarProps> = ({
                     <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600 dark:text-slate-400">Bruto</span>
                         <span className="text-sm font-semibold text-slate-800 dark:text-white">
-                            {formatCurrency(bruto)}
+                            {formatCurrency(bruto || 0)}
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600 dark:text-slate-400">PSS</span>
                         <span className="text-sm font-semibold text-red-600 dark:text-red-400">
-                            - {formatCurrency(pss)}
+                            - {formatCurrency(pss || 0)}
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600 dark:text-slate-400">IRRF</span>
                         <span className="text-sm font-semibold text-red-600 dark:text-red-400">
-                            - {formatCurrency(irrf)}
+                            - {formatCurrency(irrf || 0)}
                         </span>
                     </div>
                 </div>
