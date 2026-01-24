@@ -6,11 +6,10 @@ import { CalculatorState } from '../../types';
 interface GlobalSettingsProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
-    handleTipoCalculoChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
     styles: any;
 }
 
-export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, handleTipoCalculoChange, styles }) => {
+export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, styles }) => {
     return (
         <div className={`${styles.card} mb-8 relative overflow-hidden`}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
@@ -18,7 +17,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, h
                 <Settings className="w-4 h-4" />
                 Configurações Globais
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                 <div>
                     <label className={styles.label}>Ref. Salarial</label>
                     <select
@@ -55,19 +54,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, h
                             onChange={e => update('anoRef', Number(e.target.value))}
                         />
                     </div>
-                </div>
-                <div>
-                    <label className={styles.label}>Tipo de Cálculo</label>
-                    <select
-                        className={styles.input}
-                        value={state.tipoCalculo}
-                        onChange={handleTipoCalculoChange}
-                    >
-                        <option value="comum">Mês Comum</option>
-                        <option value="jan">Janeiro (Adiant. 13º + Férias Dez)</option>
-                        <option value="jun">Junho (1ª Parc. 13º)</option>
-                        <option value="nov">Novembro (2ª Parc. 13º)</option>
-                    </select>
                 </div>
             </div>
         </div>

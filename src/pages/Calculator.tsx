@@ -66,7 +66,6 @@ export default function Calculator() {
             <GlobalSettings
                 state={state}
                 update={update}
-                handleTipoCalculoChange={handleTipoCalculoChange}
                 styles={styles}
             />
 
