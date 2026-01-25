@@ -71,12 +71,14 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         });
     }
 
+    const tecnicoBases = salaryBases?.tecnico ?? (salaryBases as any)?.tec ?? {};
+
     return {
         adjustment_schedule: toAdjustmentSchedule(effective.adjustment_schedule),
         bases: {
             salario: {
                 analista: salaryBases?.analista ?? {},
-                tec: salaryBases?.tecnico ?? {},
+                tec: tecnicoBases,
             },
             funcoes: salaryBases?.funcoes ?? {},
         },
