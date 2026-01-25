@@ -61,7 +61,7 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                 <div className={styles.innerBox}>
                     <h4 className={styles.innerBoxTitle}>
                         Adicional Qualificação
-                        <span className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">{isNovoAQ ? 'LEI 15.292/2026' : 'REGRA ATUAL'}</span>
+                        <span className="text-label bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">{isNovoAQ ? 'LEI 15.292/2026' : 'REGRA ATUAL'}</span>
                     </h4>
 
                     {isNovoAQ ? (

@@ -48,7 +48,7 @@ export const IndemnitySection: React.FC<IndemnitySectionProps> = ({ state, updat
                         </div>
 
                         {/* Deduções (Glosas) */}
-                        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <div className="space-y-2 pt-2 border-t border-neutral-100 dark:border-neutral-700">
                             <label className={styles.label + " mb-2"}>Auxílios Recebidos (Glosar)</label>
 
                             <label className={styles.checkboxLabel}>

@@ -19,7 +19,7 @@ export const ExtraRubrics: React.FC<ExtraRubricsProps> = ({ state, addRubrica, r
             </h3>
             <button
                 onClick={addRubrica}
-                className="w-full py-3 bg-secondary text-white rounded-xl text-xs font-bold uppercase hover:bg-secondary/90 shadow-lg shadow-secondary/20 transition-all flex items-center justify-center gap-2 mb-4"
+                className="w-full py-3 bg-secondary text-white rounded-xl text-body-xs font-bold uppercase hover:bg-secondary/90 shadow-lg shadow-secondary/20 transition-all flex items-center justify-center gap-2 mb-4"
             >
                 <Plus className="h-4 w-4" /> Adicionar Crédito/Débito (Manual)
             </button>
@@ -51,13 +51,13 @@ export const ExtraRubrics: React.FC<ExtraRubricsProps> = ({ state, addRubrica, r
                             value={rubrica.valor || ''}
                             onChange={e => updateRubrica(rubrica.id, 'valor', Number(e.target.value))}
                         />
-                        <button onClick={() => removeRubrica(rubrica.id)} className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                        <button onClick={() => removeRubrica(rubrica.id)} className="text-neutral-400 hover:text-error-500 p-2 rounded-lg hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-900/60 transition-colors">
                             <Trash2 size={16} />
                         </button>
                     </div>
                 ))}
                 {state.rubricasExtras.length === 0 && (
-                    <p className="text-center text-sm text-slate-400 italic py-4">Nenhuma rubrica manual adicionada.</p>
+                    <p className="text-center text-body text-neutral-400 italic py-4">Nenhuma rubrica manual adicionada.</p>
                 )}
             </div>
         </div>

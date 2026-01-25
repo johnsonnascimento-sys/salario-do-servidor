@@ -71,22 +71,22 @@ export default function DonationModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="bg-white dark:bg-neutral-800 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-rose-500 to-pink-500 p-6 text-white relative">
+                <div className="bg-gradient-to-r from-error-500 to-error-600 p-6 text-white relative">
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/20 transition-colors"
+                        className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/20 dark:bg-transparent dark:hover:bg-neutral-900/40 transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white/20 dark:bg-neutral-900/40 rounded-xl flex items-center justify-center">
                             <Heart className="w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold">Apoie o Projeto!</h2>
-                            <p className="text-sm text-white/80">
+                            <h2 className="text-h4 font-bold">Apoie o Projeto!</h2>
+                            <p className="text-body text-white/80">
                                 Seu download será liberado em instantes
                             </p>
                         </div>
@@ -95,33 +95,33 @@ export default function DonationModal({
 
                 {/* Content */}
                 <div className="p-6 space-y-6">
-                    <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+                    <p className="text-neutral-600 dark:text-neutral-300 text-body leading-relaxed">
                         O <strong>Salário do Servidor</strong> é mantido por uma única pessoa, com recursos próprios.
                         Se esta ferramenta te ajudou, considere fazer uma contribuição via Pix.
                         <strong> Qualquer valor faz diferença!</strong>
                     </p>
 
                     {/* QR Code Section */}
-                    <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 flex flex-col items-center gap-4">
+                    <div className="bg-neutral-50 dark:bg-neutral-900 rounded-2xl p-6 flex flex-col items-center gap-4">
                         {qrCodeUrl ? (
                             <img
                                 src={qrCodeUrl}
                                 alt="QR Code Pix"
-                                className="w-32 h-32 bg-white p-2 rounded-xl"
+                                className="w-32 h-32 bg-white dark:bg-neutral-900 p-2 rounded-xl"
                             />
                         ) : (
-                            <div className="w-32 h-32 bg-slate-200 dark:bg-slate-700 rounded-xl flex items-center justify-center">
-                                <Clock className="w-8 h-8 text-slate-400 animate-spin" />
+                            <div className="w-32 h-32 bg-neutral-200 dark:bg-neutral-700 rounded-xl flex items-center justify-center">
+                                <Clock className="w-8 h-8 text-neutral-400 animate-spin" />
                             </div>
                         )}
 
-                        <div className="flex items-center gap-2 bg-white dark:bg-slate-800 py-2 px-4 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <span className="font-mono text-xs text-slate-600 dark:text-slate-300 truncate max-w-[180px]">
+                        <div className="flex items-center gap-2 bg-white dark:bg-neutral-800 py-2 px-4 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-300 truncate max-w-44">
                                 {pixKey || 'Carregando...'}
                             </span>
                             <button
                                 onClick={handleCopyPix}
-                                className="text-secondary hover:text-secondary/80 transition-colors text-xs font-bold"
+                                className="text-secondary hover:text-secondary/80 transition-colors text-body-xs font-bold"
                             >
                                 {copied ? '✓ Copiado!' : 'Copiar'}
                             </button>
@@ -131,18 +131,18 @@ export default function DonationModal({
                     {/* Countdown / Download Button */}
                     <div className="flex flex-col items-center gap-3">
                         {!isReady ? (
-                            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+                            <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400">
                                 <Clock className="w-5 h-5" />
-                                <span className="text-sm">
-                                    Download disponível em <strong className="text-secondary text-lg">{countdown}s</strong>
+                                <span className="text-body">
+                                    Download disponível em <strong className="text-secondary text-body-xl">{countdown}s</strong>
                                 </span>
                             </div>
                         ) : (
                             <button
                                 onClick={handleDownload}
                                 className={`btn btn-lg w-full ${exportType === 'pdf'
-                                        ? 'bg-rose-500 hover:bg-rose-600 text-white'
-                                        : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                                        ? 'bg-error-500 hover:bg-error-600 text-white'
+                                        : 'bg-success-500 hover:bg-success-600 text-white'
                                     }`}
                             >
                                 {exportType === 'pdf' ? (
@@ -162,7 +162,7 @@ export default function DonationModal({
 
                     {/* Progress Bar */}
                     {!isReady && (
-                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5 overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-secondary to-primary transition-all duration-1000 ease-linear"
                                 style={{ width: `${((countdownSeconds - countdown) / countdownSeconds) * 100}%` }}
@@ -173,7 +173,7 @@ export default function DonationModal({
 
                 {/* Footer */}
                 <div className="px-6 pb-6">
-                    <p className="text-xs text-center text-slate-400">
+                    <p className="text-body-xs text-center text-neutral-400">
                         {isReady
                             ? 'Obrigado por considerar apoiar o projeto! ❤️'
                             : 'Enquanto aguarda, considere fazer uma contribuição via Pix'

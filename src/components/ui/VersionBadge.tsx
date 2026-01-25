@@ -65,43 +65,43 @@ export const VersionBadge: React.FC = () => {
             onMouseLeave={() => setIsExpanded(false)}
         >
             {/* Badge compacto */}
-            <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500 font-mono cursor-help">
+            <div className="flex items-center gap-1 text-label text-neutral-400 dark:text-neutral-500 font-mono cursor-help">
                 <Info size={12} className="opacity-50" />
                 <span>
                     v{version.version} • {version.commit}
-                    {version.isDirty && <span className="text-amber-500">*</span>}
+                    {version.isDirty && <span className="text-warning-500">*</span>}
                 </span>
             </div>
 
             {/* Tooltip expandido */}
             {isExpanded && (
-                <div className="absolute bottom-full left-0 mb-2 bg-slate-800 dark:bg-slate-900 text-white text-xs rounded-lg p-3 shadow-lg border border-slate-700 z-[60] min-w-[240px]">
+                <div className="absolute bottom-full left-0 mb-2 bg-neutral-800 dark:bg-neutral-900 text-white text-body-xs rounded-lg p-3 shadow-lg border border-neutral-700 z-tooltip min-w-60">
                     <div className="space-y-1.5">
                         <div className="flex justify-between">
-                            <span className="text-slate-400">Versão:</span>
+                            <span className="text-neutral-400">Versão:</span>
                             <span className="font-semibold">{version.version}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-400">Commit:</span>
-                            <span className="font-mono text-xs">{version.commit}</span>
+                            <span className="text-neutral-400">Commit:</span>
+                            <span className="font-mono text-body-xs">{version.commit}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-400">Branch:</span>
-                            <span className="font-mono text-xs">{version.branch}</span>
+                            <span className="text-neutral-400">Branch:</span>
+                            <span className="font-mono text-body-xs">{version.branch}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-400">Build:</span>
-                            <span className="text-xs">{formatBuildDate(version.buildDate)}</span>
+                            <span className="text-neutral-400">Build:</span>
+                            <span className="text-body-xs">{formatBuildDate(version.buildDate)}</span>
                         </div>
                         {version.isDirty && (
-                            <div className="text-amber-400 text-[10px] mt-2 pt-2 border-t border-slate-700">
+                            <div className="text-warning-400 text-label mt-2 pt-2 border-t border-neutral-700">
                                 * Uncommitted changes
                             </div>
                         )}
                     </div>
 
                     {/* Seta do tooltip */}
-                    <div className="absolute bottom-[-6px] left-4 w-3 h-3 bg-slate-800 dark:bg-slate-900 border-b border-r border-slate-700 transform rotate-45"></div>
+                    <div className="absolute bottom-[-6px] left-4 w-3 h-3 bg-neutral-800 dark:bg-neutral-900 border-b border-r border-neutral-700 transform rotate-45"></div>
                 </div>
             )}
         </div>

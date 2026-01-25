@@ -31,15 +31,15 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
             >
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wider">
+                        <p className="text-body-xs font-semibold text-white/80 uppercase tracking-wider">
                             Líquido
                         </p>
-                        <p className="text-2xl font-black text-white tracking-tight">
+                        <p className="text-h3 font-black text-white tracking-tight">
                             {formatCurrency(liquido || 0)}
                         </p>
                     </div>
                     <button
-                        className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+                        className="text-white p-2 hover:bg-white/10 dark:bg-transparent dark:hover:bg-neutral-900/40 rounded-full transition-colors"
                         aria-label={isExpanded ? "Recolher" : "Expandir"}
                     >
                         {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
@@ -49,42 +49,42 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
 
             {/* Expanded Content */}
             {isExpanded && (
-                <div className="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-4 py-3">
+                <div className="bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 px-4 py-3">
                     <div className="space-y-3">
                         {/* Detalhes do Cálculo */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">Bruto</span>
-                                <span className="text-sm font-semibold text-slate-800 dark:text-white">
+                                <span className="text-body text-neutral-600 dark:text-neutral-400">Bruto</span>
+                                <span className="text-body font-semibold text-neutral-800 dark:text-white">
                                     {formatCurrency(bruto || 0)}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">PSS</span>
-                                <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                                <span className="text-body text-neutral-600 dark:text-neutral-400">PSS</span>
+                                <span className="text-body font-semibold text-error-600 dark:text-error-400">
                                     - {formatCurrency(pss || 0)}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-slate-600 dark:text-slate-400">IRRF</span>
-                                <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                                <span className="text-body text-neutral-600 dark:text-neutral-400">IRRF</span>
+                                <span className="text-body font-semibold text-error-600 dark:text-error-400">
                                     - {formatCurrency(irrf || 0)}
                                 </span>
                             </div>
                         </div>
 
                         {/* Botões de Exportação */}
-                        <div className="flex gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                        <div className="flex gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
                             <button
                                 onClick={onExportPDF}
-                                className="flex-1 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-600 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm"
+                                className="flex-1 bg-error-500/10 hover:bg-error-500 hover:text-white text-error-600 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
                             >
                                 <FileText size={18} />
                                 <span>PDF</span>
                             </button>
                             <button
                                 onClick={onExportExcel}
-                                className="flex-1 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-600 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm"
+                                className="flex-1 bg-success-500/10 hover:bg-success-500 hover:text-white text-success-600 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
                             >
                                 <TableIcon size={18} />
                                 <span>Excel</span>
@@ -92,7 +92,7 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
                         </div>
 
                         {/* Version Badge (discreto) */}
-                        <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-center">
+                        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex justify-center">
                             <VersionBadge />
                         </div>
                     </div>

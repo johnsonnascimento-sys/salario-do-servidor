@@ -26,7 +26,7 @@ export const Card: React.FC<CardProps> & {
     Content: React.FC<CardContentProps>;
 } = ({ children, className = '' }) => {
     return (
-        <div className={`bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-card ${className}`}>
+        <div className={`bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-card ${className}`}>
             {children}
         </div>
     );
@@ -34,7 +34,7 @@ export const Card: React.FC<CardProps> & {
 
 Card.Header = ({ children, className = '' }) => {
     return (
-        <div className={`p-6 border-b border-slate-200 dark:border-slate-700 ${className}`}>
+        <div className={`p-6 border-b border-neutral-200 dark:border-neutral-700 ${className}`}>
             {children}
         </div>
     );

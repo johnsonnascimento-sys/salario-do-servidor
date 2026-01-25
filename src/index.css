@@ -39,30 +39,30 @@
         @apply inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 rounded-xl;
     }
     .btn-sm {
-        @apply px-4 py-2 text-sm;
+        @apply px-4 py-2 text-body;
     }
     .btn-md {
-        @apply px-5 py-2.5 text-sm;
+        @apply px-5 py-2.5 text-body;
     }
     .btn-lg {
-        @apply px-6 py-3 text-base;
+        @apply px-6 py-3 text-body-lg;
     }
     .btn-primary {
         @apply bg-gradient-to-r from-secondary to-primary text-white shadow-lg shadow-secondary/25 hover:shadow-secondary/40 hover:scale-[1.02] active:scale-[0.98];
     }
     .btn-secondary {
-        @apply bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700;
+        @apply bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700;
     }
     .btn-ghost {
-        @apply text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800;
+        @apply text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800;
     }
     .btn-danger {
-        @apply bg-red-500 text-white hover:bg-red-600;
+        @apply bg-error-500 text-white hover:bg-error-600;
     }
 
     /* Cards */
     .card {
-        @apply bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-card;
+        @apply bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-card;
     }
     .card-elevated {
         @apply card shadow-card-hover;
@@ -70,7 +70,7 @@
 
     /* Inputs */
     .input {
-        @apply w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all;
+        @apply w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl py-3 px-4 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all;
     }
 
     /* Layout */

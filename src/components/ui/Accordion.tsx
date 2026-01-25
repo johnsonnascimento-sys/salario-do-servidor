@@ -11,21 +11,21 @@ export const Accordion: React.FC<AccordionProps> = ({ title, defaultOpen = false
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
+        <div className="border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden bg-white dark:bg-neutral-800">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/50 transition-colors"
             >
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                <h4 className="text-body font-bold text-neutral-700 dark:text-neutral-300">
                     {title}
                 </h4>
                 <ChevronDown
-                    className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+                    className={`w-5 h-5 text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
                         }`}
                 />
             </button>
             {isOpen && (
-                <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700">
                     {children}
                 </div>
             )}

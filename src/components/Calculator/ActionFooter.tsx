@@ -13,11 +13,11 @@ interface ActionFooterProps {
 
 export const ActionFooter: React.FC<ActionFooterProps> = ({ state, onExportPDF, onExportExcel }) => {
     return (
-        <div className="hidden lg:block fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 py-4 px-6 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="hidden lg:block fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-700 py-4 px-6 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Resultado Líquido</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Considerando todos os descontos legais e opcionais.</p>
+                    <p className="text-label font-bold text-neutral-400 uppercase tracking-widest mb-1">Resultado Líquido</p>
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Considerando todos os descontos legais e opcionais.</p>
                     <div className="mt-2">
                         <VersionBadge />
                     </div>
@@ -26,14 +26,14 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({ state, onExportPDF, 
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onExportPDF}
-                            className="bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-600 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-xs uppercase tracking-wide"
+                            className="bg-error-500/10 hover:bg-error-500 hover:text-white text-error-600 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-body-xs uppercase tracking-wide"
                             title="Exportar PDF/Holerite"
                         >
                             <FileText size={20} /> <span>PDF</span>
                         </button>
                         <button
                             onClick={onExportExcel}
-                            className="bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-600 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-xs uppercase tracking-wide"
+                            className="bg-success-500/10 hover:bg-success-500 hover:text-white text-success-600 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-body-xs uppercase tracking-wide"
                             title="Exportar Excel"
                         >
                             <TableIcon size={20} /> <span>Excel</span>
@@ -41,7 +41,7 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({ state, onExportPDF, 
                     </div>
 
                     <div className="text-right">
-                        <span className="text-4xl font-black text-slate-800 dark:text-white tracking-tight brand-gradient-text">
+                        <span className="text-h1 font-black text-neutral-800 dark:text-white tracking-tight brand-gradient-text">
                             {formatCurrency(state.liquido)}
                         </span>
                     </div>

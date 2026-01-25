@@ -73,7 +73,7 @@ export const SeasonalIncomeSection: React.FC<SeasonalIncomeSectionProps> = ({ st
                     )}
 
                     {/* Antecipacao Toggle */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700">
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -83,7 +83,7 @@ export const SeasonalIncomeSection: React.FC<SeasonalIncomeSectionProps> = ({ st
                             />
                             Antecipar 1/3 das férias?
                         </label>
-                        <p className="text-[10px] text-slate-400 mt-1 ml-6">
+                        <p className="text-label text-neutral-400 mt-1 ml-6">
                             Marque se recebeu o pagamento no contracheque anterior.
                         </p>
                     </div>
@@ -132,7 +132,7 @@ export const SeasonalIncomeSection: React.FC<SeasonalIncomeSectionProps> = ({ st
                                     placeholder="0,00"
                                 />
                             ) : (
-                                <div className={styles.innerBox + " cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"} onClick={() => update('adiant13Venc', state.adiant13Venc > 0 ? 0 : (state.vencimento + state.gaj + state.aqTituloValor) / 2)}>
+                                <div className={styles.innerBox + " cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"} onClick={() => update('adiant13Venc', state.adiant13Venc > 0 ? 0 : (state.vencimento + state.gaj + state.aqTituloValor) / 2)}>
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="checkbox"
@@ -142,8 +142,8 @@ export const SeasonalIncomeSection: React.FC<SeasonalIncomeSectionProps> = ({ st
                                         />
                                         <div className="flex-1">
                                             <div className="flex justify-between">
-                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Receber Adiantamento</span>
-                                                <span className="text-xs font-mono text-slate-500">{formatCurrency(state.adiant13Venc)}</span>
+                                                <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber Adiantamento</span>
+                                                <span className="text-body-xs font-mono text-neutral-500">{formatCurrency(state.adiant13Venc)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -167,7 +167,7 @@ export const SeasonalIncomeSection: React.FC<SeasonalIncomeSectionProps> = ({ st
                                     placeholder="0,00"
                                 />
                             ) : (
-                                <div className={styles.innerBox + " cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"} onClick={() => update('adiant13FC', state.adiant13FC > 0 ? 0 : 1)}>
+                                <div className={styles.innerBox + " cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"} onClick={() => update('adiant13FC', state.adiant13FC > 0 ? 0 : 1)}>
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="checkbox"
@@ -177,8 +177,8 @@ export const SeasonalIncomeSection: React.FC<SeasonalIncomeSectionProps> = ({ st
                                         />
                                         <div className="flex-1">
                                             <div className="flex justify-between">
-                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Receber Adiantamento</span>
-                                                <span className="text-xs font-mono text-slate-500">{formatCurrency(state.adiant13FC)}</span>
+                                                <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber Adiantamento</span>
+                                                <span className="text-body-xs font-mono text-neutral-500">{formatCurrency(state.adiant13FC)}</span>
                                             </div>
                                         </div>
                                     </div>

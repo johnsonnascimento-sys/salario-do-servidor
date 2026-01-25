@@ -17,14 +17,14 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ courtConfig,
     return (
         <div className="md:flex md:items-center md:justify-between mb-8">
             <div className="flex items-center gap-4 mb-4 md:mb-0">
-                <button onClick={() => navigate('/')} className="bg-white dark:bg-slate-800 p-2 rounded-xl text-slate-500 hover:text-secondary shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                <button onClick={() => navigate('/')} className="bg-white dark:bg-neutral-800 p-2 rounded-xl text-neutral-500 hover:text-secondary shadow-sm border border-neutral-200 dark:border-neutral-700 transition-colors">
                     <ArrowLeft className="w-6 h-6" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    <h1 className="text-h3 font-bold text-neutral-900 dark:text-white">
                         {agencyName || (courtConfig ? courtConfig.name : 'Simulador')}
                     </h1>
-                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-secondary/10 text-secondary text-body-xs font-bold uppercase tracking-wider">
                         <span className="w-2 h-2 rounded-full bg-secondary"></span>
                         {state.periodo === 0 ? 'Tabelas 2025' : 'Projeção Futura'}
                     </div>

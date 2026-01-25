@@ -24,21 +24,21 @@ const SIMULATOR_DATA: SimulatorNode[] = [
     id: 'judiciario',
     name: 'Poder Judiciário',
     type: 'category',
-    icon: <Building2 className="w-8 h-8 text-blue-600" />,
+    icon: <Building2 className="w-8 h-8 text-secondary-600" />,
     description: 'Tribunais Federais, Estaduais e Superiores',
     children: [
       {
         id: 'jud_federal_sphere',
         name: 'Justiça Federal',
         type: 'category',
-        icon: <Building2 className="w-6 h-6 text-blue-600" />,
+        icon: <Building2 className="w-6 h-6 text-secondary-600" />,
         description: 'Tribunais da União',
         children: [
           {
             id: 'jud_militar',
             name: 'Justiça Militar da União',
             type: 'category',
-            icon: <ShieldCheck className="w-6 h-6 text-blue-500" />,
+            icon: <ShieldCheck className="w-6 h-6 text-secondary-500" />,
             children: [
               {
                 id: 'stm',
@@ -53,7 +53,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             id: 'jud_federal_comum',
             name: 'Justiça Federal (TRFs)',
             type: 'category',
-            icon: <Building2 className="w-6 h-6 text-blue-500" />,
+            icon: <Building2 className="w-6 h-6 text-secondary-500" />,
             children: [
               { id: 'trf1', name: 'TRF-1', type: 'simulator', slug: '#' },
               { id: 'trf2', name: 'TRF-2', type: 'simulator', slug: '#' },
@@ -67,7 +67,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             id: 'jud_eleitoral',
             name: 'Justiça Eleitoral',
             type: 'category',
-            icon: <FileText className="w-6 h-6 text-blue-500" />,
+            icon: <FileText className="w-6 h-6 text-secondary-500" />,
             children: [
               { id: 'tse', name: 'TSE', type: 'simulator', slug: '#' },
               { id: 'tre_ac', name: 'TRE-AC', type: 'simulator', slug: '#' },
@@ -80,7 +80,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             id: 'jud_trabalho',
             name: 'Justiça do Trabalho',
             type: 'category',
-            icon: <Building2 className="w-6 h-6 text-blue-500" />,
+            icon: <Building2 className="w-6 h-6 text-secondary-500" />,
             children: [
               { id: 'tst', name: 'TST', type: 'simulator', slug: '#' },
               { id: 'trt_outros', name: 'TRTs (Em Breve)', type: 'simulator', slug: '#' }
@@ -90,7 +90,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             id: 'tjdft',
             name: 'TJDFT',
             type: 'category',
-            icon: <Building2 className="w-6 h-6 text-blue-500" />,
+            icon: <Building2 className="w-6 h-6 text-secondary-500" />,
             children: [
               { id: 'tjdft_sim', name: 'TJDFT (Em Breve)', type: 'simulator', slug: '#' }
             ]
@@ -101,7 +101,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
         id: 'jud_estadual_sphere',
         name: 'Justiça Estadual',
         type: 'category',
-        icon: <Building2 className="w-6 h-6 text-emerald-600" />,
+        icon: <Building2 className="w-6 h-6 text-success-600" />,
         description: 'Tribunais de Justiça (TJs)',
         children: [
           { id: 'tjac', name: 'TJAC', type: 'simulator', slug: '#' },
@@ -138,7 +138,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
     id: 'mpu',
     name: 'Ministério Público',
     type: 'category',
-    icon: <ShieldCheck className="w-8 h-8 text-rose-600" />,
+    icon: <ShieldCheck className="w-8 h-8 text-error-600" />,
     description: 'MPF, MPT, MPM e MPDFT',
     children: [
       { id: 'mpu_breve', name: 'Ramos do MPU (Em Breve)', type: 'simulator', slug: '#' }
@@ -148,7 +148,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
     id: 'executivo',
     name: 'Poder Executivo',
     type: 'category',
-    icon: <Building2 className="w-8 h-8 text-emerald-600" />,
+    icon: <Building2 className="w-8 h-8 text-success-600" />,
     description: 'Ministérios e Autarquias Federais',
     children: [
       { id: 'exec_breve', name: 'Carreiras do Executivo (Em Breve)', type: 'simulator', slug: '#' }
@@ -159,7 +159,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
     name: 'Poder Legislativo',
     type: 'category',
     // Se Landmark der erro, usamos Building2 como fallback visual
-    icon: <Building2 className="w-8 h-8 text-amber-600" />,
+    icon: <Building2 className="w-8 h-8 text-warning-600" />,
     description: 'Câmara dos Deputados e Senado Federal',
     children: [
       { id: 'leg_breve', name: 'Câmara e Senado (Em Breve)', type: 'simulator', slug: '#' }
@@ -238,23 +238,23 @@ export default function Home() {
   }, [location]);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-secondary/20">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 font-sans text-neutral-900 dark:text-white selection:bg-secondary/20">
 
       {/* Hero - Modern/Tech Style */}
-      <main className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-[90vh] flex items-center">
+      <main className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 min-h-[90vh] flex items-center">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-secondary/30 rounded-full blur-[100px] animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-secondary/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 -tranneutral-x-1/2 -tranneutral-y-1/2 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl"></div>
 
           {/* Grid Pattern */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
 
           {/* Floating Geometric Shapes */}
           <div className="absolute top-32 right-[20%] w-4 h-4 bg-secondary/60 rotate-45 animate-bounce" style={{ animationDuration: '3s' }}></div>
-          <div className="absolute top-[40%] left-[15%] w-3 h-3 bg-emerald-400/60 rounded-full animate-bounce" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
-          <div className="absolute bottom-[30%] right-[25%] w-2 h-2 bg-purple-400/60 rotate-45 animate-bounce" style={{ animationDuration: '3.5s', animationDelay: '1s' }}></div>
+          <div className="absolute top-[40%] left-[15%] w-3 h-3 bg-success-400/60 rounded-full animate-bounce" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
+          <div className="absolute bottom-[30%] right-[25%] w-2 h-2 bg-secondary-400/60 rotate-45 animate-bounce" style={{ animationDuration: '3.5s', animationDelay: '1s' }}></div>
           <div className="absolute top-[25%] left-[40%] w-6 h-6 border border-secondary/30 rotate-12 animate-spin" style={{ animationDuration: '20s' }}></div>
         </div>
 
@@ -262,35 +262,35 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="text-left">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-xs font-semibold uppercase tracking-widest mb-8 text-emerald-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 dark:bg-neutral-900/40 backdrop-blur-sm border border-white/10 text-body-xs font-semibold uppercase tracking-widest mb-8 text-success-400">
+                <span className="w-2 h-2 rounded-full bg-success-400 animate-pulse"></span>
                 Atualizado: Tabelas 2025/2026
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight mb-6 leading-[1.05]">
+              <h1 className="text-display-lg md:text-7xl font-black text-white tracking-tight mb-6 leading-[1.05]">
                 Simule seu
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-blue-400 to-purple-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary via-secondary-400 to-secondary-400">
                   salário real.
                 </span>
               </h1>
 
-              <p className="text-lg md:text-xl text-slate-400 mb-10 leading-relaxed max-w-xl">
+              <p className="text-body-xl md:text-h4 text-neutral-400 mb-10 leading-relaxed max-w-xl">
                 Cálculos precisos baseados na legislação vigente. Progressões, benefícios, descontos e projeções futuras em um só lugar.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={scrollToSimulators}
-                  className="group relative bg-gradient-to-r from-secondary to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-2xl shadow-secondary/25 flex items-center justify-center gap-3 hover:shadow-secondary/40 hover:scale-[1.02]"
+                  className="group relative bg-gradient-to-r from-secondary to-secondary-500 text-white px-8 py-4 rounded-2xl font-bold text-body-xl transition-all shadow-2xl shadow-secondary/25 flex items-center justify-center gap-3 hover:shadow-secondary/40 hover:scale-[1.02]"
                 >
                   <span className="relative z-10 flex items-center gap-3">
-                    Começar Simulação <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    Começar Simulação <ArrowRight className="w-5 h-5 group-hover:tranneutral-x-1 transition-transform" />
                   </span>
                 </button>
                 <button
                   onClick={scrollToFeatures}
-                  className="bg-white/5 backdrop-blur-sm border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all hover:bg-white/10 flex items-center justify-center gap-3"
+                  className="bg-white/5 backdrop-blur-sm border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-body-xl transition-all hover:bg-white/10 dark:bg-neutral-900/40 dark:hover:bg-neutral-900/60 flex items-center justify-center gap-3"
                 >
                   Recursos Exclusivos
                 </button>
@@ -299,33 +299,33 @@ export default function Home() {
               {/* Tech Stats */}
               <div className="flex gap-8 mt-12 pt-8 border-t border-white/10">
                 <div>
-                  <div className="text-2xl font-black text-white">100%</div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wider">Gratuito</div>
+                  <div className="text-h3 font-black text-white">100%</div>
+                  <div className="text-body-xs text-neutral-500 uppercase tracking-wider">Gratuito</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-white">2026</div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wider">Tabelas Atualizadas</div>
+                  <div className="text-h3 font-black text-white">2026</div>
+                  <div className="text-body-xs text-neutral-500 uppercase tracking-wider">Tabelas Atualizadas</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-black text-white">Real</div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wider">Precisão</div>
+                  <div className="text-h3 font-black text-white">Real</div>
+                  <div className="text-body-xs text-neutral-500 uppercase tracking-wider">Precisão</div>
                 </div>
               </div>
             </div>
 
             {/* Tech Card */}
             <div className="relative hidden lg:block">
-              <div className="absolute -inset-4 bg-gradient-to-r from-secondary/40 to-purple-500/40 rounded-3xl blur-2xl opacity-40"></div>
-              <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+              <div className="absolute -inset-4 bg-gradient-to-r from-secondary/40 to-secondary-500/40 rounded-3xl blur-2xl opacity-40"></div>
+              <div className="relative bg-white/5 dark:bg-neutral-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary to-blue-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary to-secondary-500 flex items-center justify-center">
                       <Calculator className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <div className="text-white font-bold">Simulação de Salário</div>
-                      <div className="text-xs text-slate-500">Janeiro/2026</div>
+                      <div className="text-body-xs text-neutral-500">Janeiro/2026</div>
                     </div>
                   </div>
                 </div>
@@ -333,35 +333,35 @@ export default function Home() {
                 {/* Salary Breakdown */}
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-400 text-sm">Vencimento Básico</span>
+                    <span className="text-neutral-400 text-body">Vencimento Básico</span>
                     <span className="text-white font-semibold">R$ 8.529,65</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-400 text-sm">Gratificação (GAJ)</span>
-                    <span className="text-emerald-400 font-semibold">+ R$ 5.117,79</span>
+                    <span className="text-neutral-400 text-body">Gratificação (GAJ)</span>
+                    <span className="text-success-400 font-semibold">+ R$ 5.117,79</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-400 text-sm">Adicional de Qualificação</span>
-                    <span className="text-emerald-400 font-semibold">+ R$ 1.364,74</span>
+                    <span className="text-neutral-400 text-body">Adicional de Qualificação</span>
+                    <span className="text-success-400 font-semibold">+ R$ 1.364,74</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-t border-white/10 pt-4">
-                    <span className="text-slate-400 text-sm">PSS (Previdência)</span>
-                    <span className="text-rose-400 font-semibold">- R$ 1.650,44</span>
+                    <span className="text-neutral-400 text-body">PSS (Previdência)</span>
+                    <span className="text-error-400 font-semibold">- R$ 1.650,44</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-400 text-sm">Imposto de Renda</span>
-                    <span className="text-rose-400 font-semibold">- R$ 2.411,42</span>
+                    <span className="text-neutral-400 text-body">Imposto de Renda</span>
+                    <span className="text-error-400 font-semibold">- R$ 2.411,42</span>
                   </div>
                 </div>
 
                 {/* Result Display */}
-                <div className="bg-gradient-to-r from-secondary/20 to-purple-500/20 rounded-2xl p-6 border border-secondary/30">
+                <div className="bg-gradient-to-r from-secondary/20 to-secondary-500/20 rounded-2xl p-6 border border-secondary/30">
                   <div className="flex justify-between items-center">
                     <div>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Líquido Estimado</span>
-                      <span className="text-sm text-slate-400">Valor a receber</span>
+                      <span className="text-body-xs font-bold text-neutral-400 uppercase tracking-wider block mb-1">Líquido Estimado</span>
+                      <span className="text-body text-neutral-400">Valor a receber</span>
                     </div>
-                    <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-secondary to-purple-400">R$ 10.950,32</span>
+                    <span className="text-h2 font-black text-transparent bg-clip-text bg-gradient-to-r from-secondary to-secondary-400">R$ 10.950,32</span>
                   </div>
                 </div>
               </div>
@@ -371,25 +371,25 @@ export default function Home() {
       </main>
 
       {/* SEÇÃO DE SELEÇÃO (DRILL-DOWN) */}
-      <section id="simulators-section" className="bg-white py-24 border-y border-slate-100 scroll-mt-20">
+      <section id="simulators-section" className="bg-white dark:bg-neutral-900 py-24 border-y border-neutral-100 dark:border-neutral-800 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-black text-slate-900 mb-4">Selecione seu Órgão</h2>
-            <p className="text-slate-500">Navegue pelas esferas abaixo para encontrar a calculadora específica.</p>
+            <h2 className="text-h2 font-black text-neutral-900 dark:text-white mb-4">Selecione seu Órgão</h2>
+            <p className="text-neutral-500">Navegue pelas esferas abaixo para encontrar a calculadora específica.</p>
           </div>
 
-          <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-sm min-h-[400px]">
+          <div className="bg-neutral-50 dark:bg-neutral-900/50 rounded-3xl p-8 border border-neutral-200 dark:border-neutral-700 shadow-sm min-h-96">
             {/* Breadcrumb / Botão Voltar */}
             {navHistory.length > 0 && (
               <div className="mb-6 flex items-center gap-2">
                 <button
                   onClick={handleBack}
-                  className="flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-secondary transition-colors"
+                  className="flex items-center gap-1 text-body font-bold text-neutral-500 hover:text-secondary transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" /> Voltar
                 </button>
-                <span className="text-slate-300">|</span>
-                <span className="text-sm font-bold text-slate-800">{navHistory[navHistory.length - 1].name}</span>
+                <span className="text-neutral-300">|</span>
+                <span className="text-body font-bold text-neutral-800 dark:text-neutral-100">{navHistory[navHistory.length - 1].name}</span>
               </div>
             )}
 
@@ -400,34 +400,34 @@ export default function Home() {
                   key={node.id}
                   onClick={() => handleNodeClick(node)}
                   className={`
-                    group relative bg-white border border-slate-200 rounded-2xl p-6 cursor-pointer transition-all duration-300 
-                    ${node.slug === '#' ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:shadow-secondary/5 hover:-translate-y-1 hover:border-secondary/30'}
+                    group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 cursor-pointer transition-all duration-300 
+                    ${node.slug === '#' ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:shadow-secondary/5 hover:-tranneutral-y-1 hover:border-secondary/30'}
                   `}
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 shadow-sm group-hover:scale-110 transition-transform duration-300 text-slate-600 group-hover:text-secondary">
+                    <div className="p-3 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-100 dark:border-neutral-800 shadow-sm group-hover:scale-110 transition-transform duration-300 text-neutral-600 dark:text-neutral-300 group-hover:text-secondary">
                       {node.icon || <Building2 className="w-6 h-6" />}
                     </div>
                     {node.slug === '#' ? (
-                      <span className="bg-slate-100 text-slate-400 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Em Breve</span>
+                      <span className="bg-neutral-100 dark:bg-neutral-900/50 text-neutral-400 text-label font-bold px-2 py-1 rounded-full uppercase tracking-wider">Em Breve</span>
                     ) : (
-                      <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="bg-success-100 text-success-700 text-label font-bold px-2 py-1 rounded-full uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
                         {node.type === 'category' ? 'Abrir' : 'Simular'}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover:text-secondary transition-colors">
+                  <h3 className="text-body-xl font-bold text-neutral-800 dark:text-neutral-100 mb-1 group-hover:text-secondary transition-colors">
                     {node.name}
                   </h3>
 
                   {node.description && (
-                    <p className="text-sm text-slate-500 mt-2 line-clamp-2">
+                    <p className="text-body text-neutral-500 mt-2 line-clamp-2">
                       {node.description}
                     </p>
                   )}
 
-                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 -tranneutral-x-2 group-hover:tranneutral-x-0 transition-all duration-300">
                     <ArrowRight className="w-5 h-5 text-secondary" />
                   </div>
                 </div>
@@ -438,36 +438,36 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section id="features" className="bg-slate-50 py-24">
+      <section id="features" className="bg-neutral-50 dark:bg-neutral-900 py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-black text-slate-900 mb-4">Recursos Exclusivos</h2>
-            <p className="text-slate-500">Algumas ferramentas avançadas disponíveis para assinantes.</p>
+            <h2 className="text-h2 font-black text-neutral-900 dark:text-white mb-4">Recursos Exclusivos</h2>
+            <p className="text-neutral-500">Algumas ferramentas avançadas disponíveis para assinantes.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-secondary mb-6">
+            <div className="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+              <div className="w-14 h-14 bg-secondary-50 rounded-2xl flex items-center justify-center text-secondary mb-6">
                 <TrendingUp className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Projeção de Carreira</h3>
-              <p className="text-slate-500 leading-relaxed text-sm">Visualize sua evolução salarial.</p>
+              <h3 className="text-h4 font-bold text-neutral-900 dark:text-white mb-3">Projeção de Carreira</h3>
+              <p className="text-neutral-500 leading-relaxed text-body">Visualize sua evolução salarial.</p>
             </div>
 
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6">
+            <div className="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+              <div className="w-14 h-14 bg-success-50 rounded-2xl flex items-center justify-center text-success-600 mb-6">
                 <ShieldCheck className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Cálculo Exato</h3>
-              <p className="text-slate-500 leading-relaxed text-sm">Algoritmos validados com tabelas oficiais.</p>
+              <h3 className="text-h4 font-bold text-neutral-900 dark:text-white mb-3">Cálculo Exato</h3>
+              <p className="text-neutral-500 leading-relaxed text-body">Algoritmos validados com tabelas oficiais.</p>
             </div>
 
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mb-6">
+            <div className="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+              <div className="w-14 h-14 bg-error-50 rounded-2xl flex items-center justify-center text-error-500 mb-6">
                 <FileText className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Exportação PDF e Excel</h3>
-              <p className="text-slate-500 leading-relaxed text-sm">Gere holerites simulados em formatos profissionais.</p>
+              <h3 className="text-h4 font-bold text-neutral-900 dark:text-white mb-3">Exportação PDF e Excel</h3>
+              <p className="text-neutral-500 leading-relaxed text-body">Gere holerites simulados em formatos profissionais.</p>
             </div>
           </div>
         </div>

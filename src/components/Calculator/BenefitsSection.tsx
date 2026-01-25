@@ -61,7 +61,7 @@ export const BenefitsSection: React.FC<BenefitsSectionProps> = ({ state, update,
                             </div>
                         </div>
 
-                        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <div className="space-y-2 pt-2 border-t border-neutral-100 dark:border-neutral-700">
                             <p className={styles.label}>Descontos em Diárias</p>
                             <div className="flex gap-4 flex-wrap">
                                 <label className={styles.checkboxLabel}>

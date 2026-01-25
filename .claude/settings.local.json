@@ -9,7 +9,8 @@
       "Bash(then mkdir public)",
       "Bash(fi)",
       "Bash(node scripts/generate-version.js:*)",
-      "Bash(npm run audit:*)"
+      "Bash(npm run audit:*)",
+      "Bash(npm run audit:design:*)"
     ]
   }
 }
