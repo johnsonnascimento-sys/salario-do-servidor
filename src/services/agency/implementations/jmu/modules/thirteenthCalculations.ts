@@ -1,19 +1,15 @@
 /**
- * Cálculos de 13º Salário / Gratificação Natalina - JMU
+ * Calculos de 13o Salario / Gratificacao Natalina - JMU
  * 
- * Responsável por calcular:
- * - Gratificação Natalina (13º salário)
- * - PSS sobre 13º
- * - IR sobre 13º
- * - Adiantamento do 13º (vencimento e FC)
- * - Abono sobre 13º
- * 
- * Baseado em LEGACY_FORMULAS.md seção 8 (L227-265, L319-331)
- * 
- * REFATORADO: Agora usa ConfigService para buscar dados do banco
+ * Responsavel por calcular:
+ * - Gratificacao Natalina (13o salario)
+ * - PSS sobre 13o
+ * - IR sobre 13o
+ * - Adiantamento do 13o (vencimento e FC)
+ * - Abono sobre 13o
  */
 
-import { configService } from '../../../../config';
+import { CourtConfig } from '../../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -27,12 +23,19 @@ export interface ThirteenthResult {
     abono13: number;
 }
 
+const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+    if (!params.agencyConfig) {
+        throw new Error('agencyConfig is required for JMU calculations.');
+    }
+    return params.agencyConfig;
+};
+
 /**
- * Calcula 13º Salário / Gratificação Natalina
+ * Calcula 13o Salario / Gratificacao Natalina
  */
 export async function calculateThirteenth(params: IJmuCalculationParams): Promise<ThirteenthResult> {
-    const config = await configService.getEffectiveConfig(params.orgSlug);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
+    const config = requireAgencyConfig(params);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
     const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
@@ -60,28 +63,20 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
     let ir13 = 0;
     let abono13 = 0;
 
-    // Cálculo completo em Novembro
+    const pssTable = config.historico_pss?.[params.tabelaPSS];
+    const teto = pssTable?.teto_rgps || 0;
+    const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
+
+    // Calculo completo em Novembro
     if (params.tipoCalculo === 'nov') {
         const base13 = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
             funcaoValor + gratVal + (params.vpni_lei || 0) +
             (params.vpni_decisao || 0) + (params.ats || 0);
 
-        // Abono sobre 13º
+        // Abono sobre 13o
         let base13PSS_Estimada = base13;
         base13PSS_Estimada -= aqTreinoVal;
         if (!params.pssSobreFC) base13PSS_Estimada -= funcaoValor;
-
-        const pssTableConfig = config.pss_tables?.[params.tabelaPSS];
-        const pssTable = pssTableConfig ? {
-            teto_rgps: pssTableConfig.ceiling,
-            faixas: pssTableConfig.rates.map(rate => ({
-                min: rate.min,
-                max: rate.max,
-                rate: rate.rate
-            }))
-        } : null;
-        const teto = pssTable?.teto_rgps || 0;
-        const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
         if (params.recebeAbono && pssTable) {
             if (usaTeto) {
@@ -94,30 +89,33 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
 
         gratNatalinaTotal = base13 + abono13;
 
-        // PSS sobre 13º
+        // PSS sobre 13o
         let baseParaPSS13 = base13;
         if (!params.pssSobreFC) baseParaPSS13 -= funcaoValor;
         baseParaPSS13 -= aqTreinoVal;
 
-        if (usaTeto && pssTable) {
-            const baseLimitada13 = Math.min(baseParaPSS13, teto);
-            pss13 = calculatePss(baseLimitada13, pssTable);
-        } else if (pssTable) {
-            pss13 = calculatePss(baseParaPSS13, pssTable);
+        if (pssTable) {
+            if (usaTeto) {
+                const baseLimitada13 = Math.min(baseParaPSS13, teto);
+                pss13 = calculatePss(baseLimitada13, pssTable);
+            } else {
+                pss13 = calculatePss(baseParaPSS13, pssTable);
+            }
         }
 
-        // IR sobre 13º
+        // IR sobre 13o
         const baseFunpresp = Math.max(0, baseParaPSS13 - teto);
         const valFunpresp = usaTeto && baseFunpresp > 0
             ? baseFunpresp * params.funprespAliq + (baseFunpresp * (params.funprespFacul / 100))
             : 0;
 
-        const baseIR13 = gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * (config.dependent_deduction || 0));
-        const deductionVal = config.ir_deduction?.[params.tabelaIR]?.deduction || 896.00;
+        const deducaoDep = config.values?.deducao_dep || 0;
+        const baseIR13 = gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * deducaoDep);
+        const deductionVal = config.historico_ir?.[params.tabelaIR] || 896.00;
         ir13 = calculateIrrf(baseIR13, 0.275, deductionVal);
     }
 
-    // Adiantamento do 13º
+    // Adiantamento do 13o
     let adiant13Venc = params.adiant13Venc || 0;
     let adiant13FC = params.adiant13FC || 0;
 

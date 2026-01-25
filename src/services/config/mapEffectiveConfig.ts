@@ -1,4 +1,4 @@
-import { EffectiveConfig } from './types';
+import { AdjustmentScheduleConfig, EffectiveConfig } from './types';
 import { CourtConfig, TaxTable } from '../../types';
 
 const toNumberKey = (key: string) => {
@@ -35,6 +35,18 @@ const toMenuOptions = (values?: Record<string, number>) => {
         .map(([label, value]) => ({ label, value }));
 };
 
+const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
+    if (!schedule) return undefined;
+    return Object.entries(schedule)
+        .map(([key, entry]) => {
+            const numeric = toNumberKey(key);
+            if (numeric === null) return null;
+            return { period: numeric, percentage: entry.percentage };
+        })
+        .filter((entry): entry is { period: number; percentage: number } => !!entry)
+        .sort((a, b) => a.period - b.period);
+};
+
 export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): CourtConfig => {
     const salaryBases = effective.salary_bases;
 
@@ -60,6 +72,7 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
     }
 
     return {
+        adjustment_schedule: toAdjustmentSchedule(effective.adjustment_schedule),
         bases: {
             salario: {
                 analista: salaryBases?.analista ?? {},

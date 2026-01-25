@@ -28,7 +28,7 @@ export const useCalculatorResults = (
         // Wrap in async IIFE to await the calculation
         (async () => {
             const orgSlug = agency?.slug || 'jmu';
-            const params = mapStateToJmuParams(state, orgSlug);
+            const params = mapStateToJmuParams(state, orgSlug, courtConfig || undefined);
             const result = await agencyService.calculateTotal(params);
 
             setState(prev => {
@@ -78,7 +78,7 @@ export const useCalculatorResults = (
         state.dependentes, state.regimePrev, state.funprespAliq, state.funprespFacul,
         state.tabelaPSS, state.tabelaIR,
         state.pssSobreFC, state.incidirPSSGrat,
-        state.auxAlimentacao, state.auxPreEscolarQtd, state.auxTransporteGasto,
+        state.auxAlimentacao, state.auxPreEscolarQtd, state.cotaPreEscolar, state.auxTransporteGasto,
         state.emprestimos, state.planoSaude, state.pensao,
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC,

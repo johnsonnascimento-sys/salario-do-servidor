@@ -1,104 +1,133 @@
 /**
- * Cálculos de Base Salarial - JMU
- * 
- * Responsável por calcular:
+ * Calculos de Base Salarial - JMU
+ *
+ * Responsavel por calcular:
  * - Vencimento base
- * - GAJ (Gratificação de Atividade Judiciária)
- * - Função Comissionada
- * - AQ (Adicional de Qualificação) - Sistema antigo e novo
- * - Gratificações Específicas (GAE/GAS)
+ * - GAJ (Gratificacao de Atividade Judiciaria)
+ * - Funcao Comissionada
+ * - AQ (Adicional de Qualificacao) - Sistema antigo e novo
+ * - Gratificacoes Especificas (GAE/GAS)
  * - VPNI e ATS
- * 
- * REFATORADO: Agora usa ConfigService para buscar dados do banco
- * ao invés de valores hardcoded.
+ *
+ * REFATORADO: Agora usa params.agencyConfig para buscar dados.
  */
 
-import { configService, type EffectiveConfig } from '../../../../config';
 import { calcReajuste } from '../../../../../utils/calculations';
 import { IJmuCalculationParams } from '../types';
+import { CourtConfig } from '../../../../../types';
+
+interface AdjustmentEntry {
+    period: number;
+    percentage: number;
+}
+
+const normalizePercentage = (value: number) => (value > 1 ? value / 100 : value);
+
+const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEntry[] | null => {
+    const schedule =
+        (config as any).adjustment_schedule ||
+        (config.values as any)?.adjustment_schedule ||
+        (config.values as any)?.reajustes;
+
+    if (!Array.isArray(schedule)) {
+        return null;
+    }
+
+    return schedule
+        .filter((entry: AdjustmentEntry) => Number.isFinite(entry?.period) && Number.isFinite(entry?.percentage))
+        .filter((entry: AdjustmentEntry) => entry.period <= periodo)
+        .sort((a: AdjustmentEntry, b: AdjustmentEntry) => a.period - b.period);
+};
+
+const applyCorrections = (base: number, periodo: number, config: CourtConfig): number => {
+    const schedule = findCorrectionTable(periodo, config);
+    if (!schedule || schedule.length === 0) {
+        const steps = periodo >= 2 ? periodo - 1 : 0;
+        return calcReajuste(base, steps);
+    }
+
+    return schedule.reduce((value, entry) => {
+        return value * (1 + normalizePercentage(entry.percentage));
+    }, base);
+};
+
+const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+    if (!params.agencyConfig) {
+        throw new Error('agencyConfig is required for JMU calculations.');
+    }
+    return params.agencyConfig;
+};
 
 /**
- * Obtém dados ajustados para o período (bases salariais e VR)
- * Busca do banco de dados via ConfigService
+ * Obtem dados ajustados para o periodo (bases salariais e VR)
+ * usando a configuracao do orgao ja carregada.
  */
-export async function getDataForPeriod(periodo: number, orgSlug: string = 'jmu') {
-    // Buscar configuração efetiva do banco
-    // Buscar configuração efetiva do banco
-    const config = await configService.getEffectiveConfig(orgSlug);
+export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfig) {
+    const config = agencyConfig;
 
-    const steps = periodo >= 2 ? periodo - 1 : 0;
+    const sal = JSON.parse(JSON.stringify(config.bases?.salario?.analista || {}));
+    const salTecnico = JSON.parse(JSON.stringify(config.bases?.salario?.tec || {}));
 
-    // Deep copy and adjust bases from config
-    const sal = JSON.parse(JSON.stringify(config.salary_bases?.analista || {}));
-    const salTecnico = JSON.parse(JSON.stringify(config.salary_bases?.tecnico || {}));
-
-    // Aplicar reajustes
     const salario: any = { analista: {}, tecnico: {} };
     for (let padrao in sal) {
-        salario.analista[padrao] = calcReajuste(sal[padrao], steps);
+        salario.analista[padrao] = applyCorrections(sal[padrao], periodo, config);
     }
     for (let padrao in salTecnico) {
-        salario.tecnico[padrao] = calcReajuste(salTecnico[padrao], steps);
+        salario.tecnico[padrao] = applyCorrections(salTecnico[padrao], periodo, config);
     }
 
-    const func = JSON.parse(JSON.stringify(config.salary_bases?.funcoes || {}));
+    const func = JSON.parse(JSON.stringify(config.bases?.funcoes || {}));
     const funcoes: any = {};
     for (let key in func) {
-        funcoes[key] = calcReajuste(func[key], steps);
+        funcoes[key] = applyCorrections(func[key], periodo, config);
     }
 
-    // CJ1 base do banco
-    const cj1Base = config.cj1_integral_base || 0;
-    const cj1Adjusted = calcReajuste(cj1Base, steps);
+    const cj1Base = config.values?.cj1_integral_base || 0;
+    const cj1Adjusted = applyCorrections(cj1Base, periodo, config);
     const valorVR = Math.round(cj1Adjusted * 0.065 * 100) / 100;
 
     return { salario, funcoes, valorVR };
 }
 
 /**
- * Calcula a remuneração base total
+ * Calcula a remuneracao base total
  */
 export async function calculateBase(params: IJmuCalculationParams): Promise<number> {
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
+    const config = requireAgencyConfig(params);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40; // JMU Rule: GAJ is 140%
     const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
 
-    // AQ - Adicional de Qualificação (Lei 15.292/2025)
+    // AQ - Adicional de Qualificacao
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
 
     if (params.periodo >= 1) {
-        // Novo AQ: VR × Multiplicador
-        // VALIDAÇÃO: Detectar valores incorretos (cache antigo)
         if (params.aqTituloVR > 10 || params.aqTreinoVR > 10) {
-            console.error('⚠️ ERRO: Multiplicadores AQ incorretos!', {
+            console.error('Multiplicadores AQ incorretos.', {
                 aqTituloVR: params.aqTituloVR,
                 aqTreinoVR: params.aqTreinoVR,
                 valorVR,
                 periodo: params.periodo
             });
-            console.warn('🔄 Possível cache antigo detectado. Por favor, atualize a página e selecione novamente os valores de AQ.');
         }
 
         aqTituloVal = valorVR * params.aqTituloVR;
         aqTreinoVal = valorVR * params.aqTreinoVR;
     } else {
-        // Antigo AQ: Percentual direto do vencimento
         aqTituloVal = baseVencimento * params.aqTituloPerc;
         aqTreinoVal = baseVencimento * params.aqTreinoPerc;
     }
 
-    // Gratificação Específica
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35; // JMU Rule: 35%
+        gratVal = baseVencimento * 0.35;
     } else {
         gratVal = params.gratEspecificaValor || 0;
     }
 
-    // VPNI + ATS
     const extras = (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
 
     return baseVencimento + gaj + funcaoValor + aqTituloVal + aqTreinoVal + gratVal + extras;
@@ -106,10 +135,10 @@ export async function calculateBase(params: IJmuCalculationParams): Promise<numb
 
 /**
  * Calcula componentes individuais da base para breakdown detalhado
- * IMPORTANTE: Usado para mapear de volta para o React state
  */
 export async function calculateBaseComponents(params: IJmuCalculationParams) {
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
+    const config = requireAgencyConfig(params);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
@@ -118,11 +147,9 @@ export async function calculateBaseComponents(params: IJmuCalculationParams) {
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
     if (params.periodo >= 1) {
-        // Novo AQ: VR × Multiplicador (Lei 15.292)
         aqTituloVal = valorVR * params.aqTituloVR;
         aqTreinoVal = valorVR * params.aqTreinoVR;
     } else {
-        // Antigo AQ: Percentual do vencimento
         aqTituloVal = baseVencimento * params.aqTituloPerc;
         aqTreinoVal = baseVencimento * params.aqTreinoPerc;
     }

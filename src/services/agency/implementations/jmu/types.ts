@@ -5,9 +5,11 @@
  */
 
 import { ICalculationParams } from '../../types';
+import { CourtConfig } from '../../../../types';
 
 export interface IJmuCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
+    agencyConfig?: CourtConfig;
     periodo: number;
     cargo: 'analista' | 'tec';
     padrao: string;
@@ -31,6 +33,7 @@ export interface IJmuCalculationParams extends ICalculationParams {
     funprespFacul: number;
     auxAlimentacao: number;
     auxPreEscolarQtd: number;
+    cotaPreEscolar?: number;
     auxTransporteGasto: number;
 
     // Férias e 13º

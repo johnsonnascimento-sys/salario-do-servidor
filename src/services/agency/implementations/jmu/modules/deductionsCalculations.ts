@@ -1,17 +1,13 @@
 /**
- * Cálculos de Deduções - JMU
+ * Calculos de Deducoes - JMU
  * 
- * Responsável por calcular:
- * - PSS (Previdência Social do Servidor)
+ * Responsavel por calcular:
+ * - PSS (Previdencia Social do Servidor)
  * - IRRF (Imposto de Renda Retido na Fonte)
- * - Funpresp (Fundação de Previdência Complementar)
- * 
- * Baseado nas regras de tributação do PJU
- * 
- * REFATORADO: Agora usa ConfigService para buscar tabelas do banco
+ * - Funpresp (Fundacao de Previdencia Complementar)
  */
 
-import { configService } from '../../../../config';
+import { CourtConfig } from '../../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -23,15 +19,20 @@ export interface DeductionsResult {
     total: number;
 }
 
+const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+    if (!params.agencyConfig) {
+        throw new Error('agencyConfig is required for JMU calculations.');
+    }
+    return params.agencyConfig;
+};
+
 /**
- * Calcula Deduções (PSS, IRRF, Funpresp)
- * Busca tabelas de PSS e IR do banco via ConfigService
+ * Calcula Deducoes (PSS, IRRF, Funpresp)
  */
 export async function calculateDeductions(grossValue: number, params: IJmuCalculationParams): Promise<DeductionsResult> {
-    // Buscar configuração do banco
-    const config = await configService.getEffectiveConfig(params.orgSlug);
+    const config = requireAgencyConfig(params);
 
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
 
@@ -52,31 +53,21 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     if (params.incidirPSSGrat) basePSS += gratVal;
     if (params.pssSobreFC) basePSS += funcaoValor;
 
-    // Buscar tabela PSS do banco
-    const pssTableConfig = config.pss_tables?.[params.tabelaPSS];
-
-    // Adaptar formato do banco para o formato esperado por calculatePss
-    const pssTable = pssTableConfig ? {
-        teto_rgps: pssTableConfig.ceiling,
-        faixas: pssTableConfig.rates.map(rate => ({
-            min: rate.min,
-            max: rate.max,
-            rate: rate.rate
-        }))
-    } : null;
-
+    const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
     const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
     let pssMensal = 0;
     let baseFunpresp = 0;
 
-    if (usaTeto && pssTable) {
-        const baseLimitada = Math.min(basePSS, teto);
-        pssMensal = calculatePss(baseLimitada, pssTable);
-        baseFunpresp = Math.max(0, basePSS - teto);
-    } else if (pssTable) {
-        pssMensal = calculatePss(basePSS, pssTable);
+    if (pssTable) {
+        if (usaTeto) {
+            const baseLimitada = Math.min(basePSS, teto);
+            pssMensal = calculatePss(baseLimitada, pssTable);
+            baseFunpresp = Math.max(0, basePSS - teto);
+        } else {
+            pssMensal = calculatePss(basePSS, pssTable);
+        }
     }
 
     // Funpresp
@@ -97,14 +88,11 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     let totalTrib = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
         (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0) + abonoPerm;
 
-    // Buscar dedução de dependente e tabela IR do banco
-    const deducaoDep = config.dependent_deduction || 0;
+    const deducaoDep = config.values?.deducao_dep || 0;
     const baseIR = totalTrib - pssMensal - valFunpresp - (params.dependents * deducaoDep);
 
-    const deductionVal = config.ir_deduction?.[params.tabelaIR]?.deduction || 896.00;
+    const deductionVal = config.historico_ir?.[params.tabelaIR] || 896.00;
     const irMensal = calculateIrrf(baseIR, 0.275, deductionVal);
-
-
 
     return {
         pss: pssMensal,

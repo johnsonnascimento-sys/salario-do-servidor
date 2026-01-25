@@ -1,16 +1,12 @@
 /**
- * Cálculos de Férias - JMU
+ * Calculos de Ferias - JMU
  * 
- * Responsável por calcular:
- * - Férias (1/3 Constitucional)
- * - IR sobre Férias
- * 
- * Baseado em LEGACY_FORMULAS.md seção 7 (L312-317, L284-292)
- * 
- * REFATORADO: Agora usa ConfigService para buscar dados do banco
+ * Responsavel por calcular:
+ * - Ferias (1/3 Constitucional)
+ * - IR sobre Ferias
  */
 
-import { configService } from '../../../../config';
+import { CourtConfig } from '../../../../../types';
 import { calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -20,18 +16,23 @@ export interface VacationResult {
     irFerias: number;
 }
 
+const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+    if (!params.agencyConfig) {
+        throw new Error('agencyConfig is required for JMU calculations.');
+    }
+    return params.agencyConfig;
+};
+
 /**
- * Calcula Férias (1/3 Constitucional)
+ * Calcula Ferias (1/3 Constitucional)
  */
 export async function calculateVacation(params: IJmuCalculationParams): Promise<VacationResult> {
-    const config = await configService.getEffectiveConfig(params.orgSlug);
+    const config = requireAgencyConfig(params);
     let ferias1_3 = params.ferias1_3 || 0;
 
     if (!params.manualFerias) {
-        // Férias automáticas em Janeiro ou se há valor manual
         if (params.tipoCalculo === 'jan' || ferias1_3 > 0) {
-            // Férias = 1/3 da remuneração total COM função
-            const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
+            const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
             const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
             const gaj = baseVencimento * 1.40;
             const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
@@ -39,7 +40,6 @@ export async function calculateVacation(params: IJmuCalculationParams): Promise<
             let aqTituloVal = 0;
             let aqTreinoVal = 0;
             if (params.periodo >= 1) {
-                // Novo AQ: VR × Multiplicador
                 aqTituloVal = valorVR * params.aqTituloVR;
                 aqTreinoVal = valorVR * params.aqTreinoVR;
             } else {
@@ -61,12 +61,12 @@ export async function calculateVacation(params: IJmuCalculationParams): Promise<
     }
     ferias1_3 = Math.round(ferias1_3 * 100) / 100;
 
-    // IR sobre Férias
+    // IR sobre Ferias
     let irFerias = 0;
     if (ferias1_3 > 0 && !params.feriasAntecipadas) {
-        const deducaoDep = config.dependent_deduction || 0;
+        const deducaoDep = config.values?.deducao_dep || 0;
         const baseIRFerias = ferias1_3 - (params.dependents * deducaoDep);
-        const deductionVal = config.ir_deduction?.[params.tabelaIR]?.deduction || 896.00;
+        const deductionVal = config.historico_ir?.[params.tabelaIR] || 896.00;
         irFerias = calculateIrrf(baseIRFerias, 0.275, deductionVal);
     }
 

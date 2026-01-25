@@ -1,12 +1,13 @@
 /**
- * Cálculos de Benefícios - JMU
+ * Calculos de Beneficios - JMU
  * 
- * Responsável por calcular:
- * - Auxílio Alimentação
- * - Auxílio Pré-Escolar
- * - Auxílio Transporte (crédito e débito)
+ * Responsavel por calcular:
+ * - Auxilio Alimentacao
+ * - Auxilio Pre-Escolar
+ * - Auxilio Transporte (credito e debito)
  */
 
+import { CourtConfig } from '../../../../../types';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 
@@ -17,25 +18,21 @@ export interface BenefitsResult {
     auxTransporteDebito: number;
 }
 
+const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+    if (!params.agencyConfig) {
+        throw new Error('agencyConfig is required for JMU calculations.');
+    }
+    return params.agencyConfig;
+};
+
 /**
- * Calcula benefícios (auxílios)
+ * Calcula beneficios (auxilios)
  */
 export async function calculateBenefits(params: IJmuCalculationParams): Promise<BenefitsResult> {
-    // Valores de benefícios variam conforme o período
-    // Período 0 (2025): valores antigos
-    // Período >= 1 (2026+): valores novos
-    let auxAlimentacao: number;
-    let cotaPreEscolar: number;
+    const config = requireAgencyConfig(params);
 
-    if (params.periodo === 0) {
-        // 2025
-        auxAlimentacao = 1182.74;
-        cotaPreEscolar = 935.22;
-    } else {
-        // 2026+
-        auxAlimentacao = 1784.42;
-        cotaPreEscolar = 1235.77;
-    }
+    const auxAlimentacao = config.values?.food_allowance ?? params.auxAlimentacao ?? 0;
+    const cotaPreEscolar = config.values?.pre_school ?? params.cotaPreEscolar ?? 0;
 
     const preEscolarVal = (params.auxPreEscolarQtd || 0) * cotaPreEscolar;
 
@@ -46,7 +43,7 @@ export async function calculateBenefits(params: IJmuCalculationParams): Promise<
         auxTranspCred = params.auxTransporteGasto;
 
         // Debit logic depends on base salary
-        const { salario, funcoes } = await getDataForPeriod(params.periodo, params.orgSlug);
+        const { salario, funcoes } = await getDataForPeriod(params.periodo, config);
         const baseVenc = salario[params.cargo]?.[params.padrao] || 0;
         const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
 

@@ -1,20 +1,27 @@
 /**
- * Cálculos de Substituição de Função - JMU
+ * Calculos de Substituicao de Funcao - JMU
  * 
- * Responsável por calcular:
- * - Substituição de função (diferença proporcional aos dias)
- * 
- * Baseado em LEGACY_FORMULAS.md seção 6 (L191-215)
+ * Responsavel por calcular:
+ * - Substituicao de funcao (diferenca proporcional aos dias)
  */
 
+import { CourtConfig } from '../../../../../types';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 
+const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+    if (!params.agencyConfig) {
+        throw new Error('agencyConfig is required for JMU calculations.');
+    }
+    return params.agencyConfig;
+};
+
 /**
- * Calcula Substituição de Função
+ * Calcula Substituicao de Funcao
  */
 export async function calculateSubstitution(params: IJmuCalculationParams): Promise<number> {
-    const { funcoes, salario } = await getDataForPeriod(params.periodo, params.orgSlug);
+    const config = requireAgencyConfig(params);
+    const { funcoes, salario } = await getDataForPeriod(params.periodo, config);
     const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
 
@@ -23,18 +30,16 @@ export async function calculateSubstitution(params: IJmuCalculationParams): Prom
         gratVal = baseVencimento * 0.35;
     }
 
-    // Base de abatimento = Função atual + Gratificação
+    // Base de abatimento = Funcao atual + Gratificacao
     const baseAbatimento = funcaoValor + gratVal;
 
     let substTotalCalc = 0;
 
-    // Para cada função substituída
     if (params.substDias) {
         for (const [funcKey, days] of Object.entries(params.substDias)) {
             if (days > 0 && funcoes[funcKey]) {
-                const valDestino = funcoes[funcKey]; // Valor da função destino
+                const valDestino = funcoes[funcKey];
 
-                // Só paga diferença se destino > origem
                 if (valDestino > baseAbatimento) {
                     substTotalCalc += ((valDestino - baseAbatimento) / 30) * days;
                 }

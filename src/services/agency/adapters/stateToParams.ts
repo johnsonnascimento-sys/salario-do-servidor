@@ -1,4 +1,4 @@
-import { CalculatorState } from '../../../types';
+import { CalculatorState, CourtConfig } from '../../../types';
 import { IJmuCalculationParams } from '../implementations/jmu/types';
 
 /**
@@ -8,7 +8,11 @@ import { IJmuCalculationParams } from '../implementations/jmu/types';
  * @param orgSlug - Slug da agência (pju, jmu, stm)
  * @returns Parâmetros formatados para o JmuService
  */
-export function mapStateToJmuParams(state: CalculatorState, orgSlug: string = 'jmu'): IJmuCalculationParams {
+export function mapStateToJmuParams(
+    state: CalculatorState,
+    orgSlug: string = 'jmu',
+    agencyConfig?: CourtConfig
+): IJmuCalculationParams {
     return {
         // Base (ICalculationParams)
         grossSalary: 0, // Ignorado pelo JMU (calcula de cargo/padrao)
@@ -18,6 +22,7 @@ export function mapStateToJmuParams(state: CalculatorState, orgSlug: string = 'j
 
         // Agency Slug
         orgSlug: orgSlug,
+        agencyConfig,
 
         // Core Params
         periodo: state.periodo,
@@ -52,6 +57,7 @@ export function mapStateToJmuParams(state: CalculatorState, orgSlug: string = 'j
         auxAlimentacao: state.auxAlimentacao,
         auxPreEscolarQtd: state.auxPreEscolarQtd,
         auxTransporteGasto: state.auxTransporteGasto,
+        cotaPreEscolar: state.cotaPreEscolar,
 
         // Férias e 13º (Fase 7)
         tipoCalculo: state.tipoCalculo,

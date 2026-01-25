@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 
 export interface CourtConfig {
+    adjustment_schedule?: Array<{ period: number; percentage: number }>;
     bases: any; // Defines structure matching BASES_2025
     historico_pss: any;
     historico_ir: any;
@@ -9,6 +10,8 @@ export interface CourtConfig {
         pre_school?: number; // COTA_PRE_ESCOLAR
         deducao_dep?: number; // DEDUCAO_DEP
         cj1_integral_base?: number; // CJ1_INTEGRAL_BASE
+        adjustment_schedule?: Array<{ period: number; percentage: number }>;
+        reajustes?: Array<{ period: number; percentage: number }>;
     };
     menus?: {
         food_allowance?: Array<{ label: string; value: number }>;

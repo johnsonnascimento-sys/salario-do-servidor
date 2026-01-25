@@ -23,27 +23,60 @@ const requireConfig = (config?: CourtConfig): CourtConfig => {
     return config;
 };
 
+interface AdjustmentEntry {
+    period: number;
+    percentage: number;
+}
+
+const normalizePercentage = (value: number) => (value > 1 ? value / 100 : value);
+
+const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEntry[] | null => {
+    const schedule =
+        (config as any).adjustment_schedule ||
+        (config.values as any)?.adjustment_schedule ||
+        (config.values as any)?.reajustes;
+
+    if (!Array.isArray(schedule)) {
+        return null;
+    }
+
+    return schedule
+        .filter((entry: AdjustmentEntry) => Number.isFinite(entry?.period) && Number.isFinite(entry?.percentage))
+        .filter((entry: AdjustmentEntry) => entry.period <= periodo)
+        .sort((a: AdjustmentEntry, b: AdjustmentEntry) => a.period - b.period);
+};
+
+const applyCorrections = (base: number, periodo: number, config: CourtConfig): number => {
+    const schedule = findCorrectionTable(periodo, config);
+    if (!schedule || schedule.length === 0) {
+        const steps = periodo >= 2 ? periodo - 1 : 0;
+        return calcReajuste(base, steps);
+    }
+
+    return schedule.reduce((value, entry) => {
+        return value * (1 + normalizePercentage(entry.percentage));
+    }, base);
+};
+
 export const getTablesForPeriod = (periodo: number, config?: CourtConfig) => {
     const resolved = requireConfig(config);
     const BASES = resolved.bases;
     const CJ1_BASE = resolved.values?.cj1_integral_base ?? 0;
 
-    const steps = periodo >= 2 ? periodo - 1 : 0;
-
     const newSal: SalaryTable = { analista: {}, tec: {} };
     for (let cargo in BASES.salario) {
         for (let padrao in BASES.salario[cargo as 'analista' | 'tec']) {
-            newSal[cargo][padrao] = calcReajuste(BASES.salario[cargo as 'analista' | 'tec'][padrao], steps);
+            newSal[cargo][padrao] = applyCorrections(BASES.salario[cargo as 'analista' | 'tec'][padrao], periodo, resolved);
         }
     }
 
     const newFunc: FuncoesTable = {};
     for (let key in BASES.funcoes) {
-        newFunc[key] = calcReajuste(BASES.funcoes[key], steps);
+        newFunc[key] = applyCorrections(BASES.funcoes[key], periodo, resolved);
     }
 
     // Dynamic VR Calculation
-    const cj1Adjusted = calcReajuste(CJ1_BASE, steps);
+    const cj1Adjusted = applyCorrections(CJ1_BASE, periodo, resolved);
     const valorVR = Math.round(cj1Adjusted * 0.065 * 100) / 100;
 
     return { salario: newSal, funcoes: newFunc, valorVR };

@@ -14,6 +14,7 @@ export interface TaxTable {
 }
 
 export interface CourtConfig {
+  adjustment_schedule?: Array<{ period: number; percentage: number }>;
   bases: {
     salario: SalaryTable;
     funcoes: FuncoesTable;
@@ -25,6 +26,8 @@ export interface CourtConfig {
     pre_school?: number;
     deducao_dep?: number;
     cj1_integral_base?: number;
+    adjustment_schedule?: Array<{ period: number; percentage: number }>;
+    reajustes?: Array<{ period: number; percentage: number }>;
   };
   menus?: {
     food_allowance?: Array<{ label: string; value: number }>;

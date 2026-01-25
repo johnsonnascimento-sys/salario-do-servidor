@@ -1,17 +1,13 @@
 /**
- * Cálculos de Hora Extra - JMU
+ * Calculos de Hora Extra - JMU
  * 
- * Responsável por calcular:
+ * Responsavel por calcular:
  * - Hora Extra 50%
  * - Hora Extra 100%
  * - Total de Hora Extra
- * 
- * Baseado em LEGACY_FORMULAS.md seção 5 (L147-182)
- * 
- * REFATORADO: Agora usa ConfigService
  */
 
-import { configService } from '../../../../config';
+import { CourtConfig } from '../../../../../types';
 import { calculatePss } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
@@ -22,12 +18,19 @@ export interface OvertimeResult {
     heTotal: number;
 }
 
+const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+    if (!params.agencyConfig) {
+        throw new Error('agencyConfig is required for JMU calculations.');
+    }
+    return params.agencyConfig;
+};
+
 /**
  * Calcula Hora Extra (50% e 100%)
  */
 export async function calculateOvertime(params: IJmuCalculationParams): Promise<OvertimeResult> {
-    const config = await configService.getEffectiveConfig(params.orgSlug);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, params.orgSlug);
+    const config = requireAgencyConfig(params);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * 1.40;
     const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
@@ -47,34 +50,26 @@ export async function calculateOvertime(params: IJmuCalculationParams): Promise<
         gratVal = baseVencimento * 0.35;
     }
 
-    // Base para HE inclui todos os rendimentos + abono se aplicável
+    // Base para HE inclui todos os rendimentos + abono se aplicavel
     let baseHE = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
         funcaoValor + gratVal + (params.vpni_lei || 0) +
         (params.vpni_decisao || 0) + (params.ats || 0);
 
-    // Se recebe abono, adiciona à base de HE
+    // Se recebe abono, adiciona a base de HE
     if (params.recebeAbono) {
         let baseForPSS = baseHE;
-        baseForPSS -= aqTreinoVal; // AQ Treino não entra na base PSS
+        baseForPSS -= aqTreinoVal;
         if (!params.pssSobreFC) baseForPSS -= funcaoValor;
         if (!params.incidirPSSGrat) baseForPSS -= gratVal;
 
-        const pssTableConfig = config.pss_tables?.[params.tabelaPSS];
-        const pssTable = pssTableConfig ? {
-            teto_rgps: pssTableConfig.ceiling,
-            faixas: pssTableConfig.rates.map(rate => ({
-                min: rate.min,
-                max: rate.max,
-                rate: rate.rate
-            }))
-        } : null;
+        const pssTable = config.historico_pss?.[params.tabelaPSS];
         const teto = pssTable?.teto_rgps || 0;
         const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
-        if (usaTeto) {
-            baseForPSS = Math.min(baseForPSS, teto);
-        }
         if (pssTable) {
+            if (usaTeto) {
+                baseForPSS = Math.min(baseForPSS, teto);
+            }
             const abonoEstimado = calculatePss(baseForPSS, pssTable);
             baseHE += abonoEstimado;
         }
