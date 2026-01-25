@@ -13,6 +13,7 @@ import { ExtraRubrics } from '../components/Calculator/ExtraRubrics';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
 import { ResultsSidebar } from '../components/Calculator/ResultsSidebar';
+import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
 import DonationModal from '../components/DonationModal';
 import { SeasonalIncomeSection } from '../components/Calculator/SeasonalIncomeSection';
 import { IndemnitySection } from '../components/Calculator/IndemnitySection';
@@ -54,8 +55,17 @@ export default function Calculator() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
-            <CalculatorHeader
+        <>
+            {/* Mobile Top Bar - Fixed */}
+            <MobileResultsBar
+                bruto={state.bruto}
+                pss={state.totalPss}
+                irrf={state.totalIrrf}
+                liquido={state.liquido}
+            />
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-8 pb-32">
+                <CalculatorHeader
                 courtConfig={courtConfig}
                 state={state}
                 update={update}
@@ -163,13 +173,14 @@ export default function Calculator() {
                 onExportExcel={initiateExportExcel}
             />
 
-            <DonationModal
-                isOpen={donationModalOpen}
-                onClose={() => setDonationModalOpen(false)}
-                onDownloadReady={handleDonationComplete}
-                exportType={pendingExportType}
-                countdownSeconds={10}
-            />
-        </div>
+                <DonationModal
+                    isOpen={donationModalOpen}
+                    onClose={() => setDonationModalOpen(false)}
+                    onDownloadReady={handleDonationComplete}
+                    exportType={pendingExportType}
+                    countdownSeconds={10}
+                />
+            </div>
+        </>
     );
 }
