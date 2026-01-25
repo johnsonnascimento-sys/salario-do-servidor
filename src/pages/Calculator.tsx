@@ -56,15 +56,17 @@ export default function Calculator() {
 
     return (
         <>
-            {/* Mobile Top Bar - Fixed */}
+            {/* Mobile Bottom Bar - Fixed */}
             <MobileResultsBar
                 bruto={state.bruto}
                 pss={state.totalPss}
                 irrf={state.totalIrrf}
                 liquido={state.liquido}
+                onExportPDF={initiateExportPDF}
+                onExportExcel={initiateExportExcel}
             />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-8 pb-24 lg:pb-32">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-32">
                 <CalculatorHeader
                 courtConfig={courtConfig}
                 state={state}
