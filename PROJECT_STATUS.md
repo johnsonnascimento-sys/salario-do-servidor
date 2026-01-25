@@ -1,8 +1,8 @@
 # Status do Projeto - Salario do Servidor
 
-**Ultima Atualizacao:** 25/01/2026 14:45
-**Versao:** 1.1.0
-**Ultimo Commit:** 53a84c5
+**Ultima Atualizacao:** 25/01/2026 15:32
+**Versao:** 1.0.0
+**Ultimo Commit:** 4b429d1
 **Scripts:** audit-project.cjs, audit-design-system.cjs, generate-version.js, verify-migration.js
 
 ---
@@ -10,7 +10,7 @@
 ## Resumo Executivo
 
 **Projeto em producao:** https://salariodoservidor.com.br/simulador/jmu
-**Status geral:** Sistema 100% Data-Driven + Design System 100% compliant
+**Status geral:** Sistema 100% Data-Driven + Design System 100% compliant + cards atomicos
 **Proxima prioridade:** Qualidade e governanca (testes, validacao de config, CI)
 
 ---
@@ -28,10 +28,12 @@
 - Migration SQL aplicada
 - data.ts removido
 - Adapter mapEffectiveConfig -> CourtConfig
+- Modulos JMU usam agencyConfig (sem ConfigService nos calculos)
 
 ### Fase 4: UX/UI (100%)
 - Hybrid Dashboard (sidebar + mobile bar)
 - Version badge automatico
+- Layout 3 colunas com cards atomicos (ferias/13o/subst/HE/diarias/licenca/pre-escolar)
 
 ### Fase 2: Design System (100%)
 - Tokens completos no Tailwind
@@ -82,7 +84,7 @@ npm run audit:design
 
 ## Deploy
 
-- Ultimo deploy: 53a84c5
+- Ultimo deploy: 4b429d1
 - Vercel: deploy automatico no push para main
 
 ---

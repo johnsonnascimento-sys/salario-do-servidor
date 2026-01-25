@@ -1,7 +1,7 @@
 # Plano de Correcao e Melhorias - Salario do Servidor
 
 **Data Criacao:** 23/01/2026
-**Ultima Atualizacao:** 25/01/2026
+**Ultima Atualizacao:** 25/01/2026 15:32
 **Objetivo:** Manter qualidade, estabilidade e escalabilidade
 
 ---
@@ -12,7 +12,7 @@
 - Fase 1: Modularizacao (JmuService e useCalculator)
 - Fase 2: Design System completo + audit 100/100
 - Fase 3: Data-driven completo (ConfigService + data.ts removido)
-- Fase 4: UX/UI (hybrid dashboard + mobile bar + version badge)
+- Fase 4: UX/UI (hybrid dashboard + mobile bar + version badge + cards atomicos 3 colunas)
 
 ### Em andamento
 - Fase 5: Qualidade e testes
@@ -53,3 +53,4 @@ npm run audit:design
 
 - data.ts removido; uso 100% via ConfigService
 - Design audit atual: Health Score 100/100
+- JMU calculos usam agencyConfig (sem ConfigService nos modulos)
