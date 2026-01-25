@@ -280,4 +280,4 @@ module.exports = { /* exports */ };
 
 ---
 
-**Última atualização:** 24/01/2026
+**Última atualização:** 25/01/2026

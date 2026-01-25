@@ -1305,5 +1305,8 @@ className="transition-all duration-300"  // Padrão para animações maiores
 
 ---
 
-*Última atualização: Janeiro/2026 - v1.1.0*
-*Sistema de Design Tokens: Completo e Documentado*
+---
+
+**Última atualização:** 25/01/2026
+**Versão:** 1.1.0
+**Status:** Sistema de Design Tokens Completo e Documentado
