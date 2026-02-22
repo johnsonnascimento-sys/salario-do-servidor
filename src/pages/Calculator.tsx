@@ -3,28 +3,18 @@ import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
 import { GlobalSettings } from '../components/Calculator/GlobalSettings';
 import { CalculatorHeader } from '../components/Calculator/CalculatorHeader';
-import { IncomeSection } from '../components/Calculator/IncomeSection';
-import { DeductionsSection } from '../components/Calculator/DeductionsSection';
+import { DynamicPayrollForm } from '../components/Calculator/DynamicPayrollForm';
 import { ObservationsSection } from '../components/Calculator/ObservationsSection';
-import { ExtraRubrics } from '../components/Calculator/ExtraRubrics';
+import { ResultsSidebar } from '../components/Calculator/ResultsSidebar';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
 import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
 import DonationModal from '../components/DonationModal';
-import { FoodAllowanceCard } from '../components/Calculator/cards/FoodAllowanceCard';
-import { VacationCard } from '../components/Calculator/cards/VacationCard';
-import { ThirteenthCard } from '../components/Calculator/cards/ThirteenthCard';
-import { SubstitutionCard } from '../components/Calculator/cards/SubstitutionCard';
-import { LicenseCard } from '../components/Calculator/cards/LicenseCard';
-import { OvertimeCard } from '../components/Calculator/cards/OvertimeCard';
-import { DailiesCard } from '../components/Calculator/cards/DailiesCard';
-import { PreschoolCard } from '../components/Calculator/cards/PreschoolCard';
 
 export default function Calculator() {
     const {
         state,
         update,
-        updateSubstDays,
         courtConfig,
         loadingConfig,
         resultRows,
@@ -42,8 +32,6 @@ export default function Calculator() {
         agencyName,
         configError
     } = useCalculator();
-
-    const isNovoAQ = state.periodo >= 1;
 
     if (loadingConfig) {
         return (
@@ -67,9 +55,9 @@ export default function Calculator() {
         <>
             {/* Mobile Bottom Bar - Fixed */}
             <MobileResultsBar
-                bruto={state.bruto}
-                pss={state.totalPss}
-                irrf={state.totalIrrf}
+                bruto={state.totalBruto}
+                pss={state.pssMensal + (state.pss13 || 0)}
+                irrf={state.irMensal + state.irEA + state.irFerias + (state.ir13 || 0)}
                 liquido={state.liquido}
                 onExportPDF={initiateExportPDF}
                 onExportExcel={initiateExportExcel}
@@ -92,69 +80,12 @@ export default function Calculator() {
                     styles={styles}
                 />
 
-                {/* Main Layout: 3 Columns */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column */}
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8">
                     <div className="space-y-8">
-                        <IncomeSection
+                        <DynamicPayrollForm
                             state={state}
                             update={update}
                             courtConfig={courtConfig}
-                            styles={styles}
-                            isNovoAQ={isNovoAQ}
-                        />
-                        <FoodAllowanceCard value={state.auxAlimentacao} styles={styles} />
-                    </div>
-
-                    {/* Center Column */}
-                    <div className="space-y-8">
-                        <VacationCard
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                        <ThirteenthCard
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                        <SubstitutionCard
-                            state={state}
-                            update={update}
-                            updateSubstDays={updateSubstDays}
-                            styles={styles}
-                        />
-                        <LicenseCard
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                        <OvertimeCard
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                        <DailiesCard
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                        <PreschoolCard
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="space-y-8">
-                        <DeductionsSection
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                        <ExtraRubrics
-                            state={state}
                             addRubrica={addRubrica}
                             removeRubrica={removeRubrica}
                             updateRubrica={updateRubrica}
@@ -166,6 +97,15 @@ export default function Calculator() {
                             styles={styles}
                         />
                     </div>
+
+                    <ResultsSidebar
+                        bruto={state.totalBruto}
+                        pss={state.pssMensal + (state.pss13 || 0)}
+                        irrf={state.irMensal + state.irEA + state.irFerias + (state.ir13 || 0)}
+                        liquido={state.liquido}
+                        onExportPDF={initiateExportPDF}
+                        onExportExcel={initiateExportExcel}
+                    />
                 </div>
 
                 <ResultsSummary

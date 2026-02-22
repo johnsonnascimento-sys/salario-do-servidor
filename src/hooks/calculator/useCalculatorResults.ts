@@ -80,6 +80,7 @@ export const useCalculatorResults = (
         state.pssSobreFC, state.incidirPSSGrat,
         state.auxAlimentacao, state.auxPreEscolarQtd, state.cotaPreEscolar, state.auxTransporteGasto,
         state.emprestimos, state.planoSaude, state.pensao,
+        state.rubricasExtras,
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC,
         state.heQtd50, state.heQtd100, state.substDias,
@@ -178,10 +179,22 @@ export const useCalculatorResults = (
         const glosaEst = state.diariasBruto - state.diariasValorTotal - state.diariasDescAlim - state.diariasDescTransp;
         if (glosaEst > 0.01) rows.push({ label: 'ABATIMENTO BENEF. EXTERNO (ART. 4)', value: glosaEst, type: 'D' });
 
-        state.rubricasExtras.forEach(r => {
-            if (r.valor > 0 && r.descricao) {
-                rows.push({ label: r.descricao.toUpperCase(), value: r.valor, type: r.tipo });
+        state.rubricasExtras.forEach((r, index) => {
+            if (r.valor <= 0) {
+                return;
             }
+
+            const descricaoBase = r.descricao.trim() || `${r.tipo === 'C' ? 'CREDITO' : 'DESCONTO'} MANUAL ${index + 1}`;
+            const bases: string[] = [];
+            if (r.incideIR) bases.push('BASE IR');
+            if (r.incidePSS) bases.push('BASE PSS');
+            const sufixoBase = bases.length > 0 ? ` (${bases.join(' | ')})` : '';
+
+            rows.push({
+                label: `${descricaoBase}${sufixoBase}`.toUpperCase(),
+                value: r.valor,
+                type: r.tipo
+            });
         });
 
         return rows;

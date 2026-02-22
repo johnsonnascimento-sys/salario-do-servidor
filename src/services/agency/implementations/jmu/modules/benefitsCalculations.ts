@@ -31,8 +31,13 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
 export async function calculateBenefits(params: IJmuCalculationParams): Promise<BenefitsResult> {
     const config = requireAgencyConfig(params);
 
-    const auxAlimentacao = config.values?.food_allowance ?? params.auxAlimentacao ?? 0;
-    const cotaPreEscolar = config.values?.pre_school ?? params.cotaPreEscolar ?? 0;
+    const configAuxAlimentacao = config.values?.food_allowance ?? 0;
+    const auxAlimentacao = params.auxAlimentacao > 0 ? params.auxAlimentacao : configAuxAlimentacao;
+
+    const configCotaPreEscolar = config.values?.pre_school ?? 0;
+    const cotaPreEscolar = params.cotaPreEscolar && params.cotaPreEscolar > 0
+        ? params.cotaPreEscolar
+        : configCotaPreEscolar;
 
     const preEscolarVal = (params.auxPreEscolarQtd || 0) * cotaPreEscolar;
 

@@ -5,7 +5,7 @@
  */
 
 import { ICalculationParams } from '../../types';
-import { CourtConfig } from '../../../../types';
+import { CourtConfig, Rubrica } from '../../../../types';
 
 export interface IJmuCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
@@ -62,4 +62,5 @@ export interface IJmuCalculationParams extends ICalculationParams {
     licencaDias: number;
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
+    rubricasExtras?: Rubrica[];
 }

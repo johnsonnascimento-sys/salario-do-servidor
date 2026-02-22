@@ -130,3 +130,4 @@ Comandos uteis:
 ## 6. Referencias Tecnicas
 - `DATABASE_SCHEMA.md` (detalhes do banco e ERD)
 - `PROJECT_ARCHITECTURE.md` (arquitetura da aplicacao)
+- `CALCULATOR_RULES.md` (regras imutaveis e proibicoes de hardcode)

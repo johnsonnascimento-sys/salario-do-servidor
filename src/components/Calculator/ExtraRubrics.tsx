@@ -5,7 +5,7 @@ import { CalculatorState, Rubrica } from '../../types';
 
 interface ExtraRubricsProps {
     state: CalculatorState;
-    addRubrica: () => void;
+    addRubrica: (tipo?: Rubrica['tipo']) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     styles: any;

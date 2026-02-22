@@ -26,12 +26,14 @@ export const useCalculatorState = () => {
         }));
     }, []);
 
-    const addRubrica = useCallback(() => {
+    const addRubrica = useCallback((tipo: Rubrica['tipo'] = 'C') => {
         const newRubrica: Rubrica = {
             id: Math.random().toString(36).substr(2, 9),
             descricao: '',
             valor: 0,
-            tipo: 'C'
+            tipo,
+            incideIR: false,
+            incidePSS: false
         };
         setState(prev => ({
             ...prev,

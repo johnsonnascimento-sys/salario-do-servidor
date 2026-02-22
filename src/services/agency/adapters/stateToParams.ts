@@ -19,6 +19,7 @@ export function mapStateToJmuParams(
         dependents: state.dependentes,
         discounts: state.emprestimos + state.planoSaude + state.pensao,
         otherDeductions: 0,
+        rubricasExtras: state.rubricasExtras,
 
         // Agency Slug
         orgSlug: orgSlug,

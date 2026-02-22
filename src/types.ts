@@ -40,6 +40,8 @@ export interface Rubrica {
   descricao: string;
   valor: number;
   tipo: 'C' | 'D';
+  incideIR: boolean;
+  incidePSS: boolean;
 }
 
 export interface CalculatorState {

@@ -7,7 +7,7 @@
  * - Funpresp (Fundacao de Previdencia Complementar)
  */
 
-import { CourtConfig } from '../../../../../types';
+import { CourtConfig, Rubrica } from '../../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
@@ -26,11 +26,33 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
     return params.agencyConfig;
 };
 
+const calculateRubricasBaseAdjustments = (rubricas: Rubrica[] = []) => {
+    return rubricas.reduce(
+        (acc, rubrica) => {
+            const valor = Number(rubrica.valor);
+            if (!Number.isFinite(valor) || valor <= 0) {
+                return acc;
+            }
+
+            const signedValor = rubrica.tipo === 'D' ? -valor : valor;
+            if (rubrica.incidePSS) {
+                acc.pss += signedValor;
+            }
+            if (rubrica.incideIR) {
+                acc.ir += signedValor;
+            }
+            return acc;
+        },
+        { pss: 0, ir: 0 }
+    );
+};
+
 /**
  * Calcula Deducoes (PSS, IRRF, Funpresp)
  */
 export async function calculateDeductions(grossValue: number, params: IJmuCalculationParams): Promise<DeductionsResult> {
     const config = requireAgencyConfig(params);
+    const rubricasAdjustments = calculateRubricasBaseAdjustments(params.rubricasExtras);
 
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
@@ -52,6 +74,7 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     let basePSS = baseVencimento + gaj + aqTituloVal + (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
     if (params.incidirPSSGrat) basePSS += gratVal;
     if (params.pssSobreFC) basePSS += funcaoValor;
+    basePSS = Math.max(0, basePSS + rubricasAdjustments.pss);
 
     const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
@@ -87,9 +110,10 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     // Total Tributavel Construction
     let totalTrib = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
         (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0) + abonoPerm;
+    totalTrib = Math.max(0, totalTrib + rubricasAdjustments.ir);
 
     const deducaoDep = config.values?.deducao_dep || 0;
-    const baseIR = totalTrib - pssMensal - valFunpresp - (params.dependents * deducaoDep);
+    const baseIR = Math.max(0, totalTrib - pssMensal - valFunpresp - (params.dependents * deducaoDep));
 
     const deductionVal = config.historico_ir?.[params.tabelaIR] || 896.00;
     const irMensal = calculateIrrf(baseIR, 0.275, deductionVal);

@@ -31,6 +31,26 @@ import { calculateDailies } from './jmu/modules/dailiesCalculations';
 import { calculateCompensatoryLeave } from './jmu/modules/leaveCalculations';
 import { calculateDeductions } from './jmu/modules/deductionsCalculations';
 
+const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number }> = []) => {
+    return rubricas.reduce(
+        (acc, rubrica) => {
+            const valor = Number(rubrica?.valor);
+            if (!Number.isFinite(valor) || valor <= 0) {
+                return acc;
+            }
+
+            if (rubrica?.tipo === 'D') {
+                acc.debitos += valor;
+            } else {
+                acc.creditos += valor;
+            }
+
+            return acc;
+        },
+        { creditos: 0, debitos: 0 }
+    );
+};
+
 /**
  * Service de Cálculo da JMU
  *
@@ -86,6 +106,7 @@ export class JmuService implements IAgencyCalculator {
         const substitution = await calculateSubstitution(params);
         const dailies = await calculateDailies(params);
         const compensatoryLeave = await calculateCompensatoryLeave(params);
+        const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
         // 4. Calcular Deduções (agora async)
         const deductions = await calculateDeductions(base, params);
@@ -95,11 +116,11 @@ export class JmuService implements IAgencyCalculator {
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
             benefits.auxTransporte + vacation.value + thirteenth.adiant13Venc +
             thirteenth.adiant13FC + thirteenth.gratNatalinaTotal + overtime.heTotal +
-            substitution + dailies.valor + compensatoryLeave;
+            substitution + dailies.valor + compensatoryLeave + rubricasTotals.creditos;
 
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
-            vacation.irFerias + thirteenth.pss13 + thirteenth.ir13;
+            vacation.irFerias + thirteenth.pss13 + thirteenth.ir13 + rubricasTotals.debitos;
 
         // 6. Retornar Resultado Completo
         return {
@@ -154,7 +175,9 @@ export class JmuService implements IAgencyCalculator {
                 licencaCompensatoria: compensatoryLeave,
 
                 // Benefícios
-                ...benefits
+                ...benefits,
+                rubricasDinamicasCredito: rubricasTotals.creditos,
+                rubricasDinamicasDebito: rubricasTotals.debitos
             }
         };
     }
