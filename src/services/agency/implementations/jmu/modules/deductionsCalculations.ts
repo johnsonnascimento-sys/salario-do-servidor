@@ -12,11 +12,14 @@ import { calculatePss, calculateIrrf } from '../../../../../core/calculations/ta
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
+import { calculateOvertime } from './overtimeCalculations';
+import { calculateSubstitution } from './substitutionCalculations';
 
 export interface DeductionsResult {
     pss: number;
     funpresp: number;
     irrf: number;
+    irEA: number;
     total: number;
 }
 
@@ -39,12 +42,14 @@ const calculateRubricasBaseAdjustments = (rubricas: Rubrica[] = []) => {
             if (rubrica.incidePSS) {
                 acc.pss += signedValor;
             }
-            if (rubrica.incideIR) {
-                acc.ir += signedValor;
+            if (rubrica.isEA) {
+                acc.irEA += signedValor;
+            } else if (rubrica.incideIR) {
+                acc.irMensal += signedValor;
             }
             return acc;
         },
-        { pss: 0, ir: 0 }
+        { pss: 0, irMensal: 0, irEA: 0 }
     );
 };
 
@@ -112,7 +117,14 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     // Total Tributavel Construction
     let totalTrib = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
         (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0) + abonoPerm;
-    totalTrib = Math.max(0, totalTrib + rubricasAdjustments.ir);
+
+    // Hora extra / substituicao: entram no mensal apenas quando NAO marcadas como EA.
+    const overtime = await calculateOvertime(params);
+    const substitution = await calculateSubstitution(params);
+    if (!params.heIsEA) totalTrib += overtime.heTotal;
+    if (!params.substIsEA) totalTrib += substitution;
+
+    totalTrib = Math.max(0, totalTrib + rubricasAdjustments.irMensal);
 
     const deducaoDep = config.values?.deducao_dep || 0;
     const baseIR = Math.max(0, totalTrib - pssMensal - valFunpresp - (params.dependents * deducaoDep));
@@ -120,10 +132,19 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
     const irMensal = calculateIrrf(baseIR, payrollRules.irrfTopRate, deductionVal);
 
+    // IR de Exercicio Anterior (EA): HE/Substituicao marcadas como EA.
+    const baseEA =
+        (params.heIsEA ? overtime.heTotal : 0) +
+        (params.substIsEA ? substitution : 0) +
+        rubricasAdjustments.irEA;
+    const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep));
+    const irEA = calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
+
     return {
         pss: pssMensal,
         funpresp: valFunpresp,
         irrf: irMensal,
-        total: pssMensal + valFunpresp + irMensal
+        irEA,
+        total: pssMensal + valFunpresp + irMensal + irEA
     };
 }

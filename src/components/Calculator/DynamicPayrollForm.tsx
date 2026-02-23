@@ -595,7 +595,28 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
                             <div className="flex items-center gap-4 flex-wrap">
                                 <label className={styles.checkboxLabel}>
-                                    <input type="checkbox" className={styles.checkbox} checked={rubrica.incideIR} onChange={e => updateRubrica(rubrica.id, 'incideIR', e.target.checked)} />
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={rubrica.isEA}
+                                        onChange={e => {
+                                            const checked = e.target.checked;
+                                            updateRubrica(rubrica.id, 'isEA', checked);
+                                            if (checked) {
+                                                updateRubrica(rubrica.id, 'incideIR', false);
+                                            }
+                                        }}
+                                    />
+                                    <span>Exercício Anterior (EA)</span>
+                                </label>
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={rubrica.incideIR}
+                                        disabled={rubrica.isEA}
+                                        onChange={e => updateRubrica(rubrica.id, 'incideIR', e.target.checked)}
+                                    />
                                     <span>Incluir na base do IR</span>
                                 </label>
                                 <label className={styles.checkboxLabel}>

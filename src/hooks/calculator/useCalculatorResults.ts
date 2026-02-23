@@ -43,6 +43,7 @@ export const useCalculatorResults = (
                     pssMensal: bd.pss || 0,
                     valFunpresp: bd.funpresp || 0,
                     irMensal: bd.irrf || 0,
+                    irEA: bd.irEA || 0,
                     abonoPermanencia: bd.abono || 0,
                     auxAlimentacao: bd.auxAlimentacao || 0,
                     auxPreEscolarValor: bd.auxPreEscolar || 0,
@@ -83,7 +84,7 @@ export const useCalculatorResults = (
         state.rubricasExtras,
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC,
-        state.heQtd50, state.heQtd100, state.substDias,
+        state.heQtd50, state.heQtd100, state.heIsEA, state.substDias, state.substIsEA,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
         state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
@@ -187,7 +188,8 @@ export const useCalculatorResults = (
 
             const descricaoBase = r.descricao.trim() || `${r.tipo === 'C' ? 'CREDITO' : 'DESCONTO'} MANUAL ${index + 1}`;
             const bases: string[] = [];
-            if (r.incideIR) bases.push('BASE IR');
+            if (r.isEA) bases.push('EA');
+            else if (r.incideIR) bases.push('BASE IR');
             if (r.incidePSS) bases.push('BASE PSS');
             const sufixoBase = bases.length > 0 ? ` (${bases.join(' | ')})` : '';
 

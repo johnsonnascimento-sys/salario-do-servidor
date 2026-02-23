@@ -49,7 +49,9 @@ export interface IJmuCalculationParams extends ICalculationParams {
     // Hora Extra e Substituição
     heQtd50: number;
     heQtd100: number;
+    heIsEA: boolean;
     substDias: Record<string, number>; // Mapa de função -> dias
+    substIsEA: boolean;
 
     // Diárias e Licenças
     diariasQtd: number;

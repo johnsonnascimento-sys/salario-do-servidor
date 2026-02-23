@@ -83,6 +83,7 @@ export interface Rubrica {
   tipo: 'C' | 'D';
   incideIR: boolean;
   incidePSS: boolean;
+  isEA: boolean;
 }
 
 export interface CalculatorState {

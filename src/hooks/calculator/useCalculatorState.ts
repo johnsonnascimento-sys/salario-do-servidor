@@ -33,7 +33,8 @@ export const useCalculatorState = () => {
             valor: 0,
             tipo,
             incideIR: false,
-            incidePSS: false
+            incidePSS: false,
+            isEA: false
         };
         setState(prev => ({
             ...prev,
