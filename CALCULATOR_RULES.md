@@ -32,8 +32,13 @@ Baseado em `MANUAL_DO_PROJETO.md`, `PROJECT_ARCHITECTURE.md` e `DATA_DRIVEN_MIGR
 ## 4. Data-driven obrigatorio
 
 1. Configuracoes seguem hierarquia: Global -> Power -> Org.
-2. O sistema nao pode depender de `data.ts` legado.
-3. Se faltar dado remoto, fallback permitido apenas para `courts.config` conforme fluxo atual.
+2. Regras de diarias devem viver em `power_config.config_key = dailies_rules` (com override opcional via `org_config`).
+3. Qualquer ajuste de valor/percentual de diaria deve ser feito no banco (admin/seed/migracao), nunca no codigo.
+4. Regras de formula (GAJ, VR, divisores, transporte, IR) devem viver em `power_config.config_key = payroll_rules`.
+5. Catalogo de carreira (cargo labels, codigo sem funcao) deve viver em `power_config.config_key = career_catalog`.
+6. Referencia salarial (periodos/reajustes exibidos na UI) deve viver em `power_config.config_key = adjustment_schedule`.
+7. O sistema nao pode depender de `data.ts` legado.
+8. Se faltar dado remoto, fallback permitido apenas para `courts.config` conforme fluxo atual.
 
 ## 5. Qualidade minima para merge
 

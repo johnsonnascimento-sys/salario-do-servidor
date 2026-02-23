@@ -48,9 +48,9 @@ const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
         .map(([key, entry]) => {
             const numeric = toNumberKey(key);
             if (numeric === null) return null;
-            return { period: numeric, percentage: entry.percentage };
+            return { period: numeric, percentage: entry.percentage, label: entry.label };
         })
-        .filter((entry): entry is { period: number; percentage: number } => !!entry)
+        .filter((entry): entry is { period: number; percentage: number; label?: string } => !!entry)
         .sort((a, b) => a.period - b.period);
 };
 
@@ -73,17 +73,25 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
     }
 
     const historico_ir: Record<string, number> = {};
+    const historico_ir_brackets: Record<string, Array<{ min: number; max: number; rate: number; deduction: number }>> = {};
     if (effective.ir_deduction) {
         Object.entries(effective.ir_deduction).forEach(([key, table]) => {
             historico_ir[key] = table.deduction;
+            historico_ir_brackets[key] = (table.brackets || []).map((bracket) => ({
+                min: bracket.min,
+                max: bracket.max ?? Infinity,
+                rate: bracket.rate,
+                deduction: bracket.deduction,
+            }));
         });
     }
 
-    const tecnicoBases =
-        pickCaseInsensitive(salarySource, 'tecnico') ??
-        pickCaseInsensitive(salarySource, 'tec') ??
-        {};
-    const analistaBases = pickCaseInsensitive(salarySource, 'analista') ?? {};
+    const salaryBasesNormalized: Record<string, Record<string, number>> = {};
+    Object.entries(salarySource || {}).forEach(([cargo, padroes]) => {
+        if (cargo.toLowerCase() === 'funcoes') return;
+        if (!padroes || typeof padroes !== 'object') return;
+        salaryBasesNormalized[cargo] = padroes as Record<string, number>;
+    });
     const funcoesBases =
         pickCaseInsensitive(salaryBases as any, 'funcoes') ??
         pickCaseInsensitive(salarySource, 'funcoes') ??
@@ -92,14 +100,12 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
     return {
         adjustment_schedule: toAdjustmentSchedule(effective.adjustment_schedule),
         bases: {
-            salario: {
-                analista: analistaBases,
-                tec: tecnicoBases,
-            },
+            salario: salaryBasesNormalized,
             funcoes: funcoesBases,
         },
         historico_pss,
         historico_ir,
+        historico_ir_brackets,
         values: {
             food_allowance: pickLatestValue(effective.benefits?.auxilio_alimentacao),
             pre_school: pickLatestValue(effective.benefits?.auxilio_preescolar),
@@ -110,5 +116,38 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
             food_allowance: toMenuOptions(effective.benefits?.auxilio_alimentacao),
             preschool_allowance: toMenuOptions(effective.benefits?.auxilio_preescolar),
         },
+        dailies: effective.dailies_rules
+            ? {
+                rates: effective.dailies_rules.rates ?? {},
+                embarkationAdditional: {
+                    completo: effective.dailies_rules.embarkation_additional?.completo ?? 0,
+                    metade: effective.dailies_rules.embarkation_additional?.metade ?? 0,
+                },
+                externalGloss: {
+                    hospedagem: effective.dailies_rules.external_gloss?.hospedagem ?? 0,
+                    alimentacao: effective.dailies_rules.external_gloss?.alimentacao ?? 0,
+                    transporte: effective.dailies_rules.external_gloss?.transporte ?? 0,
+                },
+            }
+            : undefined,
+        payrollRules: effective.payroll_rules
+            ? {
+                gajRate: effective.payroll_rules.gaj_rate,
+                specificGratificationRate: effective.payroll_rules.specific_gratification_rate,
+                vrRateOnCj1: effective.payroll_rules.vr_rate_on_cj1,
+                monthDayDivisor: effective.payroll_rules.month_day_divisor,
+                overtimeMonthHours: effective.payroll_rules.overtime_month_hours,
+                transportWorkdays: effective.payroll_rules.transport_workdays,
+                transportDiscountRate: effective.payroll_rules.transport_discount_rate,
+                irrfTopRate: effective.payroll_rules.irrf_top_rate,
+            }
+            : undefined,
+        careerCatalog: effective.career_catalog
+            ? {
+                noFunctionCode: effective.career_catalog.no_function_code,
+                noFunctionLabel: effective.career_catalog.no_function_label,
+                cargoLabels: effective.career_catalog.cargo_labels ?? {},
+            }
+            : undefined,
     };
 };

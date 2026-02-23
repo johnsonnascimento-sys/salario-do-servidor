@@ -10,6 +10,7 @@ import { CourtConfig } from '../../../../../types';
 import { calculatePss } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
@@ -23,9 +24,10 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  */
 export async function calculateCompensatoryLeave(params: IJmuCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-    const gaj = baseVencimento * 1.40;
+    const gaj = baseVencimento * payrollRules.gajRate;
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
@@ -39,13 +41,13 @@ export async function calculateCompensatoryLeave(params: IJmuCalculationParams):
 
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
     // Funcao usada na licenca
     let valFuncaoLicenca = 0;
     if (params.baseLicenca === 'auto') {
-        valFuncaoLicenca = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+        valFuncaoLicenca = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
     } else if (funcoes[params.baseLicenca]) {
         valFuncaoLicenca = funcoes[params.baseLicenca];
     }
@@ -66,7 +68,8 @@ export async function calculateCompensatoryLeave(params: IJmuCalculationParams):
     }
 
     // Valor da Licenca = (Base + Abono) / 30 * Dias
-    const licencaVal = ((baseLicencaTotal + abonoEstimadoLicenca) / 30) * (params.licencaDias || 0);
+    const licencaVal =
+        ((baseLicencaTotal + abonoEstimadoLicenca) / payrollRules.monthDayDivisor) * (params.licencaDias || 0);
 
     return Math.round(licencaVal * 100) / 100;
 }

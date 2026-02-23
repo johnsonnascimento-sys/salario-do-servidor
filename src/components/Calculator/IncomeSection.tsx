@@ -14,6 +14,10 @@ interface IncomeSectionProps {
 
 export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, courtConfig, styles, isNovoAQ }) => {
     const currentTables = getTablesForPeriod(state.periodo, courtConfig);
+    const careerCatalog = courtConfig?.careerCatalog;
+    const cargoOptions = Object.keys(currentTables.salario || {});
+    const noFunctionCode = careerCatalog?.noFunctionCode ?? '';
+    const noFunctionLabel = careerCatalog?.noFunctionLabel ?? 'Sem Funcao';
 
     return (
         <div className="space-y-6">
@@ -32,14 +36,17 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                             <div>
                                 <label className={styles.label}>Cargo</label>
                                 <select className={styles.input} value={state.cargo} onChange={e => update('cargo', e.target.value)}>
-                                    <option value="tec">Técnico</option>
-                                    <option value="analista">Analista</option>
+                                    {cargoOptions.map((cargo) => (
+                                        <option key={cargo} value={cargo}>
+                                            {careerCatalog?.cargoLabels?.[cargo] || cargo.toUpperCase()}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
                                 <label className={styles.label}>Classe/Padrão</label>
                                 <select className={styles.input} value={state.padrao} onChange={e => update('padrao', e.target.value)}>
-                                    {Object.keys(currentTables.salario[state.cargo]).map(p => (
+                                    {Object.keys(currentTables.salario[state.cargo] || {}).map(p => (
                                         <option key={p} value={p}>{p}</option>
                                     ))}
                                 </select>
@@ -48,7 +55,7 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                         <div>
                             <label className={styles.label}>FC / CJ</label>
                             <select className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
-                                <option value="0">Sem Função / Manual</option>
+                                {noFunctionCode && <option value={noFunctionCode}>{noFunctionLabel}</option>}
                                 {Object.keys(currentTables.funcoes).map(f => (
                                     <option key={f} value={f}>{f.toUpperCase()} - {formatCurrency(currentTables.funcoes[f])}</option>
                                 ))}
@@ -93,9 +100,7 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                                     <label className={styles.label}>Títulos %</label>
                                     <select className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
                                         <option value={0}>0%</option>
-                                        {state.cargo === 'tec' && (
-                                            <option value={0.05}>5% (Graduação)</option>
-                                        )}
+                                        <option value={0.05}>5% (Graduação)</option>
                                         <option value={0.075}>7.5% (Especialização)</option>
                                         <option value={0.10}>10% (Mestrado)</option>
                                         <option value={0.125}>12.5% (Doutorado)</option>
@@ -154,3 +159,6 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
         </div>
     );
 };
+
+
+

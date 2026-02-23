@@ -1,16 +1,28 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
-import { CalculatorState } from '../../types';
+import { CalculatorState, CourtConfig } from '../../types';
 
 interface GlobalSettingsProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
+    courtConfig: CourtConfig;
     styles: any;
 }
 
-export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, styles }) => {
+const getMonthLabel = (monthIndex: number) =>
+    new Intl.DateTimeFormat('pt-BR', { month: 'long' })
+        .format(new Date(2024, monthIndex, 1))
+        .toUpperCase();
+
+export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, courtConfig, styles }) => {
     const compactInput = `${styles.input} py-2 px-3 text-body`;
     const compactLabel = 'block text-label font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1';
+    const schedules = [...(courtConfig.adjustment_schedule || [])].sort((a, b) => a.period - b.period);
+    const periodOptions = schedules.length > 0
+        ? schedules
+        : [{ period: state.periodo, percentage: 0, label: `Periodo ${state.periodo}` }];
+
+    const monthOptions = Array.from({ length: 12 }, (_, idx) => getMonthLabel(idx));
 
     return (
         <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm">
@@ -28,11 +40,11 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, s
                         value={state.periodo}
                         onChange={(e) => update('periodo', Number(e.target.value))}
                     >
-                        <option value={0}>Fev/2025 a Dez/2025 (Atual)</option>
-                        <option value={1}>Jan/2026 a Jun/2026 (Novo AQ)</option>
-                        <option value={2}>Jul/2026 a Jun/2027 (+8%)</option>
-                        <option value={3}>Jul/2027 a Jun/2028 (+8% Acum.)</option>
-                        <option value={4}>Jul/2028 em diante (+8% Acum.)</option>
+                        {periodOptions.map((entry) => (
+                            <option key={entry.period} value={entry.period}>
+                                {entry.label || `Periodo ${entry.period} (${(entry.percentage * 100).toFixed(2)}%)`}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
@@ -44,10 +56,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, s
                             value={state.mesRef}
                             onChange={e => update('mesRef', e.target.value)}
                         >
-                            {[
-                                'JANEIRO', 'FEVEREIRO', 'MARCO', 'ABRIL', 'MAIO', 'JUNHO',
-                                'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
-                            ].map(mes => (
+                            {monthOptions.map(mes => (
                                 <option key={mes}>{mes}</option>
                             ))}
                         </select>
@@ -64,4 +73,3 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, s
         </div>
     );
 };
-

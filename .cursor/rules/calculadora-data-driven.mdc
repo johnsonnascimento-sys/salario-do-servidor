@@ -12,7 +12,7 @@ alwaysApply: true
 ## 1) Fonte de verdade
 - Toda regra de calculo deve respeitar a hierarquia:
   - `global_config`: regras universais (IR, PSS, teto RGPS)
-  - `power_config`: regras de carreira (bases, beneficios, cronogramas)
+  - `power_config`: regras de carreira (bases, beneficios, cronogramas, diarias)
   - `org_config`: overrides especificos do orgao
 - A UI nao pode recalcular tributos por conta propria fora do motor oficial.
 
@@ -37,4 +37,7 @@ alwaysApply: true
 ## 5) Qualidade minima
 - Mudanca de calculo exige build limpo.
 - Mudanca de regra deve manter rastreabilidade (documento/seed/migracao).
-
+- Regras de diarias devem existir em `power_config.config_key = dailies_rules`.
+- Regras gerais de formula devem existir em `power_config.config_key = payroll_rules`.
+- Catalogo de carreira deve existir em `power_config.config_key = career_catalog`.
+- Periodos de referencia/reajuste devem existir em `power_config.config_key = adjustment_schedule`.

@@ -17,6 +17,13 @@ export interface TaxTable {
     faixas: TaxBracket[];
 }
 
+export interface IrrfBracket {
+    min: number;
+    max: number;
+    rate: number;
+    deduction: number;
+}
+
 /**
  * Calculates PSS (Social Security Contribution) based on progressive tables.
  * This logic applies to the "New" PSS rules (EC 103/2019) where rates are progressive over chunks.
@@ -60,33 +67,25 @@ export const calculateIrrf = (base: number, rate: number, deduction: number): nu
 };
 
 /**
- * Calculates IRRF based on specific progressive logic (typically for EA/RRA).
- * Note: This contains hardcoded values from "Holerite 8249" / Receita Federal logic.
- * Ideally, these ranges should also be parameterized in the future.
+ * Calculates IRRF based on progressive bracket rules loaded from configuration.
  * 
  * @param baseCalculo - The monetary base value.
+ * @param brackets - Progressive IR bracket list.
  * @returns The calculated tax value.
  */
-export const calculateIrrfProgressive = (baseCalculo: number): number => {
-    if (baseCalculo <= 2259.20) {
-        return 0.00;
-    } else if (baseCalculo <= 2826.65) {
-        return (baseCalculo * 0.075) - 169.44;
-    } else if (baseCalculo <= 3751.05) {
-        return (baseCalculo * 0.150) - 381.44;
-    } else if (baseCalculo <= 4664.68) {
-        return (baseCalculo * 0.225) - 662.77;
-    } else {
-        return (baseCalculo * 0.275) - 896.00;
-    }
+export const calculateIrrfProgressive = (baseCalculo: number, brackets: IrrfBracket[]): number => {
+    if (!Array.isArray(brackets) || brackets.length === 0) return 0;
+    const sorted = [...brackets].sort((a, b) => a.min - b.min);
+    const faixa = sorted.find((item) => baseCalculo > item.min && baseCalculo <= item.max) || sorted[sorted.length - 1];
+    const imposto = (baseCalculo * faixa.rate) - faixa.deduction;
+    return imposto > 0 ? imposto : 0;
 };
 
 /**
  * Helper to determine the IRRF rate/deduction based on a table lookup if provided.
  * (This mimics global calcIR logic but decoupled).
  */
-export const calculateIrrfFromTable = (base: number, deductionValue: number): number => {
-    // Default top bracket behavior (27.5%)
-    const val = (base * 0.275) - deductionValue;
+export const calculateIrrfFromTable = (base: number, rate: number, deductionValue: number): number => {
+    const val = (base * rate) - deductionValue;
     return val > 0 ? val : 0;
 };

@@ -10,6 +10,7 @@ import { CourtConfig } from '../../../../../types';
 import { calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 export interface VacationResult {
     value: number;
@@ -28,14 +29,15 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  */
 export async function calculateVacation(params: IJmuCalculationParams): Promise<VacationResult> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     let ferias1_3 = params.ferias1_3 || 0;
 
     if (!params.manualFerias) {
         if (params.tipoCalculo === 'jan' || ferias1_3 > 0) {
             const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
             const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-            const gaj = baseVencimento * 1.40;
-            const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+            const gaj = baseVencimento * payrollRules.gajRate;
+            const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
             let aqTituloVal = 0;
             let aqTreinoVal = 0;
@@ -49,7 +51,7 @@ export async function calculateVacation(params: IJmuCalculationParams): Promise<
 
             let gratVal = 0;
             if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-                gratVal = baseVencimento * 0.35;
+                gratVal = baseVencimento * payrollRules.specificGratificationRate;
             }
 
             const totalComFC = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
@@ -66,8 +68,8 @@ export async function calculateVacation(params: IJmuCalculationParams): Promise<
     if (ferias1_3 > 0 && !params.feriasAntecipadas) {
         const deducaoDep = config.values?.deducao_dep || 0;
         const baseIRFerias = ferias1_3 - (params.dependents * deducaoDep);
-        const deductionVal = config.historico_ir?.[params.tabelaIR] || 896.00;
-        irFerias = calculateIrrf(baseIRFerias, 0.275, deductionVal);
+        const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
+        irFerias = calculateIrrf(baseIRFerias, payrollRules.irrfTopRate, deductionVal);
     }
 
     return { value: ferias1_3, irFerias };

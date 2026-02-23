@@ -8,6 +8,7 @@
 import { CourtConfig } from '../../../../../types';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
@@ -21,13 +22,14 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  */
 export async function calculateSubstitution(params: IJmuCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     const { funcoes, salario } = await getDataForPeriod(params.periodo, config);
-    const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
 
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
     // Base de abatimento = Funcao atual + Gratificacao
@@ -41,7 +43,7 @@ export async function calculateSubstitution(params: IJmuCalculationParams): Prom
                 const valDestino = funcoes[funcKey];
 
                 if (valDestino > baseAbatimento) {
-                    substTotalCalc += ((valDestino - baseAbatimento) / 30) * days;
+                    substTotalCalc += ((valDestino - baseAbatimento) / payrollRules.monthDayDivisor) * days;
                 }
             }
         }

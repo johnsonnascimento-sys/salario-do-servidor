@@ -11,6 +11,7 @@ import { CourtConfig } from '../../../../../types';
 import { calculatePss } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 export interface OvertimeResult {
     heVal50: number;
@@ -30,10 +31,11 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  */
 export async function calculateOvertime(params: IJmuCalculationParams): Promise<OvertimeResult> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-    const gaj = baseVencimento * 1.40;
-    const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+    const gaj = baseVencimento * payrollRules.gajRate;
+    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
@@ -47,7 +49,7 @@ export async function calculateOvertime(params: IJmuCalculationParams): Promise<
 
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
     // Base para HE inclui todos os rendimentos + abono se aplicavel
@@ -76,7 +78,7 @@ export async function calculateOvertime(params: IJmuCalculationParams): Promise<
     }
 
     // Valor da hora = Base / 175
-    const valorHora = baseHE / 175;
+    const valorHora = baseHE / payrollRules.overtimeMonthHours;
 
     // HE 50% = hora * 1.5 * quantidade
     const heVal50 = valorHora * 1.5 * (params.heQtd50 || 0);

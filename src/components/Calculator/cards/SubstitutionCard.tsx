@@ -6,10 +6,11 @@ interface SubstitutionCardProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
+    functionKeys: string[];
     styles: any;
 }
 
-export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, update, updateSubstDays, styles }) => {
+export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, update, updateSubstDays, functionKeys, styles }) => {
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
@@ -30,13 +31,13 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {Object.entries(state.substDias).map(([key, value]) => (
+                        {functionKeys.map((key) => (
                             <div key={key}>
                                 <label className={styles.label}>{key.toUpperCase()}</label>
                                 <input
                                     type="number"
                                     className={styles.input}
-                                    value={value}
+                                    value={state.substDias[key] || 0}
                                     onChange={e => updateSubstDays(key, Number(e.target.value))}
                                     placeholder="Dias"
                                 />

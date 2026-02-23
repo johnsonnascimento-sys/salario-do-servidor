@@ -77,6 +77,7 @@ export default function Calculator() {
                 <GlobalSettings
                     state={state}
                     update={update}
+                    courtConfig={courtConfig}
                     styles={styles}
                 />
 

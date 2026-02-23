@@ -1,21 +1,49 @@
 import { supabase } from '../lib/supabase';
 
 export interface CourtConfig {
-    adjustment_schedule?: Array<{ period: number; percentage: number }>;
+    adjustment_schedule?: Array<{ period: number; percentage: number; label?: string }>;
     bases: any; // Defines structure matching BASES_2025
     historico_pss: any;
     historico_ir: any;
+    historico_ir_brackets?: any;
     values: {
         food_allowance?: number; // Though auxAlimentacao is in state, maybe defaults?
         pre_school?: number; // COTA_PRE_ESCOLAR
         deducao_dep?: number; // DEDUCAO_DEP
         cj1_integral_base?: number; // CJ1_INTEGRAL_BASE
-        adjustment_schedule?: Array<{ period: number; percentage: number }>;
-        reajustes?: Array<{ period: number; percentage: number }>;
+        adjustment_schedule?: Array<{ period: number; percentage: number; label?: string }>;
+        reajustes?: Array<{ period: number; percentage: number; label?: string }>;
     };
     menus?: {
         food_allowance?: Array<{ label: string; value: number }>;
         preschool_allowance?: Array<{ label: string; value: number }>;
+    };
+    dailies?: {
+        rates: Record<string, number>;
+        embarkationAdditional: {
+            completo: number;
+            metade: number;
+        };
+        externalGloss: {
+            hospedagem: number;
+            alimentacao: number;
+            transporte: number;
+        };
+    };
+    payrollRules?: {
+        gajRate: number;
+        specificGratificationRate: number;
+        vrRateOnCj1: number;
+        monthDayDivisor: number;
+        overtimeMonthHours: number;
+        transportWorkdays: number;
+        transportDiscountRate: number;
+        irrfTopRate: number;
+    };
+    careerCatalog?: {
+        noFunctionCode: string;
+        noFunctionLabel: string;
+        cargoLabels: Record<string, string>;
     };
 }
 

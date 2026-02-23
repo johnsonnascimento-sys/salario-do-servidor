@@ -13,26 +13,67 @@ export interface TaxTable {
   faixas: { min: number; max: number; rate: number }[];
 }
 
+export interface IRBracket {
+  min: number;
+  max: number;
+  rate: number;
+  deduction: number;
+}
+
+export interface DailiesConfig {
+  rates: Record<string, number>;
+  embarkationAdditional: {
+    completo: number;
+    metade: number;
+  };
+  externalGloss: {
+    hospedagem: number;
+    alimentacao: number;
+    transporte: number;
+  };
+}
+
+export interface PayrollRulesConfig {
+  gajRate: number;
+  specificGratificationRate: number;
+  vrRateOnCj1: number;
+  monthDayDivisor: number;
+  overtimeMonthHours: number;
+  transportWorkdays: number;
+  transportDiscountRate: number;
+  irrfTopRate: number;
+}
+
+export interface CareerCatalogConfig {
+  noFunctionCode: string;
+  noFunctionLabel: string;
+  cargoLabels: Record<string, string>;
+}
+
 export interface CourtConfig {
-  adjustment_schedule?: Array<{ period: number; percentage: number }>;
+  adjustment_schedule?: Array<{ period: number; percentage: number; label?: string }>;
   bases: {
     salario: SalaryTable;
     funcoes: FuncoesTable;
   };
   historico_pss: Record<string, TaxTable>;
   historico_ir: Record<string, number>;
+  historico_ir_brackets: Record<string, IRBracket[]>;
   values: {
     food_allowance?: number;
     pre_school?: number;
     deducao_dep?: number;
     cj1_integral_base?: number;
-    adjustment_schedule?: Array<{ period: number; percentage: number }>;
-    reajustes?: Array<{ period: number; percentage: number }>;
+    adjustment_schedule?: Array<{ period: number; percentage: number; label?: string }>;
+    reajustes?: Array<{ period: number; percentage: number; label?: string }>;
   };
   menus?: {
     food_allowance?: Array<{ label: string; value: number }>;
     preschool_allowance?: Array<{ label: string; value: number }>;
   };
+  dailies?: DailiesConfig;
+  payrollRules?: PayrollRulesConfig;
+  careerCatalog?: CareerCatalogConfig;
 }
 
 export interface Rubrica {
@@ -65,7 +106,7 @@ export interface CalculatorState {
   tipoCalculo: 'comum' | 'jan' | 'jun' | 'nov';
 
   // Fixed Income
-  cargo: 'analista' | 'tec';
+  cargo: string;
   padrao: string;
   funcao: string; // '0' for none, or key like 'fc1'
   vencimento: number;
@@ -118,8 +159,8 @@ export interface CalculatorState {
   auxTransporteDesc: number; // Debit
 
   // Discounts
-  tabelaPSS: '2026' | '2025' | '2024';
-  tabelaIR: '2025_maio' | '2024_fev';
+  tabelaPSS: string;
+  tabelaIR: string;
   dependentes: number;
   regimePrev: 'antigo' | 'migrado' | 'novo_antigo' | 'rpc';
   funprespAliq: number;
@@ -193,9 +234,9 @@ export const INITIAL_STATE: CalculatorState = {
   mesRef: ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"][new Date().getMonth()],
   anoRef: new Date().getFullYear(),
   tipoCalculo: 'comum',
-  cargo: 'tec',
-  padrao: 'C13',
-  funcao: '0',
+  cargo: '',
+  padrao: '',
+  funcao: '',
   vencimento: 0,
   gaj: 0,
   vpni_lei: 0,
@@ -224,10 +265,7 @@ export const INITIAL_STATE: CalculatorState = {
   heTotal: 0,
   heIsEA: false,
 
-  substDias: {
-    'fc1': 0, 'fc2': 0, 'fc3': 0, 'fc4': 0, 'fc5': 0, 'fc6': 0,
-    'cj1': 0, 'cj2': 0, 'cj3': 0, 'cj4': 0
-  },
+  substDias: {},
   substTotal: 0,
   substIsEA: false,
 
@@ -244,8 +282,8 @@ export const INITIAL_STATE: CalculatorState = {
   auxTransporteValor: 0,
   auxTransporteDesc: 0,
 
-  tabelaPSS: '2026',
-  tabelaIR: '2025_maio',
+  tabelaPSS: '',
+  tabelaIR: '',
   dependentes: 0,
   regimePrev: 'antigo',
   funprespAliq: 0,

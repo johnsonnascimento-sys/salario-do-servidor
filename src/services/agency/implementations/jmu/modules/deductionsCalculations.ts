@@ -11,6 +11,7 @@ import { CourtConfig, Rubrica } from '../../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 export interface DeductionsResult {
     pss: number;
@@ -52,22 +53,23 @@ const calculateRubricasBaseAdjustments = (rubricas: Rubrica[] = []) => {
  */
 export async function calculateDeductions(grossValue: number, params: IJmuCalculationParams): Promise<DeductionsResult> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     const rubricasAdjustments = calculateRubricasBaseAdjustments(params.rubricasExtras);
 
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-    const gaj = baseVencimento * 1.40;
+    const gaj = baseVencimento * payrollRules.gajRate;
 
     // Recalculate components needed for PSS Base
     let aqTituloVal = 0;
     if (params.periodo >= 1) aqTituloVal = valorVR * params.aqTituloVR;
     else aqTituloVal = baseVencimento * normalizeAQPercent(params.aqTituloPerc);
 
-    const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
     // PSS Base Calculation
@@ -115,8 +117,8 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     const deducaoDep = config.values?.deducao_dep || 0;
     const baseIR = Math.max(0, totalTrib - pssMensal - valFunpresp - (params.dependents * deducaoDep));
 
-    const deductionVal = config.historico_ir?.[params.tabelaIR] || 896.00;
-    const irMensal = calculateIrrf(baseIR, 0.275, deductionVal);
+    const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
+    const irMensal = calculateIrrf(baseIR, payrollRules.irrfTopRate, deductionVal);
 
     return {
         pss: pssMensal,

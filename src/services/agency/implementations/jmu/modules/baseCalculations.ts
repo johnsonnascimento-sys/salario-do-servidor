@@ -12,9 +12,9 @@
  * REFATORADO: Agora usa params.agencyConfig para buscar dados.
  */
 
-import { calcReajuste } from '../../../../../utils/calculations';
 import { IJmuCalculationParams } from '../types';
 import { CourtConfig } from '../../../../../types';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 interface AdjustmentEntry {
     period: number;
@@ -44,8 +44,7 @@ const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEn
 const applyCorrections = (base: number, periodo: number, config: CourtConfig): number => {
     const schedule = findCorrectionTable(periodo, config);
     if (!schedule || schedule.length === 0) {
-        const steps = periodo >= 2 ? periodo - 1 : 0;
-        return calcReajuste(base, steps);
+        return base;
     }
 
     return schedule.reduce((value, entry) => {
@@ -66,18 +65,15 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  */
 export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfig) {
     const config = agencyConfig;
+    const payrollRules = getPayrollRules(config);
 
-    const sal = JSON.parse(JSON.stringify(config.bases?.salario?.analista || {}));
-    const salTecnico = JSON.parse(JSON.stringify(config.bases?.salario?.tec || {}));
-
-    const salario: any = { analista: {}, tec: {}, tecnico: {} };
-    for (let padrao in sal) {
-        salario.analista[padrao] = applyCorrections(sal[padrao], periodo, config);
-    }
-    for (let padrao in salTecnico) {
-        const value = applyCorrections(salTecnico[padrao], periodo, config);
-        salario.tec[padrao] = value;
-        salario.tecnico[padrao] = value;
+    const salario: any = {};
+    const salaryBases = config.bases?.salario || {};
+    for (const [cargo, padroes] of Object.entries(salaryBases)) {
+        salario[cargo] = {};
+        for (const [padrao, valor] of Object.entries(padroes || {})) {
+            salario[cargo][padrao] = applyCorrections(Number(valor), periodo, config);
+        }
     }
 
     const func = JSON.parse(JSON.stringify(config.bases?.funcoes || {}));
@@ -88,7 +84,7 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
 
     const cj1Base = config.values?.cj1_integral_base || 0;
     const cj1Adjusted = applyCorrections(cj1Base, periodo, config);
-    const valorVR = Math.round(cj1Adjusted * 0.065 * 100) / 100;
+    const valorVR = Math.round(cj1Adjusted * payrollRules.vrRateOnCj1 * 100) / 100;
 
     return { salario, funcoes, valorVR };
 }
@@ -98,11 +94,12 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
  */
 export async function calculateBase(params: IJmuCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-    const gaj = baseVencimento * 1.40; // JMU Rule: GAJ is 140%
-    const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+    const gaj = baseVencimento * payrollRules.gajRate;
+    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
     // AQ - Adicional de Qualificacao
     let aqTituloVal = 0;
@@ -127,7 +124,7 @@ export async function calculateBase(params: IJmuCalculationParams): Promise<numb
 
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * payrollRules.specificGratificationRate;
     } else {
         gratVal = params.gratEspecificaValor || 0;
     }
@@ -142,11 +139,12 @@ export async function calculateBase(params: IJmuCalculationParams): Promise<numb
  */
 export async function calculateBaseComponents(params: IJmuCalculationParams) {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-    const gaj = baseVencimento * 1.40;
-    const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+    const gaj = baseVencimento * payrollRules.gajRate;
+    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
@@ -160,7 +158,7 @@ export async function calculateBaseComponents(params: IJmuCalculationParams) {
 
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * payrollRules.specificGratificationRate;
     } else {
         gratVal = params.gratEspecificaValor || 0;
     }

@@ -55,6 +55,9 @@ export interface PowerConfig {
     gratification_percentages?: GratificationPercentagesConfig;
     aq_rules?: AQRulesConfig;
     benefits?: BenefitsConfig;
+    dailies_rules?: DailiesRulesConfig;
+    payroll_rules?: PayrollRulesConfig;
+    career_catalog?: CareerCatalogConfig;
 }
 
 /**
@@ -79,6 +82,7 @@ export interface AdjustmentScheduleConfig {
     [period: string]: {
         date: string;
         percentage: number;
+        label?: string;
     };
 }
 
@@ -113,6 +117,45 @@ export interface BenefitsConfig {
     auxilio_preescolar: {
         [period: string]: number;
     };
+}
+
+/**
+ * Regras de Diarias de Viagem
+ */
+export interface DailiesRulesConfig {
+    rates: Record<string, number>;
+    embarkation_additional: {
+        completo: number;
+        metade: number;
+    };
+    external_gloss: {
+        hospedagem: number;
+        alimentacao: number;
+        transporte: number;
+    };
+}
+
+/**
+ * Regras gerais de calculo da folha
+ */
+export interface PayrollRulesConfig {
+    gaj_rate: number;
+    specific_gratification_rate: number;
+    vr_rate_on_cj1: number;
+    month_day_divisor: number;
+    overtime_month_hours: number;
+    transport_workdays: number;
+    transport_discount_rate: number;
+    irrf_top_rate: number;
+}
+
+/**
+ * Catalogo de carreira para UI e parametros funcionais
+ */
+export interface CareerCatalogConfig {
+    no_function_code: string;
+    no_function_label: string;
+    cargo_labels: Record<string, string>;
 }
 
 /**

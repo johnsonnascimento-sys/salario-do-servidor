@@ -46,7 +46,17 @@ export default function AdminHub() {
       ]);
 
       const requiredGlobal = ['dependent_deduction', 'pss_tables', 'ir_deduction'];
-      const requiredPower = ['cj1_integral_base', 'salary_bases', 'aq_rules', 'gratification_percentages', 'benefits'];
+      const requiredPower = [
+        'cj1_integral_base',
+        'adjustment_schedule',
+        'salary_bases',
+        'aq_rules',
+        'gratification_percentages',
+        'benefits',
+        'dailies_rules',
+        'payroll_rules',
+        'career_catalog',
+      ];
       const requiredOrgs = ['jmu', 'stm'];
 
       const globalKeys = new Set(globals.map((item) => item.config_key));

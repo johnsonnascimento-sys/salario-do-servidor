@@ -13,6 +13,7 @@ import { CourtConfig } from '../../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 export interface ThirteenthResult {
     gratNatalinaTotal: number;
@@ -35,10 +36,11 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  */
 export async function calculateThirteenth(params: IJmuCalculationParams): Promise<ThirteenthResult> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-    const gaj = baseVencimento * 1.40;
-    const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+    const gaj = baseVencimento * payrollRules.gajRate;
+    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
@@ -52,7 +54,7 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
 
     let gratVal = 0;
     if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
     const baseSemFC = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
@@ -111,8 +113,8 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
 
         const deducaoDep = config.values?.deducao_dep || 0;
         const baseIR13 = gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * deducaoDep);
-        const deductionVal = config.historico_ir?.[params.tabelaIR] || 896.00;
-        ir13 = calculateIrrf(baseIR13, 0.275, deductionVal);
+        const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
+        ir13 = calculateIrrf(baseIR13, payrollRules.irrfTopRate, deductionVal);
     }
 
     // Adiantamento do 13o

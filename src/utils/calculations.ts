@@ -49,8 +49,7 @@ const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEn
 const applyCorrections = (base: number, periodo: number, config: CourtConfig): number => {
     const schedule = findCorrectionTable(periodo, config);
     if (!schedule || schedule.length === 0) {
-        const steps = periodo >= 2 ? periodo - 1 : 0;
-        return calcReajuste(base, steps);
+        return base;
     }
 
     return schedule.reduce((value, entry) => {
@@ -60,13 +59,20 @@ const applyCorrections = (base: number, periodo: number, config: CourtConfig): n
 
 export const getTablesForPeriod = (periodo: number, config?: CourtConfig) => {
     const resolved = requireConfig(config);
+    const payrollRules = resolved.payrollRules;
+    if (!payrollRules) {
+        throw new Error('CourtConfig.payrollRules is required for calculations.');
+    }
     const BASES = resolved.bases;
     const CJ1_BASE = resolved.values?.cj1_integral_base ?? 0;
 
-    const newSal: SalaryTable = { analista: {}, tec: {} };
+    const newSal: SalaryTable = {};
     for (let cargo in BASES.salario) {
-        for (let padrao in BASES.salario[cargo as 'analista' | 'tec']) {
-            newSal[cargo][padrao] = applyCorrections(BASES.salario[cargo as 'analista' | 'tec'][padrao], periodo, resolved);
+        if (!newSal[cargo]) {
+            newSal[cargo] = {};
+        }
+        for (let padrao in BASES.salario[cargo]) {
+            newSal[cargo][padrao] = applyCorrections(BASES.salario[cargo][padrao], periodo, resolved);
         }
     }
 
@@ -77,7 +83,7 @@ export const getTablesForPeriod = (periodo: number, config?: CourtConfig) => {
 
     // Dynamic VR Calculation
     const cj1Adjusted = applyCorrections(CJ1_BASE, periodo, resolved);
-    const valorVR = Math.round(cj1Adjusted * 0.065 * 100) / 100;
+    const valorVR = Math.round(cj1Adjusted * payrollRules.vrRateOnCj1 * 100) / 100;
 
     return { salario: newSal, funcoes: newFunc, valorVR };
 };
@@ -98,32 +104,46 @@ export const calcPSS = (base: number, tabelaKey: string, config?: CourtConfig) =
 };
 
 export const calcIR = (base: number, deductionKey: string, config?: CourtConfig) => {
-    const HIST_IR = requireConfig(config).historico_ir;
-    const deduction = HIST_IR[deductionKey] || 896.00;
-    let val = (base * 0.275) - deduction;
+    const resolved = requireConfig(config);
+    const payrollRules = resolved.payrollRules;
+    if (!payrollRules) {
+        throw new Error('CourtConfig.payrollRules is required for calculations.');
+    }
+    const HIST_IR = resolved.historico_ir;
+    const deduction = HIST_IR[deductionKey] || 0;
+    let val = (base * payrollRules.irrfTopRate) - deduction;
     return val > 0 ? val : 0;
 };
 
 // Lógica de IR Progressivo conforme código original (Holerite 8249)
-export const calcIR_Progressivo = (baseCalculo: number) => {
-    if (baseCalculo <= 2259.20) {
-        return 0.00;
-    } else if (baseCalculo <= 2826.65) {
-        return (baseCalculo * 0.075) - 169.44;
-    } else if (baseCalculo <= 3751.05) {
-        return (baseCalculo * 0.150) - 381.44;
-    } else if (baseCalculo <= 4664.68) {
-        return (baseCalculo * 0.225) - 662.77;
-    } else {
-        return (baseCalculo * 0.275) - 896.00;
+export const calcIR_Progressivo = (baseCalculo: number, deductionKey: string, config?: CourtConfig) => {
+    const resolved = requireConfig(config);
+    const brackets = resolved.historico_ir_brackets?.[deductionKey] || [];
+    if (!Array.isArray(brackets) || brackets.length === 0) {
+        return 0;
     }
+
+    const sorted = [...brackets].sort((a, b) => a.min - b.min);
+    const faixa = sorted.find((item) => baseCalculo > item.min && baseCalculo <= item.max) ||
+        sorted[sorted.length - 1];
+
+    const imposto = (baseCalculo * faixa.rate) - faixa.deduction;
+    return imposto > 0 ? imposto : 0;
 };
 
 // Helper to calculate the Fixed Base (Remuneração Fixa)
-export const calculateBaseFixa = (state: CalculatorState, funcoes: FuncoesTable, salario: SalaryTable, valorVR: number): { baseSemFC: number; totalComFC: number; funcaoValor: number } => {
-    const baseVencimento = salario[state.cargo][state.padrao] || 0;
-    const gaj = baseVencimento * 1.40;
-    const funcaoValor = state.funcao === '0' ? 0 : (funcoes[state.funcao] || 0);
+export const calculateBaseFixa = (
+    state: CalculatorState,
+    funcoes: FuncoesTable,
+    salario: SalaryTable,
+    valorVR: number,
+    gajRate: number,
+    gratRate: number,
+    noFunctionCode: string
+): { baseSemFC: number; totalComFC: number; funcaoValor: number } => {
+    const baseVencimento = salario[state.cargo]?.[state.padrao] || 0;
+    const gaj = baseVencimento * gajRate;
+    const funcaoValor = state.funcao === noFunctionCode ? 0 : (funcoes[state.funcao] || 0);
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
@@ -137,7 +157,7 @@ export const calculateBaseFixa = (state: CalculatorState, funcoes: FuncoesTable,
 
     let gratVal = state.gratEspecificaValor;
     if (state.gratEspecificaTipo === 'gae' || state.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * 0.35;
+        gratVal = baseVencimento * gratRate;
     } else {
         gratVal = 0;
     }
@@ -150,17 +170,30 @@ export const calculateBaseFixa = (state: CalculatorState, funcoes: FuncoesTable,
 
 export const calculateAll = (state: CalculatorState, config?: CourtConfig): CalculatorState => {
     const resolvedConfig = requireConfig(config);
+    const payrollRules = resolvedConfig.payrollRules;
+    if (!payrollRules) {
+        throw new Error('CourtConfig.payrollRules is required for calculations.');
+    }
+    const noFunctionCode = resolvedConfig.careerCatalog?.noFunctionCode ?? '';
     const { salario, funcoes, valorVR } = getTablesForPeriod(state.periodo, config);
-    const { baseSemFC, totalComFC, funcaoValor: funcaoValorCalc } = calculateBaseFixa(state, funcoes, salario, valorVR);
+    const { baseSemFC, totalComFC, funcaoValor: funcaoValorCalc } = calculateBaseFixa(
+        state,
+        funcoes,
+        salario,
+        valorVR,
+        payrollRules.gajRate,
+        payrollRules.specificGratificationRate,
+        noFunctionCode
+    );
 
     const HIST_PSS = resolvedConfig.historico_pss;
     const PRE_SCHOOL = resolvedConfig.values?.pre_school ?? 0;
     const DEDUC_DEP = resolvedConfig.values?.deducao_dep ?? 0;
 
     // 1. Basic Income
-    const baseVencimento = salario[state.cargo][state.padrao] || 0;
-    const gaj = baseVencimento * 1.40;
-    const funcaoValor = state.funcao === '0' ? 0 : (funcoes[state.funcao] || 0);
+    const baseVencimento = salario[state.cargo]?.[state.padrao] || 0;
+    const gaj = baseVencimento * payrollRules.gajRate;
+    const funcaoValor = state.funcao === noFunctionCode ? 0 : (funcoes[state.funcao] || 0);
 
     // 2. AQ
     let aqTituloVal = 0;
@@ -177,7 +210,7 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
     let gratVal = state.gratEspecificaValor;
     const gratType = (state.gratEspecificaTipo || '').toLowerCase().trim();
     if (gratType === 'gae' || gratType === 'gas') {
-        gratVal = round2(baseVencimento * 0.35);
+        gratVal = round2(baseVencimento * payrollRules.specificGratificationRate);
     } else {
         gratVal = 0;
     }
@@ -208,7 +241,7 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
         }
     }
 
-    const valorHora = baseHE / 175;
+    const valorHora = baseHE / payrollRules.overtimeMonthHours;
     const heVal50 = (valorHora * 1.5 * state.heQtd50);
     const heVal100 = (valorHora * 2.0 * state.heQtd100);
     const heTotal = heVal50 + heVal100;
@@ -220,7 +253,7 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
         if (days > 0 && funcoes[funcKey]) {
             const valDestino = funcoes[funcKey];
             if (valDestino > baseAbatimento) {
-                substTotalCalc += ((valDestino - baseAbatimento) / 30) * days;
+                substTotalCalc += ((valDestino - baseAbatimento) / payrollRules.monthDayDivisor) * days;
             }
         }
     }
@@ -237,7 +270,7 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
         abonoEstimadoLicenca = calcPSS(baseLicencaTotal, state.tabelaPSS, config);
     }
 
-    const licencaVal = ((baseLicencaTotal + abonoEstimadoLicenca) / 30) * state.licencaDias;
+    const licencaVal = ((baseLicencaTotal + abonoEstimadoLicenca) / payrollRules.monthDayDivisor) * state.licencaDias;
 
     // 5. Total Base for PSS
     let basePSS = baseVencimento + gaj + aqTituloVal + state.vpni_lei + state.vpni_decisao + state.ats;
@@ -318,7 +351,7 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
     if (state.substIsEA) baseEA += substTotalCalc;
 
     if (baseEA > 0) {
-        irEA = calcIR_Progressivo(baseEA - (state.dependentes * DEDUC_DEP)); // Progressivo Logic unchanged or needs config? Assuming constant logic for now.
+        irEA = calcIR_Progressivo(baseEA - (state.dependentes * DEDUC_DEP), state.tabelaIR, config);
         if (irEA < 0) irEA = 0;
     }
 
@@ -337,7 +370,9 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
     if (state.auxTransporteGasto > 0) {
         auxTranspCred = state.auxTransporteGasto;
         const baseCalculoDesc = baseVencimento > 0 ? baseVencimento : funcaoValor;
-        const desc = (baseCalculoDesc / 30 * 22) * 0.06;
+        const desc =
+            (baseCalculoDesc / payrollRules.monthDayDivisor * payrollRules.transportWorkdays) *
+            payrollRules.transportDiscountRate;
 
         if (desc >= auxTranspCred) {
             auxTranspCred = 0;
@@ -407,18 +442,17 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
     const feriasDesc = state.feriasAntecipadas ? finalFerias1_3 : 0;
 
     // Diarias
+    const dailiesConfig = resolvedConfig.dailies;
     let valorDiaria = 0;
     if (state.funcao && state.funcao.toLowerCase().startsWith('cj')) {
-        valorDiaria = 880.17; // Should be in config too maybe?
-    } else if (state.cargo === 'analista') {
-        valorDiaria = 806.82;
+        valorDiaria = dailiesConfig?.rates?.cj ?? 0;
     } else {
-        valorDiaria = 660.13;
+        valorDiaria = dailiesConfig?.rates?.[state.cargo] ?? 0;
     }
 
     let adicionalEmbarque = 0;
-    if (state.diariasEmbarque === 'completo') adicionalEmbarque = 586.78;
-    else if (state.diariasEmbarque === 'metade') adicionalEmbarque = 293.39;
+    if (state.diariasEmbarque === 'completo') adicionalEmbarque = dailiesConfig?.embarkationAdditional?.completo ?? 0;
+    else if (state.diariasEmbarque === 'metade') adicionalEmbarque = dailiesConfig?.embarkationAdditional?.metade ?? 0;
 
     const diariasBruto = (state.diariasQtd * valorDiaria) + adicionalEmbarque;
 
@@ -430,20 +464,20 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
     const baseGlosa = (state.diariasQtd * valorDiaria);
     let percentGlosa = 0;
 
-    if (state.diariasExtHospedagem) percentGlosa += 0.55;
-    if (state.diariasExtAlimentacao) percentGlosa += 0.25;
-    if (state.diariasExtTransporte) percentGlosa += 0.20;
+    if (state.diariasExtHospedagem) percentGlosa += dailiesConfig?.externalGloss?.hospedagem ?? 0;
+    if (state.diariasExtAlimentacao) percentGlosa += dailiesConfig?.externalGloss?.alimentacao ?? 0;
+    if (state.diariasExtTransporte) percentGlosa += dailiesConfig?.externalGloss?.transporte ?? 0;
 
     glosaExterno = baseGlosa * percentGlosa;
 
     if (state.diariasDescontarAlimentacao && totalDiasViagem > 0) {
-        deducaoAlimentacao = (state.auxAlimentacao / 30) * totalDiasViagem;
+        deducaoAlimentacao = (state.auxAlimentacao / payrollRules.monthDayDivisor) * totalDiasViagem;
     }
 
     if (state.diariasDescontarTransporte && totalDiasViagem > 0) {
         const baseTransp = auxTranspCred > 0 ? auxTranspCred : 0;
         if (baseTransp > 0) {
-            deducaoTransporte = (baseTransp / 30) * totalDiasViagem;
+            deducaoTransporte = (baseTransp / payrollRules.monthDayDivisor) * totalDiasViagem;
         }
     }
 

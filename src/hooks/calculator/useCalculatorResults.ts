@@ -119,7 +119,8 @@ export const useCalculatorResults = (
             rows.push({ label, value: state.aqTreinoValor, type: 'C' });
         }
 
-        if (state.funcao !== '0') {
+        const noFunctionCode = courtConfig.careerCatalog?.noFunctionCode;
+        if (state.funcao && state.funcao !== noFunctionCode) {
             const tables = getTablesForPeriod(state.periodo, courtConfig);
             const valorFC = tables.funcoes[state.funcao] || 0;
             let labelTipo = "FUNÇÃO COMISSIONADA (OPÇÃO)";

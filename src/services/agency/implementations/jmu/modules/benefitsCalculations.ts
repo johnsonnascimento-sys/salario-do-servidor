@@ -10,6 +10,7 @@
 import { CourtConfig } from '../../../../../types';
 import { IJmuCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
+import { getPayrollRules, isNoFunction } from './configRules';
 
 export interface BenefitsResult {
     auxAlimentacao: number;
@@ -30,6 +31,7 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  */
 export async function calculateBenefits(params: IJmuCalculationParams): Promise<BenefitsResult> {
     const config = requireAgencyConfig(params);
+    const payrollRules = getPayrollRules(config);
 
     const auxAlimentacao = config.values?.food_allowance ?? params.auxAlimentacao ?? 0;
 
@@ -49,10 +51,12 @@ export async function calculateBenefits(params: IJmuCalculationParams): Promise<
         // Debit logic depends on base salary
         const { salario, funcoes } = await getDataForPeriod(params.periodo, config);
         const baseVenc = salario[params.cargo]?.[params.padrao] || 0;
-        const funcaoValor = params.funcao === '0' ? 0 : (funcoes[params.funcao] || 0);
+        const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
         const baseCalculoDesc = baseVenc > 0 ? baseVenc : funcaoValor;
-        const desc = (baseCalculoDesc / 30 * 22) * 0.06;
+        const desc =
+            (baseCalculoDesc / payrollRules.monthDayDivisor * payrollRules.transportWorkdays) *
+            payrollRules.transportDiscountRate;
 
         if (desc >= auxTranspCred) {
             auxTranspCred = 0;

@@ -11,7 +11,7 @@ export interface IJmuCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
     agencyConfig?: CourtConfig;
     periodo: number;
-    cargo: 'analista' | 'tec';
+    cargo: string;
     padrao: string;
     funcao: string;
     aqTituloPerc: number;
@@ -26,7 +26,7 @@ export interface IJmuCalculationParams extends ICalculationParams {
     ats: number;
     dependents: number;
     regimePrev: 'antigo' | 'migrado' | 'novo_antigo' | 'rpc';
-    tabelaPSS: '2026' | '2025' | '2024';
+    tabelaPSS: string;
     pssSobreFC: boolean;
     incidirPSSGrat: boolean;
     funprespAliq: number;

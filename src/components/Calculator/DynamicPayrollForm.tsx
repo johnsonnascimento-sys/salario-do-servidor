@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { DollarSign, Minus, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, Rubrica } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
@@ -102,11 +102,19 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     styles
 }) => {
     const currentTables = getTablesForPeriod(state.periodo, courtConfig);
+    const payrollRules = courtConfig.payrollRules;
+    const careerCatalog = courtConfig.careerCatalog;
+    const noFunctionCode = careerCatalog?.noFunctionCode ?? '';
+    const noFunctionLabel = careerCatalog?.noFunctionLabel ?? 'Sem funcao';
+    const cargoOptions = Object.keys(currentTables.salario || {});
     const salaryByCargo = currentTables.salario[state.cargo] || {};
     const padroes = Object.keys(salaryByCargo);
     const baseVencimento = salaryByCargo[state.padrao] || 0;
-    const gaj = baseVencimento * 1.4;
+    const gaj = baseVencimento * (payrollRules?.gajRate ?? 0);
     const isNovoAQ = state.periodo >= 1;
+    const functionKeys = Object.keys(currentTables.funcoes || {});
+    const pssOptions = Object.keys(courtConfig.historico_pss || {});
+    const irOptions = Object.keys(courtConfig.historico_ir || {});
 
     const initialPresets = useMemo(() => {
         const fromState = PREDEFINED_OPTIONS
@@ -134,6 +142,42 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         update('cargo', nextCargo);
         update('padrao', fallbackPadrao);
     };
+
+    useEffect(() => {
+        if (cargoOptions.length === 0) return;
+        if (!state.cargo || !cargoOptions.includes(state.cargo)) {
+            update('cargo', cargoOptions[0]);
+        }
+    }, [cargoOptions, state.cargo, update]);
+
+    useEffect(() => {
+        if (padroes.length === 0) return;
+        if (!state.padrao || !padroes.includes(state.padrao)) {
+            update('padrao', padroes[0]);
+        }
+    }, [padroes, state.padrao, update]);
+
+    useEffect(() => {
+        if (!noFunctionCode) return;
+        const validFunctions = new Set([noFunctionCode, ...functionKeys]);
+        if (!state.funcao || !validFunctions.has(state.funcao)) {
+            update('funcao', noFunctionCode);
+        }
+    }, [noFunctionCode, functionKeys, state.funcao, update]);
+
+    useEffect(() => {
+        if (pssOptions.length === 0) return;
+        if (!state.tabelaPSS || !pssOptions.includes(state.tabelaPSS)) {
+            update('tabelaPSS', pssOptions[0]);
+        }
+    }, [pssOptions, state.tabelaPSS, update]);
+
+    useEffect(() => {
+        if (irOptions.length === 0) return;
+        if (!state.tabelaIR || !irOptions.includes(state.tabelaIR)) {
+            update('tabelaIR', irOptions[0]);
+        }
+    }, [irOptions, state.tabelaIR, update]);
 
     const clearPreset = (presetId: PredefinedRubricId) => {
         switch (presetId) {
@@ -172,7 +216,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 break;
             case 'substituicao':
                 update('substIsEA', false);
-                Object.keys(state.substDias).forEach(key => updateSubstDays(key, 0));
+                functionKeys.forEach(key => updateSubstDays(key, 0));
                 break;
             case 'licenca':
                 update('licencaDias', 0);
@@ -244,7 +288,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                 <label className={styles.label}>Titulos (%)</label>
                                 <select className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
                                     <option value={0}>0%</option>
-                                    {state.cargo === 'tec' && <option value={0.05}>5% (Graduacao)</option>}
+                                    <option value={0.05}>5% (Graduacao)</option>
                                     <option value={0.075}>7.5% (Especializacao)</option>
                                     <option value={0.1}>10% (Mestrado)</option>
                                     <option value={0.125}>12.5% (Doutorado)</option>
@@ -320,7 +364,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (presetId === 'ferias') return <VacationCard state={state} update={update} styles={styles} />;
         if (presetId === 'decimo') return <ThirteenthCard state={state} update={update} styles={styles} />;
         if (presetId === 'hora_extra') return <OvertimeCard state={state} update={update} styles={styles} />;
-        if (presetId === 'substituicao') return <SubstitutionCard state={state} update={update} updateSubstDays={updateSubstDays} styles={styles} />;
+        if (presetId === 'substituicao') return <SubstitutionCard state={state} update={update} updateSubstDays={updateSubstDays} functionKeys={functionKeys} styles={styles} />;
         if (presetId === 'licenca') return <LicenseCard state={state} update={update} styles={styles} />;
         if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} />;
 
@@ -359,9 +403,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className={styles.label}>Cargo</label>
-                        <select className={styles.input} value={state.cargo} onChange={e => handleCargoChange(e.target.value as CalculatorState['cargo'])}>
-                            <option value="tec">Técnico</option>
-                            <option value="analista">Analista</option>
+                        <select className={styles.input} value={state.cargo} onChange={e => handleCargoChange(e.target.value)}>
+                            {cargoOptions.map(cargo => (
+                                <option key={cargo} value={cargo}>
+                                    {careerCatalog?.cargoLabels?.[cargo] || cargo.toUpperCase()}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div>
@@ -375,8 +422,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     <div>
                         <label className={styles.label}>Função (FC/CJ)</label>
                         <select className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
-                            <option value="0">Sem função</option>
-                            {Object.keys(currentTables.funcoes).map(funcao => (
+                            {noFunctionCode && <option value={noFunctionCode}>{noFunctionLabel}</option>}
+                            {functionKeys.map(funcao => (
                                 <option key={funcao} value={funcao}>
                                     {funcao.toUpperCase()} - {formatCurrency(currentTables.funcoes[funcao])}
                                 </option>
@@ -580,3 +627,4 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         </div>
     );
 };
+
