@@ -74,14 +74,13 @@ export default function Calculator() {
                     agencyName={agencyName}
                 />
 
-                <GlobalSettings
-                    state={state}
-                    update={update}
-                    courtConfig={courtConfig}
-                    styles={styles}
-                />
-
                 <div className="space-y-8 max-w-5xl mx-auto">
+                    <GlobalSettings
+                        state={state}
+                        update={update}
+                        courtConfig={courtConfig}
+                        styles={styles}
+                    />
                     <DynamicPayrollForm
                         state={state}
                         update={update}

@@ -11,6 +11,7 @@ import AdminHub from './pages/AdminHub';
 import AdminGlobal from './pages/AdminGlobal';
 import AdminPower from './pages/AdminPower';
 import AdminOrg from './pages/AdminOrg';
+import AdminControlPanel from './pages/AdminControlPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import Donate from './pages/Donate';
 import About from './pages/About';
@@ -30,6 +31,11 @@ function App() {
           {/* Rotas de Login/Admin */}
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminControlPanel />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/hub" element={
             <ProtectedRoute>
               <AdminHub />
             </ProtectedRoute>
