@@ -5,7 +5,6 @@ import { GlobalSettings } from '../components/Calculator/GlobalSettings';
 import { CalculatorHeader } from '../components/Calculator/CalculatorHeader';
 import { DynamicPayrollForm } from '../components/Calculator/DynamicPayrollForm';
 import { ObservationsSection } from '../components/Calculator/ObservationsSection';
-import { ResultsSidebar } from '../components/Calculator/ResultsSidebar';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
 import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
@@ -81,29 +80,21 @@ export default function Calculator() {
                     styles={styles}
                 />
 
-                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8">
-                    <div className="space-y-8">
-                        <DynamicPayrollForm
-                            state={state}
-                            update={update}
-                            updateSubstDays={updateSubstDays}
-                            courtConfig={courtConfig}
-                            addRubrica={addRubrica}
-                            removeRubrica={removeRubrica}
-                            updateRubrica={updateRubrica}
-                            styles={styles}
-                        />
-                        <ObservationsSection
-                            state={state}
-                            update={update}
-                            styles={styles}
-                        />
-                    </div>
-
-                    <ResultsSidebar
-                        bruto={state.totalBruto}
-                        pss={state.pssMensal + (state.pss13 || 0)}
-                        irrf={state.irMensal + state.irEA + state.irFerias + (state.ir13 || 0)}
+                <div className="space-y-8 max-w-5xl mx-auto">
+                    <DynamicPayrollForm
+                        state={state}
+                        update={update}
+                        updateSubstDays={updateSubstDays}
+                        courtConfig={courtConfig}
+                        addRubrica={addRubrica}
+                        removeRubrica={removeRubrica}
+                        updateRubrica={updateRubrica}
+                        styles={styles}
+                    />
+                    <ObservationsSection
+                        state={state}
+                        update={update}
+                        styles={styles}
                     />
                 </div>
 

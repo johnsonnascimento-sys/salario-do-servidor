@@ -401,9 +401,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">GAJ (140%)</p>
                         <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
                     </div>
-                    <div>
-                        <label className={styles.label}>Auxílio Alimentação</label>
-                        <input type="number" className={styles.input} value={state.auxAlimentacao || ''} onChange={e => update('auxAlimentacao', toPositiveNumber(e.target.value))} />
+                    <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                        <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Auxílio Alimentação</p>
+                        <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(state.auxAlimentacao || 0)}</p>
                     </div>
                 </div>
             </div>
