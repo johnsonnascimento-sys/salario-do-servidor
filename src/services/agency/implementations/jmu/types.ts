@@ -44,6 +44,8 @@ export interface IJmuCalculationParams extends ICalculationParams {
     manualAdiant13: boolean;
     adiant13Venc: number;
     adiant13FC: number;
+    segunda13Venc: number;
+    segunda13FC: number;
     tabelaIR: string;
 
     // Hora Extra e Substituição

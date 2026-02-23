@@ -56,6 +56,10 @@ export const useCalculatorResults = (
                     abonoPerm13: bd.abono13 || 0,
                     pss13: bd.pss13 || 0,
                     ir13: bd.imposto13 || 0,
+                    adiant13Venc: bd.adiant13Venc || 0,
+                    adiant13FC: bd.adiant13FC || 0,
+                    segunda13Venc: bd.segunda13Venc || 0,
+                    segunda13FC: bd.segunda13FC || 0,
                     heVal50: bd.heVal50 || 0,
                     heVal100: bd.heVal100 || 0,
                     heTotal: bd.heTotal || 0,
@@ -84,7 +88,7 @@ export const useCalculatorResults = (
         state.emprestimos, state.planoSaude, state.pensao,
         state.rubricasExtras,
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
-        state.manualAdiant13, state.adiant13Venc, state.adiant13FC,
+        state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
         state.heQtd50, state.heQtd100, state.heIsEA, state.substDias, state.substIsEA,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
@@ -142,22 +146,12 @@ export const useCalculatorResults = (
         if (state.abonoPermanencia > 0) rows.push({ label: 'ABONO DE PERMANÊNCIA', value: state.abonoPermanencia, type: 'C' });
         if (state.ferias1_3 > 0) rows.push({ label: 'ADICIONAL 1/3 FÉRIAS', value: state.ferias1_3, type: 'C' });
 
-        if (state.tipoCalculo === 'nov') {
-            if (state.gratNatalinaTotal && state.gratNatalinaTotal > 0) {
-                rows.push({ label: 'GRATIFICAÇÃO NATALINA-ATIVO EC', value: state.gratNatalinaTotal, type: 'C' });
-            }
-            if (state.abonoPerm13 && state.abonoPerm13 > 0) {
-                rows.push({ label: 'ABONO DE PERMANÊNCIA-GN (13º) EC 41/2003 ATIVO EC', value: state.abonoPerm13, type: 'C' });
-            }
-            if (state.adiant13Venc > 0) {
-                rows.push({ label: 'GRATIFICAÇÃO NATALINA-ADIANT. ATIVO EC', value: state.adiant13Venc, type: 'D' });
-            }
-            if (state.adiant13FC > 0) {
-                rows.push({ label: 'GRATIFICAÇÃO NATALINA-ADIANT. FC/CJ ATIVO EC', value: state.adiant13FC, type: 'D' });
-            }
-        } else {
-            if (state.adiant13Venc > 0) rows.push({ label: 'GRATIFICAÇÃO NATALINA-ADIANT. ATIVO EC', value: state.adiant13Venc, type: 'C' });
-            if (state.adiant13FC > 0) rows.push({ label: 'GRATIFICAÇÃO NATALINA-ADIANT. FC/CJ ATIVO EC', value: state.adiant13FC, type: 'C' });
+        if (state.adiant13Venc > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA ATIVO EC', value: state.adiant13Venc, type: 'C' });
+        if (state.adiant13FC > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA FC/CJ ATIVO EC', value: state.adiant13FC, type: 'C' });
+        if (state.segunda13Venc > 0) rows.push({ label: 'GRATIFICACAO NATALINA-2a PARCELA ATIVO EC', value: state.segunda13Venc, type: 'C' });
+        if (state.segunda13FC > 0) rows.push({ label: 'GRATIFICACAO NATALINA-2a PARCELA FC/CJ ATIVO EC', value: state.segunda13FC, type: 'C' });
+        if (state.abonoPerm13 && state.abonoPerm13 > 0) {
+            rows.push({ label: 'ABONO DE PERMANENCIA-GN (13o) EC 41/2003 ATIVO EC', value: state.abonoPerm13, type: 'C' });
         }
 
         // Descontos
@@ -208,3 +202,4 @@ export const useCalculatorResults = (
 
     return { resultRows };
 };
+

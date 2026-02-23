@@ -68,6 +68,8 @@ export function mapStateToJmuParams(
         manualAdiant13: state.manualAdiant13,
         adiant13Venc: state.adiant13Venc,
         adiant13FC: state.adiant13FC,
+        segunda13Venc: state.segunda13Venc,
+        segunda13FC: state.segunda13FC,
 
         // Hora Extra e Substituição (Fase 8)
         heQtd50: state.heQtd50 || 0,

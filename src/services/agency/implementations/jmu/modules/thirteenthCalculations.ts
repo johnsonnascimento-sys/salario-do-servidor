@@ -1,11 +1,12 @@
 /**
  * Calculos de 13o Salario / Gratificacao Natalina - JMU
- * 
+ *
  * Responsavel por calcular:
  * - Gratificacao Natalina (13o salario)
  * - PSS sobre 13o
  * - IR sobre 13o
- * - Adiantamento do 13o (vencimento e FC)
+ * - 1a parcela do 13o (vencimento e FC/CJ)
+ * - 2a parcela do 13o (vencimento e FC/CJ)
  * - Abono sobre 13o
  */
 
@@ -21,6 +22,8 @@ export interface ThirteenthResult {
     ir13: number;
     adiant13Venc: number;
     adiant13FC: number;
+    segunda13Venc: number;
+    segunda13FC: number;
     abono13: number;
 }
 
@@ -30,6 +33,8 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
     }
     return params.agencyConfig;
 };
+
+const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
 /**
  * Calcula 13o Salario / Gratificacao Natalina
@@ -57,10 +62,40 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
         gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
-    const baseSemFC = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
-        gratVal + (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
+    const baseSemFC =
+        baseVencimento +
+        gaj +
+        aqTituloVal +
+        aqTreinoVal +
+        gratVal +
+        (params.vpni_lei || 0) +
+        (params.vpni_decisao || 0) +
+        (params.ats || 0);
 
-    let gratNatalinaTotal = 0;
+    const metadeVencimento13 = baseSemFC / 2;
+    const metadeFC13 = funcaoValor / 2;
+
+    let adiant13Venc = params.adiant13Venc || 0;
+    let adiant13FC = params.adiant13FC || 0;
+    let segunda13Venc = params.segunda13Venc || 0;
+    let segunda13FC = params.segunda13FC || 0;
+
+    if (!params.manualAdiant13) {
+        const forcePrimeiraByTipo =
+            params.tipoCalculo === 'jan' || params.tipoCalculo === 'jun' || params.tipoCalculo === 'nov';
+        const forceSegundaByTipo = params.tipoCalculo === 'nov';
+
+        adiant13Venc = forcePrimeiraByTipo || adiant13Venc > 0 ? metadeVencimento13 : 0;
+        adiant13FC = forcePrimeiraByTipo || adiant13FC > 0 ? metadeFC13 : 0;
+        segunda13Venc = forceSegundaByTipo || segunda13Venc > 0 ? metadeVencimento13 : 0;
+        segunda13FC = forceSegundaByTipo || segunda13FC > 0 ? metadeFC13 : 0;
+    }
+
+    const primeiraParcelaRecebida = adiant13Venc + adiant13FC;
+    const segundaParcelaRecebida = segunda13Venc + segunda13FC;
+    const houveSegundaParcela = segundaParcelaRecebida > 0;
+
+    let gratNatalinaTotal = primeiraParcelaRecebida + segundaParcelaRecebida;
     let pss13 = 0;
     let ir13 = 0;
     let abono13 = 0;
@@ -69,74 +104,77 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
     const teto = pssTable?.teto_rgps || 0;
     const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
-    // Calculo completo em Novembro
-    if (params.tipoCalculo === 'nov') {
-        const base13 = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
-            funcaoValor + gratVal + (params.vpni_lei || 0) +
-            (params.vpni_decisao || 0) + (params.ats || 0);
+    // Regra: 1a parcela nao tem IR/PSS.
+    // IR/PSS entram apenas quando ha 2a parcela, com base no total (1a + 2a).
+    if (houveSegundaParcela) {
+        // Em modo automatico, se a 2a parcela estiver marcada e a 1a estiver zerada,
+        // considera-se a 1a parcela teorica na base tributavel do 13o.
+        const primeiraVencParaTributo =
+            adiant13Venc > 0 ? adiant13Venc : (!params.manualAdiant13 ? metadeVencimento13 : 0);
+        const primeiraFCParaTributo =
+            adiant13FC > 0 ? adiant13FC : (!params.manualAdiant13 ? metadeFC13 : 0);
 
-        // Abono sobre 13o
-        let base13PSS_Estimada = base13;
-        base13PSS_Estimada -= aqTreinoVal;
-        if (!params.pssSobreFC) base13PSS_Estimada -= funcaoValor;
+        const baseVencTributavel13 = primeiraVencParaTributo + segunda13Venc;
+        const baseFCTributavel13 = primeiraFCParaTributo + segunda13FC;
+        const base13Tributavel = baseVencTributavel13 + baseFCTributavel13;
+
+        const fatorVenc =
+            baseSemFC > 0
+                ? Math.min(1, Math.max(0, baseVencTributavel13 / baseSemFC))
+                : 0;
+
+        // AQ treinamento nao integra base de PSS do 13o.
+        let baseParaPSS13 = base13Tributavel - (aqTreinoVal * fatorVenc);
+        if (!params.pssSobreFC) {
+            baseParaPSS13 -= baseFCTributavel13;
+        }
+        baseParaPSS13 = Math.max(0, baseParaPSS13);
 
         if (params.recebeAbono && pssTable) {
             if (usaTeto) {
-                const baseLimitada = Math.min(base13PSS_Estimada, teto);
-                abono13 = calculatePss(baseLimitada, pssTable);
+                abono13 = calculatePss(Math.min(baseParaPSS13, teto), pssTable);
             } else {
-                abono13 = calculatePss(base13PSS_Estimada, pssTable);
+                abono13 = calculatePss(baseParaPSS13, pssTable);
             }
         }
 
-        gratNatalinaTotal = base13 + abono13;
-
-        // PSS sobre 13o
-        let baseParaPSS13 = base13;
-        if (!params.pssSobreFC) baseParaPSS13 -= funcaoValor;
-        baseParaPSS13 -= aqTreinoVal;
+        gratNatalinaTotal += abono13;
 
         if (pssTable) {
             if (usaTeto) {
-                const baseLimitada13 = Math.min(baseParaPSS13, teto);
-                pss13 = calculatePss(baseLimitada13, pssTable);
+                pss13 = calculatePss(Math.min(baseParaPSS13, teto), pssTable);
             } else {
                 pss13 = calculatePss(baseParaPSS13, pssTable);
             }
         }
 
-        // IR sobre 13o
         const baseFunpresp = Math.max(0, baseParaPSS13 - teto);
         const valFunpresp = usaTeto && baseFunpresp > 0
             ? baseFunpresp * params.funprespAliq + (baseFunpresp * (params.funprespFacul / 100))
             : 0;
 
         const deducaoDep = config.values?.deducao_dep || 0;
-        const baseIR13 = gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * deducaoDep);
         const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
+        const baseIR13 = Math.max(
+            0,
+            gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * deducaoDep)
+        );
         ir13 = calculateIrrf(baseIR13, payrollRules.irrfTopRate, deductionVal);
     }
 
-    // Adiantamento do 13o
-    let adiant13Venc = params.adiant13Venc || 0;
-    let adiant13FC = params.adiant13FC || 0;
-
-    if (!params.manualAdiant13) {
-        if (params.tipoCalculo === 'jan' || params.tipoCalculo === 'jun' || params.tipoCalculo === 'nov') {
-            adiant13Venc = baseSemFC / 2;
-            adiant13FC = funcaoValor / 2;
-        }
-    }
-
-    adiant13Venc = Math.round(adiant13Venc * 100) / 100;
-    adiant13FC = Math.round(adiant13FC * 100) / 100;
+    adiant13Venc = roundCurrency(adiant13Venc);
+    adiant13FC = roundCurrency(adiant13FC);
+    segunda13Venc = roundCurrency(segunda13Venc);
+    segunda13FC = roundCurrency(segunda13FC);
 
     return {
-        gratNatalinaTotal,
-        pss13,
-        ir13,
+        gratNatalinaTotal: roundCurrency(gratNatalinaTotal),
+        pss13: roundCurrency(pss13),
+        ir13: roundCurrency(ir13),
         adiant13Venc,
         adiant13FC,
-        abono13
+        segunda13Venc,
+        segunda13FC,
+        abono13: roundCurrency(abono13),
     };
 }

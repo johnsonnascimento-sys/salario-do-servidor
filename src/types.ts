@@ -189,7 +189,9 @@ export interface CalculatorState {
 
   // 13th Breakdown (Manual Calculation Support)
   adiant13Venc: number; // Adiantamento Ativo EC (Base) - Used for JAN/JUN logic
-  adiant13FC: number;   // Adiantamento FC/CJ (Função) - Used for JAN/JUN logic
+  adiant13FC: number;   // Adiantamento FC/CJ (Funcao) - Used for JAN/JUN logic
+  segunda13Venc: number; // Segunda parcela do 13o (Base)
+  segunda13FC: number;   // Segunda parcela do 13o (FC/CJ)
   manualAdiant13: boolean; // Checkbox to not auto-calc 13th (JAN/JUN)
 
   // Specific for November Override (Debit Correction)
@@ -310,6 +312,8 @@ export const INITIAL_STATE: CalculatorState = {
 
   adiant13Venc: 0,
   adiant13FC: 0,
+  segunda13Venc: 0,
+  segunda13FC: 0,
   manualAdiant13: false,
 
   manualDecimoTerceiroNov: false,
@@ -342,3 +346,4 @@ export const INITIAL_STATE: CalculatorState = {
   diariasExtAlimentacao: false,
   diariasExtTransporte: false
 };
+

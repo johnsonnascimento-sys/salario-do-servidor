@@ -80,7 +80,13 @@ const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) =>
         case 'ferias':
             return state.manualFerias || state.ferias1_3 > 0 || state.feriasAntecipadas;
         case 'decimo':
-            return state.manualAdiant13 || state.adiant13Venc > 0 || state.adiant13FC > 0;
+            return (
+                state.manualAdiant13 ||
+                state.adiant13Venc > 0 ||
+                state.adiant13FC > 0 ||
+                state.segunda13Venc > 0 ||
+                state.segunda13FC > 0
+            );
         case 'hora_extra':
             return state.heQtd50 > 0 || state.heQtd100 > 0 || state.heIsEA;
         case 'substituicao':
@@ -255,6 +261,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 update('manualAdiant13', false);
                 update('adiant13Venc', 0);
                 update('adiant13FC', 0);
+                update('segunda13Venc', 0);
+                update('segunda13FC', 0);
                 break;
             case 'hora_extra':
                 update('heQtd50', 0);
@@ -335,8 +343,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 ];
             case 'decimo':
                 return [
-                    { label: 'Adiantamento vencimento', value: roundCurrency(state.adiant13Venc || 0) },
-                    { label: 'Adiantamento FC/CJ', value: roundCurrency(state.adiant13FC || 0) },
+                    { label: '1a parcela vencimento', value: roundCurrency(state.adiant13Venc || 0) },
+                    { label: '1a parcela FC/CJ', value: roundCurrency(state.adiant13FC || 0) },
+                    { label: '2a parcela vencimento', value: roundCurrency(state.segunda13Venc || 0) },
+                    { label: '2a parcela FC/CJ', value: roundCurrency(state.segunda13FC || 0) },
                     { label: 'Gratificacao natalina', value: roundCurrency(state.gratNatalinaTotal || 0) },
                     { label: 'Abono 13o', value: roundCurrency(state.abonoPerm13 || 0) }
                 ];

@@ -114,8 +114,7 @@ export class JmuService implements IAgencyCalculator {
 
         // 5. Calcular Totais
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
-            benefits.auxTransporte + vacation.value + thirteenth.adiant13Venc +
-            thirteenth.adiant13FC + thirteenth.gratNatalinaTotal + overtime.heTotal +
+            benefits.auxTransporte + vacation.value + thirteenth.gratNatalinaTotal + overtime.heTotal +
             substitution + dailies.valor + compensatoryLeave + rubricasTotals.creditos;
 
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
@@ -162,6 +161,8 @@ export class JmuService implements IAgencyCalculator {
                 pss13: thirteenth.pss13,
                 adiant13Venc: thirteenth.adiant13Venc,
                 adiant13FC: thirteenth.adiant13FC,
+                segunda13Venc: thirteenth.segunda13Venc,
+                segunda13FC: thirteenth.segunda13FC,
 
                 // Hora Extra e Substituição
                 heVal50: overtime.heVal50,
