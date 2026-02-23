@@ -23,6 +23,11 @@ type PredefinedRubricId =
     | 'aux_transporte'
     | 'diarias';
 
+interface PresetGrossLine {
+    label: string;
+    value: number;
+}
+
 interface DynamicPayrollFormProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
@@ -59,6 +64,8 @@ const toNumber = (value: string) => {
 const toPositiveNumber = (value: string) => {
     return Math.max(0, toNumber(value));
 };
+
+const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
 const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
     switch (presetId) {
@@ -134,6 +141,46 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const totalDescontos = state.rubricasExtras
         .filter(rubrica => rubrica.tipo === 'D')
         .reduce((total, rubrica) => total + (rubrica.valor || 0), 0);
+
+    const gratificacaoEspecificaCalculada =
+        state.gratEspecificaTipo === 'gae' || state.gratEspecificaTipo === 'gas'
+            ? baseVencimento * (payrollRules?.specificGratificationRate ?? 0)
+            : 0;
+
+    const funcaoAtualValor =
+        state.funcao && state.funcao !== noFunctionCode
+            ? (currentTables.funcoes[state.funcao] || 0)
+            : 0;
+
+    const substitutionBreakdown = useMemo(() => {
+        const divisor = payrollRules?.monthDayDivisor ?? 30;
+        const baseAbatimento = funcaoAtualValor + gratificacaoEspecificaCalculada;
+
+        const linhas = Object.entries(state.substDias || {})
+            .filter(([, days]) => Number(days) > 0)
+            .map(([funcKey, days]) => {
+                const destino = currentTables.funcoes[funcKey] || 0;
+                const bruto = destino > baseAbatimento
+                    ? roundCurrency(((destino - baseAbatimento) / divisor) * Number(days))
+                    : 0;
+
+                return {
+                    key: funcKey,
+                    days: Number(days),
+                    value: bruto
+                };
+            });
+
+        const total = roundCurrency(linhas.reduce((acc, linha) => acc + linha.value, 0));
+
+        return { linhas, total };
+    }, [
+        state.substDias,
+        currentTables.funcoes,
+        payrollRules?.monthDayDivisor,
+        funcaoAtualValor,
+        gratificacaoEspecificaCalculada
+    ]);
 
     const handleCargoChange = (nextCargo: CalculatorState['cargo']) => {
         const nextPadroes = Object.keys(currentTables.salario[nextCargo] || {});
@@ -254,6 +301,109 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (!selectedPreset) {
             setSelectedPreset(presetId);
         }
+    };
+
+    const getPresetGrossLines = (presetId: PredefinedRubricId): PresetGrossLine[] => {
+        switch (presetId) {
+            case 'aq': {
+                const tituloLabel = isNovoAQ ? 'AQ Titulos (Lei 15.292)' : 'AQ Titulos';
+                const treinoLabel = isNovoAQ ? 'AQ Treinamento (Lei 15.292)' : 'AQ Treinamento';
+                return [
+                    { label: tituloLabel, value: roundCurrency(state.aqTituloValor || 0) },
+                    { label: treinoLabel, value: roundCurrency(state.aqTreinoValor || 0) },
+                    { label: 'Total AQ', value: roundCurrency((state.aqTituloValor || 0) + (state.aqTreinoValor || 0)) }
+                ];
+            }
+            case 'gratificacao':
+                return [
+                    { label: 'Gratificacao especifica', value: roundCurrency(gratificacaoEspecificaCalculada) }
+                ];
+            case 'vantagens':
+                return [
+                    { label: 'VPNI (Lei)', value: roundCurrency(state.vpni_lei || 0) },
+                    { label: 'VPNI (Decisao)', value: roundCurrency(state.vpni_decisao || 0) },
+                    { label: 'ATS', value: roundCurrency(state.ats || 0) },
+                    { label: 'Total vantagens', value: roundCurrency((state.vpni_lei || 0) + (state.vpni_decisao || 0) + (state.ats || 0)) }
+                ];
+            case 'abono':
+                return [
+                    { label: 'Abono de permanencia', value: roundCurrency(state.abonoPermanencia || 0) }
+                ];
+            case 'ferias':
+                return [
+                    { label: 'Adicional 1/3 ferias', value: roundCurrency(state.ferias1_3 || 0) }
+                ];
+            case 'decimo':
+                return [
+                    { label: 'Adiantamento vencimento', value: roundCurrency(state.adiant13Venc || 0) },
+                    { label: 'Adiantamento FC/CJ', value: roundCurrency(state.adiant13FC || 0) },
+                    { label: 'Gratificacao natalina', value: roundCurrency(state.gratNatalinaTotal || 0) },
+                    { label: 'Abono 13o', value: roundCurrency(state.abonoPerm13 || 0) }
+                ];
+            case 'hora_extra':
+                return [
+                    { label: 'Hora extra 50%', value: roundCurrency(state.heVal50 || 0) },
+                    { label: 'Hora extra 100%', value: roundCurrency(state.heVal100 || 0) },
+                    { label: 'Total hora extra', value: roundCurrency(state.heTotal || 0) }
+                ];
+            case 'substituicao': {
+                const porFuncao = substitutionBreakdown.linhas.map((linha) => ({
+                    label: `Substituicao ${linha.key.toUpperCase()} (${linha.days} dia(s))`,
+                    value: linha.value
+                }));
+                return [
+                    ...porFuncao,
+                    { label: 'Total substituicao', value: roundCurrency(substitutionBreakdown.total) }
+                ];
+            }
+            case 'licenca':
+                return [
+                    { label: 'Licenca compensatoria', value: roundCurrency(state.licencaValor || 0) }
+                ];
+            case 'pre_escolar':
+                return [
+                    { label: 'Auxilio pre-escolar', value: roundCurrency(state.auxPreEscolarValor || 0) }
+                ];
+            case 'aux_transporte':
+                return [
+                    { label: 'Auxilio transporte (credito)', value: roundCurrency(state.auxTransporteValor || 0) },
+                    { label: 'Cota-parte transporte (desconto)', value: roundCurrency(state.auxTransporteDesc || 0) }
+                ];
+            case 'diarias':
+                return [
+                    { label: 'Diarias brutas', value: roundCurrency(state.diariasBruto || 0) },
+                    { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
+                    { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) },
+                    { label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) }
+                ];
+            default:
+                return [];
+        }
+    };
+
+    const renderPresetGrossSummary = (presetId: PredefinedRubricId) => {
+        const lines = getPresetGrossLines(presetId);
+        if (lines.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="rounded-xl border border-secondary/20 bg-secondary/5 px-4 py-3 space-y-2">
+                <p className="text-label font-bold uppercase tracking-widest text-secondary-700 dark:text-secondary-400">
+                    Resumo bruto calculado
+                </p>
+                <div className="space-y-1.5">
+                    {lines.map((line) => (
+                        <div key={line.label} className="flex items-center justify-between gap-3 text-body-xs">
+                            <span className="text-neutral-600 dark:text-neutral-300">{line.label}</span>
+                            <span className="font-mono font-bold text-neutral-800 dark:text-neutral-100">
+                                {formatCurrency(line.value || 0)}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
     };
 
     const renderPreset = (presetId: PredefinedRubricId) => {
@@ -519,6 +669,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                     </button>
                                 </div>
                                 {renderPreset(presetId)}
+                                {renderPresetGrossSummary(presetId)}
                             </div>
                         );
                     })}
@@ -639,8 +790,13 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                         type="checkbox"
                                         className={styles.checkbox}
                                         checked={rubrica.pssCompetenciaSeparada}
-                                        disabled={!rubrica.incidePSS}
-                                        onChange={e => updateRubrica(rubrica.id, 'pssCompetenciaSeparada', e.target.checked)}
+                                        onChange={e => {
+                                            const checked = e.target.checked;
+                                            updateRubrica(rubrica.id, 'pssCompetenciaSeparada', checked);
+                                            if (checked && !rubrica.incidePSS) {
+                                                updateRubrica(rubrica.id, 'incidePSS', true);
+                                            }
+                                        }}
                                     />
                                     <span>PSS em competência anterior</span>
                                 </label>
