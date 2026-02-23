@@ -13,7 +13,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Substituicao de Funcao
+                <Briefcase className="w-4 h-4" /> Substituição de Função
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
@@ -25,7 +25,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
                                 checked={state.substIsEA}
                                 onChange={e => update('substIsEA', e.target.checked)}
                             />
-                            <span>Exercicio Anterior (EA)</span>
+                            <span>Exercício Anterior (EA)</span>
                         </label>
                     </div>
 

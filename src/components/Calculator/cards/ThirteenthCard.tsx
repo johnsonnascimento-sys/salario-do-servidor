@@ -14,7 +14,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
                 <Gift className="w-4 h-4" />
-                Gratificacao Natalina
+                Gratificação Natalina
             </h3>
 
             <div className="space-y-4">
@@ -26,13 +26,13 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                             onChange={e => update('manualAdiant13', e.target.checked)}
                             className={styles.checkbox}
                         />
-                        Controles Manuais
+                        Controles manuais
                     </label>
                 </div>
 
                 <div className="space-y-4">
                     <div>
-                        <label className={styles.label}>Adiant. 1a Parcela (Vencimento)</label>
+                        <label className={styles.label}>Adiant. 1ª Parcela (Vencimento)</label>
 
                         {state.manualAdiant13 ? (
                             <input
@@ -59,7 +59,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                     />
                                     <div className="flex-1">
                                         <div className="flex justify-between">
-                                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber Adiantamento</span>
+                                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber adiantamento</span>
                                             <span className="text-body-xs font-mono text-neutral-500">{formatCurrency(state.adiant13Venc)}</span>
                                         </div>
                                     </div>
@@ -69,7 +69,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                     </div>
 
                     <div>
-                        <label className={styles.label}>Adiant. 1a Parcela (FC/CJ)</label>
+                        <label className={styles.label}>Adiant. 1ª Parcela (FC/CJ)</label>
 
                         {state.manualAdiant13 ? (
                             <input
@@ -96,7 +96,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                     />
                                     <div className="flex-1">
                                         <div className="flex justify-between">
-                                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber Adiantamento</span>
+                                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber adiantamento</span>
                                             <span className="text-body-xs font-mono text-neutral-500">{formatCurrency(state.adiant13FC)}</span>
                                         </div>
                                     </div>

@@ -12,13 +12,13 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, styles 
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Licenca Compensatoria
+                <Briefcase className="w-4 h-4" /> Licença Compensatória
             </h3>
 
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     <div>
-                        <label className={styles.label}>Qtd. Dias a Indenizar</label>
+                        <label className={styles.label}>Qtd. Dias a indenizar</label>
                         <input
                             type="number"
                             className={styles.input}
@@ -35,7 +35,7 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, styles 
                             onChange={e => update('incluirAbonoLicenca', e.target.checked)}
                             className={styles.checkbox}
                         />
-                        Incluir Abono na Base?
+                        Incluir abono na base?
                     </label>
                 </div>
             </div>

@@ -12,7 +12,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Clock className="w-4 h-4" /> Servico Extraordinario (HE)
+                <Clock className="w-4 h-4" /> Serviço Extraordinário (HE)
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
@@ -24,7 +24,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                                 checked={state.heIsEA}
                                 onChange={e => update('heIsEA', e.target.checked)}
                             />
-                            <span>Exercicio Anterior (EA)</span>
+                            <span>Exercício Anterior (EA)</span>
                         </label>
                     </div>
                     <div className="grid grid-cols-2 gap-4">

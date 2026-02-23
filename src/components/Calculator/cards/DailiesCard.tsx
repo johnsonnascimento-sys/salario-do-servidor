@@ -12,12 +12,12 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Plane className="w-4 h-4" /> Diarias
+                <Plane className="w-4 h-4" /> Diárias
             </h3>
 
             <div className="space-y-6">
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Diarias de Viagem</h4>
+                    <h4 className={styles.innerBoxTitle}>Diárias de Viagem</h4>
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -38,8 +38,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
                                     onChange={e => update('diariasEmbarque', e.target.value)}
                                 >
                                     <option value="nenhum">Nenhum</option>
-                                    <option value="metade">Meia Diaria</option>
-                                    <option value="completo">Diaria Completa</option>
+                                    <option value="metade">Meia Diária</option>
+                                    <option value="completo">Diária Completa</option>
                                 </select>
                             </div>
                         </div>
@@ -56,7 +56,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
                                 checked={state.diariasDescontarAlimentacao}
                                 onChange={e => update('diariasDescontarAlimentacao', e.target.checked)}
                             />
-                            <span>Aux. Alimentacao</span>
+                            <span>Aux. Alimentação</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input
@@ -71,7 +71,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
                 </div>
 
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Auxilios Recebidos (Glosar)</h4>
+                    <h4 className={styles.innerBoxTitle}>Auxílios Recebidos (Glosar)</h4>
                     <div className="space-y-2">
                         <label className={styles.checkboxLabel}>
                             <input
@@ -90,7 +90,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
                                 onChange={e => update('diariasExtAlimentacao', e.target.checked)}
                                 className={styles.checkbox}
                             />
-                            Alimentacao Fornecida
+                            Alimentação Fornecida
                         </label>
 
                         <label className={styles.checkboxLabel}>

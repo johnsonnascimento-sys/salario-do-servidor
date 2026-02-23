@@ -35,18 +35,18 @@ interface DynamicPayrollFormProps {
 }
 
 const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
-    { id: 'aq', label: 'Adicional de Qualificacao' },
-    { id: 'gratificacao', label: 'Gratificacao Especifica (GAE/GAS)' },
+    { id: 'aq', label: 'Adicional de Qualificação' },
+    { id: 'gratificacao', label: 'Gratificação Específica (GAE/GAS)' },
     { id: 'vantagens', label: 'Vantagens Pessoais' },
-    { id: 'abono', label: 'Abono de Permanencia' },
-    { id: 'ferias', label: 'Ferias' },
-    { id: 'decimo', label: '13o Salario' },
+    { id: 'abono', label: 'Abono de Permanência' },
+    { id: 'ferias', label: 'Férias' },
+    { id: 'decimo', label: '13º Salário' },
     { id: 'hora_extra', label: 'Horas Extras' },
-    { id: 'substituicao', label: 'Substituicao' },
-    { id: 'licenca', label: 'Licenca Compensatoria' },
-    { id: 'pre_escolar', label: 'Auxilio Pre-Escolar' },
-    { id: 'aux_transporte', label: 'Auxilio Transporte' },
-    { id: 'diarias', label: 'Diarias de Viagem' }
+    { id: 'substituicao', label: 'Substituição' },
+    { id: 'licenca', label: 'Licença Compensatória' },
+    { id: 'pre_escolar', label: 'Auxílio Pré-Escolar' },
+    { id: 'aux_transporte', label: 'Auxílio Transporte' },
+    { id: 'diarias', label: 'Diárias de Viagem' }
 ];
 
 const DEFAULT_PRESETS: PredefinedRubricId[] = [
@@ -319,7 +319,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             return (
                 <label className={styles.checkboxLabel}>
                     <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
-                    <span>Recebe abono de permanencia</span>
+                    <span>Recebe abono de permanência</span>
                 </label>
             );
         }
@@ -339,7 +339,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <input type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
-                        <label className={styles.label}>Cota pre-escolar</label>
+                        <label className={styles.label}>Cota pré-escolar</label>
                         <input type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
@@ -362,17 +362,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </h3>
 
             <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Base obrigatoria</h4>
+                <h4 className={styles.innerBoxTitle}>Base obrigatória</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className={styles.label}>Cargo</label>
                         <select className={styles.input} value={state.cargo} onChange={e => handleCargoChange(e.target.value as CalculatorState['cargo'])}>
-                            <option value="tec">Tecnico</option>
+                            <option value="tec">Técnico</option>
                             <option value="analista">Analista</option>
                         </select>
                     </div>
                     <div>
-                        <label className={styles.label}>Classe/Padrao</label>
+                        <label className={styles.label}>Classe/Padrão</label>
                         <select className={styles.input} value={state.padrao} onChange={e => update('padrao', e.target.value)}>
                             {padroes.map(padrao => (
                                 <option key={padrao} value={padrao}>{padrao}</option>
@@ -380,9 +380,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         </select>
                     </div>
                     <div>
-                        <label className={styles.label}>Funcao (FC/CJ)</label>
+                        <label className={styles.label}>Função (FC/CJ)</label>
                         <select className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
-                            <option value="0">Sem funcao</option>
+                            <option value="0">Sem função</option>
                             {Object.keys(currentTables.funcoes).map(funcao => (
                                 <option key={funcao} value={funcao}>
                                     {funcao.toUpperCase()} - {formatCurrency(currentTables.funcoes[funcao])}
@@ -394,7 +394,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                        <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Salario Base</p>
+                        <p className={styles.label}>Salário Base</p>
                         <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(baseVencimento)}</p>
                     </div>
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
@@ -402,20 +402,20 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
                     </div>
                     <div>
-                        <label className={styles.label}>Auxilio Alimentacao</label>
+                        <label className={styles.label}>Auxílio Alimentação</label>
                         <input type="number" className={styles.input} value={state.auxAlimentacao || ''} onChange={e => update('auxAlimentacao', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
             </div>
 
             <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Configuracoes tributarias</h4>
+                <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className={styles.label}>Regime previdenciario</label>
+                        <label className={styles.label}>Regime previdenciário</label>
                         <select className={styles.input} value={state.regimePrev} onChange={e => update('regimePrev', e.target.value)}>
                             <option value="antigo">RPPS - sem teto</option>
-                            <option value="novo_antigo">RPPS - novo sem migracao</option>
+                            <option value="novo_antigo">RPPS - novo sem migração</option>
                             <option value="migrado">RPPS migrado (com teto)</option>
                             <option value="rpc">RPC (com teto)</option>
                         </select>
@@ -438,7 +438,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     <h4 className={styles.innerBoxTitle}>
                         <span className="flex items-center gap-2">
                             <Settings className="w-4 h-4" />
-                            Rubricas pre-definidas
+                            Rubricas Pré-definidas
                         </span>
                     </h4>
                     <div className="flex items-center gap-2">
@@ -490,7 +490,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     <h4 className={styles.innerBoxTitle}>
                         <span className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4" />
-                            Rubricas manuais
+                            Rubricas Manuais
                         </span>
                     </h4>
                     <div className="flex items-center gap-2">
@@ -500,7 +500,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-success-500/10 text-success-700 dark:text-success-400 border border-success-500/20 hover:bg-success-500/20 transition-colors text-body-xs font-bold uppercase tracking-wider"
                         >
                             <Plus className="w-4 h-4" />
-                            Incluir credito
+                            Incluir crédito
                         </button>
                         <button
                             type="button"
@@ -522,7 +522,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                         ? 'bg-success-500/10 text-success-700 dark:text-success-400'
                                         : 'bg-error-500/10 text-error-700 dark:text-error-400'
                                         }`}>
-                                        {rubrica.tipo === 'C' ? 'Credito' : 'Desconto'} #{index + 1}
+                                        {rubrica.tipo === 'C' ? 'Crédito' : 'Desconto'} #{index + 1}
                                     </span>
                                 </div>
                                 <button
@@ -539,12 +539,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                 <div>
                                     <label className={styles.label}>Tipo</label>
                                     <select className={styles.input} value={rubrica.tipo} onChange={e => updateRubrica(rubrica.id, 'tipo', e.target.value as Rubrica['tipo'])}>
-                                        <option value="C">Credito (+)</option>
+                                        <option value="C">Crédito (+)</option>
                                         <option value="D">Desconto (-)</option>
                                     </select>
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className={styles.label}>Descricao</label>
+                                    <label className={styles.label}>Descrição</label>
                                     <input type="text" className={styles.input} value={rubrica.descricao} onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)} />
                                 </div>
                                 <div>
@@ -575,11 +575,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="rounded-xl border border-success-500/20 bg-success-500/5 px-4 py-3">
-                        <p className="text-label font-bold uppercase tracking-widest text-success-700 dark:text-success-400">Total creditos dinamicos</p>
+                        <p className="text-label font-bold uppercase tracking-widest text-success-700 dark:text-success-400">Total Créditos Dinâmicos</p>
                         <p className="text-body font-bold font-mono text-success-700 dark:text-success-400">{formatCurrency(totalCreditos)}</p>
                     </div>
                     <div className="rounded-xl border border-error-500/20 bg-error-500/5 px-4 py-3">
-                        <p className="text-label font-bold uppercase tracking-widest text-error-700 dark:text-error-400">Total descontos dinamicos</p>
+                        <p className="text-label font-bold uppercase tracking-widest text-error-700 dark:text-error-400">Total Descontos Dinâmicos</p>
                         <p className="text-body font-bold font-mono text-error-700 dark:text-error-400">{formatCurrency(totalDescontos)}</p>
                     </div>
                 </div>

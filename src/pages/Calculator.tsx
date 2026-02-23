@@ -104,9 +104,6 @@ export default function Calculator() {
                         bruto={state.totalBruto}
                         pss={state.pssMensal + (state.pss13 || 0)}
                         irrf={state.irMensal + state.irEA + state.irFerias + (state.ir13 || 0)}
-                        liquido={state.liquido}
-                        onExportPDF={initiateExportPDF}
-                        onExportExcel={initiateExportExcel}
                     />
                 </div>
 
