@@ -236,9 +236,9 @@ export const INITIAL_STATE: CalculatorState = {
   incluirAbonoLicenca: true,
   licencaValor: 0,
 
-  auxAlimentacao: 1784.42,
+  auxAlimentacao: 0,
   auxPreEscolarQtd: 0,
-  cotaPreEscolar: 1235.77,
+  cotaPreEscolar: 0,
   auxPreEscolarValor: 0,
   auxTransporteGasto: 0,
   auxTransporteValor: 0,

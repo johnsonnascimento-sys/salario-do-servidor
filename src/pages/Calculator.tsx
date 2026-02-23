@@ -15,6 +15,7 @@ export default function Calculator() {
     const {
         state,
         update,
+        updateSubstDays,
         courtConfig,
         loadingConfig,
         resultRows,
@@ -85,6 +86,7 @@ export default function Calculator() {
                         <DynamicPayrollForm
                             state={state}
                             update={update}
+                            updateSubstDays={updateSubstDays}
                             courtConfig={courtConfig}
                             addRubrica={addRubrica}
                             removeRubrica={removeRubrica}

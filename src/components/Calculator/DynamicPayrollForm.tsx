@@ -1,17 +1,62 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { DollarSign, Minus, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, Rubrica } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
+import { VacationCard } from './cards/VacationCard';
+import { ThirteenthCard } from './cards/ThirteenthCard';
+import { OvertimeCard } from './cards/OvertimeCard';
+import { SubstitutionCard } from './cards/SubstitutionCard';
+import { LicenseCard } from './cards/LicenseCard';
+import { DailiesCard } from './cards/DailiesCard';
+
+type PredefinedRubricId =
+    | 'aq'
+    | 'gratificacao'
+    | 'vantagens'
+    | 'abono'
+    | 'ferias'
+    | 'decimo'
+    | 'hora_extra'
+    | 'substituicao'
+    | 'licenca'
+    | 'pre_escolar'
+    | 'aux_transporte'
+    | 'diarias';
 
 interface DynamicPayrollFormProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
+    updateSubstDays: (key: string, days: number) => void;
     courtConfig: CourtConfig;
     addRubrica: (tipo?: Rubrica['tipo']) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     styles: any;
 }
+
+const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
+    { id: 'aq', label: 'Adicional de Qualificacao' },
+    { id: 'gratificacao', label: 'Gratificacao Especifica (GAE/GAS)' },
+    { id: 'vantagens', label: 'Vantagens Pessoais' },
+    { id: 'abono', label: 'Abono de Permanencia' },
+    { id: 'ferias', label: 'Ferias' },
+    { id: 'decimo', label: '13o Salario' },
+    { id: 'hora_extra', label: 'Horas Extras' },
+    { id: 'substituicao', label: 'Substituicao' },
+    { id: 'licenca', label: 'Licenca Compensatoria' },
+    { id: 'pre_escolar', label: 'Auxilio Pre-Escolar' },
+    { id: 'aux_transporte', label: 'Auxilio Transporte' },
+    { id: 'diarias', label: 'Diarias de Viagem' }
+];
+
+const DEFAULT_PRESETS: PredefinedRubricId[] = [
+    'aq',
+    'gratificacao',
+    'vantagens',
+    'abono',
+    'pre_escolar',
+    'aux_transporte'
+];
 
 const toNumber = (value: string) => {
     const parsed = Number(value);
@@ -22,9 +67,41 @@ const toPositiveNumber = (value: string) => {
     return Math.max(0, toNumber(value));
 };
 
+const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
+    switch (presetId) {
+        case 'aq':
+            return state.aqTituloPerc > 0 || state.aqTreinoPerc > 0 || state.aqTituloVR > 0 || state.aqTreinoVR > 0;
+        case 'gratificacao':
+            return state.gratEspecificaTipo !== '0' || state.gratEspecificaValor > 0;
+        case 'vantagens':
+            return state.vpni_lei > 0 || state.vpni_decisao > 0 || state.ats > 0;
+        case 'abono':
+            return state.recebeAbono;
+        case 'ferias':
+            return state.manualFerias || state.ferias1_3 > 0 || state.feriasAntecipadas;
+        case 'decimo':
+            return state.manualAdiant13 || state.adiant13Venc > 0 || state.adiant13FC > 0;
+        case 'hora_extra':
+            return state.heQtd50 > 0 || state.heQtd100 > 0 || state.heIsEA;
+        case 'substituicao':
+            return Object.values(state.substDias).some(days => days > 0) || state.substIsEA;
+        case 'licenca':
+            return state.licencaDias > 0;
+        case 'pre_escolar':
+            return state.auxPreEscolarQtd > 0;
+        case 'aux_transporte':
+            return state.auxTransporteGasto > 0;
+        case 'diarias':
+            return state.diariasQtd > 0 || state.diariasEmbarque !== 'nenhum';
+        default:
+            return false;
+    }
+};
+
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     state,
     update,
+    updateSubstDays,
     courtConfig,
     addRubrica,
     removeRubrica,
@@ -36,6 +113,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const padroes = Object.keys(salaryByCargo);
     const baseVencimento = salaryByCargo[state.padrao] || 0;
     const gaj = baseVencimento * 1.4;
+    const isNovoAQ = state.periodo >= 1;
+
+    const initialPresets = useMemo(() => {
+        const fromState = PREDEFINED_OPTIONS
+            .filter(option => hasPresetValue(option.id, state))
+            .map(option => option.id);
+        return Array.from(new Set([...DEFAULT_PRESETS, ...fromState]));
+    }, [state]);
+
+    const [enabledPresets, setEnabledPresets] = useState<PredefinedRubricId[]>(initialPresets);
+    const availablePresets = PREDEFINED_OPTIONS.filter(option => !enabledPresets.includes(option.id));
+    const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(availablePresets[0]?.id || '');
 
     const totalCreditos = state.rubricasExtras
         .filter(rubrica => rubrica.tipo === 'C')
@@ -53,79 +142,268 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         update('padrao', fallbackPadrao);
     };
 
+    const clearPreset = (presetId: PredefinedRubricId) => {
+        switch (presetId) {
+            case 'aq':
+                update('aqTituloPerc', 0);
+                update('aqTreinoPerc', 0);
+                update('aqTituloVR', 0);
+                update('aqTreinoVR', 0);
+                break;
+            case 'gratificacao':
+                update('gratEspecificaTipo', '0');
+                update('gratEspecificaValor', 0);
+                break;
+            case 'vantagens':
+                update('vpni_lei', 0);
+                update('vpni_decisao', 0);
+                update('ats', 0);
+                break;
+            case 'abono':
+                update('recebeAbono', false);
+                break;
+            case 'ferias':
+                update('manualFerias', false);
+                update('ferias1_3', 0);
+                update('feriasAntecipadas', false);
+                break;
+            case 'decimo':
+                update('manualAdiant13', false);
+                update('adiant13Venc', 0);
+                update('adiant13FC', 0);
+                break;
+            case 'hora_extra':
+                update('heQtd50', 0);
+                update('heQtd100', 0);
+                update('heIsEA', false);
+                break;
+            case 'substituicao':
+                update('substIsEA', false);
+                Object.keys(state.substDias).forEach(key => updateSubstDays(key, 0));
+                break;
+            case 'licenca':
+                update('licencaDias', 0);
+                update('baseLicenca', 'auto');
+                update('incluirAbonoLicenca', true);
+                break;
+            case 'pre_escolar':
+                update('auxPreEscolarQtd', 0);
+                break;
+            case 'aux_transporte':
+                update('auxTransporteGasto', 0);
+                break;
+            case 'diarias':
+                update('diariasQtd', 0);
+                update('diariasEmbarque', 'nenhum');
+                update('diariasDescontarAlimentacao', true);
+                update('diariasDescontarTransporte', true);
+                update('diariasExtHospedagem', false);
+                update('diariasExtAlimentacao', false);
+                update('diariasExtTransporte', false);
+                break;
+        }
+    };
+
+    const includePreset = () => {
+        if (!selectedPreset || enabledPresets.includes(selectedPreset)) return;
+        setEnabledPresets(prev => [...prev, selectedPreset]);
+        const nextAvailable = availablePresets.filter(option => option.id !== selectedPreset);
+        setSelectedPreset(nextAvailable[0]?.id || '');
+    };
+
+    const removePreset = (presetId: PredefinedRubricId) => {
+        setEnabledPresets(prev => prev.filter(id => id !== presetId));
+        clearPreset(presetId);
+        if (!selectedPreset) {
+            setSelectedPreset(presetId);
+        }
+    };
+
+    const renderPreset = (presetId: PredefinedRubricId) => {
+        if (presetId === 'aq') {
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {isNovoAQ ? (
+                        <>
+                            <div>
+                                <label className={styles.label}>Titulos (VR)</label>
+                                <select className={styles.input} value={state.aqTituloVR} onChange={e => update('aqTituloVR', Number(e.target.value))}>
+                                    <option value={0}>Nenhum</option>
+                                    <option value={1.0}>Especializacao (1.0x VR)</option>
+                                    <option value={2.0}>2x Especializacao (2.0x VR)</option>
+                                    <option value={3.5}>Mestrado (3.5x VR)</option>
+                                    <option value={5.0}>Doutorado (5.0x VR)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={styles.label}>Treinamento (VR)</label>
+                                <select className={styles.input} value={state.aqTreinoVR} onChange={e => update('aqTreinoVR', Number(e.target.value))}>
+                                    <option value={0}>Nenhum</option>
+                                    <option value={0.2}>120h (0.2x VR)</option>
+                                    <option value={0.4}>240h (0.4x VR)</option>
+                                    <option value={0.6}>360h (0.6x VR)</option>
+                                </select>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div>
+                                <label className={styles.label}>Titulos (%)</label>
+                                <select className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
+                                    <option value={0}>0%</option>
+                                    {state.cargo === 'tec' && <option value={0.05}>5% (Graduacao)</option>}
+                                    <option value={0.075}>7.5% (Especializacao)</option>
+                                    <option value={0.1}>10% (Mestrado)</option>
+                                    <option value={0.125}>12.5% (Doutorado)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={styles.label}>Treinamento (%)</label>
+                                <select className={styles.input} value={state.aqTreinoPerc} onChange={e => update('aqTreinoPerc', Number(e.target.value))}>
+                                    <option value={0}>0%</option>
+                                    <option value={0.01}>1% (120h)</option>
+                                    <option value={0.02}>2% (240h)</option>
+                                    <option value={0.03}>3% (360h)</option>
+                                </select>
+                            </div>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        if (presetId === 'gratificacao') {
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className={styles.label}>Tipo</label>
+                        <select className={styles.input} value={state.gratEspecificaTipo} onChange={e => update('gratEspecificaTipo', e.target.value)}>
+                            <option value="0">Nenhuma</option>
+                            <option value="gae">GAE (35%)</option>
+                            <option value="gas">GAS (35%)</option>
+                        </select>
+                    </div>
+                    <label className={`${styles.checkboxLabel} md:mt-8`}>
+                        <input
+                            type="checkbox"
+                            className={styles.checkbox}
+                            checked={state.incidirPSSGrat}
+                            onChange={e => update('incidirPSSGrat', e.target.checked)}
+                        />
+                        <span>Incluir na base do PSS</span>
+                    </label>
+                </div>
+            );
+        }
+
+        if (presetId === 'vantagens') {
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className={styles.label}>VPNI (Lei)</label>
+                        <input type="number" className={styles.input} value={state.vpni_lei} onChange={e => update('vpni_lei', toPositiveNumber(e.target.value))} />
+                    </div>
+                    <div>
+                        <label className={styles.label}>VPNI (Decisao)</label>
+                        <input type="number" className={styles.input} value={state.vpni_decisao} onChange={e => update('vpni_decisao', toPositiveNumber(e.target.value))} />
+                    </div>
+                    <div>
+                        <label className={styles.label}>ATS</label>
+                        <input type="number" className={styles.input} value={state.ats} onChange={e => update('ats', toPositiveNumber(e.target.value))} />
+                    </div>
+                </div>
+            );
+        }
+
+        if (presetId === 'abono') {
+            return (
+                <label className={styles.checkboxLabel}>
+                    <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
+                    <span>Recebe abono de permanencia</span>
+                </label>
+            );
+        }
+
+        if (presetId === 'ferias') return <VacationCard state={state} update={update} styles={styles} />;
+        if (presetId === 'decimo') return <ThirteenthCard state={state} update={update} styles={styles} />;
+        if (presetId === 'hora_extra') return <OvertimeCard state={state} update={update} styles={styles} />;
+        if (presetId === 'substituicao') return <SubstitutionCard state={state} update={update} updateSubstDays={updateSubstDays} styles={styles} />;
+        if (presetId === 'licenca') return <LicenseCard state={state} update={update} styles={styles} />;
+        if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} />;
+
+        if (presetId === 'pre_escolar') {
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className={styles.label}>Qtd. dependentes</label>
+                        <input type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
+                    </div>
+                    <div>
+                        <label className={styles.label}>Cota pre-escolar</label>
+                        <input type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div>
+                <label className={styles.label}>Gasto mensal de transporte</label>
+                <input type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
+            </div>
+        );
+    };
+
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
                 <Settings className="w-4 h-4" />
-                Formulario Dinamico do Holerite
+                Formulario dinamico do holerite
             </h3>
 
             <div className={styles.innerBox}>
                 <h4 className={styles.innerBoxTitle}>Base obrigatoria</h4>
-                <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className={styles.label}>Cargo</label>
-                            <select
-                                className={styles.input}
-                                value={state.cargo}
-                                onChange={e => handleCargoChange(e.target.value as CalculatorState['cargo'])}
-                            >
-                                <option value="tec">Tecnico</option>
-                                <option value="analista">Analista</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className={styles.label}>Classe/Padrao</label>
-                            <select
-                                className={styles.input}
-                                value={state.padrao}
-                                onChange={e => update('padrao', e.target.value)}
-                            >
-                                {padroes.map(padrao => (
-                                    <option key={padrao} value={padrao}>{padrao}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className={styles.label}>Funcao (FC/CJ)</label>
-                            <select
-                                className={styles.input}
-                                value={state.funcao}
-                                onChange={e => update('funcao', e.target.value)}
-                            >
-                                <option value="0">Sem funcao</option>
-                                {Object.keys(currentTables.funcoes).map(funcao => (
-                                    <option key={funcao} value={funcao}>
-                                        {funcao.toUpperCase()} - {formatCurrency(currentTables.funcoes[funcao])}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className={styles.label}>Cargo</label>
+                        <select className={styles.input} value={state.cargo} onChange={e => handleCargoChange(e.target.value as CalculatorState['cargo'])}>
+                            <option value="tec">Tecnico</option>
+                            <option value="analista">Analista</option>
+                        </select>
                     </div>
+                    <div>
+                        <label className={styles.label}>Classe/Padrao</label>
+                        <select className={styles.input} value={state.padrao} onChange={e => update('padrao', e.target.value)}>
+                            {padroes.map(padrao => (
+                                <option key={padrao} value={padrao}>{padrao}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className={styles.label}>Funcao (FC/CJ)</label>
+                        <select className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
+                            <option value="0">Sem funcao</option>
+                            {Object.keys(currentTables.funcoes).map(funcao => (
+                                <option key={funcao} value={funcao}>
+                                    {funcao.toUpperCase()} - {formatCurrency(currentTables.funcoes[funcao])}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                            <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Salario Base</p>
-                            <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">
-                                {formatCurrency(baseVencimento)}
-                            </p>
-                        </div>
-                        <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                            <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">GAJ (140%)</p>
-                            <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">
-                                {formatCurrency(gaj)}
-                            </p>
-                        </div>
-                        <div>
-                            <label className={styles.label}>Auxilio Alimentacao</label>
-                            <input
-                                type="number"
-                                className={styles.input}
-                                value={state.auxAlimentacao || ''}
-                                onChange={e => update('auxAlimentacao', toPositiveNumber(e.target.value))}
-                            />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                        <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Salario Base</p>
+                        <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(baseVencimento)}</p>
+                    </div>
+                    <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                        <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">GAJ (140%)</p>
+                        <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
+                    </div>
+                    <div>
+                        <label className={styles.label}>Auxilio Alimentacao</label>
+                        <input type="number" className={styles.input} value={state.auxAlimentacao || ''} onChange={e => update('auxAlimentacao', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
             </div>
@@ -134,12 +412,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 <h4 className={styles.innerBoxTitle}>Configuracoes tributarias</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className={styles.label}>Regime Previdenciario</label>
-                        <select
-                            className={styles.input}
-                            value={state.regimePrev}
-                            onChange={e => update('regimePrev', e.target.value)}
-                        >
+                        <label className={styles.label}>Regime previdenciario</label>
+                        <select className={styles.input} value={state.regimePrev} onChange={e => update('regimePrev', e.target.value)}>
                             <option value="antigo">RPPS - sem teto</option>
                             <option value="novo_antigo">RPPS - novo sem migracao</option>
                             <option value="migrado">RPPS migrado (com teto)</option>
@@ -148,57 +422,67 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     </div>
                     <div>
                         <label className={styles.label}>Dependentes (IR)</label>
-                        <input
-                            type="number"
-                            className={styles.input}
-                            value={state.dependentes}
-                            onChange={e => update('dependentes', toPositiveNumber(e.target.value))}
-                        />
+                        <input type="number" className={styles.input} value={state.dependentes} onChange={e => update('dependentes', toPositiveNumber(e.target.value))} />
                     </div>
                     <div className="flex flex-col justify-end gap-3">
                         <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={state.pssSobreFC}
-                                onChange={e => update('pssSobreFC', e.target.checked)}
-                            />
+                            <input type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
                             <span>PSS sobre FC/CJ</span>
-                        </label>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={state.incidirPSSGrat}
-                                onChange={e => update('incidirPSSGrat', e.target.checked)}
-                            />
-                            <span>PSS sobre gratificacoes</span>
                         </label>
                     </div>
                 </div>
+            </div>
 
-                {(state.regimePrev === 'migrado' || state.regimePrev === 'rpc') && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label className={styles.label}>Aliquota Funpresp</label>
-                            <input
-                                type="number"
-                                className={styles.input}
-                                value={state.funprespAliq}
-                                onChange={e => update('funprespAliq', toPositiveNumber(e.target.value))}
-                            />
-                        </div>
-                        <div>
-                            <label className={styles.label}>Contribuicao Facultativa (%)</label>
-                            <input
-                                type="number"
-                                className={styles.input}
-                                value={state.funprespFacul}
-                                onChange={e => update('funprespFacul', toPositiveNumber(e.target.value))}
-                            />
-                        </div>
+            <div className={styles.innerBox}>
+                <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+                    <h4 className={styles.innerBoxTitle}>
+                        <span className="flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Rubricas pre-definidas
+                        </span>
+                    </h4>
+                    <div className="flex items-center gap-2">
+                        <select className={styles.input} value={selectedPreset} onChange={e => setSelectedPreset(e.target.value as PredefinedRubricId | '')} disabled={availablePresets.length === 0}>
+                            {availablePresets.length === 0 && <option value="">Todas adicionadas</option>}
+                            {availablePresets.map(option => (
+                                <option key={option.id} value={option.id}>{option.label}</option>
+                            ))}
+                        </select>
+                        <button
+                            type="button"
+                            onClick={includePreset}
+                            disabled={!selectedPreset}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Incluir
+                        </button>
                     </div>
-                )}
+                </div>
+
+                <div className="space-y-3">
+                    {enabledPresets.map(presetId => {
+                        const preset = PREDEFINED_OPTIONS.find(option => option.id === presetId);
+                        if (!preset) return null;
+
+                        return (
+                            <div key={presetId} className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 space-y-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{preset.label}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => removePreset(presetId)}
+                                        className="text-neutral-400 hover:text-error-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                        aria-label={`Remover ${preset.label}`}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                {renderPreset(presetId)}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className={styles.innerBox}>
@@ -206,7 +490,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     <h4 className={styles.innerBoxTitle}>
                         <span className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4" />
-                            Rubricas dinamicas
+                            Rubricas manuais
                         </span>
                     </h4>
                     <div className="flex items-center gap-2">
@@ -229,11 +513,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     </div>
                 </div>
 
-                <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mb-4">
-                    Marque se a rubrica entra na base de IR e/ou PSS.
-                </p>
-
-                <div className="space-y-3">
+                <div className="space-y-3 mt-4">
                     {state.rubricasExtras.map((rubrica, index) => (
                         <div key={rubrica.id} className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 space-y-3">
                             <div className="flex items-start justify-between gap-3">
@@ -258,82 +538,49 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                 <div>
                                     <label className={styles.label}>Tipo</label>
-                                    <select
-                                        className={styles.input}
-                                        value={rubrica.tipo}
-                                        onChange={e => updateRubrica(rubrica.id, 'tipo', e.target.value as Rubrica['tipo'])}
-                                    >
+                                    <select className={styles.input} value={rubrica.tipo} onChange={e => updateRubrica(rubrica.id, 'tipo', e.target.value as Rubrica['tipo'])}>
                                         <option value="C">Credito (+)</option>
                                         <option value="D">Desconto (-)</option>
                                     </select>
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className={styles.label}>Descricao</label>
-                                    <input
-                                        type="text"
-                                        className={styles.input}
-                                        value={rubrica.descricao}
-                                        onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)}
-                                        placeholder="Ex: Retroativo adicional de qualificacao"
-                                    />
+                                    <input type="text" className={styles.input} value={rubrica.descricao} onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)} />
                                 </div>
                                 <div>
                                     <label className={styles.label}>Valor</label>
-                                    <input
-                                        type="number"
-                                        className={styles.input}
-                                        value={rubrica.valor || ''}
-                                        onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))}
-                                    />
+                                    <input type="number" className={styles.input} value={rubrica.valor || ''} onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))} />
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4 flex-wrap">
                                 <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={rubrica.incideIR}
-                                        onChange={e => updateRubrica(rubrica.id, 'incideIR', e.target.checked)}
-                                    />
+                                    <input type="checkbox" className={styles.checkbox} checked={rubrica.incideIR} onChange={e => updateRubrica(rubrica.id, 'incideIR', e.target.checked)} />
                                     <span>Incluir na base do IR</span>
                                 </label>
                                 <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={rubrica.incidePSS}
-                                        onChange={e => updateRubrica(rubrica.id, 'incidePSS', e.target.checked)}
-                                    />
+                                    <input type="checkbox" className={styles.checkbox} checked={rubrica.incidePSS} onChange={e => updateRubrica(rubrica.id, 'incidePSS', e.target.checked)} />
                                     <span>Incluir na base do PSS</span>
                                 </label>
                             </div>
                         </div>
                     ))}
-
-                    {state.rubricasExtras.length === 0 && (
-                        <p className="text-body text-neutral-400 italic py-4">
-                            Nenhuma rubrica dinamica adicionada.
-                        </p>
-                    )}
                 </div>
+
+                {state.rubricasExtras.length === 0 && (
+                    <p className="text-body text-neutral-400 italic py-4">
+                        Nenhuma rubrica manual adicionada.
+                    </p>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="rounded-xl border border-success-500/20 bg-success-500/5 px-4 py-3">
-                        <p className="text-label font-bold uppercase tracking-widest text-success-700 dark:text-success-400">
-                            Total creditos dinamicos
-                        </p>
-                        <p className="text-body font-bold font-mono text-success-700 dark:text-success-400">
-                            {formatCurrency(totalCreditos)}
-                        </p>
+                        <p className="text-label font-bold uppercase tracking-widest text-success-700 dark:text-success-400">Total creditos dinamicos</p>
+                        <p className="text-body font-bold font-mono text-success-700 dark:text-success-400">{formatCurrency(totalCreditos)}</p>
                     </div>
                     <div className="rounded-xl border border-error-500/20 bg-error-500/5 px-4 py-3">
-                        <p className="text-label font-bold uppercase tracking-widest text-error-700 dark:text-error-400">
-                            Total descontos dinamicos
-                        </p>
-                        <p className="text-body font-bold font-mono text-error-700 dark:text-error-400">
-                            {formatCurrency(totalDescontos)}
-                        </p>
+                        <p className="text-label font-bold uppercase tracking-widest text-error-700 dark:text-error-400">Total descontos dinamicos</p>
+                        <p className="text-body font-bold font-mono text-error-700 dark:text-error-400">{formatCurrency(totalDescontos)}</p>
                     </div>
                 </div>
             </div>

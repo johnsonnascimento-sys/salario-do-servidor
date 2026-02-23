@@ -1,0 +1,40 @@
+---
+description: Regras imutaveis da calculadora salarial (arquitetura data-driven e proibicao de hardcode)
+globs:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+  - "supabase/**/*.sql"
+alwaysApply: true
+---
+
+# Rules - Calculadora Data-Driven
+
+## 1) Fonte de verdade
+- Toda regra de calculo deve respeitar a hierarquia:
+  - `global_config`: regras universais (IR, PSS, teto RGPS)
+  - `power_config`: regras de carreira (bases, beneficios, cronogramas)
+  - `org_config`: overrides especificos do orgao
+- A UI nao pode recalcular tributos por conta propria fora do motor oficial.
+
+## 2) Proibicoes
+- Proibido hardcode de aliquota, faixa, deducao, teto, percentual legal e regra por orgao.
+- Proibido criar card fixo para nova rubrica de holerite.
+- Proibido voltar a depender de fonte legada fora do fluxo de configuracao oficial.
+
+## 3) Motor de calculo
+- O calculo oficial deve ficar no motor (`JmuService` e modulos).
+- O adaptador de estado deve enviar ao motor todos os campos necessarios.
+- Rubricas manuais devem ser tratadas genericamente, sem condicionais por nome.
+
+## 4) Rubricas dinamicas
+- Qualquer rubrica manual deve suportar:
+  - tipo (`C`/`D`)
+  - descricao
+  - valor
+  - incidencia em base de IR (`incideIR`)
+  - incidencia em base de PSS (`incidePSS`)
+
+## 5) Qualidade minima
+- Mudanca de calculo exige build limpo.
+- Mudanca de regra deve manter rastreabilidade (documento/seed/migracao).
+
