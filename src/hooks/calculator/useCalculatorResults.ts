@@ -41,6 +41,7 @@ export const useCalculatorResults = (
                     aqTreinoValor: bd.aqTreino || 0,
                     gratEspecificaValor: bd.gratEspecifica || 0,
                     pssMensal: bd.pss || 0,
+                    pssEA: bd.pssEA || 0,
                     valFunpresp: bd.funpresp || 0,
                     irMensal: bd.irrf || 0,
                     irEA: bd.irEA || 0,
@@ -161,6 +162,7 @@ export const useCalculatorResults = (
 
         // Descontos
         if (state.pssMensal > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS (PSS)', value: state.pssMensal, type: 'D' });
+        if (state.pssEA > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-EA', value: state.pssEA, type: 'D' });
         if (state.valFunpresp > 0) rows.push({ label: 'FUNPRESP-JUD', value: state.valFunpresp, type: 'D' });
         if (state.irMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC', value: state.irMensal, type: 'D' });
         if (state.irEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA', value: state.irEA, type: 'D' });
@@ -191,6 +193,7 @@ export const useCalculatorResults = (
             if (r.isEA) bases.push('EA');
             else if (r.incideIR) bases.push('BASE IR');
             if (r.incidePSS) bases.push('BASE PSS');
+            if (r.pssCompetenciaSeparada) bases.push('PSS COMP. ANT.');
             const sufixoBase = bases.length > 0 ? ` (${bases.join(' | ')})` : '';
 
             rows.push({

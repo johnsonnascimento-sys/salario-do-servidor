@@ -84,6 +84,7 @@ export interface Rubrica {
   incideIR: boolean;
   incidePSS: boolean;
   isEA: boolean;
+  pssCompetenciaSeparada: boolean;
 }
 
 export interface CalculatorState {
@@ -200,6 +201,7 @@ export interface CalculatorState {
 
   // Computed Results
   pssMensal: number;
+  pssEA: number;
   irMensal: number;
   irEA: number;
   irFerias: number;
@@ -317,6 +319,7 @@ export const INITIAL_STATE: CalculatorState = {
   integral13: 0,
 
   pssMensal: 0,
+  pssEA: 0,
   irMensal: 0,
   irEA: 0,
   irFerias: 0,

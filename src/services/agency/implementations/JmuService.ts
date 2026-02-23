@@ -146,6 +146,7 @@ export class JmuService implements IAgencyCalculator {
 
                 // Deduções
                 pss: deductions.pss,
+                pssEA: deductions.pssEA,
                 irrf: deductions.irrf,
                 irEA: deductions.irEA,
                 funpresp: deductions.funpresp,

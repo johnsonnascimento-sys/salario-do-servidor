@@ -34,7 +34,8 @@ export const useCalculatorState = () => {
             tipo,
             incideIR: false,
             incidePSS: false,
-            isEA: false
+            isEA: false,
+            pssCompetenciaSeparada: false
         };
         setState(prev => ({
             ...prev,

@@ -620,8 +620,29 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                     <span>Incluir na base do IR</span>
                                 </label>
                                 <label className={styles.checkboxLabel}>
-                                    <input type="checkbox" className={styles.checkbox} checked={rubrica.incidePSS} onChange={e => updateRubrica(rubrica.id, 'incidePSS', e.target.checked)} />
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={rubrica.incidePSS}
+                                        onChange={e => {
+                                            const checked = e.target.checked;
+                                            updateRubrica(rubrica.id, 'incidePSS', checked);
+                                            if (!checked) {
+                                                updateRubrica(rubrica.id, 'pssCompetenciaSeparada', false);
+                                            }
+                                        }}
+                                    />
                                     <span>Incluir na base do PSS</span>
+                                </label>
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={rubrica.pssCompetenciaSeparada}
+                                        disabled={!rubrica.incidePSS}
+                                        onChange={e => updateRubrica(rubrica.id, 'pssCompetenciaSeparada', e.target.checked)}
+                                    />
+                                    <span>PSS em competência anterior</span>
                                 </label>
                             </div>
                         </div>

@@ -17,6 +17,7 @@ import { calculateSubstitution } from './substitutionCalculations';
 
 export interface DeductionsResult {
     pss: number;
+    pssEA: number;
     funpresp: number;
     irrf: number;
     irEA: number;
@@ -40,7 +41,11 @@ const calculateRubricasBaseAdjustments = (rubricas: Rubrica[] = []) => {
 
             const signedValor = rubrica.tipo === 'D' ? -valor : valor;
             if (rubrica.incidePSS) {
-                acc.pss += signedValor;
+                if (rubrica.isEA || rubrica.pssCompetenciaSeparada) {
+                    acc.pssEA += signedValor;
+                } else {
+                    acc.pssMensal += signedValor;
+                }
             }
             if (rubrica.isEA) {
                 acc.irEA += signedValor;
@@ -49,8 +54,27 @@ const calculateRubricasBaseAdjustments = (rubricas: Rubrica[] = []) => {
             }
             return acc;
         },
-        { pss: 0, irMensal: 0, irEA: 0 }
+        { pssMensal: 0, pssEA: 0, irMensal: 0, irEA: 0 }
     );
+};
+
+const getMarginalPssRate = (
+    base: number,
+    table: { faixas?: Array<{ min: number; max: number; rate: number }> }
+) => {
+    if (!table?.faixas || table.faixas.length === 0 || base <= 0) {
+        return 0;
+    }
+    const faixaAtual = [...table.faixas]
+        .sort((a, b) => a.min - b.min)
+        .find((faixa) => base >= faixa.min && base <= faixa.max);
+
+    if (faixaAtual) {
+        return faixaAtual.rate;
+    }
+
+    const ultimaFaixa = [...table.faixas].sort((a, b) => a.min - b.min).pop();
+    return ultimaFaixa?.rate ?? 0;
 };
 
 /**
@@ -81,13 +105,14 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     let basePSS = baseVencimento + gaj + aqTituloVal + (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
     if (params.incidirPSSGrat) basePSS += gratVal;
     if (params.pssSobreFC) basePSS += funcaoValor;
-    basePSS = Math.max(0, basePSS + rubricasAdjustments.pss);
+    basePSS = Math.max(0, basePSS + rubricasAdjustments.pssMensal);
 
     const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
     const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
     let pssMensal = 0;
+    let pssEA = 0;
     let baseFunpresp = 0;
 
     if (pssTable) {
@@ -97,6 +122,12 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
             baseFunpresp = Math.max(0, basePSS - teto);
         } else {
             pssMensal = calculatePss(basePSS, pssTable);
+        }
+
+        if (rubricasAdjustments.pssEA !== 0) {
+            const baseReferenciaAliquota = usaTeto ? Math.min(basePSS, teto) : basePSS;
+            const aliquotaMarginal = getMarginalPssRate(baseReferenciaAliquota, pssTable);
+            pssEA = rubricasAdjustments.pssEA * aliquotaMarginal;
         }
     }
 
@@ -142,9 +173,10 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
 
     return {
         pss: pssMensal,
+        pssEA,
         funpresp: valFunpresp,
         irrf: irMensal,
         irEA,
-        total: pssMensal + valFunpresp + irMensal + irEA
+        total: pssMensal + pssEA + valFunpresp + irMensal + irEA
     };
 }
