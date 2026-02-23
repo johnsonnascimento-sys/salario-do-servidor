@@ -49,14 +49,7 @@ const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
     { id: 'diarias', label: 'Diárias de Viagem' }
 ];
 
-const DEFAULT_PRESETS: PredefinedRubricId[] = [
-    'aq',
-    'gratificacao',
-    'vantagens',
-    'abono',
-    'pre_escolar',
-    'aux_transporte'
-];
+const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
 const toNumber = (value: string) => {
     const parsed = Number(value);
