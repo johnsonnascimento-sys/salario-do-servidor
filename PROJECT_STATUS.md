@@ -1,112 +1,65 @@
 # Status do Projeto - Salario do Servidor
 
-**Ultima Atualizacao:** 25/01/2026 15:45
-**Versao:** 2.0.0
-**Ultimo Commit:** release v2.0.0
-**Scripts:** audit-project.cjs, audit-design-system.cjs, generate-version.js, verify-migration.js
+**Ultima atualizacao:** 23/02/2026  
+**Versao de trabalho:** 2.1.x  
+**Ultimo commit:** `cd0e17c`  
+**Branch principal:** `main`
 
 ---
 
-## Resumo Executivo
+## Resumo executivo
 
-**Projeto em producao:** https://salariodoservidor.com.br/simulador/jmu
-**Status geral:** Sistema 100% Data-Driven + Design System 100% compliant + cards atomicos
-**Proxima prioridade:** Qualidade e governanca (testes, validacao de config, CI)
-
----
-
-## Fases Completas
-
-### Fase 1: Modularizacao (100%)
-- JmuService.ts: 801 -> 162 linhas
-- useCalculator.ts: 398 -> 102 linhas
-- 9 modulos em jmu/modules
-- 4 hooks em hooks/calculator
-
-### Fase 3: Data-Driven (100%)
-- ConfigService ativo (global -> power -> org)
-- Migration SQL aplicada
-- data.ts removido
-- Adapter mapEffectiveConfig -> CourtConfig
-- Modulos JMU usam agencyConfig (sem ConfigService nos calculos)
-
-### Fase 4: UX/UI (100%)
-- Hybrid Dashboard (sidebar + mobile bar)
-- Version badge automatico
-- Layout 3 colunas com cards atomicos (ferias/13o/subst/HE/diarias/licenca/pre-escolar)
-
-### Fase 2: Design System (100%)
-- Tokens completos no Tailwind
-- DESIGN_SYSTEM.md completo
-- audit:design com Health Score 100/100
+- Calculadora em modo dinamico e data-driven (sem calculos fixos em cards antigos).
+- Hierarquia de regras ativa: `global_config -> power_config -> org_config`.
+- Calculo EA e separacao de PSS retro implementados.
+- Tabela previdenciaria global 2026 ajustada para o texto oficial da Portaria MPS/MF no 13/2026.
 
 ---
 
-## Fases em Progresso
+## O que esta pronto
 
-### Fase 5: Qualidade e testes
-- Typecheck aprovado (npx tsc --noEmit)
-- Scripts isolados do build (tsconfig include/exclude)
+1. Arquitetura de configuracao
+- Merge hierarquico com heranca entre niveis.
+- Painel administrativo unificado para manutencao de configuracoes.
 
----
+2. Formulario dinamico
+- Base obrigatoria + rubricas pre-definidas + rubricas manuais.
+- Inclusao manual de rubricas com controles de incidencia fiscal/previdenciaria.
+- Resumo bruto por card pre-definido (inclusive detalhamento por funcao na Substituicao).
 
-## Proximas Prioridades
+3. Calculo e detalhamento
+- `IR-EA` separado da trilha mensal.
+- `RPPS-EA` separado quando rubrica for marcada como competencia anterior.
+- Detalhamento final alinhado com layout e sem duplicacoes.
 
-1) Qualidade e testes
-- Testes unitarios (ConfigService + modulos)
-- Smoke tests da calculadora
-- CI (lint + typecheck + tests)
-
-2) Validacao de configuracoes
-- Schema validation para global/power/org
-- Script de validacao antes do deploy
-
-3) Admin de configuracoes
-- CRUD para global_config, power_config, org_config
-- Preview do merge efetivo
+4. Dados e configuracao global
+- Auxilio alimentacao PJU atualizado no banco.
+- `pss_tables.2026` atualizado no `global_config` (efeito global).
 
 ---
 
-## Estrutura (resumo)
+## Riscos e pontos de atencao
 
-src/
-- components/
-- hooks/
-- services/
-  - config/ (ConfigService, mapEffectiveConfig, mergeConfig, types)
-- pages/
-- data.ts removido
+1. Deploy automatico
+- Push para `main` esta funcionando.
+- Disparo automatico depende da integracao Vercel x GitHub no painel da Vercel.
 
-reports/
-- audit-report.*
-- design-audit-report.*
+2. Validacao funcional
+- Recomendado validar sempre com holerites reais (casos com retroativos, EA e regimes diferentes).
+
+3. Artefatos locais
+- Existem arquivos locais nao versionados usados para comparacao de PDF.
 
 ---
 
-## Comandos
+## Proximas prioridades
 
-npm run audit
-npm run audit:design
+1. Governanca de deploy
+- Confirmar auto-deploy da `main` na Vercel e historico de builds.
 
----
+2. Qualidade
+- Adicionar testes de regressao para cenarios com EA, PSS-EA e rubricas retroativas.
 
-## Deploy
+3. Admin data-first
+- Melhorar UX do painel para edicao de tabelas (faixas, vigencias, valores) sem deploy.
 
-- Ultimo deploy: 4b429d1
-- Vercel: deploy automatico no push para main
-
----
-
-## Metricas
-
-- JmuService.ts: 801 -> 162 (-79.8%)
-- useCalculator.ts: 398 -> 102 (-74.4%)
-- Design Health Score: 100/100
-
----
-
-## Proxima Sessao (resumo para IA)
-
-1) npm run audit && npm run audit:design
-2) Ver reports/audit-report.md e reports/design-audit-report.md
-3) Proximo foco: qualidade (testes/CI) e admin de configs
