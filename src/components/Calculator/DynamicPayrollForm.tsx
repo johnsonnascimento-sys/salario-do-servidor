@@ -40,7 +40,6 @@ interface DynamicPayrollFormProps {
 }
 
 const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
-    { id: 'aq', label: 'Adicional de Qualificação' },
     { id: 'gratificacao', label: 'Gratificação Específica (GAE/GAS)' },
     { id: 'vantagens', label: 'Vantagens Pessoais' },
     { id: 'abono', label: 'Abono de Permanência' },
@@ -54,7 +53,7 @@ const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
     { id: 'diarias', label: 'Diárias de Viagem' }
 ];
 
-const DEFAULT_PRESETS: PredefinedRubricId[] = ['aq'];
+const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
 const toNumber = (value: string) => {
     const parsed = Number(value);
@@ -307,7 +306,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const includePreset = () => {
         if (!selectedPreset || enabledPresets.includes(selectedPreset)) return;
-        setEnabledPresets(prev => [...prev, selectedPreset]);
+        setEnabledPresets(prev => [selectedPreset, ...prev]);
         const nextAvailable = availablePresets.filter(option => option.id !== selectedPreset);
         setSelectedPreset(nextAvailable[0]?.id || '');
     };
@@ -650,6 +649,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </div>
 
             <div className={styles.innerBox}>
+                <h4 className={styles.innerBoxTitle}>
+                    Adicional de Qualificação
+                    <span className="text-label bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
+                        {isNovoAQ ? 'LEI 15.292/2026' : 'REGRA ATUAL'}
+                    </span>
+                </h4>
+                {renderPreset('aq')}
+                {renderPresetGrossSummary('aq')}
+            </div>
+
+            <div className={styles.innerBox}>
                 <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -902,4 +912,3 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         </div>
     );
 };
-

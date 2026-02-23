@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.2 - 23/02/2026
+- UX: Card de `Adicional de Qualificacao` movido para ficar entre `Base obrigatoria` e `Configuracoes tributarias`.
+- UX: Rubricas pre-definidas adicionadas agora entram no topo da lista (primeiro card), em vez de no final.
+
 ## 2.1.1 - 23/02/2026
 - Feat: Exibir resumo bruto calculado dentro de cada card de rubrica pre-definida.
 - Feat: Detalhamento de substituicao por funcao (ex.: CJ1, CJ3) no proprio card.
