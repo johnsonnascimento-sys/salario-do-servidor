@@ -48,9 +48,9 @@ const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
         .map(([key, entry]) => {
             const numeric = toNumberKey(key);
             if (numeric === null) return null;
-            return { period: numeric, percentage: entry.percentage, label: entry.label };
+            return { period: numeric, percentage: entry.percentage, label: entry.label, date: entry.date };
         })
-        .filter((entry): entry is { period: number; percentage: number; label?: string } => !!entry)
+        .filter((entry): entry is { period: number; percentage: number; label?: string; date?: string } => !!entry)
         .sort((a, b) => a.period - b.period);
 };
 

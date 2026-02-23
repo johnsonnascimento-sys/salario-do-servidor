@@ -19,6 +19,7 @@ import { JmuService } from '../../services/agency/implementations/JmuService';
 
 export const useCalculatorConfig = (slug: string | undefined) => {
     const navigate = useNavigate();
+    const resolvedSlug = slug === 'stm' ? 'jmu' : slug;
 
     // Agency State
     const [agency, setAgency] = useState<{ name: string, type: string } | null>(null);
@@ -35,7 +36,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
         const loadAgency = async () => {
             setLoadingAgency(true);
             try {
-                if (!slug) {
+                if (!resolvedSlug) {
                     navigate('/');
                     return;
                 }
@@ -43,21 +44,21 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                 const { data, error } = await supabase
                     .from('agencies')
                     .select('name, type, slug')
-                    .eq('slug', slug)
+                    .eq('slug', resolvedSlug)
                     .single();
 
                 if (error || !data) {
-                    console.error("Agency not found:", slug);
+                    console.error("Agency not found:", resolvedSlug);
                     return;
                 }
 
                 setAgency(data);
 
                 // Instantiate Service
-                if (data.slug === 'stm' || data.slug === 'jmu' || data.slug === 'pju') {
+                if (data.slug === 'jmu' || data.slug === 'pju') {
                     setAgencyService(new JmuService());
                 } else {
-                    console.warn("Service not implemented for slug:", slug);
+                    console.warn("Service not implemented for slug:", resolvedSlug);
                 }
 
             } catch (err) {
@@ -68,21 +69,21 @@ export const useCalculatorConfig = (slug: string | undefined) => {
         };
 
         loadAgency();
-    }, [slug, navigate]);
+    }, [resolvedSlug, navigate]);
 
     // Load Court Config
     useEffect(() => {
         async function fetchConfig() {
             try {
-                if (slug) {
-                    const effectiveConfig = await configService.getEffectiveConfig(slug);
+                if (resolvedSlug) {
+                    const effectiveConfig = await configService.getEffectiveConfig(resolvedSlug);
                     setCourtConfig(mapEffectiveConfigToCourtConfig(effectiveConfig));
                     setConfigError(null);
                 }
             } catch (err) {
                 console.error("Failed to load config from ConfigService", err);
                 try {
-                    const court = slug ? await getCourtBySlug(slug) : null;
+                    const court = resolvedSlug ? await getCourtBySlug(resolvedSlug) : null;
                     if (court) {
                         setCourtConfig(court.config);
                         setConfigError(null);
@@ -97,7 +98,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
             }
         }
         fetchConfig();
-    }, [slug]);
+    }, [resolvedSlug]);
 
     return {
         agency,

@@ -51,7 +51,7 @@ export interface CareerCatalogConfig {
 }
 
 export interface CourtConfig {
-  adjustment_schedule?: Array<{ period: number; percentage: number; label?: string }>;
+  adjustment_schedule?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
   bases: {
     salario: SalaryTable;
     funcoes: FuncoesTable;
@@ -64,8 +64,8 @@ export interface CourtConfig {
     pre_school?: number;
     deducao_dep?: number;
     cj1_integral_base?: number;
-    adjustment_schedule?: Array<{ period: number; percentage: number; label?: string }>;
-    reajustes?: Array<{ period: number; percentage: number; label?: string }>;
+    adjustment_schedule?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
+    reajustes?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
   };
   menus?: {
     food_allowance?: Array<{ label: string; value: number }>;

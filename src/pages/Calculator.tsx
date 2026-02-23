@@ -96,12 +96,11 @@ export default function Calculator() {
                         update={update}
                         styles={styles}
                     />
+                    <ResultsSummary
+                        state={state}
+                        resultRows={resultRows}
+                    />
                 </div>
-
-                <ResultsSummary
-                    state={state}
-                    resultRows={resultRows}
-                />
 
                 <ActionFooter
                     state={state}

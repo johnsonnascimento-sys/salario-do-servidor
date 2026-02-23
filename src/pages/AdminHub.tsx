@@ -57,7 +57,7 @@ export default function AdminHub() {
         'payroll_rules',
         'career_catalog',
       ];
-      const requiredOrgs = ['jmu', 'stm'];
+      const requiredOrgs = ['jmu'];
 
       const globalKeys = new Set(globals.map((item) => item.config_key));
       const powerKeys = new Set(

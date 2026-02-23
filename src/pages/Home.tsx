@@ -41,7 +41,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             icon: <ShieldCheck className="w-6 h-6 text-secondary-500" />,
             children: [
               {
-                id: 'stm',
+                id: 'jmu',
                 name: 'STM e Auditorias (JMU)',
                 type: 'simulator',
                 slug: 'jmu',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Settings } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 
@@ -23,6 +23,36 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
         : [{ period: state.periodo, percentage: 0, label: `Periodo ${state.periodo}` }];
 
     const monthOptions = Array.from({ length: 12 }, (_, idx) => getMonthLabel(idx));
+    const autoInitRef = useRef(false);
+
+    useEffect(() => {
+        if (autoInitRef.current) return;
+        if (!schedules.length) return;
+
+        const now = new Date();
+        const nowTime = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+        const withDate = schedules
+            .filter((entry) => !!entry.date)
+            .map((entry) => ({
+                ...entry,
+                timestamp: new Date(`${entry.date}T12:00:00`).getTime(),
+            }))
+            .filter((entry) => Number.isFinite(entry.timestamp))
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        if (withDate.length > 0) {
+            const current = withDate
+                .filter((entry) => entry.timestamp <= nowTime)
+                .pop();
+
+            if (current && current.period !== state.periodo) {
+                update('periodo', current.period);
+            }
+        }
+
+        autoInitRef.current = true;
+    }, [schedules, state.periodo, update]);
 
     return (
         <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm">
