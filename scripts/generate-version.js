@@ -41,7 +41,8 @@ function generateVersion() {
     const commit = exec('git rev-parse --short=7 HEAD') || 'unknown';
     const commitFull = exec('git rev-parse HEAD') || 'unknown';
     const branch = exec('git rev-parse --abbrev-ref HEAD') || 'unknown';
-    const isDirty = exec('git status --porcelain') ? true : false;
+    const isVercelBuild = process.env.VERCEL === '1' || !!process.env.VERCEL_ENV;
+    const isDirty = isVercelBuild ? false : !!exec('git status --porcelain');
 
     // Data/hora do build
     const buildDate = new Date().toISOString();

@@ -46,6 +46,9 @@ export const VersionBadge: React.FC = () => {
     }, []);
 
     if (!version) return null;
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const showDirtyState = version.isDirty && isLocalHost;
 
     const formatBuildDate = (isoDate: string) => {
         const date = new Date(isoDate);
@@ -69,7 +72,7 @@ export const VersionBadge: React.FC = () => {
                 <Info size={12} className="opacity-50" />
                 <span>
                     v{version.version} • {version.commit}
-                    {version.isDirty && <span className="text-warning-500">*</span>}
+                    {showDirtyState && <span className="text-warning-500">*</span>}
                 </span>
             </div>
 
@@ -93,7 +96,7 @@ export const VersionBadge: React.FC = () => {
                             <span className="text-neutral-400">Build:</span>
                             <span className="text-body-xs">{formatBuildDate(version.buildDate)}</span>
                         </div>
-                        {version.isDirty && (
+                        {showDirtyState && (
                             <div className="text-warning-400 text-label mt-2 pt-2 border-t border-neutral-700">
                                 * Uncommitted changes
                             </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { DollarSign, Minus, Plus, Settings, Trash2 } from 'lucide-react';
+import { DollarSign, GripVertical, Minus, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, Rubrica } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
 import { VacationCard } from './cards/VacationCard';
@@ -139,6 +139,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const [enabledPresets, setEnabledPresets] = useState<PredefinedRubricId[]>(initialPresets);
     const availablePresets = PREDEFINED_OPTIONS.filter(option => !enabledPresets.includes(option.id));
     const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(availablePresets[0]?.id || '');
+    const [reorderMode, setReorderMode] = useState(false);
+    const [draggingPreset, setDraggingPreset] = useState<PredefinedRubricId | null>(null);
+
+    useEffect(() => {
+        if (enabledPresets.length < 2 && reorderMode) {
+            setReorderMode(false);
+            setDraggingPreset(null);
+        }
+    }, [enabledPresets.length, reorderMode]);
 
     const totalCreditos = state.rubricasExtras
         .filter(rubrica => rubrica.tipo === 'C')
@@ -309,6 +318,38 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (!selectedPreset) {
             setSelectedPreset(presetId);
         }
+    };
+
+    const handlePresetDragStart = (presetId: PredefinedRubricId) => {
+        if (!reorderMode) return;
+        setDraggingPreset(presetId);
+    };
+
+    const handlePresetDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        if (!reorderMode) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handlePresetDrop = (targetPresetId: PredefinedRubricId) => {
+        if (!reorderMode || !draggingPreset || draggingPreset === targetPresetId) {
+            return;
+        }
+
+        setEnabledPresets(prev => {
+            const fromIndex = prev.indexOf(draggingPreset);
+            const toIndex = prev.indexOf(targetPresetId);
+            if (fromIndex < 0 || toIndex < 0) return prev;
+
+            const next = [...prev];
+            const [moved] = next.splice(fromIndex, 1);
+            next.splice(toIndex, 0, moved);
+            return next;
+        });
+    };
+
+    const handlePresetDragEnd = () => {
+        setDraggingPreset(null);
     };
 
     const getPresetGrossLines = (presetId: PredefinedRubricId): PresetGrossLine[] => {
@@ -642,6 +683,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         </span>
                     </h4>
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setReorderMode(prev => !prev)}
+                            disabled={enabledPresets.length < 2 && !reorderMode}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50 dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-700"
+                        >
+                            <GripVertical className="w-4 h-4" />
+                            {reorderMode ? 'Concluir ordem' : 'Reordenar cards'}
+                        </button>
                         <select className={styles.input} value={selectedPreset} onChange={e => setSelectedPreset(e.target.value as PredefinedRubricId | '')} disabled={availablePresets.length === 0}>
                             {availablePresets.length === 0 && <option value="">Todas adicionadas</option>}
                             {availablePresets.map(option => (
@@ -660,15 +710,32 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     </div>
                 </div>
 
+                {reorderMode && (
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mb-3">
+                        Arraste os cards para reorganizar a ordem de exibição.
+                    </p>
+                )}
+
                 <div className="space-y-3">
                     {enabledPresets.map(presetId => {
                         const preset = PREDEFINED_OPTIONS.find(option => option.id === presetId);
                         if (!preset) return null;
 
                         return (
-                            <div key={presetId} className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 space-y-4">
+                            <div
+                                key={presetId}
+                                draggable={reorderMode}
+                                onDragStart={() => handlePresetDragStart(presetId)}
+                                onDragOver={handlePresetDragOver}
+                                onDrop={() => handlePresetDrop(presetId)}
+                                onDragEnd={handlePresetDragEnd}
+                                className={`rounded-xl border bg-white dark:bg-neutral-900 p-4 space-y-4 transition-shadow ${draggingPreset === presetId ? 'border-primary/60 shadow-lg' : 'border-neutral-200 dark:border-neutral-700'} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                            >
                                 <div className="flex items-start justify-between gap-3">
-                                    <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{preset.label}</span>
+                                    <div className="flex items-center gap-2">
+                                        {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
+                                        <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{preset.label}</span>
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={() => removePreset(presetId)}
