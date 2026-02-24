@@ -203,7 +203,6 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
                             <p>Valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
                             <p>{holidayCalendarLabel} usado no desconto automático por datas.</p>
-                            <p>Diária do ministro: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
                             <p>Datas de feriados oficiais cadastradas: {formatDateList(configuredHolidayDates)}.</p>
                             <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
                             <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
@@ -217,6 +216,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     Teto LDO por diária: {formatCurrencyBr(ldoCapValue)}
                                 </p>
                             )}
+                            <p>Diária do ministro: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
                         </div>
                     </div>
                 </div>
