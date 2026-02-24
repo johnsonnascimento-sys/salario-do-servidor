@@ -2,10 +2,9 @@ import React, { useMemo } from 'react';
 import { Plane } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import {
-    countCalendarDaysInRange,
-    countDeductibleDaysInRange,
+    resolveDailiesDailyRate,
     resolveDailiesDiscountRules,
-    summarizeDailiesRange
+    summarizeDailiesPeriodMode
 } from '../../../utils/dailiesRules';
 
 interface DailiesCardProps {
@@ -25,6 +24,7 @@ const formatDateList = (dates: string[]) => (
     dates.length > 0 ? dates.map(formatIsoDatePtBr).join(', ') : 'nenhum'
 );
 const isIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+const formatCurrencyBr = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig }) => {
     const dailiesConfig = courtConfig?.dailies;
@@ -39,24 +39,32 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         () => ({ ...discountRules, excludeWeekendsAndHolidays: true }),
         [discountRules]
     );
+    const dailyRate = useMemo(
+        () => resolveDailiesDailyRate({
+            dailiesConfig,
+            cargo: state.cargo,
+            hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj'))
+        }),
+        [dailiesConfig, state.cargo, state.funcao]
+    );
 
-    const periodTravelDaysRaw = useMemo(() => (
-        countCalendarDaysInRange(state.diariasDataInicio, state.diariasDataFim)
-    ), [state.diariasDataInicio, state.diariasDataFim]);
-
-    const periodTravelDays = periodTravelDaysRaw ?? Math.max(0, state.diariasQtd || 0);
-
-    const automaticDiscountDaysRaw = useMemo(() => (
-        countDeductibleDaysInRange(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
+    const periodSummary = useMemo(() => (
+        summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
     ), [state.diariasDataInicio, state.diariasDataFim, periodDiscountRules]);
-    const rangeSummary = useMemo(() => (
-        summarizeDailiesRange(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
-    ), [state.diariasDataInicio, state.diariasDataFim, periodDiscountRules]);
 
-    const automaticDiscountDays = automaticDiscountDaysRaw ?? periodTravelDays;
-    const hasValidDateRange = periodTravelDaysRaw !== null;
+    const periodTravelDays = periodSummary?.totalDays ?? Math.max(0, state.diariasQtd || 0);
+    const paidDailiesQty = periodSummary?.payableDays ?? periodTravelDays;
+    const automaticDiscountDays = periodSummary?.discountDays ?? paidDailiesQty;
+    const hasValidDateRange = periodSummary !== null;
     const ldoCapEnabled = Boolean(dailiesConfig?.ldoCap?.enabled);
     const ldoCapValue = Number(dailiesConfig?.ldoCap?.perDiemLimit || 0);
+    const halfDailyValue = periodSummary?.halfDailyApplied ? dailyRate / 2 : 0;
+    const halfFoodDiscountValue = periodSummary?.halfDiscountApplied && state.diariasDescontarAlimentacao
+        ? (state.auxAlimentacao / discountRules.foodDivisor) * 0.5
+        : 0;
+    const halfTransportDiscountValue = periodSummary?.halfDiscountApplied && state.diariasDescontarTransporte
+        ? (state.auxTransporteValor / discountRules.transportDivisor) * 0.5
+        : 0;
     const configuredHolidayDates = useMemo(
         () =>
             Array.from(new Set((discountRules.holidays || []).filter(isIsoDate)))
@@ -144,7 +152,23 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                 </div>
                                 <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
                                     {hasValidDateRange
-                                        ? `Quantidade de diárias calculada pelo período: ${periodTravelDays}`
+                                        ? (
+                                            <>
+                                                <p>Quantidade de diárias no período (calendário): {periodTravelDays}.</p>
+                                                <p>Quantidade de diárias pagas no período: {paidDailiesQty}.</p>
+                                                {periodSummary?.halfDailyApplied ? (
+                                                    <p>
+                                                        Retorno em dia útil ({formatIsoDatePtBr(periodSummary.returnDate)}): meia diária aplicada ({formatCurrencyBr(halfDailyValue)}).
+                                                    </p>
+                                                ) : (
+                                                    <p>
+                                                        {periodSummary?.returnDateIsWeekend || periodSummary?.returnDateIsHoliday
+                                                            ? `Retorno em ${periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} (${formatIsoDatePtBr(periodSummary.returnDate)}): sem meia diária.`
+                                                            : `Retorno em dia útil (${formatIsoDatePtBr(periodSummary!.returnDate)}), mas regra de meia diária está desativada.`}
+                                                    </p>
+                                                )}
+                                            </>
+                                        )
                                         : 'Preencha início e fim para calcular automaticamente a quantidade de diárias.'}
                                 </div>
                             </div>
@@ -189,9 +213,14 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <p>Datas de feriados oficiais cadastradas: {formatDateList(configuredHolidayDates)}.</p>
                             <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
                             <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
+                            <p>
+                                Retorno em dia útil:
+                                {discountRules.halfDailyOnBusinessReturnDay ? ' meia diária ativa' : ' meia diária inativa'} e
+                                {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxílios ativo' : ' meio desconto de auxílios inativo'}.
+                            </p>
                             {ldoCapEnabled && ldoCapValue > 0 && (
                                 <p>
-                                    Teto LDO por diária: {ldoCapValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    Teto LDO por diária: {formatCurrencyBr(ldoCapValue)}
                                 </p>
                             )}
                         </div>
@@ -226,13 +255,20 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
                                 {hasValidDateRange
                                     ? (
-                                        rangeSummary
+                                        periodSummary
                                             ? (
                                                 <>
                                                     <p>Dias usados no desconto: {automaticDiscountDays}.</p>
-                                                    <p>Dias não descontados por finais de semana e feriados: {rangeSummary.excludedDays}.</p>
-                                                    <p>Finais de semana considerados para não desconto: {formatDateList(rangeSummary.weekendExcludedDates)}.</p>
-                                                    <p>Feriados considerados para não desconto: {formatDateList(rangeSummary.holidayExcludedDates)}.</p>
+                                                    <p>Dias não descontados por finais de semana e feriados: {periodSummary.excludedDays}.</p>
+                                                    {periodSummary.halfDiscountApplied && (
+                                                        <p>
+                                                            Retorno em dia útil ({formatIsoDatePtBr(periodSummary.returnDate)}): meio desconto de auxílios aplicado
+                                                            {state.diariasDescontarAlimentacao ? ` | alimentação: ${formatCurrencyBr(halfFoodDiscountValue)}` : ''}
+                                                            {state.diariasDescontarTransporte ? ` | transporte: ${formatCurrencyBr(halfTransportDiscountValue)}` : ''}.
+                                                        </p>
+                                                    )}
+                                                    <p>Finais de semana considerados para não desconto: {formatDateList(periodSummary.weekendExcludedDates)}.</p>
+                                                    <p>Feriados considerados para não desconto: {formatDateList(periodSummary.holidayExcludedDates)}.</p>
                                                 </>
                                             )
                                             : `Dias usados no desconto: ${automaticDiscountDays}.`

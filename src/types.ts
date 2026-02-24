@@ -47,6 +47,8 @@ export interface DailiesConfig {
     transportDivisor: number;
     excludeWeekendsAndHolidays: boolean;
     holidays: string[];
+    halfDailyOnBusinessReturnDay?: boolean;
+    halfDiscountOnBusinessReturnDay?: boolean;
     holidayCalendarLabel?: string;
     holidayCalendarReference?: string;
     holidayCalendarVersion?: string;

@@ -12,11 +12,13 @@
 import { IJmuCalculationParams } from '../types';
 import {
     applyLdoCapToDailiesGross,
+    countDeductibleDaysInRange,
     countCalendarDaysInRange,
     resolveDailiesDailyRate,
     resolveDailiesDiscountDays,
     resolveDailiesDiscountRules,
-    resolveDailiesEmbarkationAdditional
+    resolveDailiesEmbarkationAdditional,
+    summarizeDailiesPeriodMode
 } from '../../../../../utils/dailiesRules';
 import { calculateBenefits } from './benefitsCalculations';
 import { getPayrollRules } from './configRules';
@@ -42,10 +44,26 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
     const dailiesConfig = params.agencyConfig?.dailies;
     const payrollRules = getPayrollRules(params.agencyConfig);
     const manualDailiesQty = Math.max(0, Number(params.diariasQtd) || 0);
-    const periodDailiesQty = params.diariasModoDesconto === 'periodo'
+    const discountRules = resolveDailiesDiscountRules(
+        dailiesConfig,
+        Number(payrollRules.transportWorkdays || 22)
+    );
+    const effectiveDiscountRules = params.diariasModoDesconto === 'periodo'
+        ? { ...discountRules, excludeWeekendsAndHolidays: true }
+        : discountRules;
+    const periodSummary = params.diariasModoDesconto === 'periodo'
+        ? summarizeDailiesPeriodMode(
+            params.diariasDataInicio,
+            params.diariasDataFim,
+            effectiveDiscountRules
+        )
+        : null;
+    const periodCalendarDays = params.diariasModoDesconto === 'periodo'
         ? countCalendarDaysInRange(params.diariasDataInicio, params.diariasDataFim)
         : null;
-    const dailiesQty = periodDailiesQty !== null ? periodDailiesQty : manualDailiesQty;
+    const dailiesQty = params.diariasModoDesconto === 'periodo'
+        ? (periodSummary?.payableDays ?? periodCalendarDays ?? manualDailiesQty)
+        : manualDailiesQty;
 
     // 1. Determinar valor da diaria por cargo/funcao
     const valorDiaria = resolveDailiesDailyRate({
@@ -81,25 +99,30 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
 
     // 5. Deducoes Internas
     const benefits = await calculateBenefits(params);
-    const discountRules = resolveDailiesDiscountRules(
-        dailiesConfig,
-        Number(payrollRules.transportWorkdays || 22)
-    );
-    const effectiveDiscountRules = params.diariasModoDesconto === 'periodo'
-        ? { ...discountRules, excludeWeekendsAndHolidays: true }
-        : discountRules;
+    const periodDiscountDays = params.diariasModoDesconto === 'periodo'
+        ? (
+            periodSummary?.discountDays ??
+            countDeductibleDaysInRange(params.diariasDataInicio, params.diariasDataFim, effectiveDiscountRules) ??
+            dailiesQty
+        )
+        : null;
 
-    const discountDays = resolveDailiesDiscountDays({
-        mode: params.diariasModoDesconto,
-        startDate: params.diariasDataInicio,
-        endDate: params.diariasDataFim,
-        manualFoodDays: params.diariasDiasDescontoAlimentacao,
-        manualTransportDays: params.diariasDiasDescontoTransporte,
-        applyFoodDiscount: params.diariasDescontarAlimentacao,
-        applyTransportDiscount: params.diariasDescontarTransporte,
-        fallbackDays: dailiesQty,
-        rules: effectiveDiscountRules,
-    });
+    const discountDays = params.diariasModoDesconto === 'periodo'
+        ? {
+            foodDays: params.diariasDescontarAlimentacao ? periodDiscountDays || 0 : 0,
+            transportDays: params.diariasDescontarTransporte ? periodDiscountDays || 0 : 0
+        }
+        : resolveDailiesDiscountDays({
+            mode: params.diariasModoDesconto,
+            startDate: params.diariasDataInicio,
+            endDate: params.diariasDataFim,
+            manualFoodDays: params.diariasDiasDescontoAlimentacao,
+            manualTransportDays: params.diariasDiasDescontoTransporte,
+            applyFoodDiscount: params.diariasDescontarAlimentacao,
+            applyTransportDiscount: params.diariasDescontarTransporte,
+            fallbackDays: dailiesQty,
+            rules: effectiveDiscountRules,
+        });
 
     const deducaoAlimentacao = params.diariasDescontarAlimentacao
         ? (benefits.auxAlimentacao / discountRules.foodDivisor) * discountDays.foodDays

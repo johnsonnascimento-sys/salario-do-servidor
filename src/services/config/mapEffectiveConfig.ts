@@ -155,6 +155,8 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     holidays: Array.isArray(effective.dailies_rules.discount_rules?.holidays)
                         ? effective.dailies_rules.discount_rules!.holidays
                         : [],
+                    halfDailyOnBusinessReturnDay: Boolean(effective.dailies_rules.discount_rules?.return_day_half_diem_business_day),
+                    halfDiscountOnBusinessReturnDay: Boolean(effective.dailies_rules.discount_rules?.return_day_half_discount_business_day),
                     holidayCalendarLabel: effective.dailies_rules.discount_rules?.holiday_calendar_label,
                     holidayCalendarReference: effective.dailies_rules.discount_rules?.holiday_calendar_reference,
                     holidayCalendarVersion: effective.dailies_rules.discount_rules?.holiday_calendar_version,

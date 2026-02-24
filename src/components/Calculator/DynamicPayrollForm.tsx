@@ -9,7 +9,12 @@ import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { pickBestKeyByReference, toReferenceMonthIndex } from './referenceDateUtils';
-import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
+import {
+    resolveDailiesDailyRate,
+    resolveDailiesDiscountRules,
+    resolveDailiesEmbarkationAdditional,
+    summarizeDailiesPeriodMode
+} from '../../utils/dailiesRules';
 
 type PredefinedRubricId =
     | 'aq'
@@ -445,16 +450,39 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 ];
             case 'diarias':
                 {
+                    const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
+                    const discountRules = resolveDailiesDiscountRules(courtConfig?.dailies, transportWorkdays);
+                    const periodDiscountRules = { ...discountRules, excludeWeekendsAndHolidays: true };
+                    const periodSummary = state.diariasModoDesconto === 'periodo'
+                        ? summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
+                        : null;
+                    const dailyRate = roundCurrency(resolveDailiesDailyRate({
+                        dailiesConfig: courtConfig?.dailies,
+                        cargo: state.cargo,
+                        hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj'))
+                    }));
                     const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({
                         dailiesConfig: courtConfig?.dailies,
                         embarkationType: state.diariasEmbarque
                     }));
                     const diariasSemEmbarque = roundCurrency(Math.max(0, (state.diariasBruto || 0) - adicionalEmbarque));
+                    const meiaDiariaRetorno = periodSummary?.halfDailyApplied
+                        ? roundCurrency(dailyRate * 0.5)
+                        : 0;
+                    const meioDescAuxAlimRetorno = periodSummary?.halfDiscountApplied && state.diariasDescontarAlimentacao
+                        ? roundCurrency((state.auxAlimentacao / discountRules.foodDivisor) * 0.5)
+                        : 0;
+                    const meioDescAuxTranspRetorno = periodSummary?.halfDiscountApplied && state.diariasDescontarTransporte
+                        ? roundCurrency((state.auxTransporteValor / discountRules.transportDivisor) * 0.5)
+                        : 0;
                     const lines: PresetGrossLine[] = [
                         { label: 'Diarias sem adicional de embarque', value: diariasSemEmbarque },
                         { label: 'Adicional de embarque', value: adicionalEmbarque },
                         { label: 'Diarias brutas', value: roundCurrency(state.diariasBruto || 0) }
                     ];
+                    if (meiaDiariaRetorno > 0) {
+                        lines.push({ label: 'Meia diaria no retorno', value: meiaDiariaRetorno });
+                    }
 
                     const ldoEnabled = Boolean(courtConfig?.dailies?.ldoCap?.enabled);
                     const ldoLimit = roundCurrency(Number(courtConfig?.dailies?.ldoCap?.perDiemLimit || 0));
@@ -470,9 +498,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
                         { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
                         { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
-                        { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) },
-                        { label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) }
+                        { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) }
                     );
+                    if (meioDescAuxAlimRetorno > 0) {
+                        lines.push({ label: 'Meio desconto no retorno (aux. alimentacao)', value: meioDescAuxAlimRetorno });
+                    }
+                    if (meioDescAuxTranspRetorno > 0) {
+                        lines.push({ label: 'Meio desconto no retorno (aux. transporte)', value: meioDescAuxTranspRetorno });
+                    }
+                    lines.push({ label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) });
 
                     return lines;
                 }

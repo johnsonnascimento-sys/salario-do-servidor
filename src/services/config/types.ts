@@ -149,6 +149,8 @@ export interface DailiesRulesConfig {
         transport_divisor: number;
         exclude_weekends_and_holidays: boolean;
         holidays: string[];
+        return_day_half_diem_business_day?: boolean;
+        return_day_half_discount_business_day?: boolean;
         holiday_calendar_label?: string;
         holiday_calendar_reference?: string;
         holiday_calendar_version?: string;

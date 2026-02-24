@@ -5,6 +5,8 @@ export interface DailiesDiscountRules {
     transportDivisor: number;
     excludeWeekendsAndHolidays: boolean;
     holidays: string[];
+    halfDailyOnBusinessReturnDay?: boolean;
+    halfDiscountOnBusinessReturnDay?: boolean;
     holidayCalendarLabel?: string;
     holidayCalendarReference?: string;
     holidayCalendarVersion?: string;
@@ -19,6 +21,17 @@ export interface DailiesRangeSummary {
     weekendHolidayDays: number;
     weekendExcludedDates: string[];
     holidayExcludedDates: string[];
+}
+
+export interface DailiesPeriodModeSummary extends DailiesRangeSummary {
+    payableDays: number;
+    discountDays: number;
+    returnDate: string;
+    returnDateIsWeekend: boolean;
+    returnDateIsHoliday: boolean;
+    returnDateIsBusinessDay: boolean;
+    halfDailyApplied: boolean;
+    halfDiscountApplied: boolean;
 }
 
 interface ResolveDiscountDaysInput {
@@ -110,6 +123,14 @@ const resolveRateKeyCandidates = (cargo: string, hasCommissionRole: boolean) => 
     return [normalizedCargo];
 };
 
+const buildHolidaySet = (rules: DailiesDiscountRules) => {
+    return new Set(
+        (rules.holidays || [])
+            .map(normalizeIsoDate)
+            .filter((value): value is string => !!value)
+    );
+};
+
 export const resolveDailiesDailyRate = ({
     dailiesConfig,
     cargo,
@@ -185,6 +206,8 @@ export const resolveDailiesDiscountRules = (
         transportDivisor,
         excludeWeekendsAndHolidays: Boolean(rules?.excludeWeekendsAndHolidays),
         holidays: Array.isArray(rules?.holidays) ? rules!.holidays : [],
+        halfDailyOnBusinessReturnDay: Boolean(rules?.halfDailyOnBusinessReturnDay),
+        halfDiscountOnBusinessReturnDay: Boolean(rules?.halfDiscountOnBusinessReturnDay),
         holidayCalendarLabel: rules?.holidayCalendarLabel,
         holidayCalendarReference: rules?.holidayCalendarReference,
         holidayCalendarVersion: rules?.holidayCalendarVersion
@@ -243,11 +266,7 @@ export const summarizeDailiesRange = (
         return null;
     }
 
-    const holidays = new Set(
-        (rules.holidays || [])
-            .map(normalizeIsoDate)
-            .filter((value): value is string => !!value)
-    );
+    const holidays = buildHolidaySet(rules);
 
     let totalDays = 0;
     let deductibleDays = 0;
@@ -302,6 +321,49 @@ export const summarizeDailiesRange = (
         weekendHolidayDays,
         weekendExcludedDates,
         holidayExcludedDates
+    };
+};
+
+export const summarizeDailiesPeriodMode = (
+    startDate: string,
+    endDate: string,
+    rules: DailiesDiscountRules
+): DailiesPeriodModeSummary | null => {
+    const range = resolveNormalizedRange(startDate, endDate);
+    if (!range) {
+        return null;
+    }
+
+    const summary = summarizeDailiesRange(startDate, endDate, rules);
+    if (!summary) {
+        return null;
+    }
+
+    const returnDate = toIsoDate(range.end);
+    const returnDay = toUtcDate(returnDate).getUTCDay();
+    const returnDateIsWeekend = returnDay === 0 || returnDay === 6;
+    const returnDateIsHoliday = buildHolidaySet(rules).has(returnDate);
+    const returnDateIsBusinessDay = !returnDateIsWeekend && !returnDateIsHoliday;
+    const halfDailyApplied = Boolean(rules.halfDailyOnBusinessReturnDay && returnDateIsBusinessDay);
+    const halfDiscountApplied = Boolean(
+        rules.excludeWeekendsAndHolidays &&
+        rules.halfDiscountOnBusinessReturnDay &&
+        returnDateIsBusinessDay
+    );
+
+    const payableDays = Math.max(0, round2(summary.totalDays - (halfDailyApplied ? 0.5 : 0)));
+    const discountDays = Math.max(0, round2(summary.deductibleDays - (halfDiscountApplied ? 0.5 : 0)));
+
+    return {
+        ...summary,
+        payableDays,
+        discountDays,
+        returnDate,
+        returnDateIsWeekend,
+        returnDateIsHoliday,
+        returnDateIsBusinessDay,
+        halfDailyApplied,
+        halfDiscountApplied
     };
 };
 
