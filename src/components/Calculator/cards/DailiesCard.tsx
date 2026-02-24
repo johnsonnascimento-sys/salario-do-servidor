@@ -24,6 +24,7 @@ const formatIsoDatePtBr = (isoDate: string) => {
 const formatDateList = (dates: string[]) => (
     dates.length > 0 ? dates.map(formatIsoDatePtBr).join(', ') : 'nenhum'
 );
+const isIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
 
 export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig }) => {
     const dailiesConfig = courtConfig?.dailies;
@@ -56,6 +57,22 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const hasValidDateRange = periodTravelDaysRaw !== null;
     const ldoCapEnabled = Boolean(dailiesConfig?.ldoCap?.enabled);
     const ldoCapValue = Number(dailiesConfig?.ldoCap?.perDiemLimit || 0);
+    const configuredHolidayDates = useMemo(
+        () =>
+            Array.from(new Set((discountRules.holidays || []).filter(isIsoDate)))
+                .sort((a, b) => a.localeCompare(b)),
+        [discountRules.holidays]
+    );
+    const holidayYears = useMemo(
+        () => Array.from(new Set(configuredHolidayDates.map((date) => date.slice(0, 4)))).sort(),
+        [configuredHolidayDates]
+    );
+    const holidayYearsLabel = holidayYears.length > 0 ? holidayYears.join(', ') : 'sem ano definido';
+    const holidayCalendarLabel =
+        discountRules.holidayCalendarLabel?.trim() ||
+        `Calendário oficial de feriados cadastrado no painel (${holidayYearsLabel})`;
+    const holidayCalendarReference = discountRules.holidayCalendarReference?.trim();
+    const holidayCalendarVersion = discountRules.holidayCalendarVersion?.trim();
 
     const handleModeChange = (mode: 'periodo' | 'manual') => {
         update('diariasModoDesconto', mode);
@@ -162,6 +179,14 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
                             <p>Valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
+                            <p>{holidayCalendarLabel} usado no desconto automático por datas.</p>
+                            {holidayCalendarReference && (
+                                <p>
+                                    Referência do calendário: {holidayCalendarReference}
+                                    {holidayCalendarVersion ? ` (${holidayCalendarVersion})` : ''}.
+                                </p>
+                            )}
+                            <p>Datas de feriados oficiais cadastradas: {formatDateList(configuredHolidayDates)}.</p>
                             <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
                             <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
                             {ldoCapEnabled && ldoCapValue > 0 && (

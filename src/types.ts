@@ -47,6 +47,9 @@ export interface DailiesConfig {
     transportDivisor: number;
     excludeWeekendsAndHolidays: boolean;
     holidays: string[];
+    holidayCalendarLabel?: string;
+    holidayCalendarReference?: string;
+    holidayCalendarVersion?: string;
   };
 }
 

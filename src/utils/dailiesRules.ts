@@ -5,6 +5,9 @@ export interface DailiesDiscountRules {
     transportDivisor: number;
     excludeWeekendsAndHolidays: boolean;
     holidays: string[];
+    holidayCalendarLabel?: string;
+    holidayCalendarReference?: string;
+    holidayCalendarVersion?: string;
 }
 
 export interface DailiesRangeSummary {
@@ -181,7 +184,10 @@ export const resolveDailiesDiscountRules = (
         foodDivisor,
         transportDivisor,
         excludeWeekendsAndHolidays: Boolean(rules?.excludeWeekendsAndHolidays),
-        holidays: Array.isArray(rules?.holidays) ? rules!.holidays : []
+        holidays: Array.isArray(rules?.holidays) ? rules!.holidays : [],
+        holidayCalendarLabel: rules?.holidayCalendarLabel,
+        holidayCalendarReference: rules?.holidayCalendarReference,
+        holidayCalendarVersion: rules?.holidayCalendarVersion
     };
 };
 
