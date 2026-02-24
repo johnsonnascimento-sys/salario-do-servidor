@@ -22,7 +22,12 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ courtConfig,
     return (
         <div className="md:flex md:items-center md:justify-between mb-8">
             <div className="flex items-center gap-4 mb-4 md:mb-0">
-                <button onClick={() => navigate('/')} className="bg-white dark:bg-neutral-800 p-2 rounded-xl text-neutral-500 hover:text-secondary shadow-sm border border-neutral-200 dark:border-neutral-700 transition-colors">
+                <button
+                    type="button"
+                    aria-label="Voltar para página inicial"
+                    onClick={() => navigate('/')}
+                    className="bg-white dark:bg-neutral-800 p-2 rounded-xl text-neutral-500 hover:text-secondary shadow-sm border border-neutral-200 dark:border-neutral-700 transition-colors"
+                >
                     <ArrowLeft className="w-6 h-6" />
                 </button>
                 <div>

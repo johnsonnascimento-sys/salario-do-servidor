@@ -23,13 +23,13 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
                 <table className="w-full text-body">
                     <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-700">
                         <tr>
-                            <th className="px-6 py-4 text-left font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Rubrica</th>
-                            <th className="px-6 py-4 text-right font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Valor</th>
+                            <th scope="col" className="px-6 py-4 text-left font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Rubrica</th>
+                            <th scope="col" className="px-6 py-4 text-right font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Valor</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
                         {resultRows.map((row, idx) => (
-                            <tr key={idx} className="hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/30 transition">
+                            <tr key={`${row.type}-${row.label}-${idx}`} className="hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/30 transition">
                                 <td className={`px-6 py-4 font-medium ${row.type === 'C' ? 'text-success-600 dark:text-success-400' : 'text-error-500 dark:text-error-400'}`}>
                                     {row.label}
                                 </td>

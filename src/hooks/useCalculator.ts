@@ -61,16 +61,9 @@ export const useCalculator = () => {
 
     // Wrapper para handleDonationComplete com parâmetros corretos
     const handleDonationComplete = () => {
-        handleDonationCompleteBase(state, resultRows, courtConfig);
-    };
-
-    // Handlers legados (temporariamente vazios, podem ser removidos futuramente)
-    const handleCalcFerias = () => {
-        // Phase 4: Temporarily disabled or needs migration
-    };
-
-    const handleCalc13Manual = () => {
-        // Phase 4: Temporarily disabled or needs migration
+        handleDonationCompleteBase(state, resultRows, courtConfig).catch((error) => {
+            console.error('Falha ao exportar arquivo:', error);
+        });
     };
 
     return {
@@ -85,8 +78,6 @@ export const useCalculator = () => {
         initiateExportPDF,
         initiateExportExcel,
         updateSubstDays,
-        handleCalcFerias,
-        handleCalc13Manual,
         addRubrica,
         removeRubrica,
         updateRubrica,

@@ -12,21 +12,25 @@ interface jsPDFWithAutoTable extends jsPDF {
     lastAutoTable: { finalY: number };
 }
 
+const EXPORT_BRAND_NAME = import.meta.env.VITE_EXPORT_BRAND_NAME || 'SIMULADOR DE SALARIO';
+const EXPORT_SITE_NAME = import.meta.env.VITE_EXPORT_SITE_NAME || 'Salario do Servidor';
+const EXPORT_SITE_URL = import.meta.env.VITE_EXPORT_SITE_URL || 'www.salariodoservidor.com.br';
+
 export const exportToPDF = (state: CalculatorState, resultRows: any[], courtConfig: CourtConfig | null) => {
     const doc = new jsPDF() as jsPDFWithAutoTable;
 
     // Configura o nome do órgão
-    const orgName = "SIMULADOR DE SALÁRIO";
+    const orgName = EXPORT_BRAND_NAME;
 
     // Nome do Site e URL (Marca no topo direito)
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(37, 99, 235); // Azul (Secondary)
-    doc.text("Salário do Servidor", 195, 18, { align: "right" });
+    doc.text(EXPORT_SITE_NAME, 195, 18, { align: "right" });
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100);
-    doc.text("www.salariodoservidor.com.br", 195, 23, { align: "right" });
+    doc.text(EXPORT_SITE_URL, 195, 23, { align: "right" });
 
     // Nome do Órgão (Centralizado)
     doc.setFont("helvetica", "bold");
@@ -93,7 +97,7 @@ export const exportToPDF = (state: CalculatorState, resultRows: any[], courtConf
 };
 
 export const exportToExcel = (state: CalculatorState, resultRows: any[], courtConfig: CourtConfig | null) => {
-    const orgName = "SIMULADOR DE SALÁRIO";
+    const orgName = EXPORT_BRAND_NAME;
 
     const wb = XLSX.utils.book_new();
     const wsData: (string | number)[][] = [

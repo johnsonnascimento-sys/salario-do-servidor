@@ -39,8 +39,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                             <input
                                 type="number"
                                 className={styles.input}
+                                min={0}
                                 value={state.heQtd50}
-                                onChange={e => update('heQtd50', Number(e.target.value))}
+                                onChange={e => update('heQtd50', Math.max(0, Number(e.target.value) || 0))}
                             />
                         </div>
                         <div>
@@ -48,8 +49,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                             <input
                                 type="number"
                                 className={styles.input}
+                                min={0}
                                 value={state.heQtd100}
-                                onChange={e => update('heQtd100', Number(e.target.value))}
+                                onChange={e => update('heQtd100', Math.max(0, Number(e.target.value) || 0))}
                             />
                         </div>
                     </div>

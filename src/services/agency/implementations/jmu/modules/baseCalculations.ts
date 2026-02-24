@@ -21,6 +21,14 @@ interface AdjustmentEntry {
     percentage: number;
 }
 
+interface PeriodData {
+    salario: Record<string, Record<string, number>>;
+    funcoes: Record<string, number>;
+    valorVR: number;
+}
+
+const periodDataCache = new WeakMap<CourtConfig, Map<number, PeriodData>>();
+
 const normalizePercentage = (value: number) => (value > 1 ? value / 100 : value);
 
 export const normalizeAQPercent = (value: number) => (value > 1 ? value / 100 : value);
@@ -64,6 +72,11 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
  * usando a configuracao do orgao ja carregada.
  */
 export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfig) {
+    const cachedByConfig = periodDataCache.get(agencyConfig);
+    if (cachedByConfig?.has(periodo)) {
+        return cachedByConfig.get(periodo)!;
+    }
+
     const config = agencyConfig;
     const payrollRules = getPayrollRules(config);
 
@@ -86,7 +99,15 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
     const cj1Adjusted = applyCorrections(cj1Base, periodo, config);
     const valorVR = Math.round(cj1Adjusted * payrollRules.vrRateOnCj1 * 100) / 100;
 
-    return { salario, funcoes, valorVR };
+    const computed: PeriodData = { salario, funcoes, valorVR };
+
+    if (cachedByConfig) {
+        cachedByConfig.set(periodo, computed);
+    } else {
+        periodDataCache.set(agencyConfig, new Map([[periodo, computed]]));
+    }
+
+    return computed;
 }
 
 /**

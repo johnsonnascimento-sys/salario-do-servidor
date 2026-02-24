@@ -12,6 +12,13 @@ import { useState, useCallback } from 'react';
 import type { ChangeEvent } from 'react';
 import { INITIAL_STATE, CalculatorState, Rubrica } from '../../types';
 
+const createRubricaId = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return `rubrica-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 export const useCalculatorState = () => {
     const [state, setState] = useState<CalculatorState>(INITIAL_STATE);
 
@@ -28,7 +35,7 @@ export const useCalculatorState = () => {
 
     const addRubrica = useCallback((tipo: Rubrica['tipo'] = 'C') => {
         const newRubrica: Rubrica = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: createRubricaId(),
             descricao: '',
             valor: 0,
             tipo,

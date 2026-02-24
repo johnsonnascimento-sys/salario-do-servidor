@@ -19,6 +19,57 @@ const isEligibleInput = (element: EventTarget | null): element is HTMLInputEleme
     return element.dataset.calculator === 'true';
 };
 
+type ExpressionToken = number | '+' | '-' | '*' | '/' | '(' | ')';
+
+const tokenizeExpression = (expression: string): ExpressionToken[] | null => {
+    const tokens: ExpressionToken[] = [];
+    let index = 0;
+
+    while (index < expression.length) {
+        const char = expression[index];
+
+        if ((char >= '0' && char <= '9') || char === '.') {
+            let start = index;
+            let dotCount = char === '.' ? 1 : 0;
+            index += 1;
+
+            while (index < expression.length) {
+                const nextChar = expression[index];
+                if (nextChar >= '0' && nextChar <= '9') {
+                    index += 1;
+                    continue;
+                }
+                if (nextChar === '.') {
+                    dotCount += 1;
+                    if (dotCount > 1) {
+                        return null;
+                    }
+                    index += 1;
+                    continue;
+                }
+                break;
+            }
+
+            const numeric = Number(expression.slice(start, index));
+            if (!Number.isFinite(numeric)) {
+                return null;
+            }
+            tokens.push(numeric);
+            continue;
+        }
+
+        if (char === '+' || char === '-' || char === '*' || char === '/' || char === '(' || char === ')') {
+            tokens.push(char);
+            index += 1;
+            continue;
+        }
+
+        return null;
+    }
+
+    return tokens;
+};
+
 const evaluateExpression = (expression: string): number | null => {
     const normalized = expression.replace(/\s+/g, '').replace(/,/g, '.');
     if (!normalized) {
@@ -29,15 +80,100 @@ const evaluateExpression = (expression: string): number | null => {
         return null;
     }
 
-    try {
-        const rawResult = Function(`"use strict"; return (${normalized});`)();
-        if (typeof rawResult !== 'number' || !Number.isFinite(rawResult)) {
-            return null;
-        }
-        return Math.round(rawResult * 100) / 100;
-    } catch {
+    const tokens = tokenizeExpression(normalized);
+    if (!tokens || tokens.length === 0) {
         return null;
     }
+
+    let cursor = 0;
+
+    const parseExpression = (): number | null => {
+        let value = parseTerm();
+        if (value === null) {
+            return null;
+        }
+
+        while (cursor < tokens.length && (tokens[cursor] === '+' || tokens[cursor] === '-')) {
+            const operator = tokens[cursor];
+            cursor += 1;
+            const right = parseTerm();
+            if (right === null) {
+                return null;
+            }
+
+            value = operator === '+' ? value + right : value - right;
+        }
+
+        return value;
+    };
+
+    const parseTerm = (): number | null => {
+        let value = parseFactor();
+        if (value === null) {
+            return null;
+        }
+
+        while (cursor < tokens.length && (tokens[cursor] === '*' || tokens[cursor] === '/')) {
+            const operator = tokens[cursor];
+            cursor += 1;
+            const right = parseFactor();
+            if (right === null) {
+                return null;
+            }
+
+            if (operator === '*') {
+                value *= right;
+            } else {
+                if (right === 0) {
+                    return null;
+                }
+                value /= right;
+            }
+        }
+
+        return value;
+    };
+
+    const parseFactor = (): number | null => {
+        if (cursor >= tokens.length) {
+            return null;
+        }
+
+        const token = tokens[cursor];
+
+        if (token === '+' || token === '-') {
+            cursor += 1;
+            const nested = parseFactor();
+            if (nested === null) {
+                return null;
+            }
+            return token === '-' ? -nested : nested;
+        }
+
+        if (token === '(') {
+            cursor += 1;
+            const nested = parseExpression();
+            if (nested === null || tokens[cursor] !== ')') {
+                return null;
+            }
+            cursor += 1;
+            return nested;
+        }
+
+        if (typeof token === 'number') {
+            cursor += 1;
+            return token;
+        }
+
+        return null;
+    };
+
+    const rawResult = parseExpression();
+    if (rawResult === null || cursor !== tokens.length || !Number.isFinite(rawResult)) {
+        return null;
+    }
+
+    return Math.round(rawResult * 100) / 100;
 };
 
 const parseInputValue = (value: string): number | null => {

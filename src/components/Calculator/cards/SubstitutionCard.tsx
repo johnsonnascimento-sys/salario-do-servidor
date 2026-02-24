@@ -46,8 +46,9 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
                                 <input
                                     type="number"
                                     className={styles.input}
+                                    min={0}
                                     value={state.substDias[key] || 0}
-                                    onChange={e => updateSubstDays(key, Number(e.target.value))}
+                                    onChange={e => updateSubstDays(key, Math.max(0, Number(e.target.value) || 0))}
                                     placeholder="Dias"
                                 />
                             </div>

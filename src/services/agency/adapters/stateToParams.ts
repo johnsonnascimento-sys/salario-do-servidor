@@ -77,7 +77,7 @@ export function mapStateToJmuParams(
         heQtd50: state.heQtd50 || 0,
         heQtd100: state.heQtd100 || 0,
         heIsEA: state.heIsEA,
-        hePssIsEA: state.hePssIsEA,
+        hePssIsEA: false,
         substDias: state.substDias,
         substIsEA: state.substIsEA,
         substPssIsEA: state.substPssIsEA,

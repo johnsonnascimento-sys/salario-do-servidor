@@ -7,7 +7,7 @@
  * - Geracao de rows para exibicao (resultRows)
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { CalculatorState, CourtConfig } from '../../types';
 import { JmuService } from '../../services/agency/implementations/JmuService';
@@ -21,75 +21,95 @@ export const useCalculatorResults = (
     courtConfig: CourtConfig | null,
     agency: { name: string; type: string; slug: string } | null
 ) => {
+    const latestRequestRef = useRef(0);
+
     useEffect(() => {
         if (!agencyService) return;
+        let cancelled = false;
+        const requestId = latestRequestRef.current + 1;
+        latestRequestRef.current = requestId;
 
         (async () => {
-            const orgSlug = agency?.slug || 'jmu';
-            const params = mapStateToJmuParams(state, orgSlug, courtConfig || undefined);
-            const result = await agencyService.calculateTotal(params);
+            try {
+                const orgSlug = agency?.slug || 'jmu';
+                const params = mapStateToJmuParams(state, orgSlug, courtConfig || undefined);
+                const result = await agencyService.calculateTotal(params);
 
-            setState(prev => {
-                const bd = result.breakdown;
-                return {
-                    ...prev,
-                    vencimento: bd.vencimento || 0,
-                    gaj: bd.gaj || 0,
-                    aqTituloValor: bd.aqTitulo || 0,
-                    aqTreinoValor: bd.aqTreino || 0,
-                    gratEspecificaValor: bd.gratEspecifica || 0,
-                    pssMensal: bd.pss || 0,
-                    pssEA: bd.pssEA || 0,
-                    valFunpresp: bd.funpresp || 0,
-                    irMensal: bd.irrf || 0,
-                    irEA: bd.irEA || 0,
-                    aqIr: bd.aqIr || 0,
-                    aqPss: bd.aqPss || 0,
-                    gratIr: bd.gratIr || 0,
-                    gratPss: bd.gratPss || 0,
-                    vantagensIr: bd.vantagensIr || 0,
-                    vantagensPss: bd.vantagensPss || 0,
-                    abonoIr: bd.abonoIr || 0,
-                    abonoPermanencia: bd.abono || 0,
-                    auxAlimentacao: bd.auxAlimentacao || 0,
-                    auxPreEscolarValor: bd.auxPreEscolar || 0,
-                    auxTransporteValor: bd.auxTransporte || 0,
-                    auxTransporteDesc: bd.auxTransporteDebito || 0,
-                    ferias1_3: bd.feriasConstitucional || 0,
-                    feriasDesc: bd.feriasDesconto || 0,
-                    irFerias: bd.impostoFerias || 0,
-                    gratNatalinaTotal: bd.gratificacaoNatalina || 0,
-                    abonoPerm13: bd.abono13 || 0,
-                    pss13: bd.pss13 || 0,
-                    ir13: bd.imposto13 || 0,
-                    debitoPrimeiraParcela13: bd.debitoPrimeiraParcela13 || 0,
-                    adiant13Venc: bd.adiant13Venc || 0,
-                    adiant13FC: bd.adiant13FC || 0,
-                    segunda13Venc: bd.segunda13Venc || 0,
-                    segunda13FC: bd.segunda13FC || 0,
-                    heVal50: bd.heVal50 || 0,
-                    heVal100: bd.heVal100 || 0,
-                    heTotal: bd.heTotal || 0,
-                    heIr: bd.heIr || 0,
-                    hePss: bd.hePss || 0,
-                    substTotal: bd.substituicao || 0,
-                    substIr: bd.substituicaoIr || 0,
-                    substPss: bd.substituicaoPss || 0,
-                    diariasValorTotal: bd.diariasValor || 0,
-                    diariasBruto: bd.diariasBruto || 0,
-                    diariasGlosa: bd.diariasGlosa || 0,
-                    diariasCorteLdo: bd.diariasCorteLdo || 0,
-                    diariasDescAlim: bd.diariasDescAlim ?? bd.diariasDeducoes ?? 0,
-                    diariasDescTransp: bd.diariasDescTransp || 0,
-                    diariasDiasDescontoAlimentacaoCalc: bd.diariasDiasDescAlim || 0,
-                    diariasDiasDescontoTransporteCalc: bd.diariasDiasDescTransp || 0,
-                    licencaValor: bd.licencaCompensatoria || 0,
-                    totalBruto: result.netSalary + result.totalDeductions,
-                    totalDescontos: result.totalDeductions,
-                    liquido: result.netSalary,
-                };
-            });
+                if (cancelled || requestId !== latestRequestRef.current) {
+                    return;
+                }
+
+                setState(prev => {
+                    const bd = result.breakdown;
+                    return {
+                        ...prev,
+                        vencimento: bd.vencimento || 0,
+                        gaj: bd.gaj || 0,
+                        aqTituloValor: bd.aqTitulo || 0,
+                        aqTreinoValor: bd.aqTreino || 0,
+                        gratEspecificaValor: bd.gratEspecifica || 0,
+                        pssMensal: bd.pss || 0,
+                        pssEA: bd.pssEA || 0,
+                        valFunpresp: bd.funpresp || 0,
+                        irMensal: bd.irrf || 0,
+                        irEA: bd.irEA || 0,
+                        aqIr: bd.aqIr || 0,
+                        aqPss: bd.aqPss || 0,
+                        gratIr: bd.gratIr || 0,
+                        gratPss: bd.gratPss || 0,
+                        vantagensIr: bd.vantagensIr || 0,
+                        vantagensPss: bd.vantagensPss || 0,
+                        abonoIr: bd.abonoIr || 0,
+                        abonoPermanencia: bd.abono || 0,
+                        auxAlimentacao: bd.auxAlimentacao || 0,
+                        auxPreEscolarValor: bd.auxPreEscolar || 0,
+                        auxTransporteValor: bd.auxTransporte || 0,
+                        auxTransporteDesc: bd.auxTransporteDebito || 0,
+                        ferias1_3: bd.feriasConstitucional || 0,
+                        feriasDesc: bd.feriasDesconto || 0,
+                        irFerias: bd.impostoFerias || 0,
+                        gratNatalinaTotal: bd.gratificacaoNatalina || 0,
+                        abonoPerm13: bd.abono13 || 0,
+                        pss13: bd.pss13 || 0,
+                        ir13: bd.imposto13 || 0,
+                        debitoPrimeiraParcela13: bd.debitoPrimeiraParcela13 || 0,
+                        adiant13Venc: bd.adiant13Venc || 0,
+                        adiant13FC: bd.adiant13FC || 0,
+                        segunda13Venc: bd.segunda13Venc || 0,
+                        segunda13FC: bd.segunda13FC || 0,
+                        heVal50: bd.heVal50 || 0,
+                        heVal100: bd.heVal100 || 0,
+                        heTotal: bd.heTotal || 0,
+                        heIr: bd.heIr || 0,
+                        hePss: bd.hePss || 0,
+                        substTotal: bd.substituicao || 0,
+                        substIr: bd.substituicaoIr || 0,
+                        substPss: bd.substituicaoPss || 0,
+                        diariasValorTotal: bd.diariasValor || 0,
+                        diariasBruto: bd.diariasBruto || 0,
+                        diariasGlosa: bd.diariasGlosa || 0,
+                        diariasCorteLdo: bd.diariasCorteLdo || 0,
+                        diariasDescAlim: bd.diariasDescAlim ?? bd.diariasDeducoes ?? 0,
+                        diariasDescTransp: bd.diariasDescTransp || 0,
+                        diariasDiasDescontoAlimentacaoCalc: bd.diariasDiasDescAlim || 0,
+                        diariasDiasDescontoTransporteCalc: bd.diariasDiasDescTransp || 0,
+                        licencaValor: bd.licencaCompensatoria || 0,
+                        totalBruto: result.netSalary + result.totalDeductions,
+                        totalDescontos: result.totalDeductions,
+                        liquido: result.netSalary,
+                    };
+                });
+            } catch (error) {
+                if (cancelled || requestId !== latestRequestRef.current) {
+                    return;
+                }
+                console.error('Erro ao calcular resultados da folha:', error);
+            }
         })();
+
+        return () => {
+            cancelled = true;
+        };
     }, [
         agencyService,
         state.periodo, state.cargo, state.padrao, state.funcao,
@@ -105,7 +125,7 @@ export const useCalculatorResults = (
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.feriasDesc, state.feriasDescManual,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
-        state.heQtd50, state.heQtd100, state.heIsEA, state.hePssIsEA, state.substDias, state.substIsEA, state.substPssIsEA,
+        state.heQtd50, state.heQtd100, state.heIsEA, state.substDias, state.substIsEA, state.substPssIsEA,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
@@ -113,8 +133,15 @@ export const useCalculatorResults = (
         state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
         state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
         courtConfig,
-        setState
+        agency?.slug
     ]);
+
+    const currentTables = useMemo(() => {
+        if (!courtConfig) {
+            return null;
+        }
+        return getTablesForPeriod(state.periodo, courtConfig);
+    }, [courtConfig, state.periodo]);
 
     const resultRows = useMemo(() => {
         if (!courtConfig) {
@@ -144,9 +171,8 @@ export const useCalculatorResults = (
         }
 
         const noFunctionCode = courtConfig.careerCatalog?.noFunctionCode;
-        if (state.funcao && state.funcao !== noFunctionCode) {
-            const tables = getTablesForPeriod(state.periodo, courtConfig);
-            const valorFC = tables.funcoes[state.funcao] || 0;
+        if (state.funcao && state.funcao !== noFunctionCode && currentTables) {
+            const valorFC = currentTables.funcoes[state.funcao] || 0;
             let labelTipo = 'FUNÇÃO COMISSIONADA (OPÇÃO)';
             if (state.funcao.startsWith('cj')) labelTipo = 'CARGO EM COMISSÃO';
             rows.push({ label: `${labelTipo} - ${state.funcao.toUpperCase()}`, value: valorFC, type: 'C' });
@@ -237,7 +263,7 @@ export const useCalculatorResults = (
         const creditRows = rows.filter(row => row.type === 'C');
         const debitRows = rows.filter(row => row.type === 'D');
         return [...creditRows, ...debitRows];
-    }, [state, courtConfig]);
+    }, [state, courtConfig, currentTables]);
 
     return { resultRows };
 };

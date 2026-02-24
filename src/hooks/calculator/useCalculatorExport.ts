@@ -10,7 +10,6 @@
 
 import { useState } from 'react';
 import { CalculatorState, CourtConfig } from '../../types';
-import { exportToPDF, exportToExcel } from '../../services/exportService';
 
 export const useCalculatorExport = () => {
     const [donationModalOpen, setDonationModalOpen] = useState(false);
@@ -26,11 +25,12 @@ export const useCalculatorExport = () => {
         setDonationModalOpen(true);
     };
 
-    const handleDonationComplete = (
+    const handleDonationComplete = async (
         state: CalculatorState,
         resultRows: Array<{ label: string; value: number; type: 'C' | 'D' }>,
         courtConfig: CourtConfig | null
     ) => {
+        const { exportToPDF, exportToExcel } = await import('../../services/exportService');
         if (pendingExportType === 'pdf') {
             exportToPDF(state, resultRows, courtConfig);
         } else {

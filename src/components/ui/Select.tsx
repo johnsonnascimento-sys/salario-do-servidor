@@ -4,7 +4,7 @@
  * Segue o DESIGN_SYSTEM.md com estilos padronizados
  */
 
-import React from 'react';
+import React, { useId } from 'react';
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
     label?: string;
@@ -23,7 +23,8 @@ export const Select: React.FC<SelectProps> = ({
     children,
     ...props
 }) => {
-    const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+    const generatedId = useId();
+    const selectId = id || generatedId;
 
     return (
         <div className="w-full">
