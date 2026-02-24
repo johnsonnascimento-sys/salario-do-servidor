@@ -149,7 +149,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         />
                                     </div>
                                 </div>
-                                <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
+                                <div className="rounded-lg border border-neutral-200 bg-neutral-50/70 px-3 py-2 text-body-xs text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900/30 dark:text-neutral-300">
                                     {hasValidDateRange
                                         ? (
                                             <>
@@ -244,7 +244,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         </div>
 
                         {isPeriodMode ? (
-                            <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
+                            <div className="rounded-lg border border-neutral-200 bg-neutral-50/70 px-3 py-2 text-body-xs text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900/30 dark:text-neutral-300">
                                 {hasValidDateRange
                                     ? (
                                         periodSummary
