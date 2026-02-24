@@ -54,12 +54,12 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
                 <Palmtree className="w-4 h-4" />
-                Ferias (1/3 Constitucional)
+                Férias (1/3 Constitucional)
             </h3>
 
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <label className={styles.label}>Adicional 1/3 Ferias</label>
+                    <label className={styles.label}>Adicional 1/3 Férias</label>
                     <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
@@ -112,7 +112,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                             onChange={e => handleFeriasAntecipadasChange(e.target.checked)}
                             className={styles.checkbox}
                         />
-                        Recebido 1/3 de ferias em um mes anterior
+                        Recebido 1/3 de férias em um mês anterior
                     </label>
                     <p className="text-label text-neutral-400 mt-1 ml-6">
                         Marque se recebeu o pagamento no contracheque anterior.

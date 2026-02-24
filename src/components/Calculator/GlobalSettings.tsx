@@ -72,7 +72,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
 
     const periodOptions = schedules.length > 0
         ? schedules
-        : [{ period: state.periodo, percentage: 0, label: `Periodo ${state.periodo}` }];
+        : [{ period: state.periodo, percentage: 0, label: `Período ${state.periodo}` }];
 
     const foodAllowanceOptions = useMemo(
         () => courtConfig.menus?.food_allowance || [],
@@ -88,44 +88,61 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
     const irKeys = useMemo(() => Object.keys(courtConfig.historico_ir || {}), [courtConfig.historico_ir]);
 
     const referenceBounds = useMemo(() => {
-        const sets = [
-            pssKeys.map(parseReferencePointFromKey).filter((v): v is { year: number; month: number } => !!v),
-            irKeys.map(parseReferencePointFromKey).filter((v): v is { year: number; month: number } => !!v),
-            foodAllowanceOptions.map(option => parseReferencePointFromKey(option.label)).filter((v): v is { year: number; month: number } => !!v),
-            preschoolAllowanceOptions.map(option => parseReferencePointFromKey(option.label)).filter((v): v is { year: number; month: number } => !!v),
-            schedules
-                .map(schedule => parseReferencePointFromDate(schedule.date || ''))
-                .filter((v): v is { year: number; month: number } => !!v)
-        ].filter(set => set.length > 0);
+        const pssPoints = pssKeys
+            .map(parseReferencePointFromKey)
+            .filter((v): v is { year: number; month: number } => !!v);
+        const irPoints = irKeys
+            .map(parseReferencePointFromKey)
+            .filter((v): v is { year: number; month: number } => !!v);
+        const foodPoints = foodAllowanceOptions
+            .map(option => parseReferencePointFromKey(option.label))
+            .filter((v): v is { year: number; month: number } => !!v);
+        const preschoolPoints = preschoolAllowanceOptions
+            .map(option => parseReferencePointFromKey(option.label))
+            .filter((v): v is { year: number; month: number } => !!v);
+        const schedulePoints = schedules
+            .map(schedule => parseReferencePointFromDate(schedule.date || ''))
+            .filter((v): v is { year: number; month: number } => !!v);
 
-        if (!sets.length) {
+        const minSets = [pssPoints, irPoints, foodPoints, preschoolPoints, schedulePoints].filter(set => set.length > 0);
+        const maxSetsPreferred = [pssPoints, foodPoints, preschoolPoints, schedulePoints].filter(set => set.length > 0);
+        const maxSets = maxSetsPreferred.length ? maxSetsPreferred : minSets;
+
+        if (!minSets.length || !maxSets.length) {
             return {
                 min: null as { year: number; month: number } | null,
                 max: null as { year: number; month: number } | null
             };
         }
 
-        const minCandidates = sets
+        const minCandidates = minSets
             .map(set => pickMinReferencePoint(set))
             .filter((v): v is { year: number; month: number } => !!v);
-        const maxCandidates = sets
+        const maxCandidates = maxSets
             .map(set => pickMaxReferencePoint(set))
             .filter((v): v is { year: number; month: number } => !!v);
 
-        const minPoint = pickMaxReferencePoint(minCandidates);
-        const maxPoint = pickMinReferencePoint(maxCandidates);
+        const strictMin = pickMaxReferencePoint(minCandidates);
+        const strictMax = pickMaxReferencePoint(maxCandidates);
 
-        if (minPoint && maxPoint && compareReferencePoints(minPoint, maxPoint) > 0) {
-            const fallbackPoint = maxPoint || minPoint;
+        if (!strictMin || !strictMax) {
             return {
-                min: fallbackPoint,
-                max: fallbackPoint
+                min: null as { year: number; month: number } | null,
+                max: null as { year: number; month: number } | null
+            };
+        }
+
+        if (compareReferencePoints(strictMin, strictMax) > 0) {
+            // If datasets have disjoint windows, prefer a broad valid range instead of locking selectors.
+            return {
+                min: pickMinReferencePoint(minCandidates),
+                max: pickMaxReferencePoint([...minCandidates, ...maxCandidates])
             };
         }
 
         return {
-            min: minPoint,
-            max: maxPoint
+            min: strictMin,
+            max: strictMax
         };
     }, [pssKeys, irKeys, foodAllowanceOptions, preschoolAllowanceOptions, schedules]);
 
@@ -263,7 +280,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
             <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full -mr-8 -mt-8 blur-xl"></div>
             <h3 className={styles.sectionTitle}>
                 <Settings className="w-4 h-4" />
-                Configuracoes Globais
+                Configurações Globais
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
@@ -279,14 +296,14 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
                     >
                         {periodOptions.map((entry) => (
                             <option key={entry.period} value={entry.period}>
-                                {entry.label || `Periodo ${entry.period} (${(entry.percentage * 100).toFixed(2)}%)`}
+                                {entry.label || `Período ${entry.period} (${(entry.percentage * 100).toFixed(2)}%)`}
                             </option>
                         ))}
                     </select>
                 </div>
 
                 <div>
-                    <label className={compactLabel}>Mes de Referencia (traz valores historicos de IR, PSS, Alimentacao...)</label>
+                    <label className={compactLabel}>Mês de Referência (traz valores históricos de IR, PSS, Alimentação...)</label>
                     <div className="flex gap-2">
                         <select
                             className={compactInput}
