@@ -7,6 +7,15 @@ export interface DailiesDiscountRules {
     holidays: string[];
 }
 
+export interface DailiesRangeSummary {
+    totalDays: number;
+    deductibleDays: number;
+    excludedDays: number;
+    weekendDays: number;
+    weekdayHolidayDays: number;
+    weekendHolidayDays: number;
+}
+
 interface ResolveDiscountDaysInput {
     mode: 'periodo' | 'manual';
     startDate: string;
@@ -200,11 +209,7 @@ export const countCalendarDaysInRange = (
     return days;
 };
 
-export const countDeductibleDaysInRange = (
-    startDate: string,
-    endDate: string,
-    rules: DailiesDiscountRules
-): number | null => {
+const resolveNormalizedRange = (startDate: string, endDate: string): { start: Date; end: Date } | null => {
     const normalizedStart = normalizeIsoDate(startDate);
     const normalizedEnd = normalizeIsoDate(endDate);
     if (!normalizedStart || !normalizedEnd) {
@@ -217,29 +222,78 @@ export const countDeductibleDaysInRange = (
         [start, end] = [end, start];
     }
 
+    return { start, end };
+};
+
+export const summarizeDailiesRange = (
+    startDate: string,
+    endDate: string,
+    rules: DailiesDiscountRules
+): DailiesRangeSummary | null => {
+    const range = resolveNormalizedRange(startDate, endDate);
+    if (!range) {
+        return null;
+    }
+
     const holidays = new Set(
         (rules.holidays || [])
             .map(normalizeIsoDate)
             .filter((value): value is string => !!value)
     );
 
+    let totalDays = 0;
     let deductibleDays = 0;
-    const cursor = new Date(start.getTime());
-    while (cursor.getTime() <= end.getTime()) {
+    let excludedDays = 0;
+    let weekendDays = 0;
+    let weekdayHolidayDays = 0;
+    let weekendHolidayDays = 0;
+
+    const cursor = new Date(range.start.getTime());
+    while (cursor.getTime() <= range.end.getTime()) {
+        totalDays += 1;
+
         const iso = toIsoDate(cursor);
         const dayOfWeek = cursor.getUTCDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const isHoliday = holidays.has(iso);
 
+        if (isWeekend) {
+            weekendDays += 1;
+        }
+
+        if (isHoliday && isWeekend) {
+            weekendHolidayDays += 1;
+        } else if (isHoliday) {
+            weekdayHolidayDays += 1;
+        }
+
         const shouldSkip = rules.excludeWeekendsAndHolidays && (isWeekend || isHoliday);
-        if (!shouldSkip) {
+        if (shouldSkip) {
+            excludedDays += 1;
+        } else {
             deductibleDays += 1;
         }
 
         cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
 
-    return deductibleDays;
+    return {
+        totalDays,
+        deductibleDays,
+        excludedDays,
+        weekendDays,
+        weekdayHolidayDays,
+        weekendHolidayDays
+    };
+};
+
+export const countDeductibleDaysInRange = (
+    startDate: string,
+    endDate: string,
+    rules: DailiesDiscountRules
+): number | null => {
+    const summary = summarizeDailiesRange(startDate, endDate, rules);
+    return summary ? summary.deductibleDays : null;
 };
 
 export const resolveDailiesDiscountDays = ({

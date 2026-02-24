@@ -443,14 +443,31 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     { label: 'Cota-parte transporte (desconto)', value: roundCurrency(state.auxTransporteDesc || 0) }
                 ];
             case 'diarias':
-                return [
-                    { label: 'Diarias brutas', value: roundCurrency(state.diariasBruto || 0) },
-                    { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
-                    { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
-                    { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
-                    { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) },
-                    { label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) }
-                ];
+                {
+                    const lines: PresetGrossLine[] = [
+                        { label: 'Diarias brutas', value: roundCurrency(state.diariasBruto || 0) }
+                    ];
+
+                    const ldoEnabled = Boolean(courtConfig?.dailies?.ldoCap?.enabled);
+                    const ldoLimit = roundCurrency(Number(courtConfig?.dailies?.ldoCap?.perDiemLimit || 0));
+                    if (ldoEnabled && ldoLimit > 0) {
+                        lines.push({ label: 'Limite LDO vigente (por diaria)', value: ldoLimit });
+                        lines.push({
+                            label: 'Valor enquadrado no limite LDO',
+                            value: roundCurrency(Math.max(0, (state.diariasBruto || 0) - (state.diariasCorteLdo || 0)))
+                        });
+                    }
+
+                    lines.push(
+                        { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
+                        { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
+                        { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
+                        { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) },
+                        { label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) }
+                    );
+
+                    return lines;
+                }
             default:
                 return [];
         }
