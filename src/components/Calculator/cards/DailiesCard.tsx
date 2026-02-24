@@ -25,6 +25,8 @@ const formatDateList = (dates: string[]) => (
 );
 const isIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
 const formatCurrencyBr = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const isEndBeforeStart = (startDate: string, endDate: string) =>
+    isIsoDate(startDate) && isIsoDate(endDate) && endDate < startDate;
 
 export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig }) => {
     const dailiesConfig = courtConfig?.dailies;
@@ -94,6 +96,21 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         update('diariasDataFim', '');
     };
 
+    const handleStartDateChange = (nextStartDate: string) => {
+        update('diariasDataInicio', nextStartDate);
+        if (isEndBeforeStart(nextStartDate, state.diariasDataFim)) {
+            update('diariasDataFim', nextStartDate);
+        }
+    };
+
+    const handleEndDateChange = (nextEndDate: string) => {
+        if (isEndBeforeStart(state.diariasDataInicio, nextEndDate)) {
+            update('diariasDataFim', state.diariasDataInicio);
+            return;
+        }
+        update('diariasDataFim', nextEndDate);
+    };
+
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
@@ -136,7 +153,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                             type="date"
                                             className={styles.input}
                                             value={state.diariasDataInicio}
-                                            onChange={e => update('diariasDataInicio', e.target.value)}
+                                            max={state.diariasDataFim || undefined}
+                                            onChange={e => handleStartDateChange(e.target.value)}
                                         />
                                     </div>
                                     <div>
@@ -145,7 +163,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                             type="date"
                                             className={styles.input}
                                             value={state.diariasDataFim}
-                                            onChange={e => update('diariasDataFim', e.target.value)}
+                                            min={state.diariasDataInicio || undefined}
+                                            onChange={e => handleEndDateChange(e.target.value)}
                                         />
                                     </div>
                                 </div>
