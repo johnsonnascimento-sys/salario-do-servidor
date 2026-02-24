@@ -344,7 +344,7 @@ export const summarizeDailiesPeriodMode = (
     const returnDateIsWeekend = returnDay === 0 || returnDay === 6;
     const returnDateIsHoliday = buildHolidaySet(rules).has(returnDate);
     const returnDateIsBusinessDay = !returnDateIsWeekend && !returnDateIsHoliday;
-    const halfDailyApplied = Boolean(rules.halfDailyOnBusinessReturnDay && returnDateIsBusinessDay);
+    const halfDailyApplied = Boolean(rules.halfDailyOnBusinessReturnDay && summary.totalDays > 0);
     const halfDiscountApplied = Boolean(
         rules.excludeWeekendsAndHolidays &&
         rules.halfDiscountOnBusinessReturnDay &&

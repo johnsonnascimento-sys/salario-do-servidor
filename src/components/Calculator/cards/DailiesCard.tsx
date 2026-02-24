@@ -157,13 +157,11 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                 <p>Quantidade de diárias pagas no período: {paidDailiesQty}.</p>
                                                 {periodSummary?.halfDailyApplied ? (
                                                     <p>
-                                                        Retorno em dia útil ({formatIsoDatePtBr(periodSummary.returnDate)}): meia diária aplicada ({formatCurrencyBr(halfDailyValue)}).
+                                                        Retorno em {periodSummary.returnDateIsBusinessDay ? 'dia útil' : periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary.returnDate)}): meia diária aplicada ({formatCurrencyBr(halfDailyValue)}).
                                                     </p>
                                                 ) : (
                                                     <p>
-                                                        {periodSummary?.returnDateIsWeekend || periodSummary?.returnDateIsHoliday
-                                                            ? `Retorno em ${periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} (${formatIsoDatePtBr(periodSummary.returnDate)}): sem meia diária.`
-                                                            : `Retorno em dia útil (${formatIsoDatePtBr(periodSummary!.returnDate)}), mas regra de meia diária está desativada.`}
+                                                        Retorno em {periodSummary?.returnDateIsBusinessDay ? 'dia útil' : periodSummary?.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary!.returnDate)}), mas regra de meia diária está desativada.
                                                     </p>
                                                 )}
                                             </>
@@ -207,9 +205,9 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
                             <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
                             <p>
-                                Retorno em dia útil:
-                                {discountRules.halfDailyOnBusinessReturnDay ? ' meia diária ativa' : ' meia diária inativa'} e
-                                {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxílios ativo' : ' meio desconto de auxílios inativo'}.
+                                Regra de retorno:
+                                {discountRules.halfDailyOnBusinessReturnDay ? ' meia diária ativa em qualquer dia' : ' meia diária inativa'} e
+                                {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxílios apenas em dia útil' : ' meio desconto de auxílios inativo'}.
                             </p>
                             {ldoCapEnabled && ldoCapValue > 0 && (
                                 <p>
@@ -254,12 +252,18 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                 <>
                                                     <p>Dias usados no desconto: {automaticDiscountDays}.</p>
                                                     <p>Dias não descontados por finais de semana e feriados: {periodSummary.excludedDays}.</p>
-                                                    {periodSummary.halfDiscountApplied && (
+                                                    {periodSummary.halfDiscountApplied ? (
                                                         <p>
                                                             Retorno em dia útil ({formatIsoDatePtBr(periodSummary.returnDate)}): meio desconto de auxílios aplicado
                                                             {state.diariasDescontarAlimentacao ? ` | alimentação: ${formatCurrencyBr(halfFoodDiscountValue)}` : ''}
                                                             {state.diariasDescontarTransporte ? ` | transporte: ${formatCurrencyBr(halfTransportDiscountValue)}` : ''}.
                                                         </p>
+                                                    ) : (
+                                                        !periodSummary.returnDateIsBusinessDay && (
+                                                            <p>
+                                                                Retorno em {periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary.returnDate)}): sem desconto de auxílios no dia do retorno.
+                                                            </p>
+                                                        )
                                                     )}
                                                     <p>Finais de semana considerados para não desconto: {formatDateList(periodSummary.weekendExcludedDates)}.</p>
                                                     <p>Feriados considerados para não desconto: {formatDateList(periodSummary.holidayExcludedDates)}.</p>
