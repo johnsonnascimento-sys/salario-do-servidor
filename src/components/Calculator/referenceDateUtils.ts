@@ -31,6 +31,11 @@ interface ParsedReferenceKey {
     month: number;
 }
 
+export interface ReferencePoint {
+    year: number;
+    month: number;
+}
+
 interface LabeledValueOption {
     label: string;
     value: number;
@@ -59,6 +64,15 @@ const parseReferenceKey = (key: string): ParsedReferenceKey | null => {
     const month = MONTH_TOKEN_TO_INDEX[monthToken] ?? 0;
 
     return { key, year, month };
+};
+
+export const parseReferencePointFromKey = (key: string): ReferencePoint | null => {
+    const parsed = parseReferenceKey(key);
+    if (!parsed) return null;
+    return {
+        year: parsed.year,
+        month: parsed.month || 12
+    };
 };
 
 const sortByReferenceDesc = (a: ParsedReferenceKey, b: ParsedReferenceKey) => {
@@ -92,7 +106,7 @@ export const pickBestKeyByReference = (
         (option.year === referenceYear && (option.month === 0 || option.month <= referenceMonth))
     ));
 
-    return (applicable || sorted[0]).key;
+    return (applicable || sorted[sorted.length - 1]).key;
 };
 
 export const pickBestMenuOptionByReference = (
@@ -117,7 +131,7 @@ export const pickBestMenuOptionByReference = (
         (entry.parsed.year === referenceYear && (entry.parsed.month === 0 || entry.parsed.month <= referenceMonth))
     ));
 
-    return (applicable || sorted[0]).option;
+    return (applicable || sorted[sorted.length - 1]).option;
 };
 
 export const pickPeriodFromScheduleByReference = (
@@ -145,5 +159,30 @@ export const pickPeriodFromScheduleByReference = (
 
     const applicable = withDate.filter((entry) => entry.timestamp <= referenceTimestamp).pop();
     return (applicable || withDate[0]).period;
+};
+
+export const parseReferencePointFromDate = (dateValue: string): ReferencePoint | null => {
+    if (!dateValue) return null;
+    const date = new Date(`${dateValue}T12:00:00`);
+    if (!Number.isFinite(date.getTime())) return null;
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1
+    };
+};
+
+export const compareReferencePoints = (a: ReferencePoint, b: ReferencePoint) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.month - b.month;
+};
+
+export const pickMinReferencePoint = (points: ReferencePoint[]) => {
+    if (!points.length) return null;
+    return points.reduce((min, current) => compareReferencePoints(current, min) < 0 ? current : min);
+};
+
+export const pickMaxReferencePoint = (points: ReferencePoint[]) => {
+    if (!points.length) return null;
+    return points.reduce((max, current) => compareReferencePoints(current, max) > 0 ? current : max);
 };
 

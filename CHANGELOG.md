@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.3 - 24/02/2026
+- Feat: Calculadora simples agora abre ancorada ao campo focado, com controle de mostrar/ocultar.
+- Feat: Referência de mês/ano passou a ser limitada dinamicamente ao intervalo em que há dados completos (IR, PSS, benefícios e referência salarial), sem hardcode de data.
+- Feat: Aplicada regra proporcional do STM para mês de transição do auxílio-alimentação (com detalhamento explícito na rubrica).
+- UX: Barra mobile inferior simplificada para exibir apenas ações de exportação e versão.
+
 ## 2.1.2 - 23/02/2026
 - UX: Card de `Adicional de Qualificacao` movido para ficar entre `Base obrigatoria` e `Configuracoes tributarias`.
 - UX: Rubricas pre-definidas adicionadas agora entram no topo da lista (primeiro card), em vez de no final.

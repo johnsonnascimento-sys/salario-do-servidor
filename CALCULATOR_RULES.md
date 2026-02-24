@@ -39,6 +39,8 @@ Baseado em `MANUAL_DO_PROJETO.md`, `PROJECT_ARCHITECTURE.md` e `DATA_DRIVEN_MIGR
 6. Referencia salarial (periodos/reajustes exibidos na UI) deve viver em `power_config.config_key = adjustment_schedule`.
 7. O sistema nao pode depender de `data.ts` legado.
 8. Se faltar dado remoto, fallback permitido apenas para `courts.config` conforme fluxo atual.
+9. Seletores de referencia temporal (mes/ano) devem respeitar o intervalo efetivamente coberto pelos dados ativos (IR, PSS, beneficios e referencia salarial), calculado em runtime.
+10. Mes com mudanca de valor de beneficio no proprio periodo deve permitir regra proporcional apenas quando houver metadado suficiente na configuracao para compor o calculo.
 
 ## 5. Qualidade minima para merge
 

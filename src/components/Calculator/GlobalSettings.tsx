@@ -3,9 +3,14 @@ import { Settings } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import {
     MONTH_TOKEN_TO_INDEX,
+    compareReferencePoints,
     normalizeReferenceToken,
+    parseReferencePointFromDate,
+    parseReferencePointFromKey,
     pickBestMenuOptionByReference,
     pickPeriodFromScheduleByReference,
+    pickMaxReferencePoint,
+    pickMinReferencePoint,
     toReferenceMonthIndex
 } from './referenceDateUtils';
 
@@ -21,7 +26,9 @@ const getMonthLabel = (monthIndex: number) =>
         .format(new Date(2024, monthIndex, 1))
         .toUpperCase();
 
-const parseDatedLabel = (label: string) => {
+const monthLabelByNumber = (monthNumber: number) => getMonthLabel(Math.max(0, Math.min(11, monthNumber - 1)));
+
+const parseTransitionLabel = (label: string) => {
     const normalized = normalizeReferenceToken(label);
     const match = normalized.match(/(19|20)\d{2}_([a-z]+)(\d{2})?/);
     if (!match) return null;
@@ -33,79 +40,179 @@ const parseDatedLabel = (label: string) => {
     const day = Number(dayToken);
 
     if (!month || !Number.isFinite(day)) return null;
-    return { year, month, day, label };
+    return { year, month, day };
 };
 
-const round2 = (value: number) => Math.round(value * 100) / 100;
+const clampReference = (
+    target: { year: number; month: number },
+    minRef: { year: number; month: number } | null,
+    maxRef: { year: number; month: number } | null
+) => {
+    let current = target;
+
+    if (minRef && compareReferencePoints(current, minRef) < 0) {
+        current = { ...minRef };
+    }
+
+    if (maxRef && compareReferencePoints(current, maxRef) > 0) {
+        current = { ...maxRef };
+    }
+
+    return current;
+};
 
 export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, courtConfig, styles }) => {
     const compactInput = `${styles.input} py-2 px-3 text-body`;
     const compactLabel = 'block text-label font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1';
+
     const schedules = useMemo(
         () => [...(courtConfig.adjustment_schedule || [])].sort((a, b) => a.period - b.period),
         [courtConfig.adjustment_schedule]
     );
+
     const periodOptions = schedules.length > 0
         ? schedules
         : [{ period: state.periodo, percentage: 0, label: `Periodo ${state.periodo}` }];
+
     const foodAllowanceOptions = useMemo(
         () => courtConfig.menus?.food_allowance || [],
         [courtConfig.menus?.food_allowance]
     );
+
     const preschoolAllowanceOptions = useMemo(
         () => courtConfig.menus?.preschool_allowance || [],
         [courtConfig.menus?.preschool_allowance]
     );
-    const referenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
-    const referenceYear = Number.isFinite(state.anoRef) ? state.anoRef : new Date().getFullYear();
-    const monthOptions = Array.from({ length: 12 }, (_, idx) => getMonthLabel(idx));
+
+    const pssKeys = useMemo(() => Object.keys(courtConfig.historico_pss || {}), [courtConfig.historico_pss]);
+    const irKeys = useMemo(() => Object.keys(courtConfig.historico_ir || {}), [courtConfig.historico_ir]);
+
+    const referenceBounds = useMemo(() => {
+        const sets = [
+            pssKeys.map(parseReferencePointFromKey).filter((v): v is { year: number; month: number } => !!v),
+            irKeys.map(parseReferencePointFromKey).filter((v): v is { year: number; month: number } => !!v),
+            foodAllowanceOptions.map(option => parseReferencePointFromKey(option.label)).filter((v): v is { year: number; month: number } => !!v),
+            preschoolAllowanceOptions.map(option => parseReferencePointFromKey(option.label)).filter((v): v is { year: number; month: number } => !!v),
+            schedules
+                .map(schedule => parseReferencePointFromDate(schedule.date || ''))
+                .filter((v): v is { year: number; month: number } => !!v)
+        ].filter(set => set.length > 0);
+
+        if (!sets.length) {
+            return {
+                min: null as { year: number; month: number } | null,
+                max: null as { year: number; month: number } | null
+            };
+        }
+
+        const minCandidates = sets
+            .map(set => pickMinReferencePoint(set))
+            .filter((v): v is { year: number; month: number } => !!v);
+        const maxCandidates = sets
+            .map(set => pickMaxReferencePoint(set))
+            .filter((v): v is { year: number; month: number } => !!v);
+
+        return {
+            min: pickMaxReferencePoint(minCandidates),
+            max: pickMinReferencePoint(maxCandidates)
+        };
+    }, [pssKeys, irKeys, foodAllowanceOptions, preschoolAllowanceOptions, schedules]);
+
+    const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, idx) => getMonthLabel(idx)), []);
     const manualPeriodSelectionRef = useRef(false);
     const lastReferenceKeyRef = useRef('');
 
+    const rawReferenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
+    const rawReferenceYear = Number.isFinite(state.anoRef) ? state.anoRef : new Date().getFullYear();
+    const clampedReference = clampReference(
+        { year: rawReferenceYear, month: rawReferenceMonth },
+        referenceBounds.min,
+        referenceBounds.max
+    );
+
+    const allowedYears = useMemo(() => {
+        if (!referenceBounds.min || !referenceBounds.max) {
+            return [clampedReference.year];
+        }
+
+        const years: number[] = [];
+        for (let year = referenceBounds.min.year; year <= referenceBounds.max.year; year += 1) {
+            years.push(year);
+        }
+        return years;
+    }, [referenceBounds.min, referenceBounds.max, clampedReference.year]);
+
+    const allowedMonths = useMemo(() => {
+        const minMonth = referenceBounds.min && clampedReference.year === referenceBounds.min.year
+            ? referenceBounds.min.month
+            : 1;
+        const maxMonth = referenceBounds.max && clampedReference.year === referenceBounds.max.year
+            ? referenceBounds.max.month
+            : 12;
+
+        return monthOptions
+            .map((label, index) => ({ label, month: index + 1 }))
+            .filter((item) => item.month >= minMonth && item.month <= maxMonth);
+    }, [referenceBounds.min, referenceBounds.max, clampedReference.year, monthOptions]);
+
     useEffect(() => {
-        const referenceKey = `${referenceYear}-${referenceMonth}-${schedules.length}-${foodAllowanceOptions.length}-${preschoolAllowanceOptions.length}`;
+        if (clampedReference.year !== state.anoRef) {
+            update('anoRef', clampedReference.year);
+        }
+
+        const monthLabel = monthLabelByNumber(clampedReference.month);
+        if (state.mesRef !== monthLabel) {
+            update('mesRef', monthLabel);
+        }
+    }, [clampedReference.year, clampedReference.month, state.anoRef, state.mesRef, update]);
+
+    useEffect(() => {
+        const referenceKey = `${clampedReference.year}-${clampedReference.month}-${schedules.length}-${foodAllowanceOptions.length}-${preschoolAllowanceOptions.length}`;
         if (lastReferenceKeyRef.current === referenceKey) {
             return;
         }
         lastReferenceKeyRef.current = referenceKey;
 
-        const nextPeriod = pickPeriodFromScheduleByReference(schedules, referenceYear, referenceMonth);
+        const nextPeriod = pickPeriodFromScheduleByReference(schedules, clampedReference.year, clampedReference.month);
         if (!manualPeriodSelectionRef.current && nextPeriod !== null && nextPeriod !== state.periodo) {
             update('periodo', nextPeriod);
         }
 
-        const nextFoodAllowance = pickBestMenuOptionByReference(foodAllowanceOptions, referenceYear, referenceMonth);
+        const nextFoodAllowance = pickBestMenuOptionByReference(foodAllowanceOptions, clampedReference.year, clampedReference.month);
         let nextFoodValue = nextFoodAllowance?.value ?? 0;
         let isFoodProportional = false;
         let foodDetail = '';
 
-        const datedFoodOptions = foodAllowanceOptions
-            .map(option => ({
-                ...option,
-                parsed: parseDatedLabel(option.label)
+        const transitionEntries = foodAllowanceOptions
+            .map((option) => ({
+                value: option.value,
+                parsed: parseTransitionLabel(option.label)
             }))
-            .filter((entry): entry is typeof entry & { parsed: { year: number; month: number; day: number; label: string } } => !!entry.parsed)
+            .filter((entry): entry is { value: number; parsed: { year: number; month: number; day: number } } => !!entry.parsed)
             .sort((a, b) => {
                 if (a.parsed.year !== b.parsed.year) return a.parsed.year - b.parsed.year;
                 if (a.parsed.month !== b.parsed.month) return a.parsed.month - b.parsed.month;
                 return a.parsed.day - b.parsed.day;
             });
 
-        const transitionIndex = datedFoodOptions.findIndex(entry =>
-            entry.parsed.year === referenceYear && entry.parsed.month === referenceMonth
+        const monthlyTransitionIndex = transitionEntries.findIndex((entry) =>
+            entry.parsed.year === clampedReference.year &&
+            entry.parsed.month === clampedReference.month &&
+            entry.parsed.day > 1
         );
 
-        // STM rule observed in 02/2026: proporcional em 22 avos (4/22 antigo + 18/22 novo).
-        if (
-            referenceYear === 2026 &&
-            referenceMonth === 2 &&
-            transitionIndex > 0
-        ) {
-            const previousValue = datedFoodOptions[transitionIndex - 1].value;
-            const currentValue = datedFoodOptions[transitionIndex].value;
-            nextFoodValue = round2(((previousValue * 4) + (currentValue * 18)) / 22);
-            isFoodProportional = true;
-            foodDetail = 'AUXILIO-ALIMENTACAO PROPORCIONAL STM (4/22 ANTIGO + 18/22 NOVO)';
+        if (monthlyTransitionIndex > 0) {
+            const payrollDays = Math.max(1, Number(courtConfig.payrollRules?.transportWorkdays || 22));
+            const previousValue = transitionEntries[monthlyTransitionIndex - 1].value;
+            const currentValue = transitionEntries[monthlyTransitionIndex].value;
+            const oldDays = transitionEntries[monthlyTransitionIndex].parsed.day + 1;
+            const newDays = payrollDays - oldDays;
+
+            if (oldDays > 0 && newDays > 0 && Math.abs(previousValue - currentValue) > 0.009) {
+                nextFoodValue = Math.round((((previousValue * oldDays) + (currentValue * newDays)) / payrollDays) * 100) / 100;
+                isFoodProportional = true;
+                foodDetail = `AUXILIO-ALIMENTACAO PROPORCIONAL STM (${oldDays}/${payrollDays} ANTIGO + ${newDays}/${payrollDays} NOVO)`;
+            }
         }
 
         if (Math.abs((state.auxAlimentacao || 0) - nextFoodValue) > 0.009) {
@@ -120,18 +227,18 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
 
         const nextPreschoolAllowance = pickBestMenuOptionByReference(
             preschoolAllowanceOptions,
-            referenceYear,
-            referenceMonth
+            clampedReference.year,
+            clampedReference.month
         );
         if (nextPreschoolAllowance && Math.abs((state.cotaPreEscolar || 0) - nextPreschoolAllowance.value) > 0.009) {
             update('cotaPreEscolar', nextPreschoolAllowance.value);
         }
     }, [
+        clampedReference.year,
+        clampedReference.month,
         schedules,
         foodAllowanceOptions,
         preschoolAllowanceOptions,
-        referenceYear,
-        referenceMonth,
         state.periodo,
         state.auxAlimentacao,
         state.auxAlimentacaoProporcional,
@@ -168,24 +275,27 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
                 </div>
 
                 <div>
-                    <label className={compactLabel}>Mês de Referência (traz valores históricos de IR, PSS, Alimentação...)</label>
+                    <label className={compactLabel}>M�s de Refer�ncia (traz valores hist�ricos de IR, PSS, Alimenta��o...)</label>
                     <div className="flex gap-2">
                         <select
                             className={compactInput}
-                            value={state.mesRef}
+                            value={monthLabelByNumber(clampedReference.month)}
                             onChange={e => update('mesRef', e.target.value)}
                         >
-                            {monthOptions.map(mes => (
-                                <option key={mes}>{mes}</option>
+                            {allowedMonths.map(item => (
+                                <option key={item.label}>{item.label}</option>
                             ))}
                         </select>
 
-                        <input
-                            type="number"
-                            className={`${compactInput} w-24`}
-                            value={state.anoRef}
+                        <select
+                            className={`${compactInput} w-28`}
+                            value={clampedReference.year}
                             onChange={e => update('anoRef', Number(e.target.value))}
-                        />
+                        >
+                            {allowedYears.map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </div>
