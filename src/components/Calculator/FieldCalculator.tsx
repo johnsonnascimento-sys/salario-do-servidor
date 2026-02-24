@@ -95,6 +95,17 @@ export const FieldCalculator: React.FC = () => {
 
     useEffect(() => {
         const onFocusIn = (event: FocusEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+
+            const focusedInsideCalculator =
+                (calculatorButtonElement && calculatorButtonElement.contains(target)) ||
+                (calculatorPanelElement && calculatorPanelElement.contains(target));
+
+            if (focusedInsideCalculator) {
+                return;
+            }
+
             if (isEligibleInput(event.target)) {
                 setTargetInput(event.target);
                 return;
@@ -108,7 +119,7 @@ export const FieldCalculator: React.FC = () => {
         return () => {
             document.removeEventListener('focusin', onFocusIn);
         };
-    }, []);
+    }, [calculatorButtonElement, calculatorPanelElement]);
 
     useEffect(() => {
         const onPointerDown = (event: PointerEvent) => {
