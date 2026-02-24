@@ -459,7 +459,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     }
 
                     lines.push(
-                        { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
+                        { label: 'Corte teto LDO (valor atual)', value: roundCurrency(state.diariasCorteLdo || 0) },
                         { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
                         { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
                         { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) },

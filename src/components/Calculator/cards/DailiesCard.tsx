@@ -34,6 +34,10 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         () => resolveDailiesDiscountRules(dailiesConfig, transportWorkdays),
         [dailiesConfig, transportWorkdays]
     );
+    const periodDiscountRules = useMemo(
+        () => ({ ...discountRules, excludeWeekendsAndHolidays: true }),
+        [discountRules]
+    );
 
     const periodTravelDaysRaw = useMemo(() => (
         countCalendarDaysInRange(state.diariasDataInicio, state.diariasDataFim)
@@ -42,11 +46,11 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const periodTravelDays = periodTravelDaysRaw ?? Math.max(0, state.diariasQtd || 0);
 
     const automaticDiscountDaysRaw = useMemo(() => (
-        countDeductibleDaysInRange(state.diariasDataInicio, state.diariasDataFim, discountRules)
-    ), [state.diariasDataInicio, state.diariasDataFim, discountRules]);
+        countDeductibleDaysInRange(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
+    ), [state.diariasDataInicio, state.diariasDataFim, periodDiscountRules]);
     const rangeSummary = useMemo(() => (
-        summarizeDailiesRange(state.diariasDataInicio, state.diariasDataFim, discountRules)
-    ), [state.diariasDataInicio, state.diariasDataFim, discountRules]);
+        summarizeDailiesRange(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
+    ), [state.diariasDataInicio, state.diariasDataFim, periodDiscountRules]);
 
     const automaticDiscountDays = automaticDiscountDaysRaw ?? periodTravelDays;
     const hasValidDateRange = periodTravelDaysRaw !== null;
@@ -197,7 +201,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
                                 {hasValidDateRange
                                     ? (
-                                        discountRules.excludeWeekendsAndHolidays && rangeSummary
+                                        rangeSummary
                                             ? (
                                                 <>
                                                     <p>Dias usados no desconto: {automaticDiscountDays}.</p>
@@ -206,7 +210,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                     <p>Feriados considerados para não desconto: {formatDateList(rangeSummary.holidayExcludedDates)}.</p>
                                                 </>
                                             )
-                                            : `Dias usados no desconto: ${automaticDiscountDays}. A configuração atual não exclui finais de semana e feriados.`
+                                            : `Dias usados no desconto: ${automaticDiscountDays}.`
                                     )
                                     : 'Preencha início e fim para calcular automaticamente os dias de desconto.'}
                             </div>

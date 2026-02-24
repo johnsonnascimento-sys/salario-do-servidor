@@ -85,6 +85,9 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
         dailiesConfig,
         Number(payrollRules.transportWorkdays || 22)
     );
+    const effectiveDiscountRules = params.diariasModoDesconto === 'periodo'
+        ? { ...discountRules, excludeWeekendsAndHolidays: true }
+        : discountRules;
 
     const discountDays = resolveDailiesDiscountDays({
         mode: params.diariasModoDesconto,
@@ -95,7 +98,7 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
         applyFoodDiscount: params.diariasDescontarAlimentacao,
         applyTransportDiscount: params.diariasDescontarTransporte,
         fallbackDays: dailiesQty,
-        rules: discountRules,
+        rules: effectiveDiscountRules,
     });
 
     const deducaoAlimentacao = params.diariasDescontarAlimentacao
