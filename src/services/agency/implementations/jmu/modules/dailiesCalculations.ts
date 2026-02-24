@@ -12,6 +12,7 @@
 import { IJmuCalculationParams } from '../types';
 import {
     applyLdoCapToDailiesGross,
+    countCalendarDaysInRange,
     resolveDailiesDailyRate,
     resolveDailiesDiscountDays,
     resolveDailiesDiscountRules,
@@ -40,6 +41,11 @@ const round2 = (value: number) => Math.round(value * 100) / 100;
 export async function calculateDailies(params: IJmuCalculationParams): Promise<DailiesResult> {
     const dailiesConfig = params.agencyConfig?.dailies;
     const payrollRules = getPayrollRules(params.agencyConfig);
+    const manualDailiesQty = Math.max(0, Number(params.diariasQtd) || 0);
+    const periodDailiesQty = params.diariasModoDesconto === 'periodo'
+        ? countCalendarDaysInRange(params.diariasDataInicio, params.diariasDataFim)
+        : null;
+    const dailiesQty = periodDailiesQty !== null ? periodDailiesQty : manualDailiesQty;
 
     // 1. Determinar valor da diaria por cargo/funcao
     const valorDiaria = resolveDailiesDailyRate({
@@ -56,7 +62,7 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
 
     // 3. Bruto + corte por teto LDO
     const cappedGross = applyLdoCapToDailiesGross({
-        dailiesQty: params.diariasQtd,
+        dailiesQty,
         dailiesRate: valorDiaria,
         embarkationAdditional: adicionalEmbarque,
         enabled: Boolean(dailiesConfig?.ldoCap?.enabled),
@@ -71,7 +77,7 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
     if (params.diariasExtHospedagem) percentGlosa += dailiesConfig?.externalGloss?.hospedagem ?? 0;
     if (params.diariasExtAlimentacao) percentGlosa += dailiesConfig?.externalGloss?.alimentacao ?? 0;
     if (params.diariasExtTransporte) percentGlosa += dailiesConfig?.externalGloss?.transporte ?? 0;
-    const glosaExterno = (params.diariasQtd * valorDiaria) * percentGlosa;
+    const glosaExterno = (dailiesQty * valorDiaria) * percentGlosa;
 
     // 5. Deducoes Internas
     const benefits = await calculateBenefits(params);
@@ -88,7 +94,7 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
         manualTransportDays: params.diariasDiasDescontoTransporte,
         applyFoodDiscount: params.diariasDescontarAlimentacao,
         applyTransportDiscount: params.diariasDescontarTransporte,
-        fallbackDays: params.diariasQtd,
+        fallbackDays: dailiesQty,
         rules: discountRules,
     });
 

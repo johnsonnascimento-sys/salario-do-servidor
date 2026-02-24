@@ -161,13 +161,43 @@ export const resolveDailiesDiscountRules = (
 ): DailiesDiscountRules => {
     const fallback = Math.max(1, Number.isFinite(fallbackDivisor) ? fallbackDivisor : 22);
     const rules = dailiesConfig?.discountRules;
+    const foodDivisorRaw = Number(rules?.foodDivisor);
+    const transportDivisorRaw = Number(rules?.transportDivisor);
+    const foodDivisor = Number.isFinite(foodDivisorRaw) && foodDivisorRaw > 0 ? foodDivisorRaw : fallback;
+    const transportDivisor = Number.isFinite(transportDivisorRaw) && transportDivisorRaw > 0 ? transportDivisorRaw : fallback;
 
     return {
-        foodDivisor: Math.max(1, Number(rules?.foodDivisor ?? fallback)),
-        transportDivisor: Math.max(1, Number(rules?.transportDivisor ?? fallback)),
+        foodDivisor,
+        transportDivisor,
         excludeWeekendsAndHolidays: Boolean(rules?.excludeWeekendsAndHolidays),
         holidays: Array.isArray(rules?.holidays) ? rules!.holidays : []
     };
+};
+
+export const countCalendarDaysInRange = (
+    startDate: string,
+    endDate: string
+): number | null => {
+    const normalizedStart = normalizeIsoDate(startDate);
+    const normalizedEnd = normalizeIsoDate(endDate);
+    if (!normalizedStart || !normalizedEnd) {
+        return null;
+    }
+
+    let start = toUtcDate(normalizedStart);
+    let end = toUtcDate(normalizedEnd);
+    if (start.getTime() > end.getTime()) {
+        [start, end] = [end, start];
+    }
+
+    let days = 0;
+    const cursor = new Date(start.getTime());
+    while (cursor.getTime() <= end.getTime()) {
+        days += 1;
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    return days;
 };
 
 export const countDeductibleDaysInRange = (

@@ -1,7 +1,11 @@
 import React, { useMemo } from 'react';
 import { Plane } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
-import { countDeductibleDaysInRange, resolveDailiesDiscountRules } from '../../../utils/dailiesRules';
+import {
+    countCalendarDaysInRange,
+    countDeductibleDaysInRange,
+    resolveDailiesDiscountRules
+} from '../../../utils/dailiesRules';
 
 interface DailiesCardProps {
     state: CalculatorState;
@@ -15,22 +19,40 @@ const toNonNegativeNumber = (value: string) => Math.max(0, Number(value) || 0);
 export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig }) => {
     const dailiesConfig = courtConfig?.dailies;
     const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
+    const isPeriodMode = state.diariasModoDesconto === 'periodo';
+
     const discountRules = useMemo(
         () => resolveDailiesDiscountRules(dailiesConfig, transportWorkdays),
         [dailiesConfig, transportWorkdays]
     );
 
+    const periodTravelDaysRaw = useMemo(() => (
+        countCalendarDaysInRange(state.diariasDataInicio, state.diariasDataFim)
+    ), [state.diariasDataInicio, state.diariasDataFim]);
+
+    const periodTravelDays = periodTravelDaysRaw ?? Math.max(0, state.diariasQtd || 0);
+
     const automaticDiscountDaysRaw = useMemo(() => (
         countDeductibleDaysInRange(state.diariasDataInicio, state.diariasDataFim, discountRules)
     ), [state.diariasDataInicio, state.diariasDataFim, discountRules]);
 
-    const automaticDiscountDays = automaticDiscountDaysRaw !== null
-        ? automaticDiscountDaysRaw
-        : Math.max(0, state.diariasQtd || 0);
-
-    const hasValidDateRange = automaticDiscountDaysRaw !== null;
+    const automaticDiscountDays = automaticDiscountDaysRaw ?? periodTravelDays;
+    const hasValidDateRange = periodTravelDaysRaw !== null;
     const ldoCapEnabled = Boolean(dailiesConfig?.ldoCap?.enabled);
     const ldoCapValue = Number(dailiesConfig?.ldoCap?.perDiemLimit || 0);
+
+    const handleModeChange = (mode: 'periodo' | 'manual') => {
+        update('diariasModoDesconto', mode);
+
+        if (mode === 'periodo') {
+            update('diariasDiasDescontoAlimentacao', 0);
+            update('diariasDiasDescontoTransporte', 0);
+            return;
+        }
+
+        update('diariasDataInicio', '');
+        update('diariasDataFim', '');
+    };
 
     return (
         <div className={styles.card}>
@@ -42,7 +64,58 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                 <div className={styles.innerBox}>
                     <h4 className={styles.innerBoxTitle}>Diárias de viagem</h4>
                     <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="radio"
+                                    name="diarias_modo_lancamento"
+                                    className={styles.checkbox}
+                                    checked={isPeriodMode}
+                                    onChange={() => handleModeChange('periodo')}
+                                />
+                                <span>Lançar por datas</span>
+                            </label>
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="radio"
+                                    name="diarias_modo_lancamento"
+                                    className={styles.checkbox}
+                                    checked={!isPeriodMode}
+                                    onChange={() => handleModeChange('manual')}
+                                />
+                                <span>Lançar por quantidade de diárias</span>
+                            </label>
+                        </div>
+
+                        {isPeriodMode ? (
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={styles.label}>Data de início</label>
+                                        <input
+                                            type="date"
+                                            className={styles.input}
+                                            value={state.diariasDataInicio}
+                                            onChange={e => update('diariasDataInicio', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={styles.label}>Data de fim</label>
+                                        <input
+                                            type="date"
+                                            className={styles.input}
+                                            value={state.diariasDataFim}
+                                            onChange={e => update('diariasDataFim', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
+                                    {hasValidDateRange
+                                        ? `Quantidade de diárias calculada pelo período: ${periodTravelDays}`
+                                        : 'Preencha início e fim para calcular automaticamente a quantidade de diárias.'}
+                                </div>
+                            </div>
+                        ) : (
                             <div>
                                 <label className={styles.label}>Quantidade de diárias</label>
                                 <input
@@ -56,18 +129,19 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     data-calculator="true"
                                 />
                             </div>
-                            <div>
-                                <label className={styles.label}>Adicional de embarque</label>
-                                <select
-                                    className={styles.input}
-                                    value={state.diariasEmbarque}
-                                    onChange={e => update('diariasEmbarque', e.target.value)}
-                                >
-                                    <option value="nenhum">Nenhum</option>
-                                    <option value="metade">Metade (ida ou volta)</option>
-                                    <option value="completo">Completo (ida e volta)</option>
-                                </select>
-                            </div>
+                        )}
+
+                        <div>
+                            <label className={styles.label}>Adicional de embarque</label>
+                            <select
+                                className={styles.input}
+                                value={state.diariasEmbarque}
+                                onChange={e => update('diariasEmbarque', e.target.value)}
+                            >
+                                <option value="nenhum">Nenhum</option>
+                                <option value="metade">Metade (ida ou volta)</option>
+                                <option value="completo">Completo (ida e volta)</option>
+                            </select>
                         </div>
 
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
@@ -107,84 +181,44 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             </label>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="radio"
-                                    name="diarias_modo_desconto"
-                                    className={styles.checkbox}
-                                    checked={state.diariasModoDesconto === 'periodo'}
-                                    onChange={() => update('diariasModoDesconto', 'periodo')}
-                                />
-                                <span>Deslocamento por data (automático)</span>
-                            </label>
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="radio"
-                                    name="diarias_modo_desconto"
-                                    className={styles.checkbox}
-                                    checked={state.diariasModoDesconto === 'manual'}
-                                    onChange={() => update('diariasModoDesconto', 'manual')}
-                                />
-                                <span>Dias de desconto informados manualmente</span>
-                            </label>
-                        </div>
-
-                        {state.diariasModoDesconto === 'periodo' ? (
-                            <div className="space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={styles.label}>Data de início</label>
-                                        <input
-                                            type="date"
-                                            className={styles.input}
-                                            value={state.diariasDataInicio}
-                                            onChange={e => update('diariasDataInicio', e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={styles.label}>Data de fim</label>
-                                        <input
-                                            type="date"
-                                            className={styles.input}
-                                            value={state.diariasDataFim}
-                                            onChange={e => update('diariasDataFim', e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
-                                    {hasValidDateRange
-                                        ? `Dias usados no desconto (sem finais de semana${discountRules.holidays.length > 0 ? ' e feriados configurados' : ''}): ${automaticDiscountDays}`
-                                        : `Preencha início e fim para calcular automaticamente. Enquanto isso, o sistema usa ${Math.max(0, state.diariasQtd || 0)} dia(s).`}
-                                </div>
+                        {isPeriodMode ? (
+                            <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
+                                {hasValidDateRange
+                                    ? `Dias usados no desconto (sem finais de semana${discountRules.holidays.length > 0 ? ' e feriados configurados' : ''}): ${automaticDiscountDays}`
+                                    : 'Preencha início e fim para calcular automaticamente os dias de desconto.'}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className={styles.label}>Dias para desconto do auxílio-alimentação</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        className={styles.input}
-                                        value={state.diariasDiasDescontoAlimentacao || ''}
-                                        onChange={e => update('diariasDiasDescontoAlimentacao', toNonNegativeNumber(e.target.value))}
-                                        placeholder="0"
-                                        data-calculator="true"
-                                    />
+                            <div className="space-y-3">
+                                <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300">
+                                    No modo por quantidade, os dias de desconto dos auxílios devem ser informados manualmente.
                                 </div>
-                                <div>
-                                    <label className={styles.label}>Dias para desconto do auxílio-transporte</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        className={styles.input}
-                                        value={state.diariasDiasDescontoTransporte || ''}
-                                        onChange={e => update('diariasDiasDescontoTransporte', toNonNegativeNumber(e.target.value))}
-                                        placeholder="0"
-                                        data-calculator="true"
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={styles.label}>Dias para desconto do auxílio-alimentação</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.5"
+                                            className={styles.input}
+                                            value={state.diariasDiasDescontoAlimentacao || ''}
+                                            onChange={e => update('diariasDiasDescontoAlimentacao', toNonNegativeNumber(e.target.value))}
+                                            placeholder="0"
+                                            data-calculator="true"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={styles.label}>Dias para desconto do auxílio-transporte</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.5"
+                                            className={styles.input}
+                                            value={state.diariasDiasDescontoTransporte || ''}
+                                            onChange={e => update('diariasDiasDescontoTransporte', toNonNegativeNumber(e.target.value))}
+                                            placeholder="0"
+                                            data-calculator="true"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
