@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 
@@ -14,6 +13,12 @@ interface CalculatorHeaderProps {
 }
 
 export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ courtConfig, state, update, navigate, styles, setState, agencyName }) => {
+    const referenceSalaryLabel = useMemo(() => {
+        const schedule = courtConfig?.adjustment_schedule || [];
+        const selected = schedule.find((entry) => entry.period === state.periodo);
+        return selected?.label || `Período ${state.periodo}`;
+    }, [courtConfig?.adjustment_schedule, state.periodo]);
+
     return (
         <div className="md:flex md:items-center md:justify-between mb-8">
             <div className="flex items-center gap-4 mb-4 md:mb-0">
@@ -24,9 +29,9 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ courtConfig,
                     <h1 className="text-h3 font-bold text-neutral-900 dark:text-white">
                         {agencyName || 'Simulador'}
                     </h1>
-                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-secondary/10 text-secondary text-body-xs font-bold uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-secondary/10 text-secondary text-body-xs font-bold tracking-wider">
                         <span className="w-2 h-2 rounded-full bg-secondary"></span>
-                        {state.periodo === 0 ? 'Tabelas 2025' : 'Projeção Futura'}
+                        {`Referência salarial: ${referenceSalaryLabel}`}
                     </div>
                 </div>
             </div>

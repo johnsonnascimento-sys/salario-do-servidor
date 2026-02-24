@@ -89,6 +89,7 @@ export const FieldCalculator: React.FC = () => {
     const [expression, setExpression] = useState('');
     const [lastResult, setLastResult] = useState<number | null>(null);
     const [hasError, setHasError] = useState(false);
+    const [viewportTick, setViewportTick] = useState(0);
 
     useEffect(() => {
         const onFocusIn = (event: FocusEvent) => {
@@ -104,25 +105,39 @@ export const FieldCalculator: React.FC = () => {
     }, [isOpen]);
 
     useEffect(() => {
-        if (!targetInput || !isOpen) {
+        if (!targetInput) {
             return;
         }
 
-        const closeWhenInputGone = () => {
+        let frame = 0;
+        const syncPosition = () => {
             if (!document.body.contains(targetInput)) {
                 setIsOpen(false);
                 setTargetInput(null);
+                return;
             }
+
+            if (frame) {
+                return;
+            }
+
+            frame = window.requestAnimationFrame(() => {
+                frame = 0;
+                setViewportTick((value) => value + 1);
+            });
         };
 
-        window.addEventListener('scroll', closeWhenInputGone, true);
-        window.addEventListener('resize', closeWhenInputGone);
+        window.addEventListener('scroll', syncPosition, true);
+        window.addEventListener('resize', syncPosition);
 
         return () => {
-            window.removeEventListener('scroll', closeWhenInputGone, true);
-            window.removeEventListener('resize', closeWhenInputGone);
+            window.removeEventListener('scroll', syncPosition, true);
+            window.removeEventListener('resize', syncPosition);
+            if (frame) {
+                window.cancelAnimationFrame(frame);
+            }
         };
-    }, [targetInput, isOpen]);
+    }, [targetInput]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -150,7 +165,18 @@ export const FieldCalculator: React.FC = () => {
             return null;
         }
         return getAnchorPosition(targetInput);
-    }, [hasTarget, targetInput, isOpen]);
+    }, [hasTarget, targetInput, isOpen, viewportTick]);
+
+    useEffect(() => {
+        if (!isOpen || !targetInput) {
+            return;
+        }
+
+        const initialResult = parseInputValue(targetInput.value);
+        setExpression(initialResult !== null ? formatResult(initialResult) : '');
+        setLastResult(initialResult);
+        setHasError(false);
+    }, [isOpen, targetInput]);
 
     const openCalculator = () => {
         if (!targetInput) {
@@ -257,7 +283,7 @@ export const FieldCalculator: React.FC = () => {
 
                     {hasError && (
                         <p className="mb-2 text-body-xs text-error-600">
-                            Expressao invalida. Use apenas numeros e + - * /
+                            Expressão inválida. Use apenas números e + - * /
                         </p>
                     )}
 

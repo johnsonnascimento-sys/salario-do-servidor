@@ -52,7 +52,11 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                     return;
                 }
 
-                setAgency(data);
+                const normalizedAgency = data.slug === 'jmu'
+                    ? { ...data, name: 'Justiça Militar da União' }
+                    : data;
+
+                setAgency(normalizedAgency);
 
                 // Instantiate Service
                 if (data.slug === 'jmu' || data.slug === 'pju') {
