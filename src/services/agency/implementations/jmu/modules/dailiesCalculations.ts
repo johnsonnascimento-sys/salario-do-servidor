@@ -1,14 +1,22 @@
 /**
  * Calculos de Diarias de Viagem - JMU
- * 
+ *
  * Responsavel por calcular:
  * - Diarias de viagem
  * - Adicional de embarque
- * - Glosas externas
- * - Deducoes internas (alimentacao e transporte)
+ * - Corte por teto LDO (configuravel)
+ * - Glosas externas (art. 4)
+ * - Deducoes internas (auxilio-alimentacao/transporte)
  */
 
 import { IJmuCalculationParams } from '../types';
+import {
+    applyLdoCapToDailiesGross,
+    resolveDailiesDailyRate,
+    resolveDailiesDiscountDays,
+    resolveDailiesDiscountRules,
+    resolveDailiesEmbarkationAdditional
+} from '../../../../../utils/dailiesRules';
 import { calculateBenefits } from './benefitsCalculations';
 import { getPayrollRules } from './configRules';
 
@@ -16,8 +24,15 @@ export interface DailiesResult {
     valor: number;
     bruto: number;
     glosa: number;
+    corteLdo: number;
     deducoes: number;
+    descAlim: number;
+    descTransp: number;
+    diasDescontoAlim: number;
+    diasDescontoTransp: number;
 }
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
 
 /**
  * Calcula Diarias de Viagem
@@ -27,23 +42,29 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
     const payrollRules = getPayrollRules(params.agencyConfig);
 
     // 1. Determinar valor da diaria por cargo/funcao
-    let valorDiaria = 0;
-    if (params.funcao && params.funcao.toLowerCase().startsWith('cj')) {
-        valorDiaria = dailiesConfig?.rates?.cj ?? 0;
-    } else {
-        valorDiaria = dailiesConfig?.rates?.[params.cargo] ?? 0;
-    }
+    const valorDiaria = resolveDailiesDailyRate({
+        dailiesConfig,
+        cargo: params.cargo,
+        hasCommissionRole: Boolean(params.funcao && params.funcao.toLowerCase().startsWith('cj'))
+    });
 
     // 2. Adicional de embarque
-    let adicionalEmbarque = 0;
-    if (params.diariasEmbarque === 'completo') {
-        adicionalEmbarque = dailiesConfig?.embarkationAdditional?.completo ?? 0;
-    } else if (params.diariasEmbarque === 'metade') {
-        adicionalEmbarque = dailiesConfig?.embarkationAdditional?.metade ?? 0;
-    }
+    const adicionalEmbarque = resolveDailiesEmbarkationAdditional({
+        dailiesConfig,
+        embarkationType: params.diariasEmbarque
+    });
 
-    // 3. Bruto
-    const diariasBruto = (params.diariasQtd * valorDiaria) + adicionalEmbarque;
+    // 3. Bruto + corte por teto LDO
+    const cappedGross = applyLdoCapToDailiesGross({
+        dailiesQty: params.diariasQtd,
+        dailiesRate: valorDiaria,
+        embarkationAdditional: adicionalEmbarque,
+        enabled: Boolean(dailiesConfig?.ldoCap?.enabled),
+        perDiemLimit: Number(dailiesConfig?.ldoCap?.perDiemLimit ?? 0),
+    });
+    const diariasBruto = cappedGross.gross;
+    const corteLdo = cappedGross.cut;
+    const diariasAposCorte = Math.max(0, diariasBruto - corteLdo);
 
     // 4. Glosa Externa (reducoes percentuais)
     let percentGlosa = 0;
@@ -53,29 +74,44 @@ export async function calculateDailies(params: IJmuCalculationParams): Promise<D
     const glosaExterno = (params.diariasQtd * valorDiaria) * percentGlosa;
 
     // 5. Deducoes Internas
-    const totalDiasViagem = params.diariasQtd;
-    let deducaoAlimentacao = 0;
-    let deducaoTransporte = 0;
-
     const benefits = await calculateBenefits(params);
+    const discountRules = resolveDailiesDiscountRules(
+        dailiesConfig,
+        Number(payrollRules.transportWorkdays || 22)
+    );
 
-    if (params.diariasDescontarAlimentacao && totalDiasViagem > 0) {
-        deducaoAlimentacao = (benefits.auxAlimentacao / payrollRules.monthDayDivisor) * totalDiasViagem;
-    }
+    const discountDays = resolveDailiesDiscountDays({
+        mode: params.diariasModoDesconto,
+        startDate: params.diariasDataInicio,
+        endDate: params.diariasDataFim,
+        manualFoodDays: params.diariasDiasDescontoAlimentacao,
+        manualTransportDays: params.diariasDiasDescontoTransporte,
+        applyFoodDiscount: params.diariasDescontarAlimentacao,
+        applyTransportDiscount: params.diariasDescontarTransporte,
+        fallbackDays: params.diariasQtd,
+        rules: discountRules,
+    });
 
-    if (params.diariasDescontarTransporte && totalDiasViagem > 0) {
-        deducaoTransporte = (benefits.auxTransporte / payrollRules.monthDayDivisor) * totalDiasViagem;
-    }
-
+    const deducaoAlimentacao = params.diariasDescontarAlimentacao
+        ? (benefits.auxAlimentacao / discountRules.foodDivisor) * discountDays.foodDays
+        : 0;
+    const deducaoTransporte = params.diariasDescontarTransporte
+        ? (benefits.auxTransporte / discountRules.transportDivisor) * discountDays.transportDays
+        : 0;
     const totalDeducoes = deducaoAlimentacao + deducaoTransporte;
 
     // 6. Liquido (minimo zero)
-    const valor = Math.max(0, diariasBruto - glosaExterno - totalDeducoes);
+    const valor = Math.max(0, diariasAposCorte - glosaExterno - totalDeducoes);
 
     return {
-        valor: Math.round(valor * 100) / 100,
-        bruto: Math.round(diariasBruto * 100) / 100,
-        glosa: Math.round(glosaExterno * 100) / 100,
-        deducoes: Math.round(totalDeducoes * 100) / 100
+        valor: round2(valor),
+        bruto: round2(diariasBruto),
+        glosa: round2(glosaExterno),
+        corteLdo: round2(corteLdo),
+        deducoes: round2(totalDeducoes),
+        descAlim: round2(deducaoAlimentacao),
+        descTransp: round2(deducaoTransporte),
+        diasDescontoAlim: round2(discountDays.foodDays),
+        diasDescontoTransp: round2(discountDays.transportDays),
     };
 }

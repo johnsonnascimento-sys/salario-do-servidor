@@ -1,7 +1,7 @@
 /**
- * Interface de Parâmetros de Cálculo - JMU
- * 
- * Superset de ICalculationParams com campos específicos da JMU
+ * Interface de Parametros de Calculo - JMU
+ *
+ * Superset de ICalculationParams com campos especificos da JMU.
  */
 
 import { ICalculationParams } from '../../types';
@@ -36,7 +36,7 @@ export interface IJmuCalculationParams extends ICalculationParams {
     cotaPreEscolar?: number;
     auxTransporteGasto: number;
 
-    // Férias e 13º
+    // Ferias e 13o
     tipoCalculo: 'comum' | 'jan' | 'jun' | 'nov';
     manualFerias: boolean;
     ferias1_3: number;
@@ -50,16 +50,21 @@ export interface IJmuCalculationParams extends ICalculationParams {
     segunda13FC: number;
     tabelaIR: string;
 
-    // Hora Extra e Substituição
+    // Hora Extra e Substituicao
     heQtd50: number;
     heQtd100: number;
     heIsEA: boolean;
-    substDias: Record<string, number>; // Mapa de função -> dias
+    substDias: Record<string, number>; // Mapa de funcao -> dias
     substIsEA: boolean;
 
-    // Diárias e Licenças
+    // Diarias e Licencas
     diariasQtd: number;
     diariasEmbarque: 'nenhum' | 'metade' | 'completo';
+    diariasModoDesconto: 'periodo' | 'manual';
+    diariasDataInicio: string;
+    diariasDataFim: string;
+    diariasDiasDescontoAlimentacao: number;
+    diariasDiasDescontoTransporte: number;
     diariasExtHospedagem: boolean;
     diariasExtAlimentacao: boolean;
     diariasExtTransporte: boolean;

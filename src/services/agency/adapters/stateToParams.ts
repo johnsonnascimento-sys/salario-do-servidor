@@ -83,6 +83,11 @@ export function mapStateToJmuParams(
         // Diárias e Licença (Fase 9)
         diariasQtd: state.diariasQtd || 0,
         diariasEmbarque: mapDiariasEmbarque(state.diariasEmbarque),
+        diariasModoDesconto: state.diariasModoDesconto,
+        diariasDataInicio: state.diariasDataInicio,
+        diariasDataFim: state.diariasDataFim,
+        diariasDiasDescontoAlimentacao: state.diariasDiasDescontoAlimentacao,
+        diariasDiasDescontoTransporte: state.diariasDiasDescontoTransporte,
         diariasExtHospedagem: state.diariasExtHospedagem,
         diariasExtAlimentacao: state.diariasExtAlimentacao,
         diariasExtTransporte: state.diariasExtTransporte,

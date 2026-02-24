@@ -26,10 +26,27 @@ export interface DailiesConfig {
     completo: number;
     metade: number;
   };
+  derivedFromMinister?: {
+    enabled: boolean;
+    ministerPerDiem: number;
+    ratesPercentages: Record<string, number>;
+    embarkationPercentageFull: number;
+    embarkationPercentageHalf?: number;
+  };
   externalGloss: {
     hospedagem: number;
     alimentacao: number;
     transporte: number;
+  };
+  ldoCap?: {
+    enabled: boolean;
+    perDiemLimit: number;
+  };
+  discountRules?: {
+    foodDivisor: number;
+    transportDivisor: number;
+    excludeWeekendsAndHolidays: boolean;
+    holidays: string[];
   };
 }
 
@@ -219,11 +236,20 @@ export interface CalculatorState {
   diariasQtd: number;
   diariasMeiaQtd: number;
   diariasEmbarque: 'nenhum' | 'metade' | 'completo';
+  diariasModoDesconto: 'periodo' | 'manual';
+  diariasDataInicio: string;
+  diariasDataFim: string;
+  diariasDiasDescontoAlimentacao: number;
+  diariasDiasDescontoTransporte: number;
+  diariasDiasDescontoAlimentacaoCalc: number;
+  diariasDiasDescontoTransporteCalc: number;
   diariasMotivo: string;
   diariasDescontarAlimentacao: boolean;
   diariasDescontarTransporte: boolean;
   diariasValorTotal: number;
   diariasBruto: number;
+  diariasGlosa: number;
+  diariasCorteLdo: number;
   diariasDescAlim: number;
   diariasDescTransp: number;
   diariasExtHospedagem: boolean;
@@ -341,11 +367,20 @@ export const INITIAL_STATE: CalculatorState = {
   diariasQtd: 0,
   diariasMeiaQtd: 0,
   diariasEmbarque: 'nenhum',
+  diariasModoDesconto: 'manual',
+  diariasDataInicio: '',
+  diariasDataFim: '',
+  diariasDiasDescontoAlimentacao: 0,
+  diariasDiasDescontoTransporte: 0,
+  diariasDiasDescontoAlimentacaoCalc: 0,
+  diariasDiasDescontoTransporteCalc: 0,
   diariasMotivo: '',
   diariasDescontarAlimentacao: true,
   diariasDescontarTransporte: true,
   diariasValorTotal: 0,
   diariasBruto: 0,
+  diariasGlosa: 0,
+  diariasCorteLdo: 0,
   diariasDescAlim: 0,
   diariasDescTransp: 0,
   diariasExtHospedagem: false,

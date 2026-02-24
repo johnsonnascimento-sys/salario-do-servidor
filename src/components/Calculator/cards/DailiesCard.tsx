@@ -1,14 +1,37 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Plane } from 'lucide-react';
-import { CalculatorState } from '../../../types';
+import { CalculatorState, CourtConfig } from '../../../types';
+import { countDeductibleDaysInRange, resolveDailiesDiscountRules } from '../../../utils/dailiesRules';
 
 interface DailiesCardProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
     styles: any;
+    courtConfig?: CourtConfig | null;
 }
 
-export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles }) => {
+const toNonNegativeNumber = (value: string) => Math.max(0, Number(value) || 0);
+
+export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig }) => {
+    const dailiesConfig = courtConfig?.dailies;
+    const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
+    const discountRules = useMemo(
+        () => resolveDailiesDiscountRules(dailiesConfig, transportWorkdays),
+        [dailiesConfig, transportWorkdays]
+    );
+
+    const automaticDiscountDaysRaw = useMemo(() => (
+        countDeductibleDaysInRange(state.diariasDataInicio, state.diariasDataFim, discountRules)
+    ), [state.diariasDataInicio, state.diariasDataFim, discountRules]);
+
+    const automaticDiscountDays = automaticDiscountDaysRaw !== null
+        ? automaticDiscountDaysRaw
+        : Math.max(0, state.diariasQtd || 0);
+
+    const hasValidDateRange = automaticDiscountDaysRaw !== null;
+    const ldoCapEnabled = Boolean(dailiesConfig?.ldoCap?.enabled);
+    const ldoCapValue = Number(dailiesConfig?.ldoCap?.perDiemLimit || 0);
+
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
@@ -17,61 +40,159 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
 
             <div className="space-y-6">
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Diárias de Viagem</h4>
+                    <h4 className={styles.innerBoxTitle}>Diárias de viagem</h4>
                     <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className={styles.label}>Qtd. Dias</label>
+                                <label className={styles.label}>Quantidade de diárias</label>
                                 <input
                                     type="number"
+                                    step="0.5"
+                                    min="0"
                                     className={styles.input}
                                     value={state.diariasQtd || ''}
-                                    onChange={e => update('diariasQtd', Number(e.target.value))}
+                                    onChange={e => update('diariasQtd', toNonNegativeNumber(e.target.value))}
                                     placeholder="0"
+                                    data-calculator="true"
                                 />
                             </div>
                             <div>
-                                <label className={styles.label}>Dia de Embarque</label>
+                                <label className={styles.label}>Adicional de embarque</label>
                                 <select
                                     className={styles.input}
                                     value={state.diariasEmbarque}
                                     onChange={e => update('diariasEmbarque', e.target.value)}
                                 >
                                     <option value="nenhum">Nenhum</option>
-                                    <option value="metade">Meia Diária</option>
-                                    <option value="completo">Diária Completa</option>
+                                    <option value="metade">Metade (ida ou volta)</option>
+                                    <option value="completo">Completo (ida e volta)</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
+                            <p>Valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
+                            <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
+                            <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
+                            {ldoCapEnabled && ldoCapValue > 0 && (
+                                <p>
+                                    Teto LDO por diária: {ldoCapValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Descontos Internos</h4>
-                    <div className="flex gap-4 flex-wrap">
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={state.diariasDescontarAlimentacao}
-                                onChange={e => update('diariasDescontarAlimentacao', e.target.checked)}
-                            />
-                            <span>Aux. Alimentação</span>
-                        </label>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={state.diariasDescontarTransporte}
-                                onChange={e => update('diariasDescontarTransporte', e.target.checked)}
-                            />
-                            <span>Aux. Transporte</span>
-                        </label>
+                    <h4 className={styles.innerBoxTitle}>Descontos internos</h4>
+                    <div className="space-y-4">
+                        <div className="flex gap-4 flex-wrap">
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={state.diariasDescontarAlimentacao}
+                                    onChange={e => update('diariasDescontarAlimentacao', e.target.checked)}
+                                />
+                                <span>Descontar auxílio-alimentação</span>
+                            </label>
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={state.diariasDescontarTransporte}
+                                    onChange={e => update('diariasDescontarTransporte', e.target.checked)}
+                                />
+                                <span>Descontar auxílio-transporte</span>
+                            </label>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="radio"
+                                    name="diarias_modo_desconto"
+                                    className={styles.checkbox}
+                                    checked={state.diariasModoDesconto === 'periodo'}
+                                    onChange={() => update('diariasModoDesconto', 'periodo')}
+                                />
+                                <span>Deslocamento por data (automático)</span>
+                            </label>
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="radio"
+                                    name="diarias_modo_desconto"
+                                    className={styles.checkbox}
+                                    checked={state.diariasModoDesconto === 'manual'}
+                                    onChange={() => update('diariasModoDesconto', 'manual')}
+                                />
+                                <span>Dias de desconto informados manualmente</span>
+                            </label>
+                        </div>
+
+                        {state.diariasModoDesconto === 'periodo' ? (
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={styles.label}>Data de início</label>
+                                        <input
+                                            type="date"
+                                            className={styles.input}
+                                            value={state.diariasDataInicio}
+                                            onChange={e => update('diariasDataInicio', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={styles.label}>Data de fim</label>
+                                        <input
+                                            type="date"
+                                            className={styles.input}
+                                            value={state.diariasDataFim}
+                                            onChange={e => update('diariasDataFim', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-2 text-body-xs text-secondary-700 dark:text-secondary-300">
+                                    {hasValidDateRange
+                                        ? `Dias usados no desconto (sem finais de semana${discountRules.holidays.length > 0 ? ' e feriados configurados' : ''}): ${automaticDiscountDays}`
+                                        : `Preencha início e fim para calcular automaticamente. Enquanto isso, o sistema usa ${Math.max(0, state.diariasQtd || 0)} dia(s).`}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className={styles.label}>Dias para desconto do auxílio-alimentação</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        className={styles.input}
+                                        value={state.diariasDiasDescontoAlimentacao || ''}
+                                        onChange={e => update('diariasDiasDescontoAlimentacao', toNonNegativeNumber(e.target.value))}
+                                        placeholder="0"
+                                        data-calculator="true"
+                                    />
+                                </div>
+                                <div>
+                                    <label className={styles.label}>Dias para desconto do auxílio-transporte</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        className={styles.input}
+                                        value={state.diariasDiasDescontoTransporte || ''}
+                                        onChange={e => update('diariasDiasDescontoTransporte', toNonNegativeNumber(e.target.value))}
+                                        placeholder="0"
+                                        data-calculator="true"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Auxílios Recebidos (Glosar)</h4>
+                    <h4 className={styles.innerBoxTitle}>Auxílios recebidos no deslocamento (glosa)</h4>
                     <div className="space-y-2">
                         <label className={styles.checkboxLabel}>
                             <input
@@ -80,7 +201,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
                                 onChange={e => update('diariasExtHospedagem', e.target.checked)}
                                 className={styles.checkbox}
                             />
-                            Hospedagem Fornecida
+                            Hospedagem fornecida
                         </label>
 
                         <label className={styles.checkboxLabel}>
@@ -90,7 +211,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
                                 onChange={e => update('diariasExtAlimentacao', e.target.checked)}
                                 className={styles.checkbox}
                             />
-                            Alimentação Fornecida
+                            Alimentação fornecida
                         </label>
 
                         <label className={styles.checkboxLabel}>
@@ -100,7 +221,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles 
                                 onChange={e => update('diariasExtTransporte', e.target.checked)}
                                 className={styles.checkbox}
                             />
-                            Transporte Fornecido
+                            Transporte fornecido
                         </label>
                     </div>
                 </div>

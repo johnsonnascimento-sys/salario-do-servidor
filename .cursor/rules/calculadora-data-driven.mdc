@@ -41,3 +41,20 @@ alwaysApply: true
 - Regras gerais de formula devem existir em `power_config.config_key = payroll_rules`.
 - Catalogo de carreira deve existir em `power_config.config_key = career_catalog`.
 - Periodos de referencia/reajuste devem existir em `power_config.config_key = adjustment_schedule`.
+
+## 6) Schema minimo de diarias
+- `dailies_rules.rates` deve definir valores por cargo e/ou agrupamento.
+- `dailies_rules.embarkation_additional` deve definir `completo` e `metade`.
+- `dailies_rules.derived_from_minister` (quando habilitado) deve permitir recalculo automatico:
+  - `enabled`
+  - `minister_per_diem`
+  - `rates_percentages` (ex.: `tecnico`, `analista`, `cj`)
+  - `embarkation_percentage_full`
+  - `embarkation_percentage_half` (opcional)
+- `dailies_rules.external_gloss` deve definir percentuais de `hospedagem`, `alimentacao`, `transporte`.
+- `dailies_rules.ldo_cap` deve definir `enabled` e `per_diem_limit`.
+- `dailies_rules.discount_rules` deve definir:
+  - `food_divisor`
+  - `transport_divisor`
+  - `exclude_weekends_and_holidays`
+  - `holidays` (lista `YYYY-MM-DD`)

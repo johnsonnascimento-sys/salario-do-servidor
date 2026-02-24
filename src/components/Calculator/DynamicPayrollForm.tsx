@@ -302,8 +302,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             case 'diarias':
                 update('diariasQtd', 0);
                 update('diariasEmbarque', 'nenhum');
+                update('diariasModoDesconto', 'manual');
+                update('diariasDataInicio', '');
+                update('diariasDataFim', '');
+                update('diariasDiasDescontoAlimentacao', 0);
+                update('diariasDiasDescontoTransporte', 0);
+                update('diariasDiasDescontoAlimentacaoCalc', 0);
+                update('diariasDiasDescontoTransporteCalc', 0);
                 update('diariasDescontarAlimentacao', true);
                 update('diariasDescontarTransporte', true);
+                update('diariasCorteLdo', 0);
+                update('diariasGlosa', 0);
                 update('diariasExtHospedagem', false);
                 update('diariasExtAlimentacao', false);
                 update('diariasExtTransporte', false);
@@ -436,6 +445,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             case 'diarias':
                 return [
                     { label: 'Diarias brutas', value: roundCurrency(state.diariasBruto || 0) },
+                    { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
+                    { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
                     { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
                     { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) },
                     { label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) }
@@ -580,7 +591,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (presetId === 'hora_extra') return <OvertimeCard state={state} update={update} styles={styles} />;
         if (presetId === 'substituicao') return <SubstitutionCard state={state} update={update} updateSubstDays={updateSubstDays} functionKeys={functionKeys} styles={styles} />;
         if (presetId === 'licenca') return <LicenseCard state={state} update={update} styles={styles} />;
-        if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} />;
+        if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} courtConfig={courtConfig} />;
 
         if (presetId === 'pre_escolar') {
             return (
@@ -663,7 +674,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </div>
 
             <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Adicional de Qualificação</h4>
+                <h4 className={styles.innerBoxTitle}>Adicional de QualificaÃ§Ã£o</h4>
                 {renderPreset('aq')}
                 {renderPresetGrossSummary('aq')}
             </div>
@@ -928,4 +939,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         </div>
     );
 };
+
+
 

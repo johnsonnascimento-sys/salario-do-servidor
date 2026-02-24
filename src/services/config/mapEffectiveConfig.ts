@@ -130,10 +130,31 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     completo: effective.dailies_rules.embarkation_additional?.completo ?? 0,
                     metade: effective.dailies_rules.embarkation_additional?.metade ?? 0,
                 },
+                derivedFromMinister: {
+                    enabled: Boolean(effective.dailies_rules.derived_from_minister?.enabled),
+                    ministerPerDiem: Number(effective.dailies_rules.derived_from_minister?.minister_per_diem ?? 0),
+                    ratesPercentages: effective.dailies_rules.derived_from_minister?.rates_percentages ?? {},
+                    embarkationPercentageFull: Number(effective.dailies_rules.derived_from_minister?.embarkation_percentage_full ?? 0),
+                    embarkationPercentageHalf: effective.dailies_rules.derived_from_minister?.embarkation_percentage_half !== undefined
+                        ? Number(effective.dailies_rules.derived_from_minister?.embarkation_percentage_half)
+                        : undefined,
+                },
                 externalGloss: {
                     hospedagem: effective.dailies_rules.external_gloss?.hospedagem ?? 0,
                     alimentacao: effective.dailies_rules.external_gloss?.alimentacao ?? 0,
                     transporte: effective.dailies_rules.external_gloss?.transporte ?? 0,
+                },
+                ldoCap: {
+                    enabled: Boolean(effective.dailies_rules.ldo_cap?.enabled),
+                    perDiemLimit: Number(effective.dailies_rules.ldo_cap?.per_diem_limit ?? 0),
+                },
+                discountRules: {
+                    foodDivisor: Number(effective.dailies_rules.discount_rules?.food_divisor ?? 0),
+                    transportDivisor: Number(effective.dailies_rules.discount_rules?.transport_divisor ?? 0),
+                    excludeWeekendsAndHolidays: Boolean(effective.dailies_rules.discount_rules?.exclude_weekends_and_holidays),
+                    holidays: Array.isArray(effective.dailies_rules.discount_rules?.holidays)
+                        ? effective.dailies_rules.discount_rules!.holidays
+                        : [],
                 },
             }
             : undefined,

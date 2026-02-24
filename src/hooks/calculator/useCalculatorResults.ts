@@ -1,10 +1,10 @@
 /**
  * Hook de Resultados - Calculadora
- * 
- * Responsável por:
- * - Execução de cálculos via agencyService
+ *
+ * Responsavel por:
+ * - Execucao de calculos via agencyService
  * - Mapeamento de resultados para o estado
- * - Geração de rows para exibição (resultRows)
+ * - Geracao de rows para exibicao (resultRows)
  */
 
 import { useEffect, useMemo } from 'react';
@@ -21,11 +21,9 @@ export const useCalculatorResults = (
     courtConfig: CourtConfig | null,
     agency: { name: string; type: string; slug: string } | null
 ) => {
-    // Recalculate whenever inputs change
     useEffect(() => {
         if (!agencyService) return;
 
-        // Wrap in async IIFE to await the calculation
         (async () => {
             const orgSlug = agency?.slug || 'jmu';
             const params = mapStateToJmuParams(state, orgSlug, courtConfig || undefined);
@@ -67,8 +65,12 @@ export const useCalculatorResults = (
                     substTotal: bd.substituicao || 0,
                     diariasValorTotal: bd.diariasValor || 0,
                     diariasBruto: bd.diariasBruto || 0,
-                    diariasDescAlim: bd.diariasDeducoes || 0,
-                    diariasDescTransp: 0,
+                    diariasGlosa: bd.diariasGlosa || 0,
+                    diariasCorteLdo: bd.diariasCorteLdo || 0,
+                    diariasDescAlim: bd.diariasDescAlim ?? bd.diariasDeducoes ?? 0,
+                    diariasDescTransp: bd.diariasDescTransp || 0,
+                    diariasDiasDescontoAlimentacaoCalc: bd.diariasDiasDescAlim || 0,
+                    diariasDiasDescontoTransporteCalc: bd.diariasDiasDescTransp || 0,
                     licencaValor: bd.licencaCompensatoria || 0,
                     totalBruto: result.netSalary + result.totalDeductions,
                     totalDescontos: result.totalDeductions,
@@ -93,6 +95,8 @@ export const useCalculatorResults = (
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
         state.heQtd50, state.heQtd100, state.heIsEA, state.substDias, state.substIsEA,
         state.diariasQtd, state.diariasEmbarque,
+        state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
+        state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
         state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
         state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
         state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
@@ -100,7 +104,6 @@ export const useCalculatorResults = (
         setState
     ]);
 
-    // Generate result rows for display
     const resultRows = useMemo(() => {
         if (!courtConfig) {
             return [];
@@ -109,13 +112,14 @@ export const useCalculatorResults = (
         const rows: Array<{ label: string; value: number; type: 'C' | 'D' }> = [];
         const isNovoAQ = state.periodo >= 1;
 
-        // Proventos
         if (state.vencimento > 0) rows.push({ label: 'VENCIMENTO-ATIVO EC', value: state.vencimento, type: 'C' });
         if (state.gaj > 0) rows.push({ label: 'GRAT. ATIV. JUD. (GAJ)', value: state.gaj, type: 'C' });
 
         if (state.gratEspecificaValor > 0) {
-            const label = state.gratEspecificaTipo === 'gae' ? 'GRATIFICAÇÃO DE ATIVIDADE EXTERNA (GAE)' : 'GRATIFICAÇÃO DE ATIVIDADE DE SEGURANÇA (GAS)';
-            rows.push({ label: label, value: state.gratEspecificaValor, type: 'C' });
+            const label = state.gratEspecificaTipo === 'gae'
+                ? 'GRATIFICAÇÃO DE ATIVIDADE EXTERNA (GAE)'
+                : 'GRATIFICAÇÃO DE ATIVIDADE DE SEGURANÇA (GAS)';
+            rows.push({ label, value: state.gratEspecificaValor, type: 'C' });
         }
 
         if (state.aqTituloValor > 0) {
@@ -131,8 +135,8 @@ export const useCalculatorResults = (
         if (state.funcao && state.funcao !== noFunctionCode) {
             const tables = getTablesForPeriod(state.periodo, courtConfig);
             const valorFC = tables.funcoes[state.funcao] || 0;
-            let labelTipo = "FUNÇÃO COMISSIONADA (OPÇÃO)";
-            if (state.funcao.startsWith('cj')) labelTipo = "CARGO EM COMISSÃO";
+            let labelTipo = 'FUNÇÃO COMISSIONADA (OPÇÃO)';
+            if (state.funcao.startsWith('cj')) labelTipo = 'CARGO EM COMISSÃO';
             rows.push({ label: `${labelTipo} - ${state.funcao.toUpperCase()}`, value: valorFC, type: 'C' });
         }
 
@@ -141,6 +145,7 @@ export const useCalculatorResults = (
         if (state.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: state.vpni_lei, type: 'C' });
         if (state.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: state.vpni_decisao, type: 'C' });
         if (state.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: state.ats, type: 'C' });
+
         if (state.auxAlimentacao > 0) {
             rows.push({
                 label: state.auxAlimentacaoProporcional && state.auxAlimentacaoDetalhe
@@ -150,6 +155,7 @@ export const useCalculatorResults = (
                 type: 'C'
             });
         }
+
         if (state.auxPreEscolarValor > 0) rows.push({ label: 'AUXÍLIO PRÉ-ESCOLAR', value: state.auxPreEscolarValor, type: 'C' });
         if (state.auxTransporteValor > 0) rows.push({ label: 'AUXÍLIO-TRANSPORTE', value: state.auxTransporteValor, type: 'C' });
         if (state.licencaValor > 0) rows.push({ label: 'INDENIZAÇÃO LICENÇA COMPENSATÓRIA', value: state.licencaValor, type: 'C' });
@@ -164,7 +170,6 @@ export const useCalculatorResults = (
             rows.push({ label: 'ABONO DE PERMANENCIA-GN (13o) EC 41/2003 ATIVO EC', value: state.abonoPerm13, type: 'C' });
         }
 
-        // Descontos
         if (state.pssMensal > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS (PSS)', value: state.pssMensal, type: 'D' });
         if (state.pssEA > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-EA', value: state.pssEA, type: 'D' });
         if (state.valFunpresp > 0) rows.push({ label: 'FUNPRESP-JUD', value: state.valFunpresp, type: 'D' });
@@ -179,13 +184,11 @@ export const useCalculatorResults = (
         if (state.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: state.planoSaude, type: 'D' });
         if (state.pensao > 0) rows.push({ label: 'PENSÃO ALIMENTÍCIA', value: state.pensao, type: 'D' });
 
-        // Diárias/Indenizações
         if (state.diariasBruto > 0) rows.push({ label: 'DIÁRIAS', value: state.diariasBruto, type: 'C' });
+        if (state.diariasCorteLdo > 0) rows.push({ label: 'CORTE TETO LDO (DIÁRIAS)', value: state.diariasCorteLdo, type: 'D' });
+        if (state.diariasGlosa > 0) rows.push({ label: 'ABATIMENTO BENEF. EXTERNO (ART. 4º)', value: state.diariasGlosa, type: 'D' });
         if (state.diariasDescAlim > 0) rows.push({ label: 'RESTITUIÇÃO AUX. ALIM. (DIÁRIAS)', value: state.diariasDescAlim, type: 'D' });
         if (state.diariasDescTransp > 0) rows.push({ label: 'RESTITUIÇÃO AUX. TRANSP. (DIÁRIAS)', value: state.diariasDescTransp, type: 'D' });
-
-        const glosaEst = state.diariasBruto - state.diariasValorTotal - state.diariasDescAlim - state.diariasDescTransp;
-        if (glosaEst > 0.01) rows.push({ label: 'ABATIMENTO BENEF. EXTERNO (ART. 4)', value: glosaEst, type: 'D' });
 
         state.rubricasExtras.forEach((r, index) => {
             if (r.valor <= 0) {
@@ -212,5 +215,3 @@ export const useCalculatorResults = (
 
     return { resultRows };
 };
-
-

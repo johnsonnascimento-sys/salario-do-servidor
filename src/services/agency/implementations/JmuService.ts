@@ -177,6 +177,11 @@ export class JmuService implements IAgencyCalculator {
                 diariasBruto: dailies.bruto,
                 diariasGlosa: dailies.glosa,
                 diariasDeducoes: dailies.deducoes,
+                diariasCorteLdo: dailies.corteLdo,
+                diariasDescAlim: dailies.descAlim,
+                diariasDescTransp: dailies.descTransp,
+                diariasDiasDescAlim: dailies.diasDescontoAlim,
+                diariasDiasDescTransp: dailies.diasDescontoTransp,
                 licencaCompensatoria: compensatoryLeave,
 
                 // Benefícios
@@ -187,3 +192,4 @@ export class JmuService implements IAgencyCalculator {
         };
     }
 }
+

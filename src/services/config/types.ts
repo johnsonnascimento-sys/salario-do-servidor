@@ -128,10 +128,27 @@ export interface DailiesRulesConfig {
         completo: number;
         metade: number;
     };
+    derived_from_minister?: {
+        enabled: boolean;
+        minister_per_diem: number;
+        rates_percentages: Record<string, number>;
+        embarkation_percentage_full: number;
+        embarkation_percentage_half?: number;
+    };
     external_gloss: {
         hospedagem: number;
         alimentacao: number;
         transporte: number;
+    };
+    ldo_cap?: {
+        enabled: boolean;
+        per_diem_limit: number;
+    };
+    discount_rules?: {
+        food_divisor: number;
+        transport_divisor: number;
+        exclude_weekends_and_holidays: boolean;
+        holidays: string[];
     };
 }
 
