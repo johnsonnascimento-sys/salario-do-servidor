@@ -33,6 +33,7 @@ type PredefinedRubricId =
 interface PresetGrossLine {
     label: string;
     value: number;
+    isDiscount?: boolean;
 }
 
 interface DynamicPayrollFormProps {
@@ -499,12 +500,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     }
 
                     lines.push(
-                        { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
-                        { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
-                        { label: 'Restituicao aux. alimentacao (diária inteira)', value: descAuxAlimDiariaInteira },
-                        { label: 'Restituicao aux. alimentacao (meia diária)', value: meioDescAuxAlimRetorno },
-                        { label: 'Restituicao aux. tranporte (diária inteira)', value: descAuxTranspDiariaInteira },
-                        { label: 'Restituicao aux. tranporte (meia diária)', value: meioDescAuxTranspRetorno }
+                        { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0), isDiscount: true },
+                        { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0), isDiscount: true },
+                        { label: 'Desconto aux. alimentacao (diária inteira)', value: descAuxAlimDiariaInteira, isDiscount: true },
+                        { label: 'Desconto aux. alimentacao (meia diária)', value: meioDescAuxAlimRetorno, isDiscount: true },
+                        { label: 'Desconto aux. tranporte (diária inteira)', value: descAuxTranspDiariaInteira, isDiscount: true },
+                        { label: 'Desconto aux. tranporte (meia diária)', value: meioDescAuxTranspRetorno, isDiscount: true }
                     );
                     lines.push({ label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) });
 
@@ -530,8 +531,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     {lines.map((line) => (
                         <div key={line.label} className="flex items-center justify-between gap-3 text-body-xs">
                             <span className="text-neutral-600 dark:text-neutral-300">{line.label}</span>
-                            <span className="font-mono font-bold text-neutral-800 dark:text-neutral-100">
-                                {formatCurrency(line.value || 0)}
+                            <span className={`font-mono font-bold ${line.isDiscount ? 'text-error-700 dark:text-error-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+                                {line.isDiscount ? '(-) ' : ''}{formatCurrency(line.value || 0)}
                             </span>
                         </div>
                     ))}
