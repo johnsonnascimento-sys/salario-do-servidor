@@ -66,6 +66,90 @@ const toPositiveNumber = (value: string) => {
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
+const MONTH_TOKEN_TO_INDEX: Record<string, number> = {
+    jan: 1,
+    janeiro: 1,
+    fev: 2,
+    fevereiro: 2,
+    mar: 3,
+    marco: 3,
+    abril: 4,
+    abr: 4,
+    mai: 5,
+    maio: 5,
+    jun: 6,
+    junho: 6,
+    jul: 7,
+    julho: 7,
+    ago: 8,
+    agosto: 8,
+    set: 9,
+    setembro: 9,
+    out: 10,
+    outubro: 10,
+    nov: 11,
+    novembro: 11,
+    dez: 12,
+    dezembro: 12
+};
+
+interface ParsedOptionKey {
+    key: string;
+    year: number;
+    month: number;
+}
+
+const normalizeKey = (value: string) =>
+    value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+const parseOptionKey = (key: string): ParsedOptionKey | null => {
+    const normalized = normalizeKey(key);
+    const yearMatch = normalized.match(/(19|20)\d{2}/);
+    if (!yearMatch) return null;
+
+    const year = Number(yearMatch[0]);
+    const monthToken = normalized.slice(yearMatch.index! + yearMatch[0].length).replace(/[^a-z]/g, '');
+    const month = MONTH_TOKEN_TO_INDEX[monthToken] ?? 0;
+
+    return { key, year, month };
+};
+
+const toMonthIndex = (monthLabel: string) => {
+    const normalized = normalizeKey(monthLabel);
+    const compactToken = normalized.replace(/[^a-z]/g, '');
+    return MONTH_TOKEN_TO_INDEX[compactToken] ?? MONTH_TOKEN_TO_INDEX[normalized] ?? 0;
+};
+
+const pickBestTableByReference = (
+    options: string[],
+    referenceYear: number,
+    referenceMonth: number
+) => {
+    if (options.length === 0) return '';
+
+    const parsed = options
+        .map(parseOptionKey)
+        .filter((value): value is ParsedOptionKey => value !== null);
+
+    if (parsed.length === 0) return options[0];
+
+    const sorted = parsed.sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        if (a.month !== b.month) return b.month - a.month;
+        return a.key.localeCompare(b.key);
+    });
+
+    const applicable = sorted.find((option) => (
+        option.year < referenceYear ||
+        (option.year === referenceYear && option.month <= referenceMonth)
+    ));
+
+    return (applicable || sorted[0]).key;
+};
+
 const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
     switch (presetId) {
         case 'aq':
@@ -228,17 +312,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     useEffect(() => {
         if (pssOptions.length === 0) return;
-        if (!state.tabelaPSS || !pssOptions.includes(state.tabelaPSS)) {
-            update('tabelaPSS', pssOptions[0]);
+        const referenceMonth = toMonthIndex(state.mesRef) || 12;
+        const nextTabelaPSS = pickBestTableByReference(pssOptions, state.anoRef, referenceMonth);
+        if (nextTabelaPSS && state.tabelaPSS !== nextTabelaPSS) {
+            update('tabelaPSS', nextTabelaPSS);
         }
-    }, [pssOptions, state.tabelaPSS, update]);
+    }, [pssOptions, state.tabelaPSS, state.anoRef, state.mesRef, update]);
 
     useEffect(() => {
         if (irOptions.length === 0) return;
-        if (!state.tabelaIR || !irOptions.includes(state.tabelaIR)) {
-            update('tabelaIR', irOptions[0]);
+        const referenceMonth = toMonthIndex(state.mesRef) || 12;
+        const nextTabelaIR = pickBestTableByReference(irOptions, state.anoRef, referenceMonth);
+        if (nextTabelaIR && state.tabelaIR !== nextTabelaIR) {
+            update('tabelaIR', nextTabelaIR);
         }
-    }, [irOptions, state.tabelaIR, update]);
+    }, [irOptions, state.tabelaIR, state.anoRef, state.mesRef, update]);
 
     const clearPreset = (presetId: PredefinedRubricId) => {
         switch (presetId) {
@@ -263,6 +351,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             case 'ferias':
                 update('manualFerias', false);
                 update('ferias1_3', 0);
+                update('feriasDesc', 0);
+                update('feriasDescManual', false);
                 update('feriasAntecipadas', false);
                 break;
             case 'decimo':
@@ -692,31 +782,38 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             Rubricas Pré-definidas
                         </span>
                     </h4>
-                    <div className="flex items-center gap-2">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                         <button
                             type="button"
                             onClick={() => setReorderMode(prev => !prev)}
                             disabled={enabledPresets.length < 2 && !reorderMode}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50 dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-700"
+                            className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50 dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-700 sm:justify-start"
                         >
                             <GripVertical className="w-4 h-4" />
                             {reorderMode ? 'Concluir ordem' : 'Reordenar cards'}
                         </button>
-                        <select className={styles.input} value={selectedPreset} onChange={e => setSelectedPreset(e.target.value as PredefinedRubricId | '')} disabled={availablePresets.length === 0}>
-                            {availablePresets.length === 0 && <option value="">Todas adicionadas</option>}
-                            {availablePresets.map(option => (
-                                <option key={option.id} value={option.id}>{option.label}</option>
-                            ))}
-                        </select>
-                        <button
-                            type="button"
-                            onClick={includePreset}
-                            disabled={!selectedPreset}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Incluir
-                        </button>
+                        <div className="flex w-full items-center gap-2 sm:w-auto">
+                            <select
+                                className={`${styles.input} min-w-0 flex-1 sm:w-72`}
+                                value={selectedPreset}
+                                onChange={e => setSelectedPreset(e.target.value as PredefinedRubricId | '')}
+                                disabled={availablePresets.length === 0}
+                            >
+                                {availablePresets.length === 0 && <option value="">Todas adicionadas</option>}
+                                {availablePresets.map(option => (
+                                    <option key={option.id} value={option.id}>{option.label}</option>
+                                ))}
+                            </select>
+                            <button
+                                type="button"
+                                onClick={includePreset}
+                                disabled={!selectedPreset}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50 shrink-0"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Incluir
+                            </button>
+                        </div>
                     </div>
                 </div>
 

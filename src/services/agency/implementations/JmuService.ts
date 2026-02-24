@@ -119,7 +119,8 @@ export class JmuService implements IAgencyCalculator {
 
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
-            vacation.irFerias + thirteenth.pss13 + thirteenth.ir13 + rubricasTotals.debitos;
+            vacation.irFerias + vacation.descontoAntecipacao + thirteenth.pss13 +
+            thirteenth.ir13 + rubricasTotals.debitos;
 
         // 6. Retornar Resultado Completo
         return {
@@ -153,6 +154,7 @@ export class JmuService implements IAgencyCalculator {
                 // Férias
                 feriasConstitucional: vacation.value,
                 impostoFerias: vacation.irFerias,
+                feriasDesconto: vacation.descontoAntecipacao,
 
                 // 13º Salário
                 gratificacaoNatalina: thirteenth.gratNatalinaTotal,

@@ -8,6 +8,7 @@ import { ObservationsSection } from '../components/Calculator/ObservationsSectio
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
 import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
+import { FieldCalculator } from '../components/Calculator/FieldCalculator';
 import DonationModal from '../components/DonationModal';
 
 export default function Calculator() {
@@ -115,6 +116,8 @@ export default function Calculator() {
                     exportType={pendingExportType}
                     countdownSeconds={10}
                 />
+
+                <FieldCalculator />
             </div>
         </>
     );

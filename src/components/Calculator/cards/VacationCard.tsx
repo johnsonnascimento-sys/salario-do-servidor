@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Palmtree } from 'lucide-react';
 import { CalculatorState } from '../../../types';
 import { formatCurrency } from '../../../utils/calculations';
@@ -15,6 +15,41 @@ const parseCurrencyInput = (value: string) => {
 };
 
 export const VacationCard: React.FC<VacationCardProps> = ({ state, update, styles }) => {
+    useEffect(() => {
+        if (!state.feriasAntecipadas || state.feriasDescManual) {
+            return;
+        }
+
+        const proximoDesconto = Math.round((state.ferias1_3 || 0) * 100) / 100;
+        if (Math.abs((state.feriasDesc || 0) - proximoDesconto) > 0.009) {
+            update('feriasDesc', proximoDesconto);
+        }
+    }, [state.feriasAntecipadas, state.feriasDescManual, state.ferias1_3, state.feriasDesc, update]);
+
+    const handleFeriasAntecipadasChange = (checked: boolean) => {
+        update('feriasAntecipadas', checked);
+
+        if (!checked) {
+            update('feriasDescManual', false);
+            update('feriasDesc', 0);
+            return;
+        }
+
+        if (!state.feriasDescManual) {
+            update('feriasDesc', Math.round((state.ferias1_3 || 0) * 100) / 100);
+        }
+    };
+
+    const handleFeriasDescManualChange = (checked: boolean) => {
+        update('feriasDescManual', checked);
+
+        if (!checked) {
+            update('feriasDesc', Math.round((state.ferias1_3 || 0) * 100) / 100);
+        } else if ((state.feriasDesc || 0) <= 0) {
+            update('feriasDesc', Math.round((state.ferias1_3 || 0) * 100) / 100);
+        }
+    };
+
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
@@ -41,6 +76,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                         <input
                             type="text"
                             className={styles.input}
+                            data-calculator="true"
                             value={state.ferias1_3 ? state.ferias1_3.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
                             onChange={e => update('ferias1_3', parseCurrencyInput(e.target.value))}
                             placeholder="0,00"
@@ -73,14 +109,46 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                         <input
                             type="checkbox"
                             checked={state.feriasAntecipadas}
-                            onChange={e => update('feriasAntecipadas', e.target.checked)}
+                            onChange={e => handleFeriasAntecipadasChange(e.target.checked)}
                             className={styles.checkbox}
                         />
-                        Antecipar 1/3 das ferias?
+                        Recebido 1/3 de ferias em um mes anterior
                     </label>
                     <p className="text-label text-neutral-400 mt-1 ml-6">
                         Marque se recebeu o pagamento no contracheque anterior.
                     </p>
+
+                    {state.feriasAntecipadas && (
+                        <div className="mt-3 ml-6 space-y-2">
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    checked={state.feriasDescManual}
+                                    onChange={e => handleFeriasDescManualChange(e.target.checked)}
+                                    className={styles.checkbox}
+                                />
+                                Alterar valor do desconto manualmente
+                            </label>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-label text-neutral-500 dark:text-neutral-400">
+                                    Desconto aplicado
+                                </span>
+                                <span className={styles.valueDisplay}>
+                                    {formatCurrency(state.feriasDescManual ? state.feriasDesc : state.ferias1_3)}
+                                </span>
+                            </div>
+                            {state.feriasDescManual && (
+                                <input
+                                    type="text"
+                                    className={styles.input}
+                                    data-calculator="true"
+                                    value={state.feriasDesc ? state.feriasDesc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                                    onChange={e => update('feriasDesc', parseCurrencyInput(e.target.value))}
+                                    placeholder="0,00"
+                                />
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

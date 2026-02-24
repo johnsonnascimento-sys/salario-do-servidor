@@ -15,6 +15,7 @@ import { getPayrollRules, isNoFunction } from './configRules';
 export interface VacationResult {
     value: number;
     irFerias: number;
+    descontoAntecipacao: number;
 }
 
 const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
@@ -62,6 +63,9 @@ export async function calculateVacation(params: IJmuCalculationParams): Promise<
         }
     }
     ferias1_3 = Math.round(ferias1_3 * 100) / 100;
+    const descontoAntecipacao = params.feriasAntecipadas
+        ? Math.round(((params.feriasDescManual ? params.feriasDesc : ferias1_3) || 0) * 100) / 100
+        : 0;
 
     // IR sobre Ferias
     let irFerias = 0;
@@ -72,5 +76,5 @@ export async function calculateVacation(params: IJmuCalculationParams): Promise<
         irFerias = calculateIrrf(baseIRFerias, payrollRules.irrfTopRate, deductionVal);
     }
 
-    return { value: ferias1_3, irFerias };
+    return { value: ferias1_3, irFerias, descontoAntecipacao };
 }

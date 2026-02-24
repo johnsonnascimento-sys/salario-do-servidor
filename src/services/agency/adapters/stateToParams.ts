@@ -65,6 +65,8 @@ export function mapStateToJmuParams(
         manualFerias: state.manualFerias,
         ferias1_3: state.ferias1_3,
         feriasAntecipadas: state.feriasAntecipadas,
+        feriasDesc: state.feriasDesc,
+        feriasDescManual: state.feriasDescManual,
         manualAdiant13: state.manualAdiant13,
         adiant13Venc: state.adiant13Venc,
         adiant13FC: state.adiant13FC,

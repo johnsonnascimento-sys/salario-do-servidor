@@ -41,6 +41,8 @@ export interface IJmuCalculationParams extends ICalculationParams {
     manualFerias: boolean;
     ferias1_3: number;
     feriasAntecipadas: boolean;
+    feriasDesc: number;
+    feriasDescManual: boolean;
     manualAdiant13: boolean;
     adiant13Venc: number;
     adiant13FC: number;
