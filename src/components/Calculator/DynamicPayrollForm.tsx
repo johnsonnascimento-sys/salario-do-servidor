@@ -96,9 +96,9 @@ const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) =>
                 state.segunda13FC > 0
             );
         case 'hora_extra':
-            return state.heQtd50 > 0 || state.heQtd100 > 0 || state.heIsEA;
+            return state.heQtd50 > 0 || state.heQtd100 > 0 || state.heIsEA || state.hePssIsEA;
         case 'substituicao':
-            return Object.values(state.substDias).some(days => days > 0) || state.substIsEA;
+            return Object.values(state.substDias).some(days => days > 0) || state.substIsEA || state.substPssIsEA;
         case 'licenca':
             return state.licencaDias > 0;
         case 'pre_escolar':
@@ -291,9 +291,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 update('heQtd50', 0);
                 update('heQtd100', 0);
                 update('heIsEA', false);
+                update('hePssIsEA', false);
                 break;
             case 'substituicao':
                 update('substIsEA', false);
+                update('substPssIsEA', false);
                 functionKeys.forEach(key => updateSubstDays(key, 0));
                 break;
             case 'licenca':
@@ -375,81 +377,205 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         setDraggingPreset(null);
     };
 
+    const buildCardTaxSummary = (
+        items: Array<{ label: string; value: number }>,
+        totalLabel: string,
+        irDiscount: number,
+        pssDiscount: number
+    ): PresetGrossLine[] => {
+        const normalizedItems = items.map(item => ({
+            label: item.label,
+            value: roundCurrency(item.value || 0)
+        }));
+        const totalGross = roundCurrency(normalizedItems.reduce((acc, item) => acc + item.value, 0));
+        const irVal = roundCurrency(Math.max(0, irDiscount || 0));
+        const pssVal = roundCurrency(Math.max(0, pssDiscount || 0));
+        const totalDiscounts = roundCurrency(irVal + pssVal);
+
+        const grossLines: PresetGrossLine[] = normalizedItems.map(item => ({
+            label: `${item.label} Bruto`,
+            value: item.value
+        }));
+
+        let allocatedDiscount = 0;
+        const netLines: PresetGrossLine[] = normalizedItems.map((item, index) => {
+            const isLast = index === normalizedItems.length - 1;
+            const proportion = totalGross > 0 ? item.value / totalGross : 0;
+            const discountShare = isLast
+                ? roundCurrency(Math.max(0, totalDiscounts - allocatedDiscount))
+                : roundCurrency(totalDiscounts * proportion);
+            allocatedDiscount += discountShare;
+            return {
+                label: `${item.label} Liquido`,
+                value: roundCurrency(Math.max(0, item.value - discountShare))
+            };
+        });
+
+        const totalNet = roundCurrency(Math.max(0, totalGross - totalDiscounts));
+
+        return [
+            ...grossLines,
+            { label: `Desconto IR (${totalLabel})`, value: irVal, isDiscount: true },
+            { label: `Desconto PSS (${totalLabel})`, value: pssVal, isDiscount: true },
+            ...netLines,
+            { label: `${totalLabel} Bruto`, value: totalGross },
+            { label: `${totalLabel} Liquido`, value: totalNet }
+        ];
+    };
+
     const getPresetGrossLines = (presetId: PredefinedRubricId): PresetGrossLine[] => {
         switch (presetId) {
             case 'aq': {
                 const tituloLabel = isNovoAQ ? 'AQ Titulos (Lei 15.292)' : 'AQ Titulos';
                 const treinoLabel = isNovoAQ ? 'AQ Treinamento (Lei 15.292)' : 'AQ Treinamento';
-                const lines: PresetGrossLine[] = [];
-                if (isNovoAQ) {
-                    lines.push({ label: 'Valor de referencia (VR)', value: roundCurrency(currentTables.valorVR || 0) });
-                }
-                lines.push(
-                    { label: tituloLabel, value: roundCurrency(state.aqTituloValor || 0) },
-                    { label: treinoLabel, value: roundCurrency(state.aqTreinoValor || 0) },
-                    { label: 'Total AQ', value: roundCurrency((state.aqTituloValor || 0) + (state.aqTreinoValor || 0)) }
+                const lines = buildCardTaxSummary(
+                    [
+                        { label: tituloLabel, value: state.aqTituloValor || 0 },
+                        { label: treinoLabel, value: state.aqTreinoValor || 0 }
+                    ],
+                    'Total AQ',
+                    state.aqIr || 0,
+                    state.aqPss || 0
                 );
-                return [
-                    ...lines
-                ];
+                if (isNovoAQ) {
+                    return [{ label: 'Valor de referencia (VR)', value: roundCurrency(currentTables.valorVR || 0) }, ...lines];
+                }
+                return lines;
             }
             case 'gratificacao':
-                return [
-                    { label: 'Gratificacao especifica', value: roundCurrency(gratificacaoEspecificaCalculada) }
-                ];
+                return buildCardTaxSummary(
+                    [{ label: 'Gratificacao especifica', value: gratificacaoEspecificaCalculada }],
+                    'Gratificacao especifica',
+                    state.gratIr || 0,
+                    state.gratPss || 0
+                );
             case 'vantagens':
-                return [
-                    { label: 'VPNI (Lei)', value: roundCurrency(state.vpni_lei || 0) },
-                    { label: 'VPNI (Decisao)', value: roundCurrency(state.vpni_decisao || 0) },
-                    { label: 'ATS', value: roundCurrency(state.ats || 0) },
-                    { label: 'Total vantagens', value: roundCurrency((state.vpni_lei || 0) + (state.vpni_decisao || 0) + (state.ats || 0)) }
-                ];
+                return buildCardTaxSummary(
+                    [
+                        { label: 'VPNI (Lei)', value: state.vpni_lei || 0 },
+                        { label: 'VPNI (Decisao)', value: state.vpni_decisao || 0 },
+                        { label: 'ATS', value: state.ats || 0 }
+                    ],
+                    'Total vantagens',
+                    state.vantagensIr || 0,
+                    state.vantagensPss || 0
+                );
             case 'abono':
-                return [
-                    { label: 'Abono de permanencia', value: roundCurrency(state.abonoPermanencia || 0) }
-                ];
+                return buildCardTaxSummary(
+                    [{ label: 'Abono de permanencia', value: state.abonoPermanencia || 0 }],
+                    'Abono de permanencia',
+                    state.abonoIr || 0,
+                    0
+                );
             case 'ferias':
-                return [
-                    { label: 'Adicional 1/3 ferias', value: roundCurrency(state.ferias1_3 || 0) }
-                ];
+                return buildCardTaxSummary(
+                    [{ label: 'Adicional 1/3 ferias', value: state.ferias1_3 || 0 }],
+                    'Adicional 1/3 ferias',
+                    state.irFerias || 0,
+                    0
+                );
             case 'decimo':
-                return [
-                    { label: '1a parcela vencimento', value: roundCurrency(state.adiant13Venc || 0) },
-                    { label: '1a parcela FC/CJ', value: roundCurrency(state.adiant13FC || 0) },
-                    { label: '2a parcela vencimento', value: roundCurrency(state.segunda13Venc || 0) },
-                    { label: '2a parcela FC/CJ', value: roundCurrency(state.segunda13FC || 0) },
-                    { label: 'Gratificacao natalina', value: roundCurrency(state.gratNatalinaTotal || 0) },
-                    { label: 'Abono 13o', value: roundCurrency(state.abonoPerm13 || 0) }
-                ];
+                return buildCardTaxSummary(
+                    [
+                        { label: '1a parcela vencimento', value: state.adiant13Venc || 0 },
+                        { label: '1a parcela FC/CJ', value: state.adiant13FC || 0 },
+                        { label: '2a parcela vencimento', value: state.segunda13Venc || 0 },
+                        { label: '2a parcela FC/CJ', value: state.segunda13FC || 0 },
+                        { label: 'Abono 13o', value: state.abonoPerm13 || 0 }
+                    ],
+                    'Total 13o salario',
+                    state.ir13 || 0,
+                    state.pss13 || 0
+                );
             case 'hora_extra':
-                return [
-                    { label: 'Hora extra 50%', value: roundCurrency(state.heVal50 || 0) },
-                    { label: 'Hora extra 100%', value: roundCurrency(state.heVal100 || 0) },
-                    { label: 'Total hora extra', value: roundCurrency(state.heTotal || 0) }
-                ];
+                {
+                    const he50Bruto = roundCurrency(state.heVal50 || 0);
+                    const he100Bruto = roundCurrency(state.heVal100 || 0);
+                    const heTotalBruto = roundCurrency(state.heTotal || 0);
+                    const heIr = roundCurrency(Math.max(0, state.heIr || 0));
+                    const hePss = roundCurrency(Math.max(0, state.hePss || 0));
+                    const heTotalDescontos = roundCurrency(heIr + hePss);
+                    const proporcaoHe50 = heTotalBruto > 0 ? he50Bruto / heTotalBruto : 0;
+                    const descontoHe50 = roundCurrency(heTotalDescontos * proporcaoHe50);
+                    const descontoHe100 = roundCurrency(Math.max(0, heTotalDescontos - descontoHe50));
+                    const he50Liquido = roundCurrency(Math.max(0, he50Bruto - descontoHe50));
+                    const he100Liquido = roundCurrency(Math.max(0, he100Bruto - descontoHe100));
+                    const heTotalLiquido = roundCurrency(Math.max(0, heTotalBruto - heTotalDescontos));
+
+                    return [
+                        { label: 'Hora extra 50% Bruto', value: he50Bruto },
+                        { label: 'Hora extra 100% Bruto', value: he100Bruto },
+                        { label: 'Desconto IR (Hora extra)', value: heIr, isDiscount: true },
+                        { label: 'Desconto PSS (Hora extra)', value: hePss, isDiscount: true },
+                        { label: 'Hora extra 50% Liquido', value: he50Liquido },
+                        { label: 'Hora extra 100% Liquido', value: he100Liquido },
+                        { label: 'Total hora extra Bruto', value: heTotalBruto },
+                        { label: 'Total hora extra Liquido', value: heTotalLiquido }
+                    ];
+                }
             case 'substituicao': {
-                const porFuncao = substitutionBreakdown.linhas.map((linha) => ({
-                    label: `Substituicao ${linha.key.toUpperCase()} (${linha.days} dia(s))`,
+                const substTotalBruto = roundCurrency(substitutionBreakdown.total);
+                const substIr = roundCurrency(Math.max(0, state.substIr || 0));
+                const substPss = roundCurrency(Math.max(0, state.substPss || 0));
+                const substTotalDescontos = roundCurrency(substIr + substPss);
+                let descontoSubstAcumulado = 0;
+
+                const porFuncaoBruto = substitutionBreakdown.linhas.map((linha) => ({
+                    label: `Substituicao ${linha.key.toUpperCase()} (${linha.days} dia(s)) Bruto`,
                     value: linha.value
                 }));
+
+                const porFuncaoLiquido = substitutionBreakdown.linhas.map((linha, index) => {
+                    const isLast = index === substitutionBreakdown.linhas.length - 1;
+                    const proporcao = substTotalBruto > 0 ? linha.value / substTotalBruto : 0;
+                    const desconto = isLast
+                        ? roundCurrency(Math.max(0, substTotalDescontos - descontoSubstAcumulado))
+                        : roundCurrency(substTotalDescontos * proporcao);
+                    descontoSubstAcumulado += desconto;
+                    return {
+                        label: `Substituicao ${linha.key.toUpperCase()} (${linha.days} dia(s)) Liquido`,
+                        value: roundCurrency(Math.max(0, linha.value - desconto))
+                    };
+                });
+
+                const substTotalLiquido = roundCurrency(Math.max(0, substTotalBruto - substTotalDescontos));
+
                 return [
-                    ...porFuncao,
-                    { label: 'Total substituicao', value: roundCurrency(substitutionBreakdown.total) }
+                    ...porFuncaoBruto,
+                    { label: 'Desconto IR (Substituicao)', value: substIr, isDiscount: true },
+                    { label: 'Desconto PSS (Substituicao)', value: substPss, isDiscount: true },
+                    ...porFuncaoLiquido,
+                    { label: 'Total substituicao Bruto', value: substTotalBruto },
+                    { label: 'Total substituicao Liquido', value: substTotalLiquido }
                 ];
             }
             case 'licenca':
-                return [
-                    { label: 'Licenca compensatoria', value: roundCurrency(state.licencaValor || 0) }
-                ];
+                return buildCardTaxSummary(
+                    [{ label: 'Licenca compensatoria', value: state.licencaValor || 0 }],
+                    'Licenca compensatoria',
+                    0,
+                    0
+                );
             case 'pre_escolar':
-                return [
-                    { label: 'Auxilio pre-escolar', value: roundCurrency(state.auxPreEscolarValor || 0) }
-                ];
+                return buildCardTaxSummary(
+                    [{ label: 'Auxilio pre-escolar', value: state.auxPreEscolarValor || 0 }],
+                    'Auxilio pre-escolar',
+                    0,
+                    0
+                );
             case 'aux_transporte':
-                return [
-                    { label: 'Auxilio transporte (credito)', value: roundCurrency(state.auxTransporteValor || 0) },
-                    { label: 'Cota-parte transporte (desconto)', value: roundCurrency(state.auxTransporteDesc || 0), isDiscount: true }
-                ];
+                {
+                    const transporteBruto = roundCurrency(state.auxTransporteValor || 0);
+                    const cotaParte = roundCurrency(state.auxTransporteDesc || 0);
+                    const transporteLiquido = roundCurrency(Math.max(0, transporteBruto - cotaParte));
+                    return [
+                        { label: 'Auxilio transporte Bruto', value: transporteBruto },
+                        { label: 'Cota-parte transporte', value: cotaParte, isDiscount: true },
+                        { label: 'Desconto IR (Auxilio transporte)', value: 0, isDiscount: true },
+                        { label: 'Desconto PSS (Auxilio transporte)', value: 0, isDiscount: true },
+                        { label: 'Auxilio transporte Liquido', value: transporteLiquido }
+                    ];
+                }
             case 'diarias':
                 {
                     const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
@@ -506,7 +632,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         { label: 'Desconto aux. alimentacao (diária inteira)', value: descAuxAlimDiariaInteira, isDiscount: true },
                         { label: 'Desconto aux. alimentacao (meia diária)', value: meioDescAuxAlimRetorno, isDiscount: true },
                         { label: 'Desconto aux. tranporte (diária inteira)', value: descAuxTranspDiariaInteira, isDiscount: true },
-                        { label: 'Desconto aux. tranporte (meia diária)', value: meioDescAuxTranspRetorno, isDiscount: true }
+                        { label: 'Desconto aux. tranporte (meia diária)', value: meioDescAuxTranspRetorno, isDiscount: true },
+                        { label: 'Desconto IR (Diarias)', value: 0, isDiscount: true },
+                        { label: 'Desconto PSS (Diarias)', value: 0, isDiscount: true }
                     );
                     lines.push({ label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) });
 
@@ -526,7 +654,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         return (
             <div className="rounded-xl border border-secondary/20 bg-secondary/5 px-4 py-3 space-y-2">
                 <p className="text-label font-bold uppercase tracking-widest text-secondary-700 dark:text-secondary-400">
-                    Resumo bruto calculado
+                    Resumo calculado
                 </p>
                 <div className="space-y-1.5">
                     {lines.map((line) => {
@@ -927,6 +1055,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                     <input
                                         type="checkbox"
                                         className={styles.checkbox}
+                                        checked={rubrica.incideIR}
+                                        onChange={e => {
+                                            const checked = e.target.checked;
+                                            updateRubrica(rubrica.id, 'incideIR', checked);
+                                            if (checked) {
+                                                updateRubrica(rubrica.id, 'isEA', false);
+                                            }
+                                        }}
+                                    />
+                                    <span>Incluir na base do IR</span>
+                                </label>
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
                                         checked={rubrica.isEA}
                                         onChange={e => {
                                             const checked = e.target.checked;
@@ -936,17 +1079,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                             }
                                         }}
                                     />
-                                    <span>Exercício Anterior (EA)</span>
-                                </label>
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={rubrica.incideIR}
-                                        disabled={rubrica.isEA}
-                                        onChange={e => updateRubrica(rubrica.id, 'incideIR', e.target.checked)}
-                                    />
-                                    <span>Incluir na base do IR</span>
+                                    <span>Incluir na base do IR (Exercício Anterior - EA)</span>
                                 </label>
                                 <label className={styles.checkboxLabel}>
                                     <input
@@ -956,7 +1089,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                         onChange={e => {
                                             const checked = e.target.checked;
                                             updateRubrica(rubrica.id, 'incidePSS', checked);
-                                            if (!checked) {
+                                            if (checked) {
                                                 updateRubrica(rubrica.id, 'pssCompetenciaSeparada', false);
                                             }
                                         }}
@@ -971,12 +1104,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                         onChange={e => {
                                             const checked = e.target.checked;
                                             updateRubrica(rubrica.id, 'pssCompetenciaSeparada', checked);
-                                            if (checked && !rubrica.incidePSS) {
-                                                updateRubrica(rubrica.id, 'incidePSS', true);
+                                            if (checked) {
+                                                updateRubrica(rubrica.id, 'incidePSS', false);
                                             }
                                         }}
                                     />
-                                    <span>PSS em competência anterior</span>
+                                    <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
                                 </label>
                             </div>
                         </div>

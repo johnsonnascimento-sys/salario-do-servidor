@@ -43,6 +43,13 @@ export const useCalculatorResults = (
                     valFunpresp: bd.funpresp || 0,
                     irMensal: bd.irrf || 0,
                     irEA: bd.irEA || 0,
+                    aqIr: bd.aqIr || 0,
+                    aqPss: bd.aqPss || 0,
+                    gratIr: bd.gratIr || 0,
+                    gratPss: bd.gratPss || 0,
+                    vantagensIr: bd.vantagensIr || 0,
+                    vantagensPss: bd.vantagensPss || 0,
+                    abonoIr: bd.abonoIr || 0,
                     abonoPermanencia: bd.abono || 0,
                     auxAlimentacao: bd.auxAlimentacao || 0,
                     auxPreEscolarValor: bd.auxPreEscolar || 0,
@@ -62,7 +69,11 @@ export const useCalculatorResults = (
                     heVal50: bd.heVal50 || 0,
                     heVal100: bd.heVal100 || 0,
                     heTotal: bd.heTotal || 0,
+                    heIr: bd.heIr || 0,
+                    hePss: bd.hePss || 0,
                     substTotal: bd.substituicao || 0,
+                    substIr: bd.substituicaoIr || 0,
+                    substPss: bd.substituicaoPss || 0,
                     diariasValorTotal: bd.diariasValor || 0,
                     diariasBruto: bd.diariasBruto || 0,
                     diariasGlosa: bd.diariasGlosa || 0,
@@ -93,7 +104,7 @@ export const useCalculatorResults = (
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.feriasDesc, state.feriasDescManual,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
-        state.heQtd50, state.heQtd100, state.heIsEA, state.substDias, state.substIsEA,
+        state.heQtd50, state.heQtd100, state.heIsEA, state.hePssIsEA, state.substDias, state.substIsEA, state.substPssIsEA,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
@@ -140,8 +151,20 @@ export const useCalculatorResults = (
             rows.push({ label: `${labelTipo} - ${state.funcao.toUpperCase()}`, value: valorFC, type: 'C' });
         }
 
-        if (state.substTotal > 0) rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO${state.substIsEA ? ' (EA)' : ''}`, value: state.substTotal, type: 'C' });
-        if (state.heTotal > 0) rows.push({ label: `SERVIÇO EXTRAORDINÁRIO${state.heIsEA ? ' (EA)' : ''}`, value: state.heTotal, type: 'C' });
+        if (state.substTotal > 0) {
+            const tags: string[] = [];
+            if (state.substIsEA) tags.push('IR EA');
+            if (state.substPssIsEA) tags.push('PSS EA');
+            const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
+            rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO${suffix}`, value: state.substTotal, type: 'C' });
+        }
+        if (state.heTotal > 0) {
+            const tags: string[] = [];
+            if (state.heIsEA) tags.push('IR EA');
+            if (state.hePssIsEA) tags.push('PSS EA');
+            const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
+            rows.push({ label: `SERVIÇO EXTRAORDINÁRIO${suffix}`, value: state.heTotal, type: 'C' });
+        }
         if (state.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: state.vpni_lei, type: 'C' });
         if (state.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: state.vpni_decisao, type: 'C' });
         if (state.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: state.ats, type: 'C' });
@@ -197,10 +220,10 @@ export const useCalculatorResults = (
 
             const descricaoBase = r.descricao.trim() || `${r.tipo === 'C' ? 'CREDITO' : 'DESCONTO'} MANUAL ${index + 1}`;
             const bases: string[] = [];
-            if (r.isEA) bases.push('EA');
-            else if (r.incideIR) bases.push('BASE IR');
+            if (r.incideIR) bases.push('BASE IR');
+            if (r.isEA) bases.push('BASE IR (EA)');
             if (r.incidePSS) bases.push('BASE PSS');
-            if (r.pssCompetenciaSeparada) bases.push('PSS COMP. ANT.');
+            if (r.pssCompetenciaSeparada) bases.push('BASE PSS (EA)');
             const sufixoBase = bases.length > 0 ? ` (${bases.join(' | ')})` : '';
 
             rows.push({

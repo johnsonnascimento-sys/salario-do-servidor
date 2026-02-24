@@ -18,7 +18,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -26,7 +26,16 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
                                 checked={state.substIsEA}
                                 onChange={e => update('substIsEA', e.target.checked)}
                             />
-                            <span>Exercício Anterior (EA)</span>
+                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={state.substPssIsEA}
+                                onChange={e => update('substPssIsEA', e.target.checked)}
+                            />
+                            <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
                         </label>
                     </div>
 

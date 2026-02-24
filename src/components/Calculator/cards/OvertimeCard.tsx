@@ -16,7 +16,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -24,7 +24,16 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                                 checked={state.heIsEA}
                                 onChange={e => update('heIsEA', e.target.checked)}
                             />
-                            <span>Exercício Anterior (EA)</span>
+                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={state.hePssIsEA}
+                                onChange={e => update('hePssIsEA', e.target.checked)}
+                            />
+                            <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
                         </label>
                     </div>
                     <div className="grid grid-cols-2 gap-4">

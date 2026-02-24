@@ -21,6 +21,17 @@ export interface DeductionsResult {
     funpresp: number;
     irrf: number;
     irEA: number;
+    aqIr: number;
+    aqPss: number;
+    gratIr: number;
+    gratPss: number;
+    vantagensIr: number;
+    vantagensPss: number;
+    abonoIr: number;
+    overtimeIr: number;
+    overtimePss: number;
+    substitutionIr: number;
+    substitutionPss: number;
     total: number;
 }
 
@@ -40,12 +51,10 @@ const calculateRubricasBaseAdjustments = (rubricas: Rubrica[] = []) => {
             }
 
             const signedValor = rubrica.tipo === 'D' ? -valor : valor;
-            if (rubrica.incidePSS) {
-                if (rubrica.isEA || rubrica.pssCompetenciaSeparada) {
-                    acc.pssEA += signedValor;
-                } else {
-                    acc.pssMensal += signedValor;
-                }
+            if (rubrica.pssCompetenciaSeparada) {
+                acc.pssEA += signedValor;
+            } else if (rubrica.incidePSS) {
+                acc.pssMensal += signedValor;
             }
             if (rubrica.isEA) {
                 acc.irEA += signedValor;
@@ -101,6 +110,9 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
         gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
+    const overtime = await calculateOvertime(params);
+    const substitution = await calculateSubstitution(params);
+
     // PSS Base Calculation
     let basePSS = baseVencimento + gaj + aqTituloVal + (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
     if (params.incidirPSSGrat) basePSS += gratVal;
@@ -114,6 +126,8 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     let pssMensal = 0;
     let pssEA = 0;
     let baseFunpresp = 0;
+    let overtimePss = 0;
+    let substitutionPss = 0;
 
     if (pssTable) {
         if (usaTeto) {
@@ -124,10 +138,17 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
             pssMensal = calculatePss(basePSS, pssTable);
         }
 
-        if (rubricasAdjustments.pssEA !== 0) {
+        const basePssEA =
+            (params.hePssIsEA ? overtime.heTotal : 0) +
+            (params.substPssIsEA ? substitution : 0) +
+            rubricasAdjustments.pssEA;
+
+        if (basePssEA !== 0) {
             const baseReferenciaAliquota = usaTeto ? Math.min(basePSS, teto) : basePSS;
             const aliquotaMarginal = getMarginalPssRate(baseReferenciaAliquota, pssTable);
-            pssEA = rubricasAdjustments.pssEA * aliquotaMarginal;
+            pssEA = basePssEA * aliquotaMarginal;
+            overtimePss = (params.hePssIsEA ? overtime.heTotal : 0) * aliquotaMarginal;
+            substitutionPss = (params.substPssIsEA ? substitution : 0) * aliquotaMarginal;
         }
     }
 
@@ -150,8 +171,6 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
         (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0) + abonoPerm;
 
     // Hora extra / substituicao: entram no mensal apenas quando NAO marcadas como EA.
-    const overtime = await calculateOvertime(params);
-    const substitution = await calculateSubstitution(params);
     if (!params.heIsEA) totalTrib += overtime.heTotal;
     if (!params.substIsEA) totalTrib += substitution;
 
@@ -163,6 +182,19 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
     const irMensal = calculateIrrf(baseIR, payrollRules.irrfTopRate, deductionVal);
 
+    const pssRateBase = Math.max(0, usaTeto ? Math.min(basePSS, teto) : basePSS);
+    const pssEffectiveRate = pssRateBase > 0 ? pssMensal / pssRateBase : 0;
+    const irEffectiveRate = baseIR > 0 ? irMensal / baseIR : 0;
+    const vantagensBase = (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
+
+    const aqIr = (aqTituloVal + aqTreinoVal) * irEffectiveRate;
+    const aqPss = aqTituloVal * pssEffectiveRate;
+    const gratIr = gratVal * irEffectiveRate;
+    const gratPss = (params.incidirPSSGrat ? gratVal : 0) * pssEffectiveRate;
+    const vantagensIr = vantagensBase * irEffectiveRate;
+    const vantagensPss = vantagensBase * pssEffectiveRate;
+    const abonoIr = abonoPerm * irEffectiveRate;
+
     // IR de Exercicio Anterior (EA): HE/Substituicao marcadas como EA.
     const baseEA =
         (params.heIsEA ? overtime.heTotal : 0) +
@@ -171,12 +203,50 @@ export async function calculateDeductions(grossValue: number, params: IJmuCalcul
     const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep));
     const irEA = calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
 
+    let overtimeIr = 0;
+    let substitutionIr = 0;
+
+    const heMensalBase = !params.heIsEA ? overtime.heTotal : 0;
+    if (heMensalBase > 0) {
+        const irSemHe = calculateIrrf(Math.max(0, baseIR - heMensalBase), payrollRules.irrfTopRate, deductionVal);
+        overtimeIr += Math.max(0, irMensal - irSemHe);
+    }
+
+    const substMensalBase = !params.substIsEA ? substitution : 0;
+    if (substMensalBase > 0) {
+        const irSemSubst = calculateIrrf(Math.max(0, baseIR - substMensalBase), payrollRules.irrfTopRate, deductionVal);
+        substitutionIr += Math.max(0, irMensal - irSemSubst);
+    }
+
+    const heEABase = params.heIsEA ? overtime.heTotal : 0;
+    if (heEABase > 0) {
+        const irEaSemHe = calculateIrrf(Math.max(0, baseIREA - heEABase), payrollRules.irrfTopRate, deductionVal);
+        overtimeIr += Math.max(0, irEA - irEaSemHe);
+    }
+
+    const substEABase = params.substIsEA ? substitution : 0;
+    if (substEABase > 0) {
+        const irEaSemSubst = calculateIrrf(Math.max(0, baseIREA - substEABase), payrollRules.irrfTopRate, deductionVal);
+        substitutionIr += Math.max(0, irEA - irEaSemSubst);
+    }
+
     return {
         pss: pssMensal,
         pssEA,
         funpresp: valFunpresp,
         irrf: irMensal,
         irEA,
+        aqIr,
+        aqPss,
+        gratIr,
+        gratPss,
+        vantagensIr,
+        vantagensPss,
+        abonoIr,
+        overtimeIr,
+        overtimePss,
+        substitutionIr,
+        substitutionPss,
         total: pssMensal + pssEA + valFunpresp + irMensal + irEA
     };
 }

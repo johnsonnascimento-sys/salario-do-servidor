@@ -77,8 +77,10 @@ export function mapStateToJmuParams(
         heQtd50: state.heQtd50 || 0,
         heQtd100: state.heQtd100 || 0,
         heIsEA: state.heIsEA,
+        hePssIsEA: state.hePssIsEA,
         substDias: state.substDias,
         substIsEA: state.substIsEA,
+        substPssIsEA: state.substPssIsEA,
 
         // Diárias e Licença (Fase 9)
         diariasQtd: state.diariasQtd || 0,

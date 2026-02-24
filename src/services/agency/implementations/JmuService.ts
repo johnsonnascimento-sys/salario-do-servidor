@@ -150,6 +150,13 @@ export class JmuService implements IAgencyCalculator {
                 irrf: deductions.irrf,
                 irEA: deductions.irEA,
                 funpresp: deductions.funpresp,
+                aqIr: deductions.aqIr,
+                aqPss: deductions.aqPss,
+                gratIr: deductions.gratIr,
+                gratPss: deductions.gratPss,
+                vantagensIr: deductions.vantagensIr,
+                vantagensPss: deductions.vantagensPss,
+                abonoIr: deductions.abonoIr,
 
                 // Férias
                 feriasConstitucional: vacation.value,
@@ -170,7 +177,11 @@ export class JmuService implements IAgencyCalculator {
                 heVal50: overtime.heVal50,
                 heVal100: overtime.heVal100,
                 heTotal: overtime.heTotal,
+                heIr: deductions.overtimeIr,
+                hePss: deductions.overtimePss,
                 substituicao: substitution,
+                substituicaoIr: deductions.substitutionIr,
+                substituicaoPss: deductions.substitutionPss,
 
                 // Diárias e Licença
                 diariasValor: dailies.valor,

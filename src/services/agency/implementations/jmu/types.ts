@@ -54,8 +54,10 @@ export interface IJmuCalculationParams extends ICalculationParams {
     heQtd50: number;
     heQtd100: number;
     heIsEA: boolean;
+    hePssIsEA: boolean;
     substDias: Record<string, number>; // Mapa de funcao -> dias
     substIsEA: boolean;
+    substPssIsEA: boolean;
 
     // Diarias e Licencas
     diariasQtd: number;

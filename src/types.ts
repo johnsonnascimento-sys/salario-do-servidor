@@ -162,11 +162,13 @@ export interface CalculatorState {
   heVal100: number;
   heTotal: number;
   heIsEA: boolean;
+  hePssIsEA: boolean;
 
   // Substitution (New Grid System)
   substDias: Record<string, number>; // Map like { 'fc1': 0, 'cj2': 5 }
   substTotal: number;
   substIsEA: boolean;
+  substPssIsEA: boolean;
 
   // License & Aids
   licencaDias: number;
@@ -231,6 +233,17 @@ export interface CalculatorState {
   pssEA: number;
   irMensal: number;
   irEA: number;
+  aqIr: number;
+  aqPss: number;
+  gratIr: number;
+  gratPss: number;
+  vantagensIr: number;
+  vantagensPss: number;
+  abonoIr: number;
+  heIr: number;
+  hePss: number;
+  substIr: number;
+  substPss: number;
   irFerias: number;
   valFunpresp: number;
   totalBruto: number;
@@ -303,10 +316,12 @@ export const INITIAL_STATE: CalculatorState = {
   heVal100: 0,
   heTotal: 0,
   heIsEA: false,
+  hePssIsEA: false,
 
   substDias: {},
   substTotal: 0,
   substIsEA: false,
+  substPssIsEA: false,
 
   licencaDias: 0,
   baseLicenca: 'auto',
@@ -363,6 +378,17 @@ export const INITIAL_STATE: CalculatorState = {
   pssEA: 0,
   irMensal: 0,
   irEA: 0,
+  aqIr: 0,
+  aqPss: 0,
+  gratIr: 0,
+  gratPss: 0,
+  vantagensIr: 0,
+  vantagensPss: 0,
+  abonoIr: 0,
+  heIr: 0,
+  hePss: 0,
+  substIr: 0,
+  substPss: 0,
   irFerias: 0,
   valFunpresp: 0,
   totalBruto: 0,
