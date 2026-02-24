@@ -94,8 +94,6 @@ export const FieldCalculator: React.FC = () => {
         const onFocusIn = (event: FocusEvent) => {
             if (isEligibleInput(event.target)) {
                 setTargetInput(event.target);
-            } else if (!isOpen) {
-                setTargetInput(null);
             }
         };
 

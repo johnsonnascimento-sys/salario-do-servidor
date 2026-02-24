@@ -86,6 +86,13 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         });
     }
 
+    // Compat: explicita jan-abr/2025 quando a base ainda só trouxe 2025_maio.
+    // Isso mantém a seleção histórica correta no front até a migração do banco ser aplicada.
+    if (!historico_ir['2025_jan'] && historico_ir['2025_maio'] && historico_ir['2024_fev']) {
+        historico_ir['2025_jan'] = historico_ir['2024_fev'];
+        historico_ir_brackets['2025_jan'] = [...(historico_ir_brackets['2024_fev'] || [])];
+    }
+
     const salaryBasesNormalized: Record<string, Record<string, number>> = {};
     Object.entries(salarySource || {}).forEach(([cargo, padroes]) => {
         if (cargo.toLowerCase() === 'funcoes') return;

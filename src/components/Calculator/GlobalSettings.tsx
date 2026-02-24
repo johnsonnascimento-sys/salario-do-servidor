@@ -124,6 +124,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
 
         const strictMin = pickMaxReferencePoint(minCandidates);
         const strictMax = pickMaxReferencePoint(maxCandidates);
+        const salaryReferenceMin = pickMinReferencePoint(schedulePoints);
 
         if (!strictMin || !strictMax) {
             return {
@@ -132,17 +133,13 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
             };
         }
 
-        if (compareReferencePoints(strictMin, strictMax) > 0) {
-            // If datasets have disjoint windows, prefer a broad valid range instead of locking selectors.
-            return {
-                min: pickMinReferencePoint(minCandidates),
-                max: pickMaxReferencePoint([...minCandidates, ...maxCandidates])
-            };
-        }
+        // Floor of reference selector follows salary reference availability.
+        const minPoint = salaryReferenceMin || strictMin;
+        const maxPoint = strictMax;
 
         return {
-            min: strictMin,
-            max: strictMax
+            min: compareReferencePoints(minPoint, maxPoint) <= 0 ? minPoint : maxPoint,
+            max: maxPoint
         };
     }, [pssKeys, irKeys, foodAllowanceOptions, preschoolAllowanceOptions, schedules]);
 
