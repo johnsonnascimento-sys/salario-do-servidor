@@ -9,6 +9,7 @@ import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { pickBestKeyByReference, toReferenceMonthIndex } from './referenceDateUtils';
+import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 
 type PredefinedRubricId =
     | 'aq'
@@ -444,7 +445,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 ];
             case 'diarias':
                 {
+                    const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({
+                        dailiesConfig: courtConfig?.dailies,
+                        embarkationType: state.diariasEmbarque
+                    }));
+                    const diariasSemEmbarque = roundCurrency(Math.max(0, (state.diariasBruto || 0) - adicionalEmbarque));
                     const lines: PresetGrossLine[] = [
+                        { label: 'Diarias sem adicional de embarque', value: diariasSemEmbarque },
+                        { label: 'Adicional de embarque', value: adicionalEmbarque },
                         { label: 'Diarias brutas', value: roundCurrency(state.diariasBruto || 0) }
                     ];
 
@@ -459,7 +467,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     }
 
                     lines.push(
-                        { label: 'Corte teto LDO (valor atual)', value: roundCurrency(state.diariasCorteLdo || 0) },
+                        { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
                         { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
                         { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
                         { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) },
