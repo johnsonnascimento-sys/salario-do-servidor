@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Calculator } from 'lucide-react';
 
 const KEYBOARD_KEYS = ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '(', ')', '+'];
 
@@ -93,6 +94,8 @@ export const FieldCalculator: React.FC = () => {
         const onFocusIn = (event: FocusEvent) => {
             if (isEligibleInput(event.target)) {
                 setTargetInput(event.target);
+            } else if (!isOpen) {
+                setTargetInput(null);
             }
         };
 
@@ -100,7 +103,7 @@ export const FieldCalculator: React.FC = () => {
         return () => {
             document.removeEventListener('focusin', onFocusIn);
         };
-    }, []);
+    }, [isOpen]);
 
     useEffect(() => {
         if (!targetInput || !isOpen) {
@@ -216,9 +219,11 @@ export const FieldCalculator: React.FC = () => {
                             setIsOpen(false);
                         }
                     }}
-                    className="rounded-full bg-secondary px-3 py-1.5 text-label font-bold text-white shadow-lg hover:bg-secondary-700"
+                    className="rounded-full bg-secondary p-2.5 text-white shadow-lg hover:bg-secondary-700"
+                    aria-label={isOpen ? 'Ocultar calculadora' : 'Mostrar calculadora'}
+                    title={isOpen ? 'Ocultar calculadora' : 'Mostrar calculadora'}
                 >
-                    {isOpen ? 'Ocultar' : 'Mostrar calc'}
+                    <Calculator className="w-4 h-4" />
                 </button>
             </div>
 

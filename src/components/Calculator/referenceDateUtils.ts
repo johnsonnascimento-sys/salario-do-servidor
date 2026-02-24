@@ -71,7 +71,7 @@ export const parseReferencePointFromKey = (key: string): ReferencePoint | null =
     if (!parsed) return null;
     return {
         year: parsed.year,
-        month: parsed.month || 12
+        month: parsed.month || 1
     };
 };
 
@@ -185,4 +185,3 @@ export const pickMaxReferencePoint = (points: ReferencePoint[]) => {
     if (!points.length) return null;
     return points.reduce((max, current) => compareReferencePoints(current, max) > 0 ? current : max);
 };
-

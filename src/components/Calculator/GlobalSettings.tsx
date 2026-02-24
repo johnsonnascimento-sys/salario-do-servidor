@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+﻿import React, { useEffect, useMemo, useRef } from 'react';
 import { Settings } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import {
@@ -112,9 +112,20 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
             .map(set => pickMaxReferencePoint(set))
             .filter((v): v is { year: number; month: number } => !!v);
 
+        const minPoint = pickMaxReferencePoint(minCandidates);
+        const maxPoint = pickMinReferencePoint(maxCandidates);
+
+        if (minPoint && maxPoint && compareReferencePoints(minPoint, maxPoint) > 0) {
+            const fallbackPoint = maxPoint || minPoint;
+            return {
+                min: fallbackPoint,
+                max: fallbackPoint
+            };
+        }
+
         return {
-            min: pickMaxReferencePoint(minCandidates),
-            max: pickMinReferencePoint(maxCandidates)
+            min: minPoint,
+            max: maxPoint
         };
     }, [pssKeys, irKeys, foodAllowanceOptions, preschoolAllowanceOptions, schedules]);
 
@@ -275,7 +286,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
                 </div>
 
                 <div>
-                    <label className={compactLabel}>M�s de Refer�ncia (traz valores hist�ricos de IR, PSS, Alimenta��o...)</label>
+                    <label className={compactLabel}>Mes de Referencia (traz valores historicos de IR, PSS, Alimentacao...)</label>
                     <div className="flex gap-2">
                         <select
                             className={compactInput}

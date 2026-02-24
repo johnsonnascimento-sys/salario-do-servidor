@@ -363,11 +363,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             case 'aq': {
                 const tituloLabel = isNovoAQ ? 'AQ Titulos (Lei 15.292)' : 'AQ Titulos';
                 const treinoLabel = isNovoAQ ? 'AQ Treinamento (Lei 15.292)' : 'AQ Treinamento';
-                return [
-                    { label: 'Valor de referencia (VR)', value: roundCurrency(currentTables.valorVR || 0) },
+                const lines: PresetGrossLine[] = [];
+                if (isNovoAQ) {
+                    lines.push({ label: 'Valor de referencia (VR)', value: roundCurrency(currentTables.valorVR || 0) });
+                }
+                lines.push(
                     { label: tituloLabel, value: roundCurrency(state.aqTituloValor || 0) },
                     { label: treinoLabel, value: roundCurrency(state.aqTreinoValor || 0) },
                     { label: 'Total AQ', value: roundCurrency((state.aqTituloValor || 0) + (state.aqTreinoValor || 0)) }
+                );
+                return [
+                    ...lines
                 ];
             }
             case 'gratificacao':
