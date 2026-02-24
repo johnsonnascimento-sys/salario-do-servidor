@@ -13,6 +13,7 @@ import { CalculatorState, CourtConfig } from '../../types';
 import { JmuService } from '../../services/agency/implementations/JmuService';
 import { mapStateToJmuParams } from '../../services/agency/adapters/stateToParams';
 import { getTablesForPeriod } from '../../utils/calculations';
+import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 
 export const useCalculatorResults = (
     state: CalculatorState,
@@ -234,7 +235,21 @@ export const useCalculatorResults = (
         if (state.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: state.planoSaude, type: 'D' });
         if (state.pensao > 0) rows.push({ label: 'PENSÃO ALIMENTÍCIA', value: state.pensao, type: 'D' });
 
-        if (state.diariasBruto > 0) rows.push({ label: 'DIÁRIAS', value: state.diariasBruto, type: 'C' });
+        const diariasAdicionalEmbarque = resolveDailiesEmbarkationAdditional({
+            dailiesConfig: courtConfig?.dailies,
+            embarkationType: state.diariasEmbarque
+        });
+        const diariasSemAdicionalEmbarque = Math.max(0, state.diariasBruto - diariasAdicionalEmbarque);
+
+        if (diariasSemAdicionalEmbarque > 0) {
+            rows.push({ label: 'DIÁRIAS (SEM ADICIONAL DE EMBARQUE)', value: diariasSemAdicionalEmbarque, type: 'C' });
+        }
+        if (diariasAdicionalEmbarque > 0) {
+            rows.push({ label: 'ADICIONAL DE EMBARQUE (DIÁRIAS)', value: diariasAdicionalEmbarque, type: 'C' });
+        }
+        if (state.diariasBruto > 0 && diariasSemAdicionalEmbarque <= 0 && diariasAdicionalEmbarque <= 0) {
+            rows.push({ label: 'DIÁRIAS', value: state.diariasBruto, type: 'C' });
+        }
         if (state.diariasCorteLdo > 0) rows.push({ label: 'CORTE TETO LDO (DIÁRIAS)', value: state.diariasCorteLdo, type: 'D' });
         if (state.diariasGlosa > 0) rows.push({ label: 'ABATIMENTO BENEF. EXTERNO (ART. 4º)', value: state.diariasGlosa, type: 'D' });
         if (state.diariasDescAlim > 0) rows.push({ label: 'RESTITUIÇÃO AUX. ALIM. (DIÁRIAS)', value: state.diariasDescAlim, type: 'D' });
