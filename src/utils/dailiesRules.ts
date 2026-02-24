@@ -14,6 +14,8 @@ export interface DailiesRangeSummary {
     weekendDays: number;
     weekdayHolidayDays: number;
     weekendHolidayDays: number;
+    weekendExcludedDates: string[];
+    holidayExcludedDates: string[];
 }
 
 interface ResolveDiscountDaysInput {
@@ -247,6 +249,8 @@ export const summarizeDailiesRange = (
     let weekendDays = 0;
     let weekdayHolidayDays = 0;
     let weekendHolidayDays = 0;
+    const weekendExcludedDates: string[] = [];
+    const holidayExcludedDates: string[] = [];
 
     const cursor = new Date(range.start.getTime());
     while (cursor.getTime() <= range.end.getTime()) {
@@ -270,6 +274,12 @@ export const summarizeDailiesRange = (
         const shouldSkip = rules.excludeWeekendsAndHolidays && (isWeekend || isHoliday);
         if (shouldSkip) {
             excludedDays += 1;
+            if (isWeekend) {
+                weekendExcludedDates.push(iso);
+            }
+            if (isHoliday) {
+                holidayExcludedDates.push(iso);
+            }
         } else {
             deductibleDays += 1;
         }
@@ -283,7 +293,9 @@ export const summarizeDailiesRange = (
         excludedDays,
         weekendDays,
         weekdayHolidayDays,
-        weekendHolidayDays
+        weekendHolidayDays,
+        weekendExcludedDates,
+        holidayExcludedDates
     };
 };
 

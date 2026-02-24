@@ -16,6 +16,14 @@ interface DailiesCardProps {
 }
 
 const toNonNegativeNumber = (value: string) => Math.max(0, Number(value) || 0);
+const formatIsoDatePtBr = (isoDate: string) => {
+    const [year, month, day] = isoDate.split('-');
+    if (!year || !month || !day) return isoDate;
+    return `${day}/${month}/${year}`;
+};
+const formatDateList = (dates: string[]) => (
+    dates.length > 0 ? dates.map(formatIsoDatePtBr).join(', ') : 'nenhum'
+);
 
 export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig }) => {
     const dailiesConfig = courtConfig?.dailies;
@@ -190,7 +198,14 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                 {hasValidDateRange
                                     ? (
                                         discountRules.excludeWeekendsAndHolidays && rangeSummary
-                                            ? `Dias usados no desconto: ${automaticDiscountDays}. Não descontados: ${rangeSummary.excludedDays} dia(s) (finais de semana: ${rangeSummary.weekendDays}; feriados em dia útil: ${rangeSummary.weekdayHolidayDays}${rangeSummary.weekendHolidayDays > 0 ? `; feriados em fim de semana: ${rangeSummary.weekendHolidayDays}` : ''}).`
+                                            ? (
+                                                <>
+                                                    <p>Dias usados no desconto: {automaticDiscountDays}.</p>
+                                                    <p>Dias não descontados por finais de semana e feriados: {rangeSummary.excludedDays}.</p>
+                                                    <p>Finais de semana considerados para não desconto: {formatDateList(rangeSummary.weekendExcludedDates)}.</p>
+                                                    <p>Feriados considerados para não desconto: {formatDateList(rangeSummary.holidayExcludedDates)}.</p>
+                                                </>
+                                            )
                                             : `Dias usados no desconto: ${automaticDiscountDays}. A configuração atual não exclui finais de semana e feriados.`
                                     )
                                     : 'Preencha início e fim para calcular automaticamente os dias de desconto.'}
