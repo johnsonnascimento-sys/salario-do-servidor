@@ -55,12 +55,9 @@ export default function Calculator() {
     return (
         <>
             {/* Mobile Bottom Bar - Fixed */}
-                <MobileResultsBar
-                    bruto={state.totalBruto}
-                    pss={state.pssMensal + state.pssEA + (state.pss13 || 0)}
-                    irrf={state.irMensal + state.irEA + state.irFerias + (state.ir13 || 0)}
-                    liquido={state.liquido}
-                    onExportPDF={initiateExportPDF}
+            <MobileResultsBar
+                liquido={state.liquido}
+                onExportPDF={initiateExportPDF}
                 onExportExcel={initiateExportExcel}
             />
 
