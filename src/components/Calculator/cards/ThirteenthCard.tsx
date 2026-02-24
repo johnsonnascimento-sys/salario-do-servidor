@@ -15,10 +15,10 @@ const parseCurrencyInput = (value: string) => {
 };
 
 export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, styles }) => {
-    const renderAutoToggle = (field: keyof CalculatorState, enabled: boolean, amount: number, label: string) => (
+    const renderAutoToggle = (enabled: boolean, amount: number, label: string, onToggle: () => void) => (
         <div
             className={styles.innerBox + ' cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors'}
-            onClick={() => update(field, enabled ? 0 : 1)}
+            onClick={onToggle}
         >
             <div className="flex items-center gap-3">
                 <input
@@ -73,7 +73,22 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 placeholder="0,00"
                             />
                         ) : (
-                            renderAutoToggle('adiant13Venc', state.adiant13Venc > 0, state.adiant13Venc, 'Receber adiantamento')
+                            renderAutoToggle(
+                                state.adiant13Venc > 0,
+                                state.adiant13Venc,
+                                'Receber adiantamento',
+                                () => {
+                                    const nextEnabled = !(state.adiant13Venc > 0);
+                                    if (nextEnabled) {
+                                        update('adiant13Venc', 1);
+                                        return;
+                                    }
+                                    update('adiant13Venc', 0);
+                                    if (state.segunda13Venc > 0) {
+                                        update('segunda13Venc', 0);
+                                    }
+                                }
+                            )
                         )}
                     </div>
 
@@ -88,7 +103,22 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 placeholder="0,00"
                             />
                         ) : (
-                            renderAutoToggle('adiant13FC', state.adiant13FC > 0, state.adiant13FC, 'Receber adiantamento')
+                            renderAutoToggle(
+                                state.adiant13FC > 0,
+                                state.adiant13FC,
+                                'Receber adiantamento',
+                                () => {
+                                    const nextEnabled = !(state.adiant13FC > 0);
+                                    if (nextEnabled) {
+                                        update('adiant13FC', 1);
+                                        return;
+                                    }
+                                    update('adiant13FC', 0);
+                                    if (state.segunda13FC > 0) {
+                                        update('segunda13FC', 0);
+                                    }
+                                }
+                            )
                         )}
                     </div>
 
@@ -103,7 +133,22 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 placeholder="0,00"
                             />
                         ) : (
-                            renderAutoToggle('segunda13Venc', state.segunda13Venc > 0, state.segunda13Venc, 'Receber segunda parcela')
+                            renderAutoToggle(
+                                state.segunda13Venc > 0,
+                                state.segunda13Venc,
+                                'Receber segunda parcela',
+                                () => {
+                                    const nextEnabled = !(state.segunda13Venc > 0);
+                                    if (nextEnabled) {
+                                        update('segunda13Venc', 1);
+                                        if (state.adiant13Venc <= 0) {
+                                            update('adiant13Venc', 1);
+                                        }
+                                        return;
+                                    }
+                                    update('segunda13Venc', 0);
+                                }
+                            )
                         )}
                     </div>
 
@@ -118,7 +163,22 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 placeholder="0,00"
                             />
                         ) : (
-                            renderAutoToggle('segunda13FC', state.segunda13FC > 0, state.segunda13FC, 'Receber segunda parcela')
+                            renderAutoToggle(
+                                state.segunda13FC > 0,
+                                state.segunda13FC,
+                                'Receber segunda parcela',
+                                () => {
+                                    const nextEnabled = !(state.segunda13FC > 0);
+                                    if (nextEnabled) {
+                                        update('segunda13FC', 1);
+                                        if (state.adiant13FC <= 0) {
+                                            update('adiant13FC', 1);
+                                        }
+                                        return;
+                                    }
+                                    update('segunda13FC', 0);
+                                }
+                            )
                         )}
                     </div>
                 </div>
