@@ -663,12 +663,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </div>
 
             <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>
-                    Adicional de QualificaÃ§Ã£o
-                    <span className="text-label bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
-                        {isNovoAQ ? 'LEI 15.292/2026' : 'REGRA ATUAL'}
-                    </span>
-                </h4>
+                <h4 className={styles.innerBoxTitle}>Adicional de Qualificação</h4>
                 {renderPreset('aq')}
                 {renderPresetGrossSummary('aq')}
             </div>
@@ -933,3 +928,4 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         </div>
     );
 };
+

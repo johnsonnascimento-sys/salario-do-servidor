@@ -90,6 +90,8 @@ export const FieldCalculator: React.FC = () => {
     const [lastResult, setLastResult] = useState<number | null>(null);
     const [hasError, setHasError] = useState(false);
     const [viewportTick, setViewportTick] = useState(0);
+    const [calculatorButtonElement, setCalculatorButtonElement] = useState<HTMLDivElement | null>(null);
+    const [calculatorPanelElement, setCalculatorPanelElement] = useState<HTMLDivElement | null>(null);
 
     useEffect(() => {
         const onFocusIn = (event: FocusEvent) => {
@@ -107,6 +109,33 @@ export const FieldCalculator: React.FC = () => {
             document.removeEventListener('focusin', onFocusIn);
         };
     }, []);
+
+    useEffect(() => {
+        const onPointerDown = (event: PointerEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+
+            const clickedInsideCalculator =
+                (calculatorButtonElement && calculatorButtonElement.contains(target)) ||
+                (calculatorPanelElement && calculatorPanelElement.contains(target));
+
+            if (clickedInsideCalculator) {
+                return;
+            }
+
+            if (isEligibleInput(event.target)) {
+                return;
+            }
+
+            setIsOpen(false);
+            setTargetInput(null);
+        };
+
+        document.addEventListener('pointerdown', onPointerDown, true);
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown, true);
+        };
+    }, [calculatorButtonElement, calculatorPanelElement]);
 
     useEffect(() => {
         if (!targetInput) {
@@ -235,6 +264,7 @@ export const FieldCalculator: React.FC = () => {
     return (
         <>
             <div
+                ref={setCalculatorButtonElement}
                 style={{ top: anchor.buttonTop, left: anchor.buttonLeft }}
                 className="fixed z-40"
             >
@@ -257,6 +287,7 @@ export const FieldCalculator: React.FC = () => {
 
             {isOpen && (
                 <div
+                    ref={setCalculatorPanelElement}
                     style={{ top: anchor.panelTop, left: anchor.panelLeft, width: anchor.panelWidth }}
                     className="fixed z-50 rounded-2xl bg-white p-4 shadow-2xl border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-700"
                 >
