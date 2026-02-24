@@ -475,6 +475,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     const meioDescAuxTranspRetorno = periodSummary?.halfDiscountApplied && state.diariasDescontarTransporte
                         ? roundCurrency((state.auxTransporteValor / discountRules.transportDivisor) * 0.5)
                         : 0;
+                    const totalDescAuxAlim = roundCurrency(state.diariasDescAlim || 0);
+                    const totalDescAuxTransp = roundCurrency(state.diariasDescTransp || 0);
+                    const descAuxAlimDiariaInteira = roundCurrency(Math.max(0, totalDescAuxAlim - meioDescAuxAlimRetorno));
+                    const descAuxTranspDiariaInteira = roundCurrency(Math.max(0, totalDescAuxTransp - meioDescAuxTranspRetorno));
                     const lines: PresetGrossLine[] = [
                         { label: 'Diarias sem adicional de embarque', value: diariasSemEmbarque },
                         { label: 'Adicional de embarque', value: adicionalEmbarque },
@@ -497,15 +501,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     lines.push(
                         { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0) },
                         { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0) },
-                        { label: 'Restituicao aux. alimentacao', value: roundCurrency(state.diariasDescAlim || 0) },
-                        { label: 'Restituicao aux. transporte', value: roundCurrency(state.diariasDescTransp || 0) }
+                        { label: 'Restituicao aux. alimentacao (diária inteira)', value: descAuxAlimDiariaInteira },
+                        { label: 'Restituicao aux. alimentacao (meia diária)', value: meioDescAuxAlimRetorno },
+                        { label: 'Restituicao aux. tranporte (diária inteira)', value: descAuxTranspDiariaInteira },
+                        { label: 'Restituicao aux. tranporte (meia diária)', value: meioDescAuxTranspRetorno }
                     );
-                    if (meioDescAuxAlimRetorno > 0) {
-                        lines.push({ label: 'Meio desconto no retorno (aux. alimentacao)', value: meioDescAuxAlimRetorno });
-                    }
-                    if (meioDescAuxTranspRetorno > 0) {
-                        lines.push({ label: 'Meio desconto no retorno (aux. transporte)', value: meioDescAuxTranspRetorno });
-                    }
                     lines.push({ label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) });
 
                     return lines;
