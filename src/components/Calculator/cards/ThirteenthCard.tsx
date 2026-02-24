@@ -46,7 +46,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
 
             <div className="space-y-4">
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                    1a parcela sem IR/PSS. 2a parcela com IR/PSS sobre o total (1a + 2a).
+                    1a parcela sem IR/PSS. Na 2a parcela, IR e PSS sobre o total (1a + 2a), sem PSS sobre FC/CJ, com abatimento da 1a parcela.
                 </p>
 
                 <div className="flex justify-end">

@@ -62,6 +62,7 @@ export const useCalculatorResults = (
                     abonoPerm13: bd.abono13 || 0,
                     pss13: bd.pss13 || 0,
                     ir13: bd.imposto13 || 0,
+                    debitoPrimeiraParcela13: bd.debitoPrimeiraParcela13 || 0,
                     adiant13Venc: bd.adiant13Venc || 0,
                     adiant13FC: bd.adiant13FC || 0,
                     segunda13Venc: bd.segunda13Venc || 0,
@@ -202,6 +203,7 @@ export const useCalculatorResults = (
         if (state.feriasDesc && state.feriasDesc > 0) rows.push({ label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', value: state.feriasDesc, type: 'D' });
         if (state.pss13 && state.pss13 > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC', value: state.pss13, type: 'D' });
         if (state.ir13 && state.ir13 > 0) rows.push({ label: 'IMPOSTO DE RENDA-GN(13º) EC', value: state.ir13, type: 'D' });
+        if (state.debitoPrimeiraParcela13 > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA (ABATIMENTO)', value: state.debitoPrimeiraParcela13, type: 'D' });
         if (state.auxTransporteDesc > 0) rows.push({ label: 'COTA-PARTE AUXÍLIO-TRANSPORTE', value: state.auxTransporteDesc, type: 'D' });
         if (state.emprestimos > 0) rows.push({ label: 'CONSIGNAÇÕES / EMPRÉSTIMOS', value: state.emprestimos, type: 'D' });
         if (state.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: state.planoSaude, type: 'D' });

@@ -20,6 +20,7 @@ export interface ThirteenthResult {
     gratNatalinaTotal: number;
     pss13: number;
     ir13: number;
+    primeiraParcelaDesconto: number;
     adiant13Venc: number;
     adiant13FC: number;
     segunda13Venc: number;
@@ -99,20 +100,24 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
     let pss13 = 0;
     let ir13 = 0;
     let abono13 = 0;
+    let primeiraParcelaDesconto = 0;
 
     const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
     const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
 
     // Regra: 1a parcela nao tem IR/PSS.
-    // IR/PSS entram apenas quando ha 2a parcela, com base no total (1a + 2a).
+    // Quando ha 2a parcela, IR/PSS incidem sobre o total (1a + 2a),
+    // com abatimento da 1a parcela no contracheque da 2a.
     if (houveSegundaParcela) {
-        // Em modo automatico, se a 2a parcela estiver marcada e a 1a estiver zerada,
-        // considera-se a 1a parcela teorica na base tributavel do 13o.
+        // Se a 2a parcela foi selecionada, considera a 1a parcela na base
+        // mesmo quando nao informada manualmente.
         const primeiraVencParaTributo =
-            adiant13Venc > 0 ? adiant13Venc : (!params.manualAdiant13 ? metadeVencimento13 : 0);
+            adiant13Venc > 0 ? adiant13Venc : metadeVencimento13;
         const primeiraFCParaTributo =
-            adiant13FC > 0 ? adiant13FC : (!params.manualAdiant13 ? metadeFC13 : 0);
+            adiant13FC > 0 ? adiant13FC : metadeFC13;
+
+        primeiraParcelaDesconto = primeiraVencParaTributo + primeiraFCParaTributo;
 
         const baseVencTributavel13 = primeiraVencParaTributo + segunda13Venc;
         const baseFCTributavel13 = primeiraFCParaTributo + segunda13FC;
@@ -123,11 +128,9 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
                 ? Math.min(1, Math.max(0, baseVencTributavel13 / baseSemFC))
                 : 0;
 
-        // AQ treinamento nao integra base de PSS do 13o.
+        // AQ treinamento e FC/CJ nao integram base de PSS do 13o.
         let baseParaPSS13 = base13Tributavel - (aqTreinoVal * fatorVenc);
-        if (!params.pssSobreFC) {
-            baseParaPSS13 -= baseFCTributavel13;
-        }
+        baseParaPSS13 -= baseFCTributavel13;
         baseParaPSS13 = Math.max(0, baseParaPSS13);
 
         if (params.recebeAbono && pssTable) {
@@ -171,6 +174,7 @@ export async function calculateThirteenth(params: IJmuCalculationParams): Promis
         gratNatalinaTotal: roundCurrency(gratNatalinaTotal),
         pss13: roundCurrency(pss13),
         ir13: roundCurrency(ir13),
+        primeiraParcelaDesconto: roundCurrency(primeiraParcelaDesconto),
         adiant13Venc,
         adiant13FC,
         segunda13Venc,

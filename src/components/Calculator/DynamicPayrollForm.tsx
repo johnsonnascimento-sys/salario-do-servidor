@@ -412,15 +412,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         });
 
         const totalNet = roundCurrency(Math.max(0, totalGross - totalDiscounts));
-
-        return [
+        const lines: PresetGrossLine[] = [
             ...grossLines,
             { label: `Desconto IR (${totalLabel})`, value: irVal, isDiscount: true },
             { label: `Desconto PSS (${totalLabel})`, value: pssVal, isDiscount: true },
-            ...netLines,
-            { label: `${totalLabel} Bruto`, value: totalGross },
-            { label: `${totalLabel} Liquido`, value: totalNet }
+            ...netLines
         ];
+
+        if (normalizedItems.length > 1) {
+            lines.push(
+                { label: `${totalLabel} Bruto`, value: totalGross },
+                { label: `${totalLabel} Liquido`, value: totalNet }
+            );
+        }
+
+        return lines;
     };
 
     const getPresetGrossLines = (presetId: PredefinedRubricId): PresetGrossLine[] => {

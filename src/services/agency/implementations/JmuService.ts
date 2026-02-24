@@ -120,7 +120,7 @@ export class JmuService implements IAgencyCalculator {
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
             vacation.irFerias + vacation.descontoAntecipacao + thirteenth.pss13 +
-            thirteenth.ir13 + rubricasTotals.debitos;
+            thirteenth.ir13 + thirteenth.primeiraParcelaDesconto + rubricasTotals.debitos;
 
         // 6. Retornar Resultado Completo
         return {
@@ -168,6 +168,7 @@ export class JmuService implements IAgencyCalculator {
                 abono13: thirteenth.abono13,
                 imposto13: thirteenth.ir13,
                 pss13: thirteenth.pss13,
+                debitoPrimeiraParcela13: thirteenth.primeiraParcelaDesconto,
                 adiant13Venc: thirteenth.adiant13Venc,
                 adiant13FC: thirteenth.adiant13FC,
                 segunda13Venc: thirteenth.segunda13Venc,

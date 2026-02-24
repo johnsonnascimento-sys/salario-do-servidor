@@ -213,6 +213,7 @@ export interface CalculatorState {
   ir13?: number;
   pss13?: number;
   gratNatalinaTotal?: number;
+  debitoPrimeiraParcela13: number;
 
   // 13th Breakdown (Manual Calculation Support)
   adiant13Venc: number; // Adiantamento Ativo EC (Base) - Used for JAN/JUN logic
@@ -361,6 +362,7 @@ export const INITIAL_STATE: CalculatorState = {
   ir13: 0,
   pss13: 0,
   gratNatalinaTotal: 0,
+  debitoPrimeiraParcela13: 0,
 
   adiant13Venc: 0,
   adiant13FC: 0,
