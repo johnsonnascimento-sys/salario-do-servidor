@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.4 - 24/02/2026
+- Fix: Calculadora de campo não fecha mais ao focar/clicar no próprio painel.
+- UX: Regra visual de desconto padronizada no "Resumo bruto calculado" de todos os cards (`(-)` + cor de desconto).
+- Feat: Diárias com calendário oficial STM/JMU 2026 exibido no card e detalhamento de dias não descontados.
+- Feat: Exibição da diária do ministro no card de diárias.
+- Feat: Resumo de diárias com detalhamento de adicional de embarque e descontos de auxílio separados por diária inteira/meia diária.
+- Feat: Regras de diárias movidas para configuração data-driven com metadados de calendário e flags de retorno:
+  - `return_day_half_diem_business_day`
+  - `return_day_half_discount_business_day`
+- Fix: Regra de retorno ajustada:
+  - meia diária mantida também em retorno em fim de semana/feriado;
+  - meio desconto de auxílios aplicado apenas em retorno em dia útil.
+- Data: Correção da configuração ativa de feriados no banco para garantir reconhecimento de feriados (ex.: 07/09/2026).
+- Data: Migrações adicionadas:
+  - `009_fix_jmu_holidays_source_and_dailies_rules.sql`
+  - `010_add_jmu_holiday_calendar_metadata.sql`
+  - `011_enable_jmu_return_half_day_rules.sql`
+
 ## 2.1.3 - 24/02/2026
 - Feat: Calculadora simples agora abre ancorada ao campo focado, com controle de mostrar/ocultar.
 - Feat: Referência de mês/ano passou a ser limitada dinamicamente ao intervalo em que há dados completos (IR, PSS, benefícios e referência salarial), sem hardcode de data.

@@ -1,5 +1,5 @@
 # Manual Tecnico - Salario do Servidor (v2.0)
-Atualizado em: 25/01/2026
+Atualizado em: 24/02/2026
 
 ## 1. Visao Geral do Produto
 Plataforma Multi-Tenancy de Transparencia Salarial para simulacao de holerites do setor publico.
@@ -15,7 +15,9 @@ Stack:
 ## 2. Arquitetura de Dados (O Core)
 O sistema e majoritariamente Data-Driven. Bases, impostos e beneficios vem do banco
 e sao combinados por hierarquia. Alguns valores legados ainda estao hardcoded
-e devem ser migrados (ex: diarias).
+e devem ser migrados. Regras de diarias JMU ja foram migradas para configuracao
+hierarquica (power_config/org_config), incluindo feriados oficiais, teto LDO,
+percentuais derivados da diaria do ministro e regras de retorno com meia diaria.
 
 ### Hierarquia de Configuracao (Cascade Configuration)
 1) Global (`global_config`): regras universais (IR, PSS, teto RGPS).
@@ -112,6 +114,16 @@ Pergunta: "Como ajustar regras de AQ (graduacao/treinamento)?"
 Resposta: editar `power_config` com `config_key = 'aq_rules'`.
 - Percentuais em decimal (ex: 0.01 = 1%).
 - Regras historicas usam `valid_from`/`valid_to` (ex: pre-2026 e 2026+).
+
+### Cenario E (Diarias JMU e Calendario Oficial)
+Pergunta: "Onde ajustar diaria do ministro, teto LDO, feriados e regras de retorno?"
+Resposta: editar `power_config` com `config_key = 'dailies_rules'` (e opcionalmente override em `org_config.configuration.dailies_rules`).
+- `derived_from_minister`: diaria do ministro + percentuais por cargo + embarque.
+- `ldo_cap`: habilitacao e limite por diaria.
+- `discount_rules.holidays`: feriados oficiais usados para nao desconto de auxilios.
+- `discount_rules.return_day_half_diem_business_day`: aplica meia diaria no retorno.
+- `discount_rules.return_day_half_discount_business_day`: aplica meio desconto de auxilios no retorno em dia util.
+- Metadados de calendario: `holiday_calendar_label`, `holiday_calendar_reference`, `holiday_calendar_version`.
 
 ## 5. Estrutura de Pastas e Comandos
 Pastas chave:
