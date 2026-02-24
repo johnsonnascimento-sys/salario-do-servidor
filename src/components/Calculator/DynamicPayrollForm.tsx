@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { DollarSign, GripVertical, Minus, Plus, Settings, Trash2 } from 'lucide-react';
+import { ChevronDown, DollarSign, GripVertical, Minus, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, Rubrica } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
 import { VacationCard } from './cards/VacationCard';
@@ -500,6 +500,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     const segunda13VencLiquido = roundCurrency(Math.max(0, segunda13VencBruto - descontoSegundaVenc));
                     const segunda13FcLiquido = roundCurrency(Math.max(0, segunda13FcBruto - descontoSegundaFc));
                     const abono13Liquido = abono13Bruto;
+                    const totalPrimeiraParcelaBruto = roundCurrency(primeira13VencBruto + primeira13FcBruto);
+                    const totalPrimeiraParcelaLiquido = roundCurrency(primeira13VencLiquido + primeira13FcLiquido);
+                    const totalSegundaParcelaBruto = roundCurrency(segunda13VencBruto + segunda13FcBruto);
+                    const totalSegundaParcelaLiquido = roundCurrency(segunda13VencLiquido + segunda13FcLiquido);
 
                     const total13Bruto = roundCurrency(
                         primeira13VencBruto + primeira13FcBruto + segunda13VencBruto + segunda13FcBruto + abono13Bruto
@@ -522,7 +526,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         { label: '2a parcela FC/CJ Liquido', value: segunda13FcLiquido },
                         { label: 'Abono 13o Liquido', value: abono13Liquido },
                         { label: 'Total 13o salario Bruto', value: total13Bruto },
-                        { label: 'Total 13o salario Liquido', value: total13Liquido }
+                        { label: 'Total 13o salario Liquido', value: total13Liquido },
+                        { label: 'Total 13o salario Bruto 1a Parcela', value: totalPrimeiraParcelaBruto },
+                        { label: 'Total 13o salario Liquido 1a Parcela', value: totalPrimeiraParcelaLiquido },
+                        { label: 'Total 13o salario Bruto 2a Parcela', value: totalSegundaParcelaBruto },
+                        { label: 'Total 13o salario Liquido 2a Parcela', value: totalSegundaParcelaLiquido }
                     ];
                 }
             case 'hora_extra':
@@ -690,11 +698,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         }
 
         return (
-            <div className="rounded-xl border border-secondary/20 bg-secondary/5 px-4 py-3 space-y-2">
-                <p className="text-label font-bold uppercase tracking-widest text-secondary-700 dark:text-secondary-400">
-                    Resumo calculado
-                </p>
-                <div className="space-y-1.5">
+            <details className="group rounded-xl border border-secondary/20 bg-secondary/5 px-4 py-3">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                    <p className="text-label font-bold uppercase tracking-widest text-secondary-700 dark:text-secondary-400">
+                        Resumo calculado
+                    </p>
+                    <ChevronDown className="h-4 w-4 text-secondary-700 transition-transform duration-200 group-open:rotate-180 dark:text-secondary-400" />
+                </summary>
+                <div className="space-y-1.5 pt-2">
                     {lines.map((line) => {
                         const isDiscount = Boolean(line.isDiscount || isDiscountLabel(line.label));
                         return (
@@ -707,7 +718,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         );
                     })}
                 </div>
-            </div>
+            </details>
         );
     };
 
