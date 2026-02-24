@@ -39,7 +39,7 @@ export const useCalculatorState = () => {
         };
         setState(prev => ({
             ...prev,
-            rubricasExtras: [...prev.rubricasExtras, newRubrica]
+            rubricasExtras: [newRubrica, ...prev.rubricasExtras]
         }));
     }, []);
 
