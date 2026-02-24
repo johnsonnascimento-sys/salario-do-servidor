@@ -241,13 +241,18 @@ VALUES (
   'benefits',
   '{
     "auxilio_alimentacao": {
-      "2025": 1784.42
+      "2024_jan26": 1393.10,
+      "2025_jan29": 1460.40,
+      "2025_mar17": 1784.42,
+      "2026_fev03": 1860.51
     },
     "auxilio_preescolar": {
-      "2025": 1235.77
+      "2024_jan26": 1178.82,
+      "2025_jan29": 1235.77,
+      "2026_fev03": 1288.47
     }
   }'::jsonb,
-  '2025-01-01',
+  '2024-01-01',
   NULL
 )
 ON CONFLICT (power_name, config_key, valid_from) DO UPDATE

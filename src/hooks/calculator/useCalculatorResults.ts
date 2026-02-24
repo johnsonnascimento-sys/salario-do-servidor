@@ -141,7 +141,15 @@ export const useCalculatorResults = (
         if (state.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: state.vpni_lei, type: 'C' });
         if (state.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: state.vpni_decisao, type: 'C' });
         if (state.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: state.ats, type: 'C' });
-        if (state.auxAlimentacao > 0) rows.push({ label: 'AUXÍLIO-ALIMENTAÇÃO', value: state.auxAlimentacao, type: 'C' });
+        if (state.auxAlimentacao > 0) {
+            rows.push({
+                label: state.auxAlimentacaoProporcional && state.auxAlimentacaoDetalhe
+                    ? state.auxAlimentacaoDetalhe
+                    : 'AUXILIO-ALIMENTACAO',
+                value: state.auxAlimentacao,
+                type: 'C'
+            });
+        }
         if (state.auxPreEscolarValor > 0) rows.push({ label: 'AUXÍLIO PRÉ-ESCOLAR', value: state.auxPreEscolarValor, type: 'C' });
         if (state.auxTransporteValor > 0) rows.push({ label: 'AUXÍLIO-TRANSPORTE', value: state.auxTransporteValor, type: 'C' });
         if (state.licencaValor > 0) rows.push({ label: 'INDENIZAÇÃO LICENÇA COMPENSATÓRIA', value: state.licencaValor, type: 'C' });
@@ -204,4 +212,5 @@ export const useCalculatorResults = (
 
     return { resultRows };
 };
+
 

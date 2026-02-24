@@ -33,7 +33,9 @@ export async function calculateBenefits(params: IJmuCalculationParams): Promise<
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
 
-    const auxAlimentacao = config.values?.food_allowance ?? params.auxAlimentacao ?? 0;
+    const auxAlimentacao = params.auxAlimentacao > 0
+        ? params.auxAlimentacao
+        : (config.values?.food_allowance ?? 0);
 
     const configCotaPreEscolar = config.values?.pre_school ?? 0;
     const cotaPreEscolar = params.cotaPreEscolar && params.cotaPreEscolar > 0

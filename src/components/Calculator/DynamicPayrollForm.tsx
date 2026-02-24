@@ -8,6 +8,7 @@ import { OvertimeCard } from './cards/OvertimeCard';
 import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
 import { DailiesCard } from './cards/DailiesCard';
+import { pickBestKeyByReference, toReferenceMonthIndex } from './referenceDateUtils';
 
 type PredefinedRubricId =
     | 'aq'
@@ -65,90 +66,6 @@ const toPositiveNumber = (value: string) => {
 };
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
-
-const MONTH_TOKEN_TO_INDEX: Record<string, number> = {
-    jan: 1,
-    janeiro: 1,
-    fev: 2,
-    fevereiro: 2,
-    mar: 3,
-    marco: 3,
-    abril: 4,
-    abr: 4,
-    mai: 5,
-    maio: 5,
-    jun: 6,
-    junho: 6,
-    jul: 7,
-    julho: 7,
-    ago: 8,
-    agosto: 8,
-    set: 9,
-    setembro: 9,
-    out: 10,
-    outubro: 10,
-    nov: 11,
-    novembro: 11,
-    dez: 12,
-    dezembro: 12
-};
-
-interface ParsedOptionKey {
-    key: string;
-    year: number;
-    month: number;
-}
-
-const normalizeKey = (value: string) =>
-    value
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-const parseOptionKey = (key: string): ParsedOptionKey | null => {
-    const normalized = normalizeKey(key);
-    const yearMatch = normalized.match(/(19|20)\d{2}/);
-    if (!yearMatch) return null;
-
-    const year = Number(yearMatch[0]);
-    const monthToken = normalized.slice(yearMatch.index! + yearMatch[0].length).replace(/[^a-z]/g, '');
-    const month = MONTH_TOKEN_TO_INDEX[monthToken] ?? 0;
-
-    return { key, year, month };
-};
-
-const toMonthIndex = (monthLabel: string) => {
-    const normalized = normalizeKey(monthLabel);
-    const compactToken = normalized.replace(/[^a-z]/g, '');
-    return MONTH_TOKEN_TO_INDEX[compactToken] ?? MONTH_TOKEN_TO_INDEX[normalized] ?? 0;
-};
-
-const pickBestTableByReference = (
-    options: string[],
-    referenceYear: number,
-    referenceMonth: number
-) => {
-    if (options.length === 0) return '';
-
-    const parsed = options
-        .map(parseOptionKey)
-        .filter((value): value is ParsedOptionKey => value !== null);
-
-    if (parsed.length === 0) return options[0];
-
-    const sorted = parsed.sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
-        if (a.month !== b.month) return b.month - a.month;
-        return a.key.localeCompare(b.key);
-    });
-
-    const applicable = sorted.find((option) => (
-        option.year < referenceYear ||
-        (option.year === referenceYear && option.month <= referenceMonth)
-    ));
-
-    return (applicable || sorted[0]).key;
-};
 
 const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
     switch (presetId) {
@@ -312,8 +229,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     useEffect(() => {
         if (pssOptions.length === 0) return;
-        const referenceMonth = toMonthIndex(state.mesRef) || 12;
-        const nextTabelaPSS = pickBestTableByReference(pssOptions, state.anoRef, referenceMonth);
+        const referenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
+        const nextTabelaPSS = pickBestKeyByReference(pssOptions, state.anoRef, referenceMonth);
         if (nextTabelaPSS && state.tabelaPSS !== nextTabelaPSS) {
             update('tabelaPSS', nextTabelaPSS);
         }
@@ -321,8 +238,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     useEffect(() => {
         if (irOptions.length === 0) return;
-        const referenceMonth = toMonthIndex(state.mesRef) || 12;
-        const nextTabelaIR = pickBestTableByReference(irOptions, state.anoRef, referenceMonth);
+        const referenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
+        const nextTabelaIR = pickBestKeyByReference(irOptions, state.anoRef, referenceMonth);
         if (nextTabelaIR && state.tabelaIR !== nextTabelaIR) {
             update('tabelaIR', nextTabelaIR);
         }
@@ -447,6 +364,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 const tituloLabel = isNovoAQ ? 'AQ Titulos (Lei 15.292)' : 'AQ Titulos';
                 const treinoLabel = isNovoAQ ? 'AQ Treinamento (Lei 15.292)' : 'AQ Treinamento';
                 return [
+                    { label: 'Valor de referencia (VR)', value: roundCurrency(currentTables.valorVR || 0) },
                     { label: tituloLabel, value: roundCurrency(state.aqTituloValor || 0) },
                     { label: treinoLabel, value: roundCurrency(state.aqTreinoValor || 0) },
                     { label: 'Total AQ', value: roundCurrency((state.aqTituloValor || 0) + (state.aqTreinoValor || 0)) }

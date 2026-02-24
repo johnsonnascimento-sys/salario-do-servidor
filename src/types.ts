@@ -153,6 +153,8 @@ export interface CalculatorState {
   licencaValor: number;
 
   auxAlimentacao: number;
+  auxAlimentacaoProporcional: boolean;
+  auxAlimentacaoDetalhe: string;
   auxPreEscolarQtd: number;
   cotaPreEscolar: number;
   auxPreEscolarValor: number;
@@ -281,6 +283,8 @@ export const INITIAL_STATE: CalculatorState = {
   licencaValor: 0,
 
   auxAlimentacao: 0,
+  auxAlimentacaoProporcional: false,
+  auxAlimentacaoDetalhe: '',
   auxPreEscolarQtd: 0,
   cotaPreEscolar: 0,
   auxPreEscolarValor: 0,
