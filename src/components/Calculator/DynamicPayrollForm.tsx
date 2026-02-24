@@ -481,18 +481,50 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     0
                 );
             case 'decimo':
-                return buildCardTaxSummary(
-                    [
-                        { label: '1a parcela vencimento', value: state.adiant13Venc || 0 },
-                        { label: '1a parcela FC/CJ', value: state.adiant13FC || 0 },
-                        { label: '2a parcela vencimento', value: state.segunda13Venc || 0 },
-                        { label: '2a parcela FC/CJ', value: state.segunda13FC || 0 },
-                        { label: 'Abono 13o', value: state.abonoPerm13 || 0 }
-                    ],
-                    'Total 13o salario',
-                    state.ir13 || 0,
-                    state.pss13 || 0
-                );
+                {
+                    const primeira13VencBruto = roundCurrency(state.adiant13Venc || 0);
+                    const primeira13FcBruto = roundCurrency(state.adiant13FC || 0);
+                    const segunda13VencBruto = roundCurrency(state.segunda13Venc || 0);
+                    const segunda13FcBruto = roundCurrency(state.segunda13FC || 0);
+                    const abono13Bruto = roundCurrency(state.abonoPerm13 || 0);
+                    const ir13 = roundCurrency(Math.max(0, state.ir13 || 0));
+                    const pss13 = roundCurrency(Math.max(0, state.pss13 || 0));
+                    const totalDescontos13 = roundCurrency(ir13 + pss13);
+                    const baseSegundaParcela = roundCurrency(segunda13VencBruto + segunda13FcBruto);
+                    const proporcaoSegundaVenc = baseSegundaParcela > 0 ? segunda13VencBruto / baseSegundaParcela : 0;
+                    const descontoSegundaVenc = roundCurrency(totalDescontos13 * proporcaoSegundaVenc);
+                    const descontoSegundaFc = roundCurrency(Math.max(0, totalDescontos13 - descontoSegundaVenc));
+
+                    const primeira13VencLiquido = primeira13VencBruto;
+                    const primeira13FcLiquido = primeira13FcBruto;
+                    const segunda13VencLiquido = roundCurrency(Math.max(0, segunda13VencBruto - descontoSegundaVenc));
+                    const segunda13FcLiquido = roundCurrency(Math.max(0, segunda13FcBruto - descontoSegundaFc));
+                    const abono13Liquido = abono13Bruto;
+
+                    const total13Bruto = roundCurrency(
+                        primeira13VencBruto + primeira13FcBruto + segunda13VencBruto + segunda13FcBruto + abono13Bruto
+                    );
+                    const total13Liquido = roundCurrency(
+                        primeira13VencLiquido + primeira13FcLiquido + segunda13VencLiquido + segunda13FcLiquido + abono13Liquido
+                    );
+
+                    return [
+                        { label: '1a parcela vencimento Bruto', value: primeira13VencBruto },
+                        { label: '1a parcela FC/CJ Bruto', value: primeira13FcBruto },
+                        { label: '2a parcela vencimento Bruto', value: segunda13VencBruto },
+                        { label: '2a parcela FC/CJ Bruto', value: segunda13FcBruto },
+                        { label: 'Abono 13o Bruto', value: abono13Bruto },
+                        { label: 'Desconto IR (Total 13o salario)', value: ir13, isDiscount: true },
+                        { label: 'Desconto PSS (Total 13o salario)', value: pss13, isDiscount: true },
+                        { label: '1a parcela vencimento Liquido', value: primeira13VencLiquido },
+                        { label: '1a parcela FC/CJ Liquido', value: primeira13FcLiquido },
+                        { label: '2a parcela vencimento Liquido', value: segunda13VencLiquido },
+                        { label: '2a parcela FC/CJ Liquido', value: segunda13FcLiquido },
+                        { label: 'Abono 13o Liquido', value: abono13Liquido },
+                        { label: 'Total 13o salario Bruto', value: total13Bruto },
+                        { label: 'Total 13o salario Liquido', value: total13Liquido }
+                    ];
+                }
             case 'hora_extra':
                 {
                     const he50Bruto = roundCurrency(state.heVal50 || 0);
