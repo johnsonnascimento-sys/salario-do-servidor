@@ -58,6 +58,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const hasValidDateRange = periodSummary !== null;
     const ldoCapEnabled = Boolean(dailiesConfig?.ldoCap?.enabled);
     const ldoCapValue = Number(dailiesConfig?.ldoCap?.perDiemLimit || 0);
+    const ministerPerDiemValue = Number(dailiesConfig?.derivedFromMinister?.ministerPerDiem || 0);
     const halfDailyValue = periodSummary?.halfDailyApplied ? dailyRate / 2 : 0;
     const halfFoodDiscountValue = periodSummary?.halfDiscountApplied && state.diariasDescontarAlimentacao
         ? (state.auxAlimentacao / discountRules.foodDivisor) * 0.5
@@ -79,8 +80,6 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const holidayCalendarLabel =
         discountRules.holidayCalendarLabel?.trim() ||
         `Calendário oficial de feriados cadastrado no painel (${holidayYearsLabel})`;
-    const holidayCalendarReference = discountRules.holidayCalendarReference?.trim();
-    const holidayCalendarVersion = discountRules.holidayCalendarVersion?.trim();
 
     const handleModeChange = (mode: 'periodo' | 'manual') => {
         update('diariasModoDesconto', mode);
@@ -204,12 +203,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
                             <p>Valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
                             <p>{holidayCalendarLabel} usado no desconto automático por datas.</p>
-                            {holidayCalendarReference && (
-                                <p>
-                                    Referência do calendário: {holidayCalendarReference}
-                                    {holidayCalendarVersion ? ` (${holidayCalendarVersion})` : ''}.
-                                </p>
-                            )}
+                            <p>Diária do ministro: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
                             <p>Datas de feriados oficiais cadastradas: {formatDateList(configuredHolidayDates)}.</p>
                             <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
                             <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
