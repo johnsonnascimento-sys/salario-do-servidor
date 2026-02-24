@@ -32,7 +32,7 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
                         aria-expanded={isAccordionOpen}
                         className="flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-2 text-body-xs font-semibold text-neutral-600 dark:text-neutral-300"
                     >
-                        <span>Exportar e versão</span>
+                        <span>Exportar</span>
                         {isAccordionOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                 </div>

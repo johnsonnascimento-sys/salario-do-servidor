@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { CalculatorState } from '../../../types';
 
@@ -9,6 +9,12 @@ interface OvertimeCardProps {
 }
 
 export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, styles }) => {
+    useEffect(() => {
+        if (state.hePssIsEA) {
+            update('hePssIsEA', false);
+        }
+    }, [state.hePssIsEA, update]);
+
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
@@ -25,15 +31,6 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                                 onChange={e => update('heIsEA', e.target.checked)}
                             />
                             <span>Incluir na base do IR (Exercício Anterior - EA)</span>
-                        </label>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={state.hePssIsEA}
-                                onChange={e => update('hePssIsEA', e.target.checked)}
-                            />
-                            <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
                         </label>
                     </div>
                     <div className="grid grid-cols-2 gap-4">

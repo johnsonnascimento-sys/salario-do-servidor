@@ -162,7 +162,6 @@ export const useCalculatorResults = (
         if (state.heTotal > 0) {
             const tags: string[] = [];
             if (state.heIsEA) tags.push('IR EA');
-            if (state.hePssIsEA) tags.push('PSS EA');
             const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
             rows.push({ label: `SERVIÇO EXTRAORDINÁRIO${suffix}`, value: state.heTotal, type: 'C' });
         }
@@ -235,7 +234,9 @@ export const useCalculatorResults = (
             });
         });
 
-        return rows;
+        const creditRows = rows.filter(row => row.type === 'C');
+        const debitRows = rows.filter(row => row.type === 'D');
+        return [...creditRows, ...debitRows];
     }, [state, courtConfig]);
 
     return { resultRows };
