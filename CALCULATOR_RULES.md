@@ -1,75 +1,85 @@
-# Regras Imutaveis da Calculadora
+# Regras da Calculadora
 
 Atualizado em: 24/02/2026
 
-Este arquivo define as regras que **nao podem ser alteradas** sem ADR aprovado.
-Baseado em `MANUAL_DO_PROJETO.md`, `PROJECT_ARCHITECTURE.md` e `DATA_DRIVEN_MIGRATION.md`.
+Este documento consolida as regras funcionais e de UX da calculadora.
+Qualquer alteracao que mude calculo oficial deve ser feita com rastreabilidade (changelog + commit).
 
-## 1. Proibicao de calculos hardcoded
+## 1. Principios tecnicos
 
-1. Nenhuma aliquota, faixa, deducao, teto ou percentual tributario pode ser fixado no codigo de produto.
-2. Nenhuma regra de calculo especifica de orgao pode ficar embutida em componente React.
-3. Qualquer valor legal deve vir de `agencyConfig` (ConfigService) ou input explicito do usuario.
-4. Excecoes temporarias so sao permitidas com comentario `TODO` + prazo + issue referenciada.
+1. Nenhuma aliquota, faixa, deducao, teto ou percentual legal pode ficar hardcoded na UI.
+2. O motor oficial de calculo e o service da agencia (`JmuService` + modulos).
+3. A UI so exibe resultados e envia parametros; nao deve recalcular tributos paralelamente.
+4. Configuracoes de negocio devem vir de fonte data-driven (configuracao da agencia).
 
-## 2. Fonte unica de verdade
+## 2. Rubricas manuais
 
-1. O motor oficial de calculo e o `JmuService` + modulos em `src/services/agency/implementations/jmu/modules/`.
-2. A UI nao pode recalcular imposto/previdencia por conta propria.
-3. O adaptador `mapStateToJmuParams` deve transportar todos os campos necessarios ao motor.
+Cada rubrica manual deve suportar:
+1. Tipo (`C` credito, `D` desconto)
+2. Descricao
+3. Valor
+4. `Incluir na base do IR`
+5. `Incluir na base do IR (Exercicio Anterior - EA)`
+6. `Incluir na base do PSS`
+7. `Incluir na base do PSS (Exercicio Anterior - EA)`
 
-## 3. Formulario dinamico de rubricas
+## 3. Rubricas pre-definidas e resumo por card
 
-1. Novas rubricas nao devem gerar novos cards fixos.
-2. Qualquer rubrica manual deve suportar:
-- tipo (`C` credito / `D` desconto)
-- descricao
-- valor
-- `incideIR`
-- `incidePSS`
-3. A incidencia em base de IR/PSS deve ser dirigida por esses flags, nunca por nome de rubrica.
+1. Cada card pode exibir `Resumo calculado` em modo recolhido (accordion).
+2. O resumo por card deve priorizar leitura financeira:
+   - linhas brutas
+   - descontos (IR/PSS quando aplicavel)
+   - linhas liquidas
+   - totais (quando houver multiplas linhas)
+3. O destaque visual do resumo deve ser discreto e alinhado ao restante do layout.
 
-## 4. Data-driven obrigatorio
+## 4. Convencao visual de descontos
 
-1. Configuracoes seguem hierarquia: Global -> Power -> Org.
-2. Regras de diarias devem viver em `power_config.config_key = dailies_rules` (com override opcional via `org_config`).
-3. Qualquer ajuste de valor/percentual de diaria deve ser feito no banco (admin/seed/migracao), nunca no codigo.
-4. Regras de formula (GAJ, VR, divisores, transporte, IR) devem viver em `power_config.config_key = payroll_rules`.
-5. Catalogo de carreira (cargo labels, codigo sem funcao) deve viver em `power_config.config_key = career_catalog`.
-6. Referencia salarial (periodos/reajustes exibidos na UI) deve viver em `power_config.config_key = adjustment_schedule`.
-7. O sistema nao pode depender de `data.ts` legado.
-8. Se faltar dado remoto, fallback permitido apenas para `courts.config` conforme fluxo atual.
-9. Seletores de referencia temporal (mes/ano) devem respeitar o intervalo efetivamente coberto pelos dados ativos (IR, PSS, beneficios e referencia salarial), calculado em runtime.
-10. Mes com mudanca de valor de beneficio no proprio periodo deve permitir regra proporcional apenas quando houver metadado suficiente na configuracao para compor o calculo.
+1. Descontos devem ser diferenciados por cor de desconto.
+2. Nao usar prefixo textual `(-)` para descontos.
 
-## 5. Qualidade minima para merge
+## 5. Horas extras
 
-1. Mudancas de calculo exigem validacao de build e smoke manual da calculadora.
-2. Toda mudanca de regra tributaria deve citar origem (portaria/lei ou config admin).
-3. PR sem evidencia de que evitou hardcode deve ser bloqueado.
+1. Nao exibir checkbox `Incluir na base do PSS...` em horas extras.
+2. Campos numericos nao devem aceitar valores negativos.
 
-## 6. Regras obrigatorias de Diarias (JMU)
+## 6. Gratificacao Natalina (13o)
 
-1. O valor da diaria por cargo deve ser derivado da diaria do ministro quando `derived_from_minister.enabled = true`.
-2. As porcentagens de cargos (juiz, CJ, analista, tecnico) e do adicional de embarque devem vir de configuracao.
-3. O modo de entrada deve ser exclusivo: ou por datas, ou por quantidade de diarias.
-4. Em modo por datas, o sistema deve:
-- contar dias corridos para periodo;
-- aplicar meia diaria no dia de retorno (inclusive retorno em fim de semana/feriado);
-- aplicar meio desconto de auxilios no retorno apenas se o retorno for dia util.
-5. Finais de semana e feriados oficiais devem ser usados para excluir desconto de auxilios, nunca para remover o direito a meia diaria de retorno.
-6. O teto LDO por diaria deve ser parametrico (`dailies_rules.ldo_cap`) e o corte exibido separadamente.
-7. O calendario de feriados deve ser data-driven (lista de datas + metadados) em `discount_rules`.
-8. A UI deve explicitar datas consideradas (fins de semana/feriados), meia diaria e meios descontos no resumo.
+1. Nao cobrar PSS sobre FC/CJ na Gratificacao Natalina.
+2. Ao selecionar 2a parcela, o sistema deve considerar o contexto completo para tributacao:
+   - calcular IR e PSS sobre a base total aplicavel;
+   - aplicar abatimento da 1a parcela;
+   - manter a apresentacao do desconto concentrada na 2a parcela no resumo.
+3. Se 2a parcela for marcada, a 1a parcela correspondente deve ser marcada automaticamente para evitar base incompleta.
+4. Exibir totais finais por bloco:
+   - Total 13o salario Bruto 1a Parcela
+   - Total 13o salario Liquido 1a Parcela
+   - Total 13o salario Bruto 2a Parcela
+   - Total 13o salario Liquido 2a Parcela
 
-## 7. Regra visual obrigatoria para resumo por card
+## 7. Diarias
 
-1. Linhas de desconto no "Resumo bruto calculado" devem usar o padrao visual de desconto.
-2. Esse padrao inclui marcador `(-)` e cor de desconto pre-definida.
-3. O padrao deve valer para todos os cards, nao apenas para Diarias.
+1. Modo por datas:
+   - `Data de fim` deve ser sempre igual ou maior que `Data de inicio`.
+2. As diarias devem aparecer separadas no detalhamento, pois o pagamento e separado do holerite.
+3. Dentro de diarias, o adicional de embarque deve aparecer em linha propria.
+4. Exibir tambem `Diarias Liquidas` no bloco de diarias.
 
-## 8. Regra de UX da calculadora de campo
+## 8. Detalhamento final
 
-1. A calculadora flutuante nao pode fechar ao clicar ou focar em elementos internos dela.
-2. Deve fechar ao perder contexto (clique fora e fora de campo elegivel).
-3. Deve manter ancoragem ao campo de valor em foco e reposicionar com scroll/resize.
+1. Separar blocos:
+   - Holerite (sem diarias)
+   - Diarias (pagamento separado)
+2. Manter ordem:
+   - creditos primeiro
+   - debitos por ultimo
+3. Em cada bloco, exibir totais coerentes com o proprio bloco.
+
+## 9. Mobile e rodape
+
+1. No mobile, usar apenas o texto `Exportar` no rodape (sem `e versao`).
+2. A versao continua visivel no layout, mas sem compor o texto do CTA.
+
+## 10. Intencoes preservadas
+
+1. O gatilho `Johnson*` e intencional e nao deve ser removido por refatoracao automatica.
