@@ -73,6 +73,7 @@ const toPositiveNumber = (value: string) => {
 };
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
+const isDiscountLabel = (label: string) => /desconto|cota-parte|corte|abatimento|restitui|dedu[cç][aã]o|glosa/i.test(label);
 
 const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
     switch (presetId) {
@@ -447,7 +448,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             case 'aux_transporte':
                 return [
                     { label: 'Auxilio transporte (credito)', value: roundCurrency(state.auxTransporteValor || 0) },
-                    { label: 'Cota-parte transporte (desconto)', value: roundCurrency(state.auxTransporteDesc || 0) }
+                    { label: 'Cota-parte transporte (desconto)', value: roundCurrency(state.auxTransporteDesc || 0), isDiscount: true }
                 ];
             case 'diarias':
                 {
@@ -528,14 +529,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     Resumo bruto calculado
                 </p>
                 <div className="space-y-1.5">
-                    {lines.map((line) => (
-                        <div key={line.label} className="flex items-center justify-between gap-3 text-body-xs">
-                            <span className="text-neutral-600 dark:text-neutral-300">{line.label}</span>
-                            <span className={`font-mono font-bold ${line.isDiscount ? 'text-error-700 dark:text-error-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
-                                {line.isDiscount ? '(-) ' : ''}{formatCurrency(line.value || 0)}
-                            </span>
-                        </div>
-                    ))}
+                    {lines.map((line) => {
+                        const isDiscount = Boolean(line.isDiscount || isDiscountLabel(line.label));
+                        return (
+                            <div key={line.label} className="flex items-center justify-between gap-3 text-body-xs">
+                                <span className="text-neutral-600 dark:text-neutral-300">{line.label}</span>
+                                <span className={`font-mono font-bold ${isDiscount ? 'text-error-700 dark:text-error-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+                                    {isDiscount ? '(-) ' : ''}{formatCurrency(line.value || 0)}
+                                </span>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         );
