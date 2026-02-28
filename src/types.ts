@@ -66,6 +66,36 @@ export interface PayrollRulesConfig {
   irrfTopRate: number;
 }
 
+export interface PrevidenciaComplementarConfig {
+  enabled: boolean;
+  scope: 'patrocinado' | string;
+  sponsoredRate: {
+    min: number;
+    max: number;
+    step: number;
+    defaultRpc: number;
+  };
+  facultativeRate: {
+    minIfPositive: number;
+    max: number;
+    step: number;
+    default: number;
+  };
+  baseRule: string;
+  includeThirteenth: boolean;
+  costingDisclosure?: {
+    loadingNormal?: number;
+    loadingFacultative?: number;
+    fcbeShareOfNormal?: number;
+    adminRemidoAssistido?: number;
+    effectiveFrom?: string;
+  };
+  references?: {
+    regulamentoVersion?: string;
+    planoCusteioRef?: string;
+  };
+}
+
 export interface CareerCatalogConfig {
   noFunctionCode: string;
   noFunctionLabel: string;
@@ -95,6 +125,7 @@ export interface CourtConfig {
   };
   dailies?: DailiesConfig;
   payrollRules?: PayrollRulesConfig;
+  previdenciaComplementar?: PrevidenciaComplementarConfig;
   careerCatalog?: CareerCatalogConfig;
 }
 
@@ -191,6 +222,7 @@ export interface CalculatorState {
   tabelaIR: string;
   dependentes: number;
   regimePrev: 'antigo' | 'migrado' | 'novo_antigo' | 'rpc';
+  funprespParticipacao: 'nao' | 'patrocinado';
   funprespAliq: number;
   funprespFacul: number;
 
@@ -343,6 +375,7 @@ export const INITIAL_STATE: CalculatorState = {
   tabelaIR: '',
   dependentes: 0,
   regimePrev: 'antigo',
+  funprespParticipacao: 'nao',
   funprespAliq: 0,
   funprespFacul: 0,
 

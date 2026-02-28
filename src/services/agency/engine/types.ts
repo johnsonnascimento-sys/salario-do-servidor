@@ -29,6 +29,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     tabelaPSS: string;
     pssSobreFC: boolean;
     incidirPSSGrat: boolean;
+    funprespParticipacao: 'nao' | 'patrocinado';
     funprespAliq: number;
     funprespFacul: number;
     auxAlimentacao: number;

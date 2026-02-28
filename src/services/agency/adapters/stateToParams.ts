@@ -51,6 +51,7 @@ export function mapStateToAgencyParams(
         tabelaIR: state.tabelaIR,
         pssSobreFC: state.pssSobreFC,
         incidirPSSGrat: state.incidirPSSGrat,
+        funprespParticipacao: state.funprespParticipacao,
         funprespAliq: state.funprespAliq,
         funprespFacul: state.funprespFacul,
 

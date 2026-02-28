@@ -292,8 +292,8 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
     }
 
     let valFunpresp = 0;
-    if (usaTeto && baseFunpresp > 0) {
-        valFunpresp = baseFunpresp * state.funprespAliq + (baseFunpresp * (state.funprespFacul / 100));
+    if (usaTeto && baseFunpresp > 0 && state.funprespParticipacao === 'patrocinado') {
+        valFunpresp = baseFunpresp * state.funprespAliq + (baseFunpresp * state.funprespFacul);
     }
 
     const abonoPerm = state.recebeAbono ? pssMensal : 0;

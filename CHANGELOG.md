@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.8 - 28/02/2026
+- Feat: Funpresp no fluxo ativo da calculadora (`DynamicPayrollForm`) com participacao patrocinada, aliquota normal e facultativa.
+- Feat: nova chave data-driven `previdencia_complementar` mapeada de `power_config` para `CourtConfig`.
+- Fix: normalizacao de unidade de aliquota Funpresp (decimal interno para normal e facultativa) no motor mensal e 13o.
+- Tech: novo campo `funprespParticipacao` no estado e contrato interno do motor.
+- Data: migracao adicionada `012_add_previdencia_complementar_config.sql`.
+
 ## 2.1.7 - 28/02/2026
 - Docs: criado `PROJECT_RULES.md` como fonte canonica de regras do projeto.
 - Docs: criado `AGENTS.md` apontando para `PROJECT_RULES.md`.

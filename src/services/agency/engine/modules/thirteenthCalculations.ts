@@ -152,8 +152,8 @@ export async function calculateThirteenth(params: IAgencyCalculationParams): Pro
         }
 
         const baseFunpresp = Math.max(0, baseParaPSS13 - teto);
-        const valFunpresp = usaTeto && baseFunpresp > 0
-            ? baseFunpresp * params.funprespAliq + (baseFunpresp * (params.funprespFacul / 100))
+        const valFunpresp = usaTeto && baseFunpresp > 0 && params.funprespParticipacao === 'patrocinado'
+            ? baseFunpresp * params.funprespAliq + (baseFunpresp * params.funprespFacul)
             : 0;
 
         const deducaoDep = config.values?.deducao_dep || 0;

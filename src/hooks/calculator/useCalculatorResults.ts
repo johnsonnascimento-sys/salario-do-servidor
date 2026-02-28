@@ -117,7 +117,7 @@ export const useCalculatorResults = (
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
         state.vpni_lei, state.vpni_decisao, state.ats,
-        state.dependentes, state.regimePrev, state.funprespAliq, state.funprespFacul,
+        state.dependentes, state.regimePrev, state.funprespParticipacao, state.funprespAliq, state.funprespFacul,
         state.tabelaPSS, state.tabelaIR,
         state.pssSobreFC, state.incidirPSSGrat,
         state.auxAlimentacao, state.auxPreEscolarQtd, state.cotaPreEscolar, state.auxTransporteGasto,

@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 28/02/2026
+Atualizado em: 28/02/2026 19:21
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -149,6 +149,14 @@ Cada rubrica manual deve suportar:
 2. Conteudo deve ser didatico para usuario iniciante no inicio do artigo.
 3. Cada artigo tecnico deve terminar com uma secao de fundamentos normativos e de calculo (formulas, premissas e fontes oficiais).
 4. Fontes devem privilegiar origem primaria (Constituicao, leis, LC, regulamentos e planos oficiais).
+5. Nenhuma Wiki deve expor detalhes de implementacao do sistema.
+6. E proibido incluir em Wiki qualquer conteudo sobre:
+   - codigo de programacao
+   - HTML/CSS/JavaScript
+   - banco de dados
+   - frontend/backend
+   - APIs internas
+   - arquitetura ou operacao de producao
 
 ### 7.4 Padrao visual e UX da Wiki
 
@@ -163,3 +171,8 @@ Cada rubrica manual deve suportar:
 1. Toda alteracao relevante de regra da wiki deve atualizar a data `updatedAt` do artigo.
 2. Se houver mudanca normativa que altere entendimento de calculo, atualizar tambem o `CHANGELOG.md`.
 3. Conteudos marcados como `Em breve` devem ficar explicitos no catalogo da wiki e nao devem gerar rota quebrada.
+
+## 8. Governanca do PROJECT_RULES.md
+
+1. Toda alteracao neste arquivo deve atualizar obrigatoriamente o campo `Atualizado em:`.
+2. O campo `Atualizado em:` deve conter sempre data e hora no formato `dd/MM/yyyy HH:mm`.

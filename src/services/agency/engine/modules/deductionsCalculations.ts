@@ -154,8 +154,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
 
     // Funpresp
     let valFunpresp = 0;
-    if (usaTeto && baseFunpresp > 0) {
-        valFunpresp = baseFunpresp * params.funprespAliq + (baseFunpresp * (params.funprespFacul / 100));
+    if (usaTeto && baseFunpresp > 0 && params.funprespParticipacao === 'patrocinado') {
+        valFunpresp = baseFunpresp * params.funprespAliq + (baseFunpresp * params.funprespFacul);
     }
 
     // IRRF Base

@@ -141,19 +141,8 @@ const WIKI_ARTICLES: WikiArticle[] = [
         ],
       },
       {
-        id: 'tecnico-formulas',
-        title: '5) Parte técnica: fórmulas e parâmetros de cálculo',
-        paragraphs: [
-          'No motor atual, a base excedente é derivada da base previdenciária mensal e do teto RGPS aplicável no período.',
-          'Fórmula de base: baseExcedente = max(0, basePSS - tetoRGPS).',
-          'Fórmula de contribuição: valFunpresp = baseExcedente * aliquotaNormal + baseExcedente * aliquotaFacultativa.',
-          'No 13º, o cálculo segue a base aplicável ao bloco da gratificação natalina, respeitando regras específicas de incidência do módulo de décimo terceiro.',
-          'No contrato interno do cálculo, alíquotas devem ser tratadas em decimal (ex.: 8,5% = 0,085) para evitar distorções.',
-        ],
-      },
-      {
         id: 'tecnico-base-legal',
-        title: '6) Parte técnica: fundamentos normativos e regulatórios',
+        title: '5) Parte técnica: fundamentos normativos e regulatórios',
         bullets: [
           'Constituição Federal (organização do regime previdenciário e base constitucional do sistema).',
           'Lei 12.618/2012: institui o regime de previdência complementar para servidores federais e estabelece parâmetros de contribuição.',
@@ -165,7 +154,7 @@ const WIKI_ARTICLES: WikiArticle[] = [
       },
       {
         id: 'checagem-final',
-        title: '7) Checklist rápido antes de confiar no número',
+        title: '6) Checklist rápido antes de confiar no número',
         bullets: [
           'Período/mês de referência confere com o cenário real?',
           'Regime previdenciário está correto?',

@@ -57,7 +57,38 @@ export interface PowerConfig {
     benefits?: BenefitsConfig;
     dailies_rules?: DailiesRulesConfig;
     payroll_rules?: PayrollRulesConfig;
+    previdencia_complementar?: PrevidenciaComplementarPowerConfig;
     career_catalog?: CareerCatalogConfig;
+}
+
+export interface PrevidenciaComplementarPowerConfig {
+    enabled: boolean;
+    scope: string;
+    sponsored_rate: {
+        min: number;
+        max: number;
+        step: number;
+        default_rpc: number;
+    };
+    facultative_rate: {
+        min_if_positive: number;
+        max: number;
+        step: number;
+        default: number;
+    };
+    base_rule: string;
+    include_thirteenth: boolean;
+    costing_disclosure?: {
+        loading_normal?: number;
+        loading_facultative?: number;
+        fcbe_share_of_normal?: number;
+        admin_remido_assistido?: number;
+        effective_from?: string;
+    };
+    references?: {
+        regulamento_version?: string;
+        plano_custeio_ref?: string;
+    };
 }
 
 /**

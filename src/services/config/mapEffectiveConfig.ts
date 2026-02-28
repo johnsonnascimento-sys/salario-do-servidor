@@ -175,6 +175,37 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                 irrfTopRate: effective.payroll_rules.irrf_top_rate,
             }
             : undefined,
+        previdenciaComplementar: effective.previdencia_complementar
+            ? {
+                enabled: Boolean(effective.previdencia_complementar.enabled),
+                scope: effective.previdencia_complementar.scope ?? 'patrocinado',
+                sponsoredRate: {
+                    min: Number(effective.previdencia_complementar.sponsored_rate?.min ?? 0),
+                    max: Number(effective.previdencia_complementar.sponsored_rate?.max ?? 0),
+                    step: Number(effective.previdencia_complementar.sponsored_rate?.step ?? 0),
+                    defaultRpc: Number(effective.previdencia_complementar.sponsored_rate?.default_rpc ?? 0),
+                },
+                facultativeRate: {
+                    minIfPositive: Number(effective.previdencia_complementar.facultative_rate?.min_if_positive ?? 0),
+                    max: Number(effective.previdencia_complementar.facultative_rate?.max ?? 0),
+                    step: Number(effective.previdencia_complementar.facultative_rate?.step ?? 0),
+                    default: Number(effective.previdencia_complementar.facultative_rate?.default ?? 0),
+                },
+                baseRule: effective.previdencia_complementar.base_rule ?? 'excedente_teto_rgps',
+                includeThirteenth: Boolean(effective.previdencia_complementar.include_thirteenth),
+                costingDisclosure: {
+                    loadingNormal: effective.previdencia_complementar.costing_disclosure?.loading_normal,
+                    loadingFacultative: effective.previdencia_complementar.costing_disclosure?.loading_facultative,
+                    fcbeShareOfNormal: effective.previdencia_complementar.costing_disclosure?.fcbe_share_of_normal,
+                    adminRemidoAssistido: effective.previdencia_complementar.costing_disclosure?.admin_remido_assistido,
+                    effectiveFrom: effective.previdencia_complementar.costing_disclosure?.effective_from,
+                },
+                references: {
+                    regulamentoVersion: effective.previdencia_complementar.references?.regulamento_version,
+                    planoCusteioRef: effective.previdencia_complementar.references?.plano_custeio_ref,
+                },
+            }
+            : undefined,
         careerCatalog: effective.career_catalog
             ? {
                 noFunctionCode: effective.career_catalog.no_function_code,

@@ -26,6 +26,7 @@ const mockState: CalculatorState = {
     ats: 0,
     dependentes: 0,
     regimePrev: 'rpc',
+    funprespParticipacao: 'nao',
     funprespAliq: 0,
     funprespFacul: 0,
     tabelaPSS: '2025',

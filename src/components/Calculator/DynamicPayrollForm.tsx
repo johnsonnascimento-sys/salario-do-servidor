@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, DollarSign, GripVertical, Minus, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, Rubrica } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
@@ -73,6 +73,32 @@ const toPositiveNumber = (value: string) => {
 };
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
+const toPercentLabel = (value: number) => `${(value * 100).toFixed(1).replace('.', ',')}%`;
+const toDecimalRateFromPercentInput = (value: string) => Math.max(0, toNumber(value) / 100);
+
+const isStepAligned = (value: number, step: number) => {
+    if (!Number.isFinite(value) || !Number.isFinite(step) || step <= 0) return false;
+    const ratio = value / step;
+    return Math.abs(ratio - Math.round(ratio)) < 1e-9;
+};
+
+const buildRateOptions = (min: number, max: number, step: number): number[] => {
+    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step) || step <= 0 || max < min) {
+        return [];
+    }
+
+    const options: number[] = [];
+    const totalSteps = Math.floor((max - min) / step);
+    for (let i = 0; i <= totalSteps; i += 1) {
+        options.push(Number((min + (i * step)).toFixed(6)));
+    }
+
+    if (options.length === 0 || Math.abs(options[options.length - 1] - max) > 1e-9) {
+        options.push(Number(max.toFixed(6)));
+    }
+
+    return options;
+};
 const isDiscountLabel = (label: string) => /desconto|cota-parte|corte|abatimento|restitui|dedu[cç][aã]o|glosa/i.test(label);
 
 const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
@@ -136,6 +162,100 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const functionKeys = Object.keys(currentTables.funcoes || {});
     const pssOptions = Object.keys(courtConfig.historico_pss || {});
     const irOptions = Object.keys(courtConfig.historico_ir || {});
+    const previdenciaComplementar = courtConfig.previdenciaComplementar;
+    const isFunprespRegime = state.regimePrev === 'rpc' || state.regimePrev === 'migrado';
+    const showFunprespSection = Boolean(previdenciaComplementar?.enabled && isFunprespRegime);
+    const funprespDefaultsAppliedRef = useRef(false);
+
+    const funprespNormalOptions = useMemo(
+        () => buildRateOptions(
+            previdenciaComplementar?.sponsoredRate?.min ?? 0,
+            previdenciaComplementar?.sponsoredRate?.max ?? 0,
+            previdenciaComplementar?.sponsoredRate?.step ?? 0
+        ),
+        [
+            previdenciaComplementar?.sponsoredRate?.min,
+            previdenciaComplementar?.sponsoredRate?.max,
+            previdenciaComplementar?.sponsoredRate?.step
+        ]
+    );
+
+    const funprespNormalOptionsSet = useMemo(
+        () => new Set(funprespNormalOptions.map((value) => Number(value.toFixed(6)))),
+        [funprespNormalOptions]
+    );
+
+    const applyFunprespDefaultsForRegime = (nextRegime: CalculatorState['regimePrev']) => {
+        if (!previdenciaComplementar?.enabled) return;
+
+        if (nextRegime === 'rpc') {
+            update('funprespParticipacao', 'patrocinado');
+            update('funprespAliq', previdenciaComplementar.sponsoredRate.defaultRpc);
+            update('funprespFacul', previdenciaComplementar.facultativeRate.default);
+            return;
+        }
+
+        update('funprespParticipacao', 'nao');
+        update('funprespAliq', 0);
+        update('funprespFacul', 0);
+    };
+
+    const handleRegimePrevChange = (nextRegimeValue: string) => {
+        const nextRegime = nextRegimeValue as CalculatorState['regimePrev'];
+        update('regimePrev', nextRegime);
+        applyFunprespDefaultsForRegime(nextRegime);
+    };
+
+    const handleFunprespParticipacaoChange = (nextParticipacao: 'nao' | 'patrocinado') => {
+        update('funprespParticipacao', nextParticipacao);
+        if (nextParticipacao === 'nao') {
+            update('funprespAliq', 0);
+            update('funprespFacul', 0);
+            return;
+        }
+
+        if (state.funprespAliq <= 0) {
+            update('funprespAliq', previdenciaComplementar?.sponsoredRate.defaultRpc ?? 0);
+        }
+    };
+
+    const funprespValidationError = useMemo(() => {
+        if (!showFunprespSection || state.funprespParticipacao !== 'patrocinado' || !previdenciaComplementar) {
+            return null;
+        }
+
+        const normal = Number(state.funprespAliq.toFixed(6));
+        if (!funprespNormalOptionsSet.has(normal)) {
+            return 'Contribuicao normal fora da grade permitida.';
+        }
+
+        const facultativa = Number(state.funprespFacul.toFixed(6));
+        if (facultativa < 0) {
+            return 'Contribuicao facultativa nao pode ser negativa.';
+        }
+
+        if (facultativa > 0) {
+            if (facultativa < previdenciaComplementar.facultativeRate.minIfPositive) {
+                return `Contribuicao facultativa minima: ${toPercentLabel(previdenciaComplementar.facultativeRate.minIfPositive)}.`;
+            }
+            if (!isStepAligned(facultativa, previdenciaComplementar.facultativeRate.step)) {
+                return `Contribuicao facultativa deve seguir passo de ${toPercentLabel(previdenciaComplementar.facultativeRate.step)}.`;
+            }
+        }
+
+        if (facultativa > previdenciaComplementar.facultativeRate.max) {
+            return `Contribuicao facultativa maxima: ${toPercentLabel(previdenciaComplementar.facultativeRate.max)}.`;
+        }
+
+        return null;
+    }, [
+        showFunprespSection,
+        state.funprespParticipacao,
+        state.funprespAliq,
+        state.funprespFacul,
+        previdenciaComplementar,
+        funprespNormalOptionsSet
+    ]);
 
     const initialPresets = useMemo(() => {
         const fromState = PREDEFINED_OPTIONS
@@ -252,6 +372,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             update('tabelaIR', nextTabelaIR);
         }
     }, [irOptions, state.tabelaIR, state.anoRef, state.mesRef, update]);
+
+    useEffect(() => {
+        if (funprespDefaultsAppliedRef.current) return;
+        applyFunprespDefaultsForRegime(state.regimePrev);
+        funprespDefaultsAppliedRef.current = true;
+    }, [state.regimePrev]);
 
     const clearPreset = (presetId: PredefinedRubricId) => {
         switch (presetId) {
@@ -912,6 +1038,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(state.auxAlimentacao || 0)}</p>
                     </div>
                 </div>
+
             </div>
 
             <div className={styles.innerBox}>
@@ -925,7 +1052,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className={styles.label}>Regime previdenciário</label>
-                        <select className={styles.input} value={state.regimePrev} onChange={e => update('regimePrev', e.target.value)}>
+                        <select className={styles.input} value={state.regimePrev} onChange={e => handleRegimePrevChange(e.target.value)}>
                             <option value="antigo">RPPS - sem teto</option>
                             <option value="novo_antigo">RPPS - novo sem migração</option>
                             <option value="migrado">RPPS migrado (com teto)</option>
@@ -943,6 +1070,56 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         </label>
                     </div>
                 </div>
+
+                {showFunprespSection && previdenciaComplementar && (
+                    <div className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
+                        <h5 className="text-label font-bold uppercase tracking-widest text-neutral-600 dark:text-neutral-300">
+                            Previdencia Complementar (Funpresp)
+                        </h5>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className={styles.label}>Participa Funpresp</label>
+                                <select
+                                    className={styles.input}
+                                    value={state.funprespParticipacao}
+                                    onChange={e => handleFunprespParticipacaoChange(e.target.value as 'nao' | 'patrocinado')}
+                                >
+                                    <option value="nao">Nao</option>
+                                    <option value="patrocinado">Sim (Patrocinado)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={styles.label}>Contribuicao normal patrocinada</label>
+                                <select
+                                    className={styles.input}
+                                    value={state.funprespAliq}
+                                    onChange={e => update('funprespAliq', Number(e.target.value))}
+                                    disabled={state.funprespParticipacao !== 'patrocinado'}
+                                >
+                                    {funprespNormalOptions.map(rate => (
+                                        <option key={rate} value={rate}>{toPercentLabel(rate)}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className={styles.label}>Contribuicao facultativa (%)</label>
+                                <input
+                                    type="number"
+                                    className={styles.input}
+                                    min={0}
+                                    max={previdenciaComplementar.facultativeRate.max * 100}
+                                    step={previdenciaComplementar.facultativeRate.step * 100}
+                                    value={Number((state.funprespFacul * 100).toFixed(1))}
+                                    onChange={e => update('funprespFacul', toDecimalRateFromPercentInput(e.target.value))}
+                                    disabled={state.funprespParticipacao !== 'patrocinado'}
+                                />
+                            </div>
+                        </div>
+                        {funprespValidationError && (
+                            <p className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className={styles.innerBox}>
