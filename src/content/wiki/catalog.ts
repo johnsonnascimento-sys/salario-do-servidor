@@ -175,6 +175,76 @@ const WIKI_ARTICLES: WikiArticle[] = [
       { label: 'Plano de Custeio (vigência 2025)', href: 'https://www.funprespjud.com.br/wp-content/uploads/2025/01/plano-de-custeio-aa-2024-abr2025-170225.pdf' },
     ],
   },
+  {
+    scope: 'global',
+    slug: 'previdencia-regras-e-uso-na-calculadora',
+    title: 'Wiki Global: Previdencia (regras e uso na calculadora)',
+    subtitle:
+      'Guia pratico para entender RPPS/RPC, teto do RGPS e como preencher corretamente o bloco previdenciario no simulador.',
+    audience: 'Servidores que querem simular o contracheque com menos erro de preenchimento.',
+    updatedAt: '2026-02-28',
+    readingLevel: 'iniciante',
+    sections: [
+      {
+        id: 'visao-geral-previdencia',
+        title: '1) O que a previdencia faz no contracheque',
+        paragraphs: [
+          'A previdencia e um desconto obrigatorio que incide sobre uma base de contribuicao definida por regra.',
+          'Na simulacao, o bloco previdenciario impacta diretamente o liquido e tambem influencia outras bases, como IR em varios cenarios.',
+          'A regra central e: primeiro definir o regime correto, depois validar a base, e so entao analisar o valor do desconto.',
+        ],
+      },
+      {
+        id: 'regras-gerais',
+        title: '2) Regras gerais que voce precisa conferir',
+        bullets: [
+          'Regime sem teto: a contribuicao pode considerar toda a base previdenciaria aplicavel.',
+          'Regime com teto (migrado/RPC): a contribuicao principal de RPPS limita no teto do RGPS.',
+          'Quando houver previdencia complementar, ela costuma incidir no excedente ao teto, conforme regras do plano aplicavel.',
+          'Eventos de exercicio anterior (EA) seguem trilha propria e podem alterar a leitura do desconto no resultado.',
+        ],
+      },
+      {
+        id: 'como-preencher',
+        title: '3) Como preencher na calculadora (passo a passo)',
+        steps: [
+          'Escolha o orgao e o periodo corretos do seu cenario.',
+          'Preencha cargo, padrao, funcao e vantagens da base obrigatoria.',
+          'No bloco tributario, selecione o regime previdenciario correto (antigo, novo sem migracao, migrado ou RPC).',
+          'Revise se PSS sobre FC/CJ esta coerente com seu cenario real.',
+          'Se o bloco de previdencia complementar aparecer, marque participacao e aliquotas conforme seu caso.',
+          'Compare o resumo final: contribuicao RPPS, eventual complemento e impacto no liquido.',
+        ],
+      },
+      {
+        id: 'erros-frequentes-previdencia',
+        title: '4) Erros comuns de preenchimento',
+        bullets: [
+          'Selecionar regime diferente do regime real do contracheque comparado.',
+          'Confundir percentual exibido na UI com unidade interna do calculo.',
+          'Alterar varios campos ao mesmo tempo e perder a rastreabilidade do impacto.',
+          'Comparar simulacao de um mes com contracheque de outro periodo de tabela.',
+        ],
+      },
+      {
+        id: 'ponte-pju',
+        title: '5) Quando voce deve abrir a wiki especifica do PJU',
+        paragraphs: [
+          'Se voce precisa detalhar previdencia complementar (FUNPRESP-JUD), use o guia tecnico especifico do PJU.',
+          'La estao reunidos criterios de participacao, leitura do desconto e referencias normativas da previdencia complementar do plano.',
+        ],
+        bullets: [
+          'Acessar: /wiki/pju/previdencia-complementar',
+        ],
+      },
+    ],
+    legalRefs: [
+      { label: 'Constituicao Federal de 1988 (Planalto)', href: 'https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm' },
+      { label: 'Lei 10.887/2004 (Planalto)', href: 'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l10.887.htm' },
+      { label: 'Lei 12.618/2012 (Planalto)', href: 'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12618.htm' },
+      { label: 'Guia PJU: Previdencia Complementar (FUNPRESP-JUD)', href: '/wiki/pju/previdencia-complementar' },
+    ],
+  },
 ];
 
 export const WIKI_CATALOG_TREE: WikiNode[] = [
@@ -191,6 +261,14 @@ export const WIKI_CATALOG_TREE: WikiNode[] = [
         scope: 'global',
         slug: 'ir-e-previdencia-geral',
         description: 'Introdução para quem está começando.',
+      },
+      {
+        id: 'global-previdencia-regras',
+        name: 'Previdencia: regras e uso na calculadora',
+        type: 'article',
+        scope: 'global',
+        slug: 'previdencia-regras-e-uso-na-calculadora',
+        description: 'Guia pratico para preencher corretamente o bloco previdenciario.',
       },
     ],
   },
