@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de Base Salarial - JMU
  *
  * Responsavel por calcular:
@@ -12,8 +12,8 @@
  * REFATORADO: Agora usa params.agencyConfig para buscar dados.
  */
 
-import { IJmuCalculationParams } from '../types';
-import { CourtConfig } from '../../../../../types';
+import { IAgencyCalculationParams } from '../types';
+import { CourtConfig } from '../../../../types';
 import { getPayrollRules, isNoFunction } from './configRules';
 
 interface AdjustmentEntry {
@@ -60,7 +60,7 @@ const applyCorrections = (base: number, periodo: number, config: CourtConfig): n
     }, base);
 };
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -113,7 +113,7 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
 /**
  * Calcula a remuneracao base total
  */
-export async function calculateBase(params: IJmuCalculationParams): Promise<number> {
+export async function calculateBase(params: IAgencyCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
@@ -158,7 +158,7 @@ export async function calculateBase(params: IJmuCalculationParams): Promise<numb
 /**
  * Calcula componentes individuais da base para breakdown detalhado
  */
-export async function calculateBaseComponents(params: IJmuCalculationParams) {
+export async function calculateBaseComponents(params: IAgencyCalculationParams) {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);

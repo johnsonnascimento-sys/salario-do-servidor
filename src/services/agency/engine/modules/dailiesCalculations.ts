@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de Diarias de Viagem - JMU
  *
  * Responsavel por calcular:
@@ -9,7 +9,7 @@
  * - Deducoes internas (auxilio-alimentacao/transporte)
  */
 
-import { IJmuCalculationParams } from '../types';
+import { IAgencyCalculationParams } from '../types';
 import {
     applyLdoCapToDailiesGross,
     countDeductibleDaysInRange,
@@ -19,7 +19,7 @@ import {
     resolveDailiesDiscountRules,
     resolveDailiesEmbarkationAdditional,
     summarizeDailiesPeriodMode
-} from '../../../../../utils/dailiesRules';
+} from '../../../../utils/dailiesRules';
 import { calculateBenefits } from './benefitsCalculations';
 import { getPayrollRules } from './configRules';
 
@@ -40,7 +40,7 @@ const round2 = (value: number) => Math.round(value * 100) / 100;
 /**
  * Calcula Diarias de Viagem
  */
-export async function calculateDailies(params: IJmuCalculationParams): Promise<DailiesResult> {
+export async function calculateDailies(params: IAgencyCalculationParams): Promise<DailiesResult> {
     const dailiesConfig = params.agencyConfig?.dailies;
     const payrollRules = getPayrollRules(params.agencyConfig);
     const manualDailiesQty = Math.max(0, Number(params.diariasQtd) || 0);

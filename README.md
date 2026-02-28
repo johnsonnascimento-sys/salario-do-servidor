@@ -47,7 +47,8 @@ npm run preview
 
 ## Documentacao
 
-- [Regras consolidadas](./CALCULATOR_RULES.md)
+- [Regras do projeto (fonte canonica)](./PROJECT_RULES.md)
+- [Guia para agentes](./AGENTS.md)
 - [Historico de mudancas](./CHANGELOG.md)
 - [Formulas legadas (referencia)](./src/docs/LEGACY_FORMULAS.md)
 

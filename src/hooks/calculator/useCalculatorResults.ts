@@ -10,15 +10,15 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { CalculatorState, CourtConfig } from '../../types';
-import { JmuService } from '../../services/agency/implementations/JmuService';
-import { mapStateToJmuParams } from '../../services/agency/adapters/stateToParams';
+import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
+import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 
 export const useCalculatorResults = (
     state: CalculatorState,
     setState: Dispatch<SetStateAction<CalculatorState>>,
-    agencyService: JmuService | null,
+    agencyService: AgencyCalculationEngine | null,
     courtConfig: CourtConfig | null,
     agency: { name: string; type: string; slug: string } | null
 ) => {
@@ -33,7 +33,7 @@ export const useCalculatorResults = (
         (async () => {
             try {
                 const orgSlug = agency?.slug || 'jmu';
-                const params = mapStateToJmuParams(state, orgSlug, courtConfig || undefined);
+                const params = mapStateToAgencyParams(state, orgSlug, courtConfig || undefined);
                 const result = await agencyService.calculateTotal(params);
 
                 if (cancelled || requestId !== latestRequestRef.current) {

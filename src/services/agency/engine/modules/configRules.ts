@@ -1,4 +1,4 @@
-import { CourtConfig } from '../../../../../types';
+﻿import { CourtConfig } from '../../../../types';
 
 const requireAgencyConfig = (config?: CourtConfig): CourtConfig => {
   if (!config) {

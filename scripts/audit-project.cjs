@@ -26,7 +26,7 @@ const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports');
 
 // Arquivos principais a auditar
 const KEY_FILES = {
-  jmuService: 'src/services/agency/implementations/JmuService.ts',
+  agencyEngine: 'src/services/agency/engine/AgencyCalculationEngine.ts',
   useCalculator: 'src/hooks/useCalculator.ts',
   configService: 'src/services/config/ConfigService.ts',
   dataTs: 'src/data.ts',
@@ -35,18 +35,18 @@ const KEY_FILES = {
 
 // Diretórios a auditar
 const KEY_DIRECTORIES = {
-  jmuModules: 'src/services/agency/implementations/jmu/modules',
+  engineModules: 'src/services/agency/engine/modules',
   calculatorHooks: 'src/hooks/calculator',
   uiComponents: 'src/components/ui',
   calculatorComponents: 'src/components/Calculator',
   configService: 'src/services/config',
 };
 
-// Expectativas baseadas no IMPLEMENTATION_PLAN.md
+// Expectativas de estrutura atual do projeto
 const EXPECTATIONS = {
-  jmuService: { maxLines: 200, target: 140 },
+  agencyEngine: { maxLines: 200, target: 140 },
   useCalculator: { maxLines: 200, target: 99 },
-  jmuModulesCount: 9,
+  engineModulesCount: 9,
   calculatorHooksCount: 4,
   uiComponentsMin: 4, // Button, Input, Select, Card mínimo
 };
@@ -162,9 +162,9 @@ function auditKeyFiles() {
     };
 
     // Validações específicas
-    if (key === 'jmuService') {
-      results[key].isValid = lines.total <= EXPECTATIONS.jmuService.maxLines;
-      results[key].meetsTarget = lines.total <= EXPECTATIONS.jmuService.target;
+    if (key === 'agencyEngine') {
+      results[key].isValid = lines.total <= EXPECTATIONS.agencyEngine.maxLines;
+      results[key].meetsTarget = lines.total <= EXPECTATIONS.agencyEngine.target;
     } else if (key === 'useCalculator') {
       results[key].isValid = lines.total <= EXPECTATIONS.useCalculator.maxLines;
       results[key].meetsTarget = lines.total <= EXPECTATIONS.useCalculator.target;
@@ -189,9 +189,9 @@ function auditDirectories() {
     };
 
     // Validações específicas
-    if (key === 'jmuModules') {
-      results[key].isValid = listing.count === EXPECTATIONS.jmuModulesCount;
-      results[key].expected = EXPECTATIONS.jmuModulesCount;
+    if (key === 'engineModules') {
+      results[key].isValid = listing.count === EXPECTATIONS.engineModulesCount;
+      results[key].expected = EXPECTATIONS.engineModulesCount;
     } else if (key === 'calculatorHooks') {
       results[key].isValid = listing.count === EXPECTATIONS.calculatorHooksCount;
       results[key].expected = EXPECTATIONS.calculatorHooksCount;
@@ -208,20 +208,20 @@ function auditDirectories() {
  * Calcula métricas do projeto
  */
 function calculateMetrics(keyFiles) {
-  const jmuBefore = 801;
-  const jmuAfter = keyFiles.jmuService.total;
-  const jmuReduction = ((jmuBefore - jmuAfter) / jmuBefore * 100).toFixed(1);
+  const engineBefore = 801;
+  const engineAfter = keyFiles.agencyEngine.total;
+  const engineReduction = ((engineBefore - engineAfter) / engineBefore * 100).toFixed(1);
 
   const calcBefore = 398;
   const calcAfter = keyFiles.useCalculator.total;
   const calcReduction = ((calcBefore - calcAfter) / calcBefore * 100).toFixed(1);
 
   return {
-    jmuService: {
-      before: jmuBefore,
-      after: jmuAfter,
-      reduction: jmuReduction,
-      reductionLines: jmuBefore - jmuAfter,
+    agencyEngine: {
+      before: engineBefore,
+      after: engineAfter,
+      reduction: engineReduction,
+      reductionLines: engineBefore - engineAfter,
     },
     useCalculator: {
       before: calcBefore,
@@ -233,15 +233,15 @@ function calculateMetrics(keyFiles) {
 }
 
 /**
- * Valida fases do IMPLEMENTATION_PLAN
+ * Valida fases de evolução estrutural do projeto
  */
 function validatePhases(keyFiles, directories) {
   return {
-    phase_1_1_modularize_jmu: {
-      complete: keyFiles.jmuService.exists &&
-                keyFiles.jmuService.total <= 200 &&
-                directories.jmuModules.count === 9,
-      details: `JmuService: ${keyFiles.jmuService.total} linhas, ${directories.jmuModules.count} módulos`,
+    phase_1_1_modularize_engine: {
+      complete: keyFiles.agencyEngine.exists &&
+                keyFiles.agencyEngine.total <= 200 &&
+                directories.engineModules.count === 9,
+      details: `AgencyCalculationEngine: ${keyFiles.agencyEngine.total} linhas, ${directories.engineModules.count} módulos`,
     },
     phase_1_2_modularize_hooks: {
       complete: keyFiles.useCalculator.exists &&
@@ -324,11 +324,11 @@ function generateMarkdownReport(report) {
 
   // Métricas de Redução
   md += `## 📉 Métricas de Redução de Código\n\n`;
-  md += `### JmuService.ts\n`;
-  md += `- **Antes:** ${metrics.jmuService.before} linhas\n`;
-  md += `- **Depois:** ${metrics.jmuService.after} linhas\n`;
-  md += `- **Redução:** ${metrics.jmuService.reduction}% (-${metrics.jmuService.reductionLines} linhas)\n`;
-  md += `- **Status:** ${files.jmuService.isValid ? '✅' : '❌'} ${files.jmuService.meetsTarget ? 'Meta atingida!' : 'Acima da meta'}\n\n`;
+  md += `### AgencyCalculationEngine.ts\n`;
+  md += `- **Antes:** ${metrics.agencyEngine.before} linhas\n`;
+  md += `- **Depois:** ${metrics.agencyEngine.after} linhas\n`;
+  md += `- **Redução:** ${metrics.agencyEngine.reduction}% (-${metrics.agencyEngine.reductionLines} linhas)\n`;
+  md += `- **Status:** ${files.agencyEngine.isValid ? '✅' : '❌'} ${files.agencyEngine.meetsTarget ? 'Meta atingida!' : 'Acima da meta'}\n\n`;
 
   md += `### useCalculator.ts\n`;
   md += `- **Antes:** ${metrics.useCalculator.before} linhas\n`;
@@ -363,7 +363,7 @@ function generateMarkdownReport(report) {
   }
 
   // Validação de Fases
-  md += `## ✅ Validação de Fases (IMPLEMENTATION_PLAN)\n\n`;
+  md += `## ✅ Validação de Fases Estruturais\n\n`;
   md += `| Fase | Status | Detalhes |\n`;
   md += `|------|--------|----------|\n`;
   for (const [key, phase] of Object.entries(phases)) {
@@ -418,10 +418,10 @@ function main() {
     console.log(`Commit: ${report.meta.git.lastCommit}`);
     console.log(`Fases completas: ${report.summary.phasesComplete}/${report.summary.phasesTotal}`);
     console.log('\nMétricas de Redução:');
-    console.log(`  JmuService.ts:     ${report.metrics.jmuService.before} → ${report.metrics.jmuService.after} linhas (-${report.metrics.jmuService.reduction}%)`);
+    console.log(`  AgencyCalculationEngine.ts: ${report.metrics.agencyEngine.before} → ${report.metrics.agencyEngine.after} linhas (-${report.metrics.agencyEngine.reduction}%)`);
     console.log(`  useCalculator.ts:  ${report.metrics.useCalculator.before} → ${report.metrics.useCalculator.after} linhas (-${report.metrics.useCalculator.reduction}%)`);
     console.log('\nMódulos:');
-    console.log(`  JMU modules:       ${report.directories.jmuModules.count}/9 ${report.directories.jmuModules.isValid ? '✅' : '❌'}`);
+    console.log(`  Engine modules:    ${report.directories.engineModules.count}/9 ${report.directories.engineModules.isValid ? '✅' : '❌'}`);
     console.log(`  Calculator hooks:  ${report.directories.calculatorHooks.count}/4 ${report.directories.calculatorHooks.isValid ? '✅' : '❌'}`);
     console.log(`  UI components:     ${report.directories.uiComponents.count} ${report.directories.uiComponents.isValid ? '✅' : '⚠️'}`);
     console.log('='.repeat(60));
@@ -429,9 +429,9 @@ function main() {
 
     // Exit code baseado em validações críticas
     const criticalChecks = [
-      report.files.jmuService.isValid,
+      report.files.agencyEngine.isValid,
       report.files.useCalculator.isValid,
-      report.directories.jmuModules.isValid,
+      report.directories.engineModules.isValid,
       report.directories.calculatorHooks.isValid,
     ];
 

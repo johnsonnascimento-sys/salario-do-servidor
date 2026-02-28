@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de Ferias - JMU
  * 
  * Responsavel por calcular:
@@ -6,9 +6,9 @@
  * - IR sobre Ferias
  */
 
-import { CourtConfig } from '../../../../../types';
-import { calculateIrrf } from '../../../../../core/calculations/taxUtils';
-import { IJmuCalculationParams } from '../types';
+import { CourtConfig } from '../../../../types';
+import { calculateIrrf } from '../../../../core/calculations/taxUtils';
+import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 
@@ -18,7 +18,7 @@ export interface VacationResult {
     descontoAntecipacao: number;
 }
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -28,7 +28,7 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
 /**
  * Calcula Ferias (1/3 Constitucional)
  */
-export async function calculateVacation(params: IJmuCalculationParams): Promise<VacationResult> {
+export async function calculateVacation(params: IAgencyCalculationParams): Promise<VacationResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     let ferias1_3 = params.ferias1_3 || 0;

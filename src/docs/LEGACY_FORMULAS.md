@@ -447,7 +447,7 @@ if (usaTeto && baseFunpresp > 0) {
 
 Para reativar na Fase 7, basta:
 1. Chamar `calculateAll()` no hook OU
-2. Migrar cada função para `JmuService`
+2. Migrar cada função para `AgencyCalculationEngine`
 
 ---
 

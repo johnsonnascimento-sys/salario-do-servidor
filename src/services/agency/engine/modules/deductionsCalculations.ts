@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de Deducoes - JMU
  * 
  * Responsavel por calcular:
@@ -7,9 +7,9 @@
  * - Funpresp (Fundacao de Previdencia Complementar)
  */
 
-import { CourtConfig, Rubrica } from '../../../../../types';
-import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
-import { IJmuCalculationParams } from '../types';
+import { CourtConfig, Rubrica } from '../../../../types';
+import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
+import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 import { calculateOvertime } from './overtimeCalculations';
@@ -35,7 +35,7 @@ export interface DeductionsResult {
     total: number;
 }
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -89,7 +89,7 @@ const getMarginalPssRate = (
 /**
  * Calcula Deducoes (PSS, IRRF, Funpresp)
  */
-export async function calculateDeductions(grossValue: number, params: IJmuCalculationParams): Promise<DeductionsResult> {
+export async function calculateDeductions(grossValue: number, params: IAgencyCalculationParams): Promise<DeductionsResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const rubricasAdjustments = calculateRubricasBaseAdjustments(params.rubricasExtras);

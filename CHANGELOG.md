@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.7 - 28/02/2026
+- Docs: criado `PROJECT_RULES.md` como fonte canonica de regras do projeto.
+- Docs: criado `AGENTS.md` apontando para `PROJECT_RULES.md`.
+- Docs: limpeza de arquivos `.md` obsoletos e redundantes.
+
 ## 2.1.6 - 24/02/2026
 - Docs: consolidacao completa das regras funcionais e de UX em `CALCULATOR_RULES.md`.
 - Docs: inclusao de `README.md` com guia rapido, arquitetura e mapa de documentacao.

@@ -21,25 +21,25 @@ Gera 2 arquivos em `reports/`:
 ### O que analisa
 
 ✅ **Arquivos principais:**
-- JmuService.ts (linhas, validação)
+- AgencyCalculationEngine.ts (linhas, validação)
 - useCalculator.ts (linhas, validação)
 - ConfigService.ts (existência, linhas)
 - data.ts (linhas, status de depreciação)
 - Calculator.tsx (linhas)
 
 ✅ **Diretórios e módulos:**
-- 9 módulos JMU em `jmu/modules/`
+- 9 módulos do motor em `engine/modules/`
 - 4 hooks calculator em `hooks/calculator/`
 - 7+ componentes UI em `components/ui/`
 - 15 componentes Calculator
 - 4 arquivos ConfigService
 
 ✅ **Métricas de redução:**
-- JmuService: 801 → 141 linhas (-82.4%)
+- AgencyCalculationEngine: 801 → 141 linhas (-82.4%)
 - useCalculator: 398 → 100 linhas (-74.9%)
 
 ✅ **Validação de fases:**
-- Fase 1.1: Modularizar JmuService
+- Fase 1.1: Modularizar AgencyCalculationEngine
 - Fase 1.2: Modularizar useCalculator
 - Fase 1.3: Componentes UI reutilizáveis
 - Fase 3.1: ConfigService
@@ -76,9 +76,9 @@ cat reports/audit-report.json
 - **1** - Alguma validação crítica falhou
 
 Validações críticas:
-- JmuService ≤ 200 linhas
+- AgencyCalculationEngine ≤ 200 linhas
 - useCalculator ≤ 200 linhas
-- 9 módulos JMU presentes
+- 9 módulos do motor presentes
 - 4 hooks calculator presentes
 
 ---

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de Beneficios - JMU
  * 
  * Responsavel por calcular:
@@ -7,8 +7,8 @@
  * - Auxilio Transporte (credito e debito)
  */
 
-import { CourtConfig } from '../../../../../types';
-import { IJmuCalculationParams } from '../types';
+import { CourtConfig } from '../../../../types';
+import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 
@@ -19,7 +19,7 @@ export interface BenefitsResult {
     auxTransporteDebito: number;
 }
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -29,7 +29,7 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
 /**
  * Calcula beneficios (auxilios)
  */
-export async function calculateBenefits(params: IJmuCalculationParams): Promise<BenefitsResult> {
+export async function calculateBenefits(params: IAgencyCalculationParams): Promise<BenefitsResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
 

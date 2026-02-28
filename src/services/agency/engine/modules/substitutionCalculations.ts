@@ -1,16 +1,16 @@
-/**
+﻿/**
  * Calculos de Substituicao de Funcao - JMU
  * 
  * Responsavel por calcular:
  * - Substituicao de funcao (diferenca proporcional aos dias)
  */
 
-import { CourtConfig } from '../../../../../types';
-import { IJmuCalculationParams } from '../types';
+import { CourtConfig } from '../../../../types';
+import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -20,7 +20,7 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
 /**
  * Calcula Substituicao de Funcao
  */
-export async function calculateSubstitution(params: IJmuCalculationParams): Promise<number> {
+export async function calculateSubstitution(params: IAgencyCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { funcoes, salario } = await getDataForPeriod(params.periodo, config);

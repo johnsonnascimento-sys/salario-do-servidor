@@ -1,0 +1,497 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-br" xml:lang="pt-br">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="descrição" content="Simule seu contracheque com reajustes e o novo Adicional de Qualificação do MPU e Judiciário"/>
+    
+    <title>Simulação Salário MPU/Judiciário - Unificado</title>
+    
+    <style type="text/css">
+        BODY {
+            font-family: 'Inter', arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .container-fluid {
+            max-width: 900px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        /* Garantindo que os grupos de AQ e AT não tenham display flex por padrão para serem controlados pelo JS */
+        #aq_jud, #at_mpu, #at_jud, #cargosMPU, #cargosJudiciario, #fc_jud, #fc_mpu {
+            display: none;
+        }
+        /* Estilos adicionais para o bloco do AQ ficar organizado */
+        .aq-options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .aq-option {
+            margin-bottom: 0 !important;
+        }
+    </style>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="shortcut icon" href="favicon.ico">
+</head>
+
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="d0985d5edcb651a24798543a-|49"></script><body onload="mostraContribuicaoFunpresp(); orgaoAltera();"><a href="https://josebarbosa.com.br/cdn-cgi/content?id=_nTC5t_CJxOF4uwhrtZsPbRncxzX3Yhr3YlZ81hob_Q-1772310946.736738-1.0.1.1-QAMKgw5l1HO7FFdLgiO2IYy4QpRFP7ZnJRXTSwRujH0" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" type="d0985d5edcb651a24798543a-text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawR8W2+z/q3FkK3E5u0C+q4/z/q3FkK3E5u0C+q4/z/0A==" crossorigin="anonymous" type="d0985d5edcb651a24798543a-text/javascript"></script>
+
+        
+    <div class="container-fluid">
+        <header class="text-center">
+            <h1>Simulação Salarial MPU e Judiciário (PLs e AQ)</h1>
+            <p>Planilha para cálculo personalizado dos salários de servidores do judiciário e MPU, com previsão de reajustes futuros (<a href="https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2564274" target="_blank">PL 4750/2025 - Judiciário</a> e <a href="https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2571101" target="_blank">PL 5120/2025 - MPU</a>). </p>
+            <p>E para o Judiciário, há previsão de criação do novo modelo de Adicional de Qualificação - AQ <a href="https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2528613" target="_blank">PL 3084/2025 - MPU</a></p>
+        </header>
+        
+        <form action="calcula.php" method="post" class="row g-3 mt-4">
+            
+            <input type="hidden" id="active_aq_format_input" name="active_aq_format" value="0">
+
+            <div class="input-group mb-3">
+                <label for="orgao" class="col-sm-3 col-form-label">Órgão</label>
+                <div class="col-sm-9 col">
+                    <input type="radio" id="orgao_mpu" name="orgao" value="1" checked class="btn-check" autocomplete="off" onchange="if (!window.__cfRLUnblockHandlers) return false; orgaoAltera();" data-cf-modified-d0985d5edcb651a24798543a-="">
+                    <label class="btn btn-outline-primary" for="orgao_mpu">MPU</label>
+                    <input type="radio" id="orgao_jud" name="orgao" value="2" onchange="if (!window.__cfRLUnblockHandlers) return false; orgaoAltera();" class="btn-check" autocomplete="off" data-cf-modified-d0985d5edcb651a24798543a-="">
+                    <label class="btn btn-outline-primary" for="orgao_jud">Judiciário</label>
+                </div>
+            </div>
+
+            <div class="input-group mb-3">
+                <label for="previdencia" class="col-sm-3 col-form-label">Regime Previdenciário</label>
+                <div class="col-sm-9">
+                    
+                    <div class="form-check form-switch mb-2">
+                        <input type="checkbox" class="form-check-input" name="variaveisPSS" id="variaveisPSS"  /> 
+                        <label class="form-check-label" for="variaveisPSS">Incluir parcelas opcionais na base PSS.</label>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="tooltip" data-bs-placement="right" title="Vide Lei 10887/2004, art. 4º, §2º: recomendável para servidores que ingressaram a partir de 2004, nos regimes de média e previdência complementar.">Info</button>
+                    </div>
+                    
+                    <div class="form-check form-switch mb-3">
+                        <input type="checkbox" class="form-check-input" name="abonoPermanencia" id="abonoPermanencia"  /> 
+                        <label class="form-check-label" for="abonoPermanencia">Recebe Abono de Permanência.</label>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="tooltip" data-bs-placement="right" title="Se já possui requisitos para aposentadoria, enquanto estiver na ativa possui o direito de receber uma compensação equivalente à contribuição previdenciária.">Info</button>
+                    </div>
+                    
+                    <input type="radio" id="previdencia_proprio" name="previdencia" value="1" checked class="btn-check" autocomplete="off" onchange="if (!window.__cfRLUnblockHandlers) return false; mostraContribuicaoFunpresp();" data-cf-modified-d0985d5edcb651a24798543a-="" />
+                    <label class="btn btn-outline-secondary" for="previdencia_proprio">Paridade/Média Int.</label>
+                    <input type="radio" id="previdencia_funpresp" name="previdencia" value="2" class="btn-check" autocomplete="off" onchange="if (!window.__cfRLUnblockHandlers) return false; mostraContribuicaoFunpresp();" data-cf-modified-d0985d5edcb651a24798543a-="" />
+                    <label class="btn btn-outline-secondary" for="previdencia_funpresp">Prev. Complementar (FUNPRESP-JUD)</label>
+                    
+                    <div class="form-check form-switch form-floating mt-3" id="trfunpresp" style="display: none;">
+                        <div class="form-floating mb-3">
+                            <select id="funprespIndice" name="funprespIndice" class="form-select" >
+                                <option value="0.085" > 8,5%</option>
+                                <option value="0.065" > 6,5%</option>
+                                <option value="0.07" > 7%</option>
+                                <option value="0.075" > 7,5%</option>
+                                <option value="0.08" > 8%</option>
+                                <option value="0" > Não (0%)</option>
+                            </select>
+                            <label for="funprespIndice">Contribuição Patrocinada</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="number" id="funprespOpcional" class="form-control" name="funprespOpcional" value="0" min="0" max="22" step="0.5"/>
+                            <label for="funprespOpcional">Contribuição Facultativa (Opcional) %</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group mb-3">
+                <label for="cargo" class="col-sm-3 col-form-label">Cargo</label>
+                <div class="col-sm-6">
+                    <select id="cargosMPU" name="cargosMPU" class="form-select form-select-lg mb-3">
+                        <option value="2" >Técnico</option>
+                        <option value="3" >Analista</option>
+                        <option disabled value="4">Requisitado</option>
+                    </select>
+                    <select id="cargosJudiciario" name="cargosJudiciario" class="form-select form-select-lg mb-3">
+                        <option value="2" >Técnico</option>
+                        <option value="3" >Analista</option>
+                        <option value="1" id="cargoAuxiliar" >Auxiliar</option>
+                        <option disabled value="4">Requisitado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group mb-3">
+                <label for="nivel" class="col-sm-3 col-form-label">Classe / Padrão</label>
+                <div class="col-sm-6">
+                    <select id="nivel" name="nivel" class="form-select form-select-lg mb-3">
+                        <option value="13" >13</option> 
+                                                    <option value="1" > 1</option>
+                                                    <option value="2" > 2</option>
+                                                    <option value="3" > 3</option>
+                                                    <option value="4" > 4</option>
+                                                    <option value="5" > 5</option>
+                                                    <option value="6" > 6</option>
+                                                    <option value="7" > 7</option>
+                                                    <option value="8" > 8</option>
+                                                    <option value="9" > 9</option>
+                                                    <option value="10" > 10</option>
+                                                    <option value="11" > 11</option>
+                                                    <option value="12" > 12</option>
+                                            </select>
+                </div>
+            </div>
+            
+            <div class="input-group mb-3">
+                <label for="fc_jud" class="col-sm-3 col-form-label">Função ou Cargo em Comissão</label>
+                <div class="col-sm-6">
+                    <select id="fc_jud" name="fc_jud" class="form-select form-select-lg mb-3">
+                        <option value="" selected>Não</option>
+                                                    <option value="1" >FC-1</option>
+                                                    <option value="2" >FC-2</option>
+                                                    <option value="3" >FC-3</option>
+                                                    <option value="4" >FC-4</option>
+                                                    <option value="5" >FC-5</option>
+                                                    <option value="6" >FC-6</option>
+                                                                            <option value="7" >CJ-1</option>
+                                                    <option value="8" >CJ-2</option>
+                                                    <option value="9" >CJ-3</option>
+                                                    <option value="10" >CJ-4</option>
+                                            </select>
+                    <select id="fc_mpu" name="fc_mpu" class="form-select form-select-lg mb-3">
+                        <option value="" selected>Não</option>
+                                                    <option value="1" >FC-1</option>
+                                                    <option value="2" >FC-2</option>
+                                                    <option value="3" >FC-3</option>
+                                                                            <option value="4" >CC-1</option>
+                                                    <option value="5" >CC-2</option>
+                                                    <option value="6" >CC-3</option>
+                                                    <option value="7" >CC-4</option>
+                                                    <option value="8" >CC-5</option>
+                                                    <option value="9" >CC-6</option>
+                                                    <option value="10" >CC-7</option>
+                                            </select>
+                </div>
+            </div>
+
+            <div class="input-group mb-3">
+                <label for="aq_toggle_btn" class="col-sm-3 col-form-label">
+                    Adicional de Qualificação
+                </label>
+                <div class="col-sm-9">
+                    <button type="button" id="aq_toggle_btn" class="btn btn-warning mb-3" onclick="if (!window.__cfRLUnblockHandlers) return false; toggleAQFormat()" data-cf-modified-d0985d5edcb651a24798543a-="">
+                        Alternar Formato AQ: ...
+                    </button>
+
+                    <div id="aq_container" class="aq-options-container">
+                        
+                        <div id="aq_format_old" class="w-100 d-flex flex-wrap gap-2" style="display: none;">
+                            <p class="text-muted w-100 mb-2">Selecione o maior título de AQ (Percentual sobre o Vencimento Básico):</p>
+                            <input type="radio" id="aq_old_0" name="aq_old" value="0"  class="btn-check" autocomplete="off" />
+                            <label class="btn btn-outline-secondary aq-option" for="aq_old_0">Não</label>
+                            <input type="radio" id="aqGraduacao" name="aq_old" value="0.05"  class="btn-check" autocomplete="off" />
+                            <label class="btn btn-outline-secondary aq-option" for="aqGraduacao">Graduação (5%)</label>
+                            <input type="radio" id="aqEspecializacao" name="aq_old" value="0.075"  class="btn-check" autocomplete="off" />
+                            <label class="btn btn-outline-secondary aq-option" for="aqEspecializacao">Especialização (7,5%)</label>
+                            <input type="radio" id="aqMestrado" name="aq_old" value="0.1"  class="btn-check" autocomplete="off" />
+                            <label class="btn btn-outline-secondary aq-option" for="aqMestrado">Mestrado (10%)</label>
+                            <input type="radio" id="aqDoutorado" name="aq_old" value="0.125"  class="btn-check" autocomplete="off" />
+                            <label class="btn btn-outline-secondary aq-option" for="aqDoutorado">Doutorado (12,5%)</label>
+                        </div>
+
+                        <div id="aq_format_new" class="w-100" style="display: none;">
+                            <p class="text-muted w-100 mb-2">Selecione as qualificações do novo plano (Valores de Referência - VRs):</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <input type="checkbox" id="aqJudgraduacao" name="aq_new[]" value="grad"  class="btn-check" autocomplete="off" />
+                                <label class="btn btn-outline-success aq-option" for="aqJudgraduacao">Segunda Graduação (1 VR)</label>
+                                
+                                <input type="checkbox" id="aqJudPrimeiraEspecializacao" name="aq_new[]" value="esp1"  class="btn-check" autocomplete="off" />
+                                <label class="btn btn-outline-success aq-option" for="aqJudPrimeiraEspecializacao">1ª Especialização (1 VR)</label>
+                                
+                                <input type="checkbox" id="aqJudSegundaEspecializacao" name="aq_new[]" value="esp2"  class="btn-check" autocomplete="off" />
+                                <label class="btn btn-outline-success aq-option" for="aqJudSegundaEspecializacao">2ª Especialização (1 VR)</label>
+                                
+                                <input type="checkbox" id="aqJudPrimeiraCertificacao" name="aq_new[]" value="cert1"  class="btn-check" autocomplete="off" />
+                                <label class="btn btn-outline-success aq-option" for="aqJudPrimeiraCertificacao">1ª Certificação (0,5 VR)</label>
+                                
+                                <input type="checkbox" id="aqJudSegundaCertificacao" name="aq_new[]" value="cert2"  class="btn-check" autocomplete="off" />
+                                <label class="btn btn-outline-success aq-option" for="aqJudSegundaCertificacao">2ª Certificação (0,5 VR)</label>
+                                
+                                <input type="checkbox" id="aqJudMestrado" name="aq_new[]" value="mest"  class="btn-check" autocomplete="off" />
+                                <label class="btn btn-outline-success aq-option" for="aqJudMestrado">Mestrado (3,5 VR)</label>
+                                
+                                <input type="checkbox" id="aqJudDoutorado" name="aq_new[]" value="dout"  class="btn-check" autocomplete="off" />
+                                <label class="btn btn-outline-success aq-option" for="aqJudDoutorado">Doutorado (5 VR)</label>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <label for="at_jud" class="col-sm-3 col-form-label">Adicional de Treinamento</label>
+                <div class="col-sm-6">
+                    <select name="at_mpu" id="at_mpu" class="form-select form-select-lg mb-3">
+                        <option value="" selected>Não</option>
+                        <option value="0.01" >2,5% (120 horas)</option>
+                        <option value="0.02" >5% (240 horas)</option>
+                    </select>
+                    <select name="at_jud" id="at_jud" class="form-select form-select-lg mb-3">
+                        <option value="" selected>Não</option>
+                        <option value="0.01" >0,2 VR (120 horas)</option>
+                        <option value="0.02" >0,4 VR (240 horas)</option>
+                        <option value="0.03" >0,6 VR (360 horas)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <label for="penosa" class="col-sm-3 col-form-label">Penosidade ou Periculosidade</label>
+                <div class="col-sm-6 col d-flex flex-wrap gap-2">
+                    <input type="radio" id="penosa_nao" name="penosa" value="" checked class="btn-check" autocomplete="off" />
+                    <label class="btn btn-outline-secondary" for="penosa_nao">Não</label>
+                    <input type="radio" name="penosa" id="penosa10" value="0.1"  class="btn-check" autocomplete="off"/>
+                    <label class="btn btn-outline-secondary" for="penosa10">Insalubridade(10%)</label>
+                    <input type="radio" name="penosa" id="penosa20" value="0.2"  class="btn-check" autocomplete="off"/>
+                    <label class="btn btn-outline-secondary" for="penosa20">Penosidade | Periculosidade (20%)</label>
+                </div>
+            </div>
+            <div class="input-group mb-3">
+                <label for="gas" class="col-sm-3 col-form-label">GAS/GAE/GP</label>
+                <div class="col-sm-6 col d-flex flex-wrap gap-2">
+                    <input type="radio" id="gas_nao" name="gas" value="" checked class="btn-check" autocomplete="off" />
+                    <label class="btn btn-outline-secondary" for="gas_nao">Não</label>
+                    <input type="radio" name="gas" id="gas35" value="0.35"  class="btn-check" autocomplete="off"/>
+                    <label class="btn btn-outline-secondary" for="gas35">GAS, GAE ou Projeto (35%)</label>
+                    <input type="radio" name="gas" id="gas25" value="0.25"  class="btn-check" autocomplete="off"/>
+                    <label class="btn btn-outline-secondary" for="gas25">GAS (25%)</label>
+                </div>
+            </div>
+                        
+            <div class="input-group mb-3">
+                <label for="anuenio" class="col-sm-3 col-form-label">Adicional por Tempo de Serviço</label>
+                <div class="col-sm-6 col form-floating mb-3">
+                    <input type="number" id="anuenio" name="anuenio" value="0" max="35" min="0" class="form-control" placeholder="ATS/Anuênios (%)"/>
+                    <label for="anuenio"> ATS/Anuênios (%)</label>
+                </div>
+            </div>
+
+            <div class="input-group mb-3">
+                <label for="dependentes" class="col-sm-3 col-form-label">Dependentes (IRRF)</label>
+                <div class="col-sm-6 col form-floating mb-3">
+                    <input type="number" id="dependentes" name="dependentes" value="0" min="0" max="9" class="form-control" placeholder="Número"/>
+                    <label for="dependentes"> Número</label>
+                </div>
+            </div>
+
+            <div class="input-group mb-3" >
+                <label for="dependentesCreche" class="col-sm-3 col-form-label">Auxílio-creche</label>
+                <div class="col-sm-6 col form-floating mb-3">
+                    <input type="number" id="dependentesCreche" name="dependentesCreche" value="0" min="0" max="9" class="form-control" placeholder="Número"/>
+                    <label for="dependentesCreche"> Número</label>
+                </div>
+            </div>
+
+            <div class="input-group mb-3" >
+                <label for="vpni" class="col-sm-3 col-form-label">VPNI / Incorporações:</label>
+                <div class="col-sm-6 col form-floating mb-3">
+                    <input type="text" name="vpni" id="vpni" class="form-control" value="" placeholder="VPNI (R$)"/>
+                    <label for="vpni"> VPNI (R$)</label>
+                </div>
+            </div>
+
+            <div class="input-group mb-3" id="group_dep_aux_saude">
+                <label for="depAuxSaude" class="col-sm-3 col-form-label">Dep. Auxílio Saúde</label>
+                <div class="col-sm-6 col form-floating mb-3" id="input_dep_aux_saude">
+                    <input type="number" id="depAuxSaude" name="depAuxSaude" value="0" min="0" max="9" class="form-control" placeholder="Número Dependentes Auxílio-saúde"/>
+                    <label for="depAuxSaude"> Número Dependentes Auxílio-saúde</label>
+                </div>
+            </div>
+
+            <div class="input-group mb-3">
+                <label for="rubricaNome" class="col-sm-3 col-form-label">Rubricas Adicionais <br/>(Adições ou Descontos)</label>
+                <div id="camposAdicionais" class="col-sm-9 col mb-3">
+                                        <span data-bs-toggle="tooltip" data-bs-placement="top" title="Adicionar Rubrica Adicional (Adição ou Desconto fixo)." class="d-inline-block">
+                        <button id="addCampo" type="button" class="btn btn-secondary btn-sm mt-3" onclick="if (!window.__cfRLUnblockHandlers) return false; addRubrica()" data-cf-modified-d0985d5edcb651a24798543a-="">Adicionar Rubrica</button>
+                    </span>
+                    
+                </div>
+            </div>
+            
+            <div class="col-12 text-center">
+                <input type="hidden" id="active_aq_format_input" name="active_aq_format" value="0">
+                <input class="btn btn-success btn-lg mb-3" type="submit" value="Calcular"/>
+            </div>
+            
+        </form>
+
+        <footer class="text-center mt-5 pt-3 border-top">
+            <p class='text-muted'>Atualizado em 07/12/2025 | <a href='../novopcs/sobre.php'>Sobre o Sistema</a></p>            <div class="p-3 bg-light rounded shadow-sm">
+                <div>Chave PIX: <b><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5a3035293f743b2974383b283835293b1a2f353674393537743828">[email&#160;protected]</a></b></div>
+                <p class="mb-2">Se você gostou, contribua com a iniciativa. Doe! A sua contribuição é importante para manter os custos de manutenção de hospedagem e registro de domínio da página. </p>
+            </div>
+            <p class="mt-3 text-sm text-muted">
+                © Todos os direitos reservados. Criado por José Antonio dos Santos Barbosa. 
+                <adress>Contato: <a href="/cdn-cgi/l/email-protection#6d07021e082d07021e080f0c1f0f021e0c430e0200430f1f"><span class="__cf_email__" data-cfemail="7a1015091f3a1015091f181b081815091b54191517541808">[email&#160;protected]</span></a></adress>
+            </p>
+        </footer>
+    </div>
+    
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novidades do site</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-primary" role="alert">
+                        Site atualizado em 07/09/2025 (Exemplo)
+                    </div>
+                    <h4>Últimas Atualizações</h4>
+                    <p>Funcionalidade de persistência de dados via sessão implementada para melhor usabilidade.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="d0985d5edcb651a24798543a-text/javascript">
+        // Variável global para rastrear o formato ativo do AQ (0: Old/Percentual, 1: New/VR)
+        let activeAQFormat = 0; 
+        const aqToggleBtn = document.getElementById("aq_toggle_btn");
+        const aqFormatInput = document.getElementById("active_aq_format_input");
+        const camposAdicionaisContainer = document.getElementById("camposAdicionais");
+
+        // --- FUNÇÕES DE RUBRICAS (VANILLA JS) ---
+
+        const newRubricaHtmlTemplate = `
+            <div class="saved-rubrica mt-3 pt-3 border-top">
+                <div class="form-floating mb-2">
+                    <input type="text" name="rubricaNome[]" class="form-control" placeholder="Nome da Rubrica" required/>
+                    <label>Nome da Rubrica</label>
+                </div>
+                <div class="form-floating mb-2">
+                    <input type="number" name="rubricaValor[]" class="form-control" placeholder="Valor (R$)" step=".01" required/>
+                    <label>Valor (R$)</label>
+                </div>
+                <div class="form-floating mb-2">
+                    <select name="rubricaTipo[]" class="form-select" required>
+                        <option value="" selected disabled>Selecione o Tipo</option>
+                        <option value="A">Adição Indenizatória (Sem IR/PSS)</option>
+                        <option value="R">Adição Remuneratória (Com IR/PSS)</option>
+                        <option value="D_N">Desconto (Sem impacto no IR)</option>
+                        <option value="D_I">Desconto (Com impacto no IR)</option>
+                    </select>
+                    <label>Tipo (Impacto no cálculo)</label>
+                </div>
+                <div class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-rubrica" onclick="removeRubrica(this)">Remover</button>
+                </div>
+            </div>`;
+
+        function addRubrica() {
+            if (camposAdicionaisContainer) {
+                const div = document.createElement('div');
+                div.innerHTML = newRubricaHtmlTemplate.trim();
+                camposAdicionaisContainer.appendChild(div.firstChild);
+            }
+        }
+        
+        // Função Vanilla JS para remover o campo pai (Rubrica)
+        function removeRubrica(buttonElement) {
+            const rubricaDiv = buttonElement.closest('.saved-rubrica');
+            if (rubricaDiv) {
+                rubricaDiv.remove();
+            }
+        }
+
+        // --- FUNÇÕES DE LÓGICA GERAL ---
+        function mostraContribuicaoFunpresp() {
+            var funprespChecked = document.getElementById("previdencia_funpresp").checked;
+            document.getElementById("trfunpresp").style.display = funprespChecked ? "block" : "none";
+        }
+
+        function toggleAQFormat() {
+            activeAQFormat = 1 - activeAQFormat;
+            aqFormatInput.value = activeAQFormat;
+            updateAQDisplay();
+        }
+
+        function updateAQDisplay() {
+            const aqOld = document.getElementById("aq_format_old");
+            const aqNew = document.getElementById("aq_format_new");
+            
+            aqToggleBtn.classList.remove('btn-warning', 'btn-success');
+            
+            let formatName;
+            if (activeAQFormat === 0) {
+                formatName = "Antigo (Percentual)";
+                aqToggleBtn.classList.add('btn-warning');
+            } else {
+                formatName = "Novo (VR/Certificação)";
+                aqToggleBtn.classList.add('btn-success');
+            }
+            aqToggleBtn.textContent = `Alternar Formato AQ: ${formatName}`;
+
+            if (activeAQFormat === 0) { 
+                aqOld.style.display = 'flex';
+                aqNew.style.display = 'none';
+                
+                aqNew.querySelectorAll('input[type="checkbox"]').forEach(input => input.name = '');
+                aqOld.querySelectorAll('input[type="radio"]').forEach(input => input.name = `aq_old`);
+                
+            } else { 
+                aqOld.style.display = 'none';
+                aqNew.style.display = 'block'; 
+                
+                aqOld.querySelectorAll('input[type="radio"]').forEach(input => input.name = '');
+                aqNew.querySelectorAll('input[type="checkbox"]').forEach(input => input.name = `aq_new[]`);
+            }
+        }
+
+        function orgaoAltera() {
+            var isMPU = document.getElementById("orgao_mpu").checked;
+            
+            document.getElementById("fc_mpu").style.display = isMPU ? "block" : "none";
+            document.getElementById("fc_jud").style.display = isMPU ? "none" : "block";
+            
+            document.getElementById("at_mpu").style.display = isMPU ? "block" : "none";
+            document.getElementById("at_jud").style.display = isMPU ? "none" : "block";
+            
+            document.getElementById("cargosMPU").style.display = isMPU ? "block" : "none";
+            document.getElementById("cargosJudiciario").style.display = isMPU ? "none" : "block";
+            
+            document.getElementById("group_dep_aux_saude").style.display = isMPU ? "flex" : "none";
+            
+            updateAQDisplay();
+        }
+
+        // Inicialização de Tooltips do Bootstrap 5 e Lógica de Rubricas
+        $(document).ready(function() {
+            // Inicialização de Tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+
+            // Se a função de remoção de rubrica já existir (criada dinamicamente),
+            // a lógica JQuery de delegação para remoção não é mais estritamente necessária,
+            // mas mantemos para cobrir rubricas carregadas via PHP.
+            $(document).on('click', '.remove-rubrica', function() {
+                // Usamos o método nativo, mas acionado via JQuery's .on() para elementos persistentes
+                removeRubrica(this); 
+            });
+            
+            orgaoAltera();
+        });
+    </script>
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="d0985d5edcb651a24798543a-|49" defer></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v67327c56f0bb4ef8b305cae61679db8f1769101564043" integrity="sha512-rdcWY47ByXd76cbCFzznIcEaCN71jqkWBBqlwhF1SY7KubdLKZiEGeP7AyieKZlGP9hbY/MhGrwXzJC/HulNyg==" data-cf-beacon='{"version":"2024.11.0","token":"05713ed850ee4946b1c73424ab404692","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d52b5d91b270290',t:'MTc3MjMxMDk0Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

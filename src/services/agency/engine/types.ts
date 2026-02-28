@@ -1,13 +1,13 @@
-/**
- * Interface de Parametros de Calculo - JMU
+﻿/**
+ * Interface de Parametros de Calculo da Agencia
  *
- * Superset de ICalculationParams com campos especificos da JMU.
+ * Superset de ICalculationParams com campos da implementacao atual da agencia.
  */
 
-import { ICalculationParams } from '../../types';
-import { CourtConfig, Rubrica } from '../../../../types';
+import { ICalculationParams } from '../types';
+import { CourtConfig, Rubrica } from '../../../types';
 
-export interface IJmuCalculationParams extends ICalculationParams {
+export interface IAgencyCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
     agencyConfig?: CourtConfig;
     periodo: number;

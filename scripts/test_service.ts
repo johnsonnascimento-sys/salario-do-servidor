@@ -1,7 +1,7 @@
 
-import { JmuService } from '../src/services/agency/implementations/JmuService';
+import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
 import { CalculatorState } from '../src/types';
-import { mapStateToJmuParams } from '../src/services/agency/adapters/stateToParams';
+import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToParams';
 import { config } from 'dotenv';
 import path from 'path';
 
@@ -99,10 +99,10 @@ const mockState: CalculatorState = {
 };
 
 async function run() {
-    console.log('Testing JmuService...');
+    console.log('Testing AgencyCalculationEngine...');
     try {
-        const service = new JmuService();
-        const params = mapStateToJmuParams(mockState, 'jmu');
+        const service = new AgencyCalculationEngine();
+        const params = mapStateToAgencyParams(mockState, 'jmu');
 
         console.log('Params:', JSON.stringify(params, null, 2));
 

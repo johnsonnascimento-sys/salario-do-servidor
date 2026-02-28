@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de Hora Extra - JMU
  * 
  * Responsavel por calcular:
@@ -7,9 +7,9 @@
  * - Total de Hora Extra
  */
 
-import { CourtConfig } from '../../../../../types';
-import { calculatePss } from '../../../../../core/calculations/taxUtils';
-import { IJmuCalculationParams } from '../types';
+import { CourtConfig } from '../../../../types';
+import { calculatePss } from '../../../../core/calculations/taxUtils';
+import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 
@@ -19,7 +19,7 @@ export interface OvertimeResult {
     heTotal: number;
 }
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -29,7 +29,7 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
 /**
  * Calcula Hora Extra (50% e 100%)
  */
-export async function calculateOvertime(params: IJmuCalculationParams): Promise<OvertimeResult> {
+export async function calculateOvertime(params: IAgencyCalculationParams): Promise<OvertimeResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);

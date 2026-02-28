@@ -1,35 +1,36 @@
-/**
- * JMU Service - Orquestrador de Cálculos
+﻿/**
+ * Agency Calculation Engine - Orquestrador de CÃ¡lculos
  * 
- * Service principal para cálculos da Justiça Militar da União (JMU).
- * Implementa a interface IAgencyCalculator e delega cálculos específicos
- * para módulos especializados.
+ * Motor de cÃ¡lculo por agÃªncia.
+ * A implementaÃ§Ã£o atual utiliza as regras da JustiÃ§a Militar da UniÃ£o (JMU),
+ * delegando cÃ¡lculos especÃ­ficos
+ * para mÃ³dulos especializados.
  * 
  * Arquitetura Modular:
  * - modules/baseCalculations.ts - Vencimento, GAJ, FC, AQ
- * - modules/benefitsCalculations.ts - Auxílios
- * - modules/vacationCalculations.ts - Férias
- * - modules/thirteenthCalculations.ts - 13º Salário
+ * - modules/benefitsCalculations.ts - AuxÃ­lios
+ * - modules/vacationCalculations.ts - FÃ©rias
+ * - modules/thirteenthCalculations.ts - 13Âº SalÃ¡rio
  * - modules/overtimeCalculations.ts - Hora Extra
- * - modules/substitutionCalculations.ts - Substituição
- * - modules/dailiesCalculations.ts - Diárias
- * - modules/leaveCalculations.ts - Licença Compensatória
+ * - modules/substitutionCalculations.ts - SubstituiÃ§Ã£o
+ * - modules/dailiesCalculations.ts - DiÃ¡rias
+ * - modules/leaveCalculations.ts - LicenÃ§a CompensatÃ³ria
  * - modules/deductionsCalculations.ts - PSS, IRRF, Funpresp
  */
 
 import { IAgencyCalculator, ICalculationResult, ICalculationParams } from '../types';
-import { IJmuCalculationParams } from './jmu/types';
+import { IAgencyCalculationParams } from './types';
 
-// Importar módulos de cálculo
-import { calculateBase, calculateBaseComponents } from './jmu/modules/baseCalculations';
-import { calculateBenefits } from './jmu/modules/benefitsCalculations';
-import { calculateVacation } from './jmu/modules/vacationCalculations';
-import { calculateThirteenth } from './jmu/modules/thirteenthCalculations';
-import { calculateOvertime } from './jmu/modules/overtimeCalculations';
-import { calculateSubstitution } from './jmu/modules/substitutionCalculations';
-import { calculateDailies } from './jmu/modules/dailiesCalculations';
-import { calculateCompensatoryLeave } from './jmu/modules/leaveCalculations';
-import { calculateDeductions } from './jmu/modules/deductionsCalculations';
+// Importar mÃ³dulos de cÃ¡lculo
+import { calculateBase, calculateBaseComponents } from './modules/baseCalculations';
+import { calculateBenefits } from './modules/benefitsCalculations';
+import { calculateVacation } from './modules/vacationCalculations';
+import { calculateThirteenth } from './modules/thirteenthCalculations';
+import { calculateOvertime } from './modules/overtimeCalculations';
+import { calculateSubstitution } from './modules/substitutionCalculations';
+import { calculateDailies } from './modules/dailiesCalculations';
+import { calculateCompensatoryLeave } from './modules/leaveCalculations';
+import { calculateDeductions } from './modules/deductionsCalculations';
 
 const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number }> = []) => {
     return rubricas.reduce(
@@ -52,54 +53,54 @@ const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number
 };
 
 /**
- * Service de Cálculo da JMU
+ * Engine de cÃ¡lculo da agÃªncia
  *
- * Orquestra todos os cálculos delegando para módulos especializados.
+ * Orquestra todos os cÃ¡lculos delegando para mÃ³dulos especializados.
  */
-export class JmuService implements IAgencyCalculator {
+export class AgencyCalculationEngine implements IAgencyCalculator {
 
     /**
-     * Calcula a base salarial (vencimento + GAJ + FC + AQ + gratificações)
+     * Calcula a base salarial (vencimento + GAJ + FC + AQ + gratificaÃ§Ãµes)
      */
     async calculateBase(params: ICalculationParams): Promise<number> {
-        return await calculateBase(params as IJmuCalculationParams);
+        return await calculateBase(params as IAgencyCalculationParams);
     }
 
     /**
-     * Calcula as deduções (PSS, IRRF, Funpresp)
+     * Calcula as deduÃ§Ãµes (PSS, IRRF, Funpresp)
      */
     async calculateDeductions(grossValue: number, params: ICalculationParams): Promise<any> {
-        return await calculateDeductions(grossValue, params as IJmuCalculationParams);
+        return await calculateDeductions(grossValue, params as IAgencyCalculationParams);
     }
 
     /**
-     * Calcula os benefícios (auxílios)
+     * Calcula os benefÃ­cios (auxÃ­lios)
      */
     async calculateBenefits(params: ICalculationParams): Promise<any> {
-        return await calculateBenefits(params as IJmuCalculationParams);
+        return await calculateBenefits(params as IAgencyCalculationParams);
     }
 
     /**
-     * Calcula o total da remuneração com todos os componentes
+     * Calcula o total da remuneraÃ§Ã£o com todos os componentes
      * 
-     * Este é o método principal que orquestra todos os cálculos:
-     * 1. Base salarial (vencimento, GAJ, FC, AQ, gratificações)
-     * 2. Benefícios (auxílios)
-     * 3. Rendimentos variáveis (férias, 13º, HE, substituição, diárias, licença)
-     * 4. Deduções (PSS, IRRF, Funpresp)
-     * 5. Total líquido
+     * Este Ã© o mÃ©todo principal que orquestra todos os cÃ¡lculos:
+     * 1. Base salarial (vencimento, GAJ, FC, AQ, gratificaÃ§Ãµes)
+     * 2. BenefÃ­cios (auxÃ­lios)
+     * 3. Rendimentos variÃ¡veis (fÃ©rias, 13Âº, HE, substituiÃ§Ã£o, diÃ¡rias, licenÃ§a)
+     * 4. DeduÃ§Ãµes (PSS, IRRF, Funpresp)
+     * 5. Total lÃ­quido
      * 
-     * REFATORADO: Agora é async para suportar ConfigService
+     * REFATORADO: Agora Ã© async para suportar ConfigService
      */
-    async calculateTotal(params: IJmuCalculationParams): Promise<ICalculationResult> {
+    async calculateTotal(params: IAgencyCalculationParams): Promise<ICalculationResult> {
         // 1. Calcular Base Salarial (agora async)
         const base = await calculateBase(params);
         const baseComponents = await calculateBaseComponents(params);
 
-        // 2. Calcular Benefícios
+        // 2. Calcular BenefÃ­cios
         const benefits = await calculateBenefits(params);
 
-        // 3. Calcular Rendimentos Variáveis (alguns agora async)
+        // 3. Calcular Rendimentos VariÃ¡veis (alguns agora async)
         const vacation = await calculateVacation(params);
         const thirteenth = await calculateThirteenth(params);
         const overtime = await calculateOvertime(params);
@@ -108,7 +109,7 @@ export class JmuService implements IAgencyCalculator {
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
-        // 4. Calcular Deduções (agora async)
+        // 4. Calcular DeduÃ§Ãµes (agora async)
         const deductions = await calculateDeductions(base, params);
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
 
@@ -144,7 +145,7 @@ export class JmuService implements IAgencyCalculator {
                 base: base,
                 abono: abonoPerm,
 
-                // Deduções
+                // DeduÃ§Ãµes
                 pss: deductions.pss,
                 pssEA: deductions.pssEA,
                 irrf: deductions.irrf,
@@ -158,12 +159,12 @@ export class JmuService implements IAgencyCalculator {
                 vantagensPss: deductions.vantagensPss,
                 abonoIr: deductions.abonoIr,
 
-                // Férias
+                // FÃ©rias
                 feriasConstitucional: vacation.value,
                 impostoFerias: vacation.irFerias,
                 feriasDesconto: vacation.descontoAntecipacao,
 
-                // 13º Salário
+                // 13Âº SalÃ¡rio
                 gratificacaoNatalina: thirteenth.gratNatalinaTotal,
                 abono13: thirteenth.abono13,
                 imposto13: thirteenth.ir13,
@@ -174,7 +175,7 @@ export class JmuService implements IAgencyCalculator {
                 segunda13Venc: thirteenth.segunda13Venc,
                 segunda13FC: thirteenth.segunda13FC,
 
-                // Hora Extra e Substituição
+                // Hora Extra e SubstituiÃ§Ã£o
                 heVal50: overtime.heVal50,
                 heVal100: overtime.heVal100,
                 heTotal: overtime.heTotal,
@@ -184,7 +185,7 @@ export class JmuService implements IAgencyCalculator {
                 substituicaoIr: deductions.substitutionIr,
                 substituicaoPss: deductions.substitutionPss,
 
-                // Diárias e Licença
+                // DiÃ¡rias e LicenÃ§a
                 diariasValor: dailies.valor,
                 diariasBruto: dailies.bruto,
                 diariasGlosa: dailies.glosa,
@@ -196,7 +197,7 @@ export class JmuService implements IAgencyCalculator {
                 diariasDiasDescTransp: dailies.diasDescontoTransp,
                 licencaCompensatoria: compensatoryLeave,
 
-                // Benefícios
+                // BenefÃ­cios
                 ...benefits,
                 rubricasDinamicasCredito: rubricasTotals.creditos,
                 rubricasDinamicasDebito: rubricasTotals.debitos

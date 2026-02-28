@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de Licenca Compensatoria - JMU
  * 
  * Responsavel por calcular:
@@ -6,13 +6,13 @@
  * - Abono sobre licenca (opcional)
  */
 
-import { CourtConfig } from '../../../../../types';
-import { calculatePss } from '../../../../../core/calculations/taxUtils';
-import { IJmuCalculationParams } from '../types';
+import { CourtConfig } from '../../../../types';
+import { calculatePss } from '../../../../core/calculations/taxUtils';
+import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -22,7 +22,7 @@ const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
 /**
  * Calcula Licenca Compensatoria
  */
-export async function calculateCompensatoryLeave(params: IJmuCalculationParams): Promise<number> {
+export async function calculateCompensatoryLeave(params: IAgencyCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);

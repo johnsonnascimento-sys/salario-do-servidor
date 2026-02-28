@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Calculos de 13o Salario / Gratificacao Natalina - JMU
  *
  * Responsavel por calcular:
@@ -10,9 +10,9 @@
  * - Abono sobre 13o
  */
 
-import { CourtConfig } from '../../../../../types';
-import { calculatePss, calculateIrrf } from '../../../../../core/calculations/taxUtils';
-import { IJmuCalculationParams } from '../types';
+import { CourtConfig } from '../../../../types';
+import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
+import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 
@@ -28,7 +28,7 @@ export interface ThirteenthResult {
     abono13: number;
 }
 
-const requireAgencyConfig = (params: IJmuCalculationParams): CourtConfig => {
+const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
     }
@@ -40,7 +40,7 @@ const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 /**
  * Calcula 13o Salario / Gratificacao Natalina
  */
-export async function calculateThirteenth(params: IJmuCalculationParams): Promise<ThirteenthResult> {
+export async function calculateThirteenth(params: IAgencyCalculationParams): Promise<ThirteenthResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);

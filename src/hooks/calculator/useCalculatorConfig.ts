@@ -3,7 +3,7 @@
  * 
  * Responsável por:
  * - Carregamento de agência (agency) do Supabase
- * - Instanciação do service apropriado (JmuService, etc)
+ * - Instanciação do motor de cálculo apropriado por agência
  * - Carregamento de configuração do tribunal (courtConfig)
  * - Estados de loading
  */
@@ -15,7 +15,7 @@ import { getCourtBySlug } from '../../services/courtService';
 import { configService } from '../../services/config';
 import { mapEffectiveConfigToCourtConfig } from '../../services/config/mapEffectiveConfig';
 import { supabase } from '../../lib/supabase';
-import { JmuService } from '../../services/agency/implementations/JmuService';
+import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
 
 export const useCalculatorConfig = (slug: string | undefined) => {
     const navigate = useNavigate();
@@ -23,7 +23,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
 
     // Agency State
     const [agency, setAgency] = useState<{ name: string, type: string } | null>(null);
-    const [agencyService, setAgencyService] = useState<JmuService | null>(null);
+    const [agencyService, setAgencyService] = useState<AgencyCalculationEngine | null>(null);
     const [loadingAgency, setLoadingAgency] = useState(true);
 
     // Court Config State
@@ -60,7 +60,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
 
                 // Instantiate Service
                 if (data.slug === 'jmu' || data.slug === 'pju') {
-                    setAgencyService(new JmuService());
+                    setAgencyService(new AgencyCalculationEngine());
                 } else {
                     console.warn("Service not implemented for slug:", resolvedSlug);
                 }
