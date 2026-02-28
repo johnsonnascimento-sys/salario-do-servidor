@@ -360,7 +360,10 @@ export default function AdminControlPanel() {
             </div>
             <div className="flex items-center gap-2">
               <Link to="/admin/hub" className="px-3 py-2 rounded-md border border-gray-300 text-body text-gray-600 hover:bg-gray-50">
-                Diagnóstico
+                Diagnostico
+              </Link>
+              <Link to="/admin/wiki" className="px-3 py-2 rounded-md border border-gray-300 text-body text-gray-600 hover:bg-gray-50">
+                Wiki
               </Link>
               <button
                 onClick={openCreate}
@@ -640,4 +643,5 @@ export default function AdminControlPanel() {
     </div>
   );
 }
+
 

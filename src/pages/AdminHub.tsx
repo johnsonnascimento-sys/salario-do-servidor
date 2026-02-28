@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Database, Layers, Building2 } from 'lucide-react';
+import { Database, Layers, Building2, BookOpen } from 'lucide-react';
 import { AdminService } from '../services/admin/AdminService';
 
 const cards = [
@@ -21,6 +21,12 @@ const cards = [
     description: 'Overrides especificos por orgao.',
     to: '/admin/org',
     icon: Building2,
+  },
+  {
+    title: 'Wiki do Usuario',
+    description: 'Acesso as paginas da wiki publica do PJU.',
+    to: '/admin/wiki',
+    icon: BookOpen,
   },
 ];
 
