@@ -41,10 +41,10 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ courtConfig,
                             {`Referencia salarial: ${referenceSalaryLabel}`}
                         </div>
                         <Link
-                            to="/wiki/pju/previdencia-complementar"
+                            to="/wiki"
                             className="inline-flex items-center px-2 py-0.5 rounded-md border border-secondary/40 text-secondary text-body-xs font-bold tracking-wider hover:bg-secondary/10 transition-colors"
                         >
-                            Manual PJU
+                            Wiki
                         </Link>
                     </div>
                 </div>

@@ -68,12 +68,11 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const halfTransportDiscountValue = periodSummary?.halfDiscountApplied && state.diariasDescontarTransporte
         ? (state.auxTransporteValor / discountRules.transportDivisor) * 0.5
         : 0;
-    const configuredHolidayDates = useMemo(
-        () =>
-            Array.from(new Set((discountRules.holidays || []).filter(isIsoDate)))
-                .sort((a, b) => a.localeCompare(b)),
-        [discountRules.holidays]
-    );
+    const configuredHolidayDates = useMemo<string[]>(() => {
+        const dates = (discountRules.holidays || []) as unknown[];
+        const isoDates = dates.filter((date): date is string => typeof date === 'string' && isIsoDate(date));
+        return Array.from(new Set(isoDates)).sort((a, b) => a.localeCompare(b));
+    }, [discountRules.holidays]);
     const holidayYears = useMemo(
         () => Array.from(new Set(configuredHolidayDates.map((date) => date.slice(0, 4)))).sort(),
         [configuredHolidayDates]

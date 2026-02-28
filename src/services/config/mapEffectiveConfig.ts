@@ -45,12 +45,12 @@ const pickCaseInsensitive = (obj: Record<string, any> | undefined, key: string) 
 const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
     if (!schedule) return undefined;
     return Object.entries(schedule)
-        .map(([key, entry]) => {
+        .reduce<Array<{ period: number; percentage: number; label?: string; date: string }>>((acc, [key, entry]) => {
             const numeric = toNumberKey(key);
-            if (numeric === null) return null;
-            return { period: numeric, percentage: entry.percentage, label: entry.label, date: entry.date };
-        })
-        .filter((entry): entry is { period: number; percentage: number; label?: string; date?: string } => !!entry)
+            if (numeric === null) return acc;
+            acc.push({ period: numeric, percentage: entry.percentage, label: entry.label, date: entry.date });
+            return acc;
+        }, [])
         .sort((a, b) => a.period - b.period);
 };
 

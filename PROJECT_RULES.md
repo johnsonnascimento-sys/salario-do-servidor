@@ -117,3 +117,49 @@ Cada rubrica manual deve suportar:
 3. Nova regra global: adicionar em `global_config`.
 4. Antes de codar regra nova, verificar se ela ja pode ser resolvida por configuracao.
 5. Evitar duplicacao de documentacao: este arquivo e a referencia principal de regras.
+
+## 7. Regras da Wiki do Usuario
+
+### 7.1 Estrutura obrigatoria
+
+1. O menu principal deve exibir apenas `Wiki` (sem sufixo de poder).
+2. A entrada da wiki deve ser em `/wiki`.
+3. Em `/wiki`, o usuario deve escolher entre:
+   - `Wiki Global` (IR e regras gerais de previdencia)
+   - `Wiki por Poder` (PJU, Executivo Federal, etc.)
+4. A navegacao deve seguir logica de selecao em niveis, semelhante ao fluxo de escolha dos simuladores.
+
+### 7.2 Modelo de conteudo (data-driven)
+
+1. Conteudo da wiki deve ser cadastrado em catalogo estruturado (objetos/arrays versionados no codigo), sem texto hardcoded diretamente em componentes de pagina.
+2. Cada artigo deve ter no minimo:
+   - `scope`
+   - `slug`
+   - `title`
+   - `subtitle`
+   - `audience`
+   - `updatedAt`
+   - `sections`
+   - `legalRefs`
+3. O componente de renderizacao deve consumir apenas esse modelo de dados.
+
+### 7.3 Padrao editorial
+
+1. Texto deve usar portugues completo com acentuacao correta.
+2. Conteudo deve ser didatico para usuario iniciante no inicio do artigo.
+3. Cada artigo tecnico deve terminar com uma secao de fundamentos normativos e de calculo (formulas, premissas e fontes oficiais).
+4. Fontes devem privilegiar origem primaria (Constituicao, leis, LC, regulamentos e planos oficiais).
+
+### 7.4 Padrao visual e UX da Wiki
+
+1. Tipografia deve ser consistente entre titulos, paragrafos, listas e links.
+2. Evitar misturar tamanhos de fonte sem criterio visual.
+3. Toda pagina de artigo deve oferecer:
+   - link de retorno para `/wiki`
+   - link util para simulacao relacionada (quando aplicavel)
+
+### 7.5 Governanca de atualizacao
+
+1. Toda alteracao relevante de regra da wiki deve atualizar a data `updatedAt` do artigo.
+2. Se houver mudanca normativa que altere entendimento de calculo, atualizar tambem o `CHANGELOG.md`.
+3. Conteudos marcados como `Em breve` devem ficar explicitos no catalogo da wiki e nao devem gerar rota quebrada.

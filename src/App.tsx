@@ -18,6 +18,7 @@ import Donate from './pages/Donate';
 import About from './pages/About';
 import Privacy from './pages/Privacy';
 import WikiArticlePage from './pages/WikiArticlePage';
+import WikiHome from './pages/WikiHome';
 
 function App() {
   return (
@@ -75,6 +76,7 @@ function App() {
             <Route path="/apoiar" element={<Donate />} />
             <Route path="/quem-somos" element={<About />} />
             <Route path="/privacidade" element={<Privacy />} />
+            <Route path="/wiki" element={<WikiHome />} />
             <Route path="/wiki/:scope/:articleSlug" element={<WikiArticlePage />} />
           </Route>
 
