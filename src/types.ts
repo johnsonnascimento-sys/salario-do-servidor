@@ -194,6 +194,7 @@ export interface CalculatorState {
   heTotal: number;
   heIsEA: boolean;
   hePssIsEA: boolean;
+  heExcluirIR: boolean;
 
   // Substitution (New Grid System)
   substDias: Record<string, number>; // Map like { 'fc1': 0, 'cj2': 5 }
@@ -350,6 +351,7 @@ export const INITIAL_STATE: CalculatorState = {
   heTotal: 0,
   heIsEA: false,
   hePssIsEA: false,
+  heExcluirIR: false,
 
   substDias: {},
   substTotal: 0,

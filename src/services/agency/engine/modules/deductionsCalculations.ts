@@ -171,7 +171,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0) + abonoPerm;
 
     // Hora extra / substituicao: entram no mensal apenas quando NAO marcadas como EA.
-    if (!params.heIsEA) totalTrib += overtime.heTotal;
+    // Regra HE: se heExcluirIR estiver ativo, nao entra em nenhuma base de IR.
+    if (!params.heIsEA && !params.heExcluirIR) totalTrib += overtime.heTotal;
     if (!params.substIsEA) totalTrib += substitution;
 
     totalTrib = Math.max(0, totalTrib + rubricasAdjustments.irMensal);
@@ -197,7 +198,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
 
     // IR de Exercicio Anterior (EA): HE/Substituicao marcadas como EA.
     const baseEA =
-        (params.heIsEA ? overtime.heTotal : 0) +
+        (params.heIsEA && !params.heExcluirIR ? overtime.heTotal : 0) +
         (params.substIsEA ? substitution : 0) +
         rubricasAdjustments.irEA;
     const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep));
@@ -206,7 +207,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     let overtimeIr = 0;
     let substitutionIr = 0;
 
-    const heMensalBase = !params.heIsEA ? overtime.heTotal : 0;
+    const heMensalBase = !params.heIsEA && !params.heExcluirIR ? overtime.heTotal : 0;
     if (heMensalBase > 0) {
         const irSemHe = calculateIrrf(Math.max(0, baseIR - heMensalBase), payrollRules.irrfTopRate, deductionVal);
         overtimeIr += Math.max(0, irMensal - irSemHe);
@@ -218,7 +219,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         substitutionIr += Math.max(0, irMensal - irSemSubst);
     }
 
-    const heEABase = params.heIsEA ? overtime.heTotal : 0;
+    const heEABase = params.heIsEA && !params.heExcluirIR ? overtime.heTotal : 0;
     if (heEABase > 0) {
         const irEaSemHe = calculateIrrf(Math.max(0, baseIREA - heEABase), payrollRules.irrfTopRate, deductionVal);
         overtimeIr += Math.max(0, irEA - irEaSemHe);

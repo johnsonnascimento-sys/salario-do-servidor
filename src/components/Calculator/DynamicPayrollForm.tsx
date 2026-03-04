@@ -122,7 +122,7 @@ const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) =>
                 state.segunda13FC > 0
             );
         case 'hora_extra':
-            return state.heQtd50 > 0 || state.heQtd100 > 0 || state.heIsEA;
+            return state.heQtd50 > 0 || state.heQtd100 > 0 || state.heIsEA || state.heExcluirIR;
         case 'substituicao':
             return Object.values(state.substDias).some(days => days > 0) || state.substIsEA || state.substPssIsEA;
         case 'licenca':
@@ -418,6 +418,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 update('heQtd100', 0);
                 update('heIsEA', false);
                 update('hePssIsEA', false);
+                update('heExcluirIR', false);
                 break;
             case 'substituicao':
                 update('substIsEA', false);

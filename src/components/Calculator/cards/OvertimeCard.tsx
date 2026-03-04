@@ -32,6 +32,15 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                             />
                             <span>Incluir na base do IR (Exercício Anterior - EA)</span>
                         </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={state.heExcluirIR}
+                                onChange={e => update('heExcluirIR', e.target.checked)}
+                            />
+                            <span>Excluir da base do IR</span>
+                        </label>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>

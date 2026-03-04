@@ -56,6 +56,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     heQtd100: number;
     heIsEA: boolean;
     hePssIsEA: boolean;
+    heExcluirIR: boolean;
     substDias: Record<string, number>; // Mapa de funcao -> dias
     substIsEA: boolean;
     substPssIsEA: boolean;

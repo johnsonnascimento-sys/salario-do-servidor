@@ -79,6 +79,7 @@ export function mapStateToAgencyParams(
         heQtd100: state.heQtd100 || 0,
         heIsEA: state.heIsEA,
         hePssIsEA: false,
+        heExcluirIR: state.heExcluirIR,
         substDias: state.substDias,
         substIsEA: state.substIsEA,
         substPssIsEA: state.substPssIsEA,
