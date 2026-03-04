@@ -126,7 +126,7 @@ export const useCalculatorResults = (
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.feriasDesc, state.feriasDescManual,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
-        state.heQtd50, state.heQtd100, state.heIsEA, state.substDias, state.substIsEA, state.substPssIsEA,
+        state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.substDias, state.substIsEA, state.substPssIsEA,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
