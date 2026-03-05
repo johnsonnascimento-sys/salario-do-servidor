@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.14 - 05/03/2026
+- Feat(Admin): configuracao de `Doacao/Pix` (chave Pix + upload de QR Code) migrada para o painel novo (`/admin`).
+- Refactor: removido atalho para painel legado e extinta rota `/admin/legacy`.
+- Cleanup: removidos arquivos e rotas do painel antigo de administracao de doacao.
+- Cleanup: removidas paginas/rotas da Wiki (`/wiki` e `/wiki/:scope/:articleSlug`) e respectivos links no layout e cabecalho da calculadora.
+- Docs: `PROJECT_RULES.md` atualizado para marcar Wiki como descontinuada.
+
 ## 2.1.13 - 05/03/2026
 - Fix: `Resumo calculado` da Hora Extra passa a ratear IR por card usando a base correta (`heIrMensal` para mensal e `heIrEA` para EA), sem reaproveitar IR de outra incidencia.
 - Fix: desconto de IR por card de Hora Extra agora e limitado ao proprio bruto da instancia, evitando liquido negativo por extrapolacao.

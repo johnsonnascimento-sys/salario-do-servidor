@@ -35,7 +35,6 @@ const MainLayout: React.FC = () => {
                         <nav className="hidden md:flex items-center gap-10">
                             <Link to="/beta-access" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Início</Link>
                             <Link to="/beta-access#simulators" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Simuladores</Link>
-                            <Link to="/wiki" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Wiki</Link>
                             <Link to="/quem-somos" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Quem Somos</Link>
                         </nav>
 
@@ -91,7 +90,6 @@ const MainLayout: React.FC = () => {
                             <ul className="space-y-4 text-body">
                                 <li><Link to="/quem-somos" className="hover:text-primary transition-colors">Quem Somos</Link></li>
                                 <li><Link to="/privacidade" className="hover:text-primary transition-colors">Privacidade e Termos</Link></li>
-                                <li><Link to="/wiki" className="hover:text-primary transition-colors">Wiki</Link></li>
                                 <li><Link to="/apoiar" className="hover:text-primary transition-colors">Apoiar o Projeto</Link></li>
                             </ul>
                         </div>

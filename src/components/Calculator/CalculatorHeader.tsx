@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 
@@ -40,12 +39,6 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ courtConfig,
                             <span className="w-2 h-2 rounded-full bg-secondary"></span>
                             {`Referencia salarial: ${referenceSalaryLabel}`}
                         </div>
-                        <Link
-                            to="/wiki"
-                            className="inline-flex items-center px-2 py-0.5 rounded-md border border-secondary/40 text-secondary text-body-xs font-bold tracking-wider hover:bg-secondary/10 transition-colors"
-                        >
-                            Wiki
-                        </Link>
                     </div>
                 </div>
             </div>

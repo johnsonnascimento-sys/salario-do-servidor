@@ -6,19 +6,15 @@ import ComingSoon from './pages/ComingSoon';
 import Home from './pages/Home';
 import Calculator from './pages/Calculator';
 import Login from './pages/Login';
-import AdminDashboard from './pages/AdminDashboard';
 import AdminHub from './pages/AdminHub';
 import AdminGlobal from './pages/AdminGlobal';
 import AdminPower from './pages/AdminPower';
 import AdminOrg from './pages/AdminOrg';
 import AdminControlPanel from './pages/AdminControlPanel';
-import AdminWiki from './pages/AdminWiki';
 import ProtectedRoute from './components/ProtectedRoute';
 import Donate from './pages/Donate';
 import About from './pages/About';
 import Privacy from './pages/Privacy';
-import WikiArticlePage from './pages/WikiArticlePage';
-import WikiHome from './pages/WikiHome';
 
 function App() {
   return (
@@ -43,11 +39,6 @@ function App() {
               <AdminHub />
             </ProtectedRoute>
           } />
-          <Route path="/admin/legacy" element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
           <Route path="/admin/global" element={
             <ProtectedRoute>
               <AdminGlobal />
@@ -63,11 +54,6 @@ function App() {
               <AdminOrg />
             </ProtectedRoute>
           } />
-          <Route path="/admin/wiki" element={
-            <ProtectedRoute>
-              <AdminWiki />
-            </ProtectedRoute>
-          } />
 
           {/* Rotas que USAM o MainLayout */}
           <Route element={<MainLayout />}>
@@ -76,8 +62,6 @@ function App() {
             <Route path="/apoiar" element={<Donate />} />
             <Route path="/quem-somos" element={<About />} />
             <Route path="/privacidade" element={<Privacy />} />
-            <Route path="/wiki" element={<WikiHome />} />
-            <Route path="/wiki/:scope/:articleSlug" element={<WikiArticlePage />} />
           </Route>
 
           {/* Rota padrão para não encontrados */}

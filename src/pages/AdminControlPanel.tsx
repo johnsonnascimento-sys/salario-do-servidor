@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Check, Heart, Image, Save, Upload } from 'lucide-react';
 import JsonEditor from '../components/Admin/JsonEditor';
 import { AdminService } from '../services/admin/AdminService';
+import { getPixKey, getPixQrCode, updatePixKey, uploadPixQrCode } from '../services/settingsService';
 import { GlobalConfig, JsonObject, OrgConfig, PowerConfig } from '../types/admin';
 
 type Scope = 'global' | 'power' | 'org';
@@ -75,6 +77,12 @@ export default function AdminControlPanel() {
   const [adjDate, setAdjDate] = useState(today());
   const [adjPct, setAdjPct] = useState('');
   const [adjLabel, setAdjLabel] = useState('');
+  const [pixKeyValue, setPixKeyValue] = useState('');
+  const [pixKeySaving, setPixKeySaving] = useState(false);
+  const [pixKeySaved, setPixKeySaved] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [qrCodeUploading, setQrCodeUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const loadAll = async () => {
     setLoading(true);
@@ -97,6 +105,19 @@ export default function AdminControlPanel() {
 
   useEffect(() => {
     loadAll();
+  }, []);
+
+  useEffect(() => {
+    const loadDonationSettings = async () => {
+      try {
+        const [pixKey, qrUrl] = await Promise.all([getPixKey(), getPixQrCode()]);
+        setPixKeyValue(pixKey);
+        setQrCodeUrl(qrUrl);
+      } catch (err) {
+        console.error('Erro ao carregar configuracoes de doacao:', err);
+      }
+    };
+    loadDonationSettings();
   }, []);
 
   const powerNames = useMemo(
@@ -273,6 +294,21 @@ export default function AdminControlPanel() {
     setAdjLabel('');
   };
 
+  const handleQrCodeUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setQrCodeUploading(true);
+    const url = await uploadPixQrCode(file);
+    setQrCodeUploading(false);
+
+    if (url) {
+      setQrCodeUrl(url);
+    } else {
+      alert('Erro ao enviar QR Code.');
+    }
+  };
+
   const save = async () => {
     const confirmed = window.confirm('Essa alteracao impacta os calculos imediatamente. Deseja continuar?');
     if (!confirmed) return;
@@ -362,17 +398,87 @@ export default function AdminControlPanel() {
               <Link to="/admin/hub" className="px-3 py-2 rounded-md border border-gray-300 text-body text-gray-600 hover:bg-gray-50">
                 Diagnostico
               </Link>
-              <Link to="/admin/wiki" className="px-3 py-2 rounded-md border border-gray-300 text-body text-gray-600 hover:bg-gray-50">
-                Wiki
-              </Link>
-              <Link to="/admin/legacy" className="px-3 py-2 rounded-md border border-gray-300 text-body text-gray-600 hover:bg-gray-50">
-                Doacao/Pix
-              </Link>
               <button
                 onClick={openCreate}
                 className="px-4 py-2 rounded-md text-body text-white bg-secondary-500 hover:bg-secondary-700"
               >
                 Novo Registro
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h2 className="text-body-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <Heart className="h-5 w-5 text-error-500" />
+            Configuracoes de Doacao/Pix
+          </h2>
+          <p className="text-body text-gray-500 mb-5">
+            Defina a chave Pix e a imagem do QR Code exibidos no modal e na pagina de apoio.
+          </p>
+
+          <div className="max-w-lg space-y-4">
+            <div>
+              <label className="block text-body font-medium text-gray-700 mb-1">Chave Pix</label>
+              <input
+                type="text"
+                value={pixKeyValue}
+                onChange={(e) => {
+                  setPixKeyValue(e.target.value);
+                  setPixKeySaved(false);
+                }}
+                placeholder="email@exemplo.com ou CPF/CNPJ/chave aleatoria"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary-500 focus:ring-secondary-500 text-body p-3 border"
+              />
+            </div>
+
+            <button
+              onClick={async () => {
+                setPixKeySaving(true);
+                const success = await updatePixKey(pixKeyValue);
+                setPixKeySaving(false);
+                if (success) {
+                  setPixKeySaved(true);
+                  setTimeout(() => setPixKeySaved(false), 3000);
+                } else {
+                  alert('Erro ao salvar chave Pix.');
+                }
+              }}
+              disabled={pixKeySaving}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-body font-medium rounded-md text-white bg-secondary-500 hover:bg-secondary-700 disabled:opacity-50"
+            >
+              {pixKeySaving ? 'Salvando...' : pixKeySaved ? <><Check className="h-4 w-4 mr-2" /> Salvo!</> : <><Save className="h-4 w-4 mr-2" /> Salvar chave Pix</>}
+            </button>
+
+            <hr className="my-4 border-gray-200" />
+
+            <div>
+              <label className="block text-body font-medium text-gray-700 mb-1 flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                QR Code Pix
+              </label>
+              {qrCodeUrl && (
+                <div className="mb-3">
+                  <img
+                    src={qrCodeUrl}
+                    alt="QR Code Pix"
+                    className="w-32 h-32 border border-gray-300 rounded-lg object-contain bg-white p-1"
+                  />
+                </div>
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleQrCodeUpload}
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={qrCodeUploading}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-body font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                {qrCodeUploading ? 'Enviando...' : <><Upload className="h-4 w-4 mr-2" /> {qrCodeUrl ? 'Trocar QR Code' : 'Enviar QR Code'}</>}
               </button>
             </div>
           </div>
