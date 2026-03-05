@@ -7,6 +7,7 @@ export default function Donate() {
     const [pixKey, setPixKey] = useState<string>('');
     const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [qrLoadError, setQrLoadError] = useState(false);
 
     useEffect(() => {
         async function loadDonationData() {
@@ -16,6 +17,7 @@ export default function Donate() {
             ]);
             setPixKey(key);
             setQrCodeUrl(qrUrl);
+            setQrLoadError(false);
             setLoading(false);
         }
         loadDonationData();
@@ -80,11 +82,12 @@ export default function Donate() {
                         </div>
                         <div className="flex flex-col items-center gap-3">
                             <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl">
-                                {qrCodeUrl ? (
+                                {qrCodeUrl && !qrLoadError ? (
                                     <img
                                         src={qrCodeUrl}
                                         alt="QR Code Pix"
                                         className="w-24 h-24 object-contain"
+                                        onError={() => setQrLoadError(true)}
                                     />
                                 ) : (
                                     <QrCode className="w-10 h-10 text-neutral-900 dark:text-neutral-100" />

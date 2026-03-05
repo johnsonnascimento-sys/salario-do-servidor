@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Receipt } from 'lucide-react';
 import { CalculatorState } from '../../types';
@@ -58,36 +57,38 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
                             Holerite (sem diárias)
                         </p>
                     </div>
-                    <table className="w-full text-body">
-                        <thead className="bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700">
-                            <tr>
-                                <th scope="col" className="px-6 py-4 text-left font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Rubrica</th>
-                                <th scope="col" className="px-6 py-4 text-right font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
-                            {payrollRows.map((row, idx) => (
-                                <tr key={`${row.type}-${row.label}-${idx}`} className="hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/30 transition">
-                                    <td className={`px-6 py-4 font-medium ${row.type === 'C' ? 'text-success-600 dark:text-success-400' : 'text-error-500 dark:text-error-400'}`}>
-                                        {row.label}
-                                    </td>
-                                    <td className="px-6 py-4 text-right font-mono text-neutral-700 dark:text-neutral-200">{formatCurrency(row.value)}</td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[320px] table-fixed text-body">
+                            <thead className="bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700">
+                                <tr>
+                                    <th scope="col" className="w-[62%] px-3 py-4 sm:px-6 text-left font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Rubrica</th>
+                                    <th scope="col" className="w-[38%] px-3 py-4 sm:px-6 text-right font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Valor</th>
                                 </tr>
-                            ))}
-                            <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
-                                <td className="px-6 py-5 font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide">Total Créditos (Holerite)</td>
-                                <td className="px-6 py-5 text-right font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(payrollCredits)}</td>
-                            </tr>
-                            <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
-                                <td className="px-6 py-5 font-bold text-error-600 dark:text-error-400 uppercase tracking-wide">Total Débitos (Holerite)</td>
-                                <td className="px-6 py-5 text-right font-bold text-error-600 dark:text-error-400 font-mono">{formatCurrency(payrollDebits)}</td>
-                            </tr>
-                            <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
-                                <td className="px-6 py-5 font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide">Total Líquido (Holerite)</td>
-                                <td className="px-6 py-5 text-right font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(payrollCredits - payrollDebits)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+                                {payrollRows.map((row, idx) => (
+                                    <tr key={`${row.type}-${row.label}-${idx}`} className="hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/30 transition">
+                                        <td className={`px-3 py-4 sm:px-6 font-medium break-words ${row.type === 'C' ? 'text-success-600 dark:text-success-400' : 'text-error-500 dark:text-error-400'}`}>
+                                            {row.label}
+                                        </td>
+                                        <td className="px-3 py-4 sm:px-6 text-right font-mono text-neutral-700 dark:text-neutral-200 whitespace-nowrap">{formatCurrency(row.value)}</td>
+                                    </tr>
+                                ))}
+                                <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                    <td className="px-3 py-5 sm:px-6 font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide">Total Créditos (Holerite)</td>
+                                    <td className="px-3 py-5 sm:px-6 text-right font-bold text-neutral-800 dark:text-neutral-100 font-mono whitespace-nowrap">{formatCurrency(payrollCredits)}</td>
+                                </tr>
+                                <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                    <td className="px-3 py-5 sm:px-6 font-bold text-error-600 dark:text-error-400 uppercase tracking-wide">Total Débitos (Holerite)</td>
+                                    <td className="px-3 py-5 sm:px-6 text-right font-bold text-error-600 dark:text-error-400 font-mono whitespace-nowrap">{formatCurrency(payrollDebits)}</td>
+                                </tr>
+                                <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                    <td className="px-3 py-5 sm:px-6 font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide">Total Líquido (Holerite)</td>
+                                    <td className="px-3 py-5 sm:px-6 text-right font-bold text-neutral-800 dark:text-neutral-100 font-mono whitespace-nowrap">{formatCurrency(payrollCredits - payrollDebits)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </section>
 
                 {dailiesRows.length > 0 && (
@@ -97,36 +98,38 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
                                 Diárias (pagamento separado)
                             </p>
                         </div>
-                        <table className="w-full text-body">
-                            <thead className="bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700">
-                                <tr>
-                                    <th scope="col" className="px-6 py-4 text-left font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Rubrica</th>
-                                    <th scope="col" className="px-6 py-4 text-right font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Valor</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
-                                {dailiesRows.map((row, idx) => (
-                                    <tr key={`diarias-${row.type}-${row.label}-${idx}`} className="hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/30 transition">
-                                        <td className={`px-6 py-4 font-medium ${row.type === 'C' ? 'text-success-600 dark:text-success-400' : 'text-error-500 dark:text-error-400'}`}>
-                                            {row.label}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-mono text-neutral-700 dark:text-neutral-200">{formatCurrency(row.value)}</td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[320px] table-fixed text-body">
+                                <thead className="bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700">
+                                    <tr>
+                                        <th scope="col" className="w-[62%] px-3 py-4 sm:px-6 text-left font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Rubrica</th>
+                                        <th scope="col" className="w-[38%] px-3 py-4 sm:px-6 text-right font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Valor</th>
                                     </tr>
-                                ))}
-                                <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
-                                    <td className="px-6 py-5 font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide">Total Diárias Bruto</td>
-                                    <td className="px-6 py-5 text-right font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(dailiesCredits)}</td>
-                                </tr>
-                                <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
-                                    <td className="px-6 py-5 font-bold text-error-600 dark:text-error-400 uppercase tracking-wide">Total Débitos (Diárias)</td>
-                                    <td className="px-6 py-5 text-right font-bold text-error-600 dark:text-error-400 font-mono">{formatCurrency(dailiesDebits)}</td>
-                                </tr>
-                                <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
-                                    <td className="px-6 py-5 font-bold text-success-700 dark:text-success-400 uppercase tracking-wide">Diárias Líquidas</td>
-                                    <td className="px-6 py-5 text-right font-bold text-success-700 dark:text-success-400 font-mono">{formatCurrency(dailiesNet)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+                                    {dailiesRows.map((row, idx) => (
+                                        <tr key={`diarias-${row.type}-${row.label}-${idx}`} className="hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/30 transition">
+                                            <td className={`px-3 py-4 sm:px-6 font-medium break-words ${row.type === 'C' ? 'text-success-600 dark:text-success-400' : 'text-error-500 dark:text-error-400'}`}>
+                                                {row.label}
+                                            </td>
+                                            <td className="px-3 py-4 sm:px-6 text-right font-mono text-neutral-700 dark:text-neutral-200 whitespace-nowrap">{formatCurrency(row.value)}</td>
+                                        </tr>
+                                    ))}
+                                    <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                        <td className="px-3 py-5 sm:px-6 font-bold text-neutral-800 dark:text-neutral-100 uppercase tracking-wide">Total Diárias Bruto</td>
+                                        <td className="px-3 py-5 sm:px-6 text-right font-bold text-neutral-800 dark:text-neutral-100 font-mono whitespace-nowrap">{formatCurrency(dailiesCredits)}</td>
+                                    </tr>
+                                    <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                        <td className="px-3 py-5 sm:px-6 font-bold text-error-600 dark:text-error-400 uppercase tracking-wide">Total Débitos (Diárias)</td>
+                                        <td className="px-3 py-5 sm:px-6 text-right font-bold text-error-600 dark:text-error-400 font-mono whitespace-nowrap">{formatCurrency(dailiesDebits)}</td>
+                                    </tr>
+                                    <tr className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                        <td className="px-3 py-5 sm:px-6 font-bold text-success-700 dark:text-success-400 uppercase tracking-wide">Diárias Líquidas</td>
+                                        <td className="px-3 py-5 sm:px-6 text-right font-bold text-success-700 dark:text-success-400 font-mono whitespace-nowrap">{formatCurrency(dailiesNet)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </section>
                 )}
             </div>

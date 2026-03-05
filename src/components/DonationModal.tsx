@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, X, Clock, FileText, Table } from 'lucide-react';
+import { Heart, X, Clock, FileText, QrCode, Table } from 'lucide-react';
 import { getPixKey, getPixQrCode } from '../services/settingsService';
 
 interface DonationModalProps {
@@ -22,12 +22,14 @@ export default function DonationModal({
     const [pixKey, setPixKey] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [qrLoadError, setQrLoadError] = useState(false);
 
     // Load Pix data on open
     useEffect(() => {
         if (isOpen) {
             setCountdown(countdownSeconds);
             setIsReady(false);
+            setQrLoadError(false);
 
             Promise.all([getPixKey(), getPixQrCode()]).then(([key, qr]) => {
                 setPixKey(key);
@@ -103,15 +105,16 @@ export default function DonationModal({
 
                     {/* QR Code Section */}
                     <div className="bg-neutral-50 dark:bg-neutral-900 rounded-2xl p-6 flex flex-col items-center gap-4">
-                        {qrCodeUrl ? (
+                        {qrCodeUrl && !qrLoadError ? (
                             <img
                                 src={qrCodeUrl}
                                 alt="QR Code Pix"
                                 className="w-32 h-32 bg-white dark:bg-neutral-900 p-2 rounded-xl"
+                                onError={() => setQrLoadError(true)}
                             />
                         ) : (
                             <div className="w-32 h-32 bg-neutral-200 dark:bg-neutral-700 rounded-xl flex items-center justify-center">
-                                <Clock className="w-8 h-8 text-neutral-400 animate-spin" />
+                                <QrCode className="w-8 h-8 text-neutral-400" />
                             </div>
                         )}
 

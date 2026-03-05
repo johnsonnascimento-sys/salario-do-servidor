@@ -365,6 +365,9 @@ export default function AdminControlPanel() {
               <Link to="/admin/wiki" className="px-3 py-2 rounded-md border border-gray-300 text-body text-gray-600 hover:bg-gray-50">
                 Wiki
               </Link>
+              <Link to="/admin/legacy" className="px-3 py-2 rounded-md border border-gray-300 text-body text-gray-600 hover:bg-gray-50">
+                Doacao/Pix
+              </Link>
               <button
                 onClick={openCreate}
                 className="px-4 py-2 rounded-md text-body text-white bg-secondary-500 hover:bg-secondary-700"

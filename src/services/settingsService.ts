@@ -7,6 +7,38 @@ export interface SiteSetting {
     updated_at: string;
 }
 
+const PIX_QR_BUCKET = 'assets';
+
+function isAbsoluteUrl(value: string): boolean {
+    return /^https?:\/\//i.test(value);
+}
+
+function normalizePixQrValue(rawValue: string | null): string | null {
+    if (!rawValue) return null;
+    const trimmed = rawValue.trim();
+    if (!trimmed) return null;
+
+    if (trimmed.startsWith('data:image/')) {
+        return trimmed;
+    }
+
+    if (isAbsoluteUrl(trimmed)) {
+        return trimmed;
+    }
+
+    const normalizedPath = trimmed
+        .replace(/^\/+/, '')
+        .replace(/^assets\/+/i, '')
+        .replace(/^qrcodes\/+/i, 'qrcodes/');
+    const finalPath = normalizedPath.includes('/') ? normalizedPath : `qrcodes/${normalizedPath}`;
+
+    const { data } = supabase.storage
+        .from(PIX_QR_BUCKET)
+        .getPublicUrl(finalPath);
+
+    return data?.publicUrl || null;
+}
+
 // Buscar uma configuração pelo nome da chave
 export async function getSetting(key: string): Promise<string | null> {
     const { data, error } = await supabase
@@ -53,7 +85,8 @@ export async function updatePixKey(pixKey: string): Promise<boolean> {
 
 // Buscar URL do QR Code Pix
 export async function getPixQrCode(): Promise<string | null> {
-    return getSetting('pix_qrcode_url');
+    const qrCodeValue = await getSetting('pix_qrcode_url');
+    return normalizePixQrValue(qrCodeValue);
 }
 
 // Upload de QR Code para o Storage e salvar URL
@@ -77,7 +110,7 @@ export async function uploadPixQrCode(file: File): Promise<string | null> {
 
     // Obter URL pública
     const { data } = supabase.storage
-        .from('assets')
+        .from(PIX_QR_BUCKET)
         .getPublicUrl(filePath);
 
     const publicUrl = data.publicUrl;

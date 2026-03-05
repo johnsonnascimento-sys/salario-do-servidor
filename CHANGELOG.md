@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.12 - 05/03/2026
+- Fix: detalhamento mobile agora preserva a coluna de valores sem corte, com ajustes responsivos de largura/padding e quebra de texto na rubrica.
+- Fix: modal/pagina de apoio tratam QR Code Pix com fallback quando a imagem configurada falha ao carregar.
+- Tech: `settingsService.getPixQrCode` passa a normalizar valores legados (URL absoluta, data URL ou caminho no bucket `assets`).
+- UX/Admin: painel principal recebe atalho `Doacao/Pix` para abrir rapidamente o painel legado de configuracao de chave e QR.
+
 ## 2.1.11 - 05/03/2026
 - Fix: detalhamento de `IMPOSTO DE RENDA-EA` deixa de exibir linha generica e passa a separar por rubrica (Hora Extra, Substituicao e rubricas manuais EA).
 - Fix: motor de deducoes passa a expor `substitutionIrMensal` e `substitutionIrEA` para composicao correta do detalhamento.
