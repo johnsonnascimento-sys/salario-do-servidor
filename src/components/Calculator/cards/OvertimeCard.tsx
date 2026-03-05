@@ -12,7 +12,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Clock className="w-4 h-4" /> Servico Extraordinario (HE)
+                <Clock className="w-4 h-4" /> Serviço Extraordinário (HE)
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
@@ -27,7 +27,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                                     updateEntry(entry.id, { isEA: checked, excluirIR: checked ? false : entry.excluirIR });
                                 }}
                             />
-                            <span>Incluir na base do IR (Exercicio Anterior - EA)</span>
+                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input

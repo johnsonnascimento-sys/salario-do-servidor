@@ -68,7 +68,7 @@ const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
     { id: 'diarias', label: 'Diárias de Viagem' }
 ];
 const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra', 'substituicao']);
-const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras, Substituicao';
+const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras, Substituição';
 
 const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
@@ -186,7 +186,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const payrollRules = courtConfig.payrollRules;
     const careerCatalog = courtConfig.careerCatalog;
     const noFunctionCode = careerCatalog?.noFunctionCode ?? '';
-    const noFunctionLabel = careerCatalog?.noFunctionLabel ?? 'Sem funcao';
+    const noFunctionLabel = careerCatalog?.noFunctionLabel ?? 'Sem função';
     const cargoOptions = Object.keys(currentTables.salario || {});
     const salaryByCargo = currentTables.salario[state.cargo] || {};
     const padroes = Object.keys(salaryByCargo);
@@ -262,25 +262,25 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
         const normal = Number(state.funprespAliq.toFixed(6));
         if (!funprespNormalOptionsSet.has(normal)) {
-            return 'Contribuicao normal fora da grade permitida.';
+            return 'Contribuição normal fora da grade permitida.';
         }
 
         const facultativa = Number(state.funprespFacul.toFixed(6));
         if (facultativa < 0) {
-            return 'Contribuicao facultativa nao pode ser negativa.';
+            return 'Contribuição facultativa não pode ser negativa.';
         }
 
         if (facultativa > 0) {
             if (facultativa < previdenciaComplementar.facultativeRate.minIfPositive) {
-                return `Contribuicao facultativa minima: ${toPercentLabel(previdenciaComplementar.facultativeRate.minIfPositive)}.`;
+                return `Contribuição facultativa mínima: ${toPercentLabel(previdenciaComplementar.facultativeRate.minIfPositive)}.`;
             }
             if (!isStepAligned(facultativa, previdenciaComplementar.facultativeRate.step)) {
-                return `Contribuicao facultativa deve seguir passo de ${toPercentLabel(previdenciaComplementar.facultativeRate.step)}.`;
+                return `Contribuição facultativa deve seguir passo de ${toPercentLabel(previdenciaComplementar.facultativeRate.step)}.`;
             }
         }
 
         if (facultativa > previdenciaComplementar.facultativeRate.max) {
-            return `Contribuicao facultativa maxima: ${toPercentLabel(previdenciaComplementar.facultativeRate.max)}.`;
+            return `Contribuição facultativa máxima: ${toPercentLabel(previdenciaComplementar.facultativeRate.max)}.`;
         }
 
         return null;
@@ -884,7 +884,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         const presetId = instance.presetId;
         switch (presetId) {
             case 'aq': {
-                const tituloLabel = isNovoAQ ? 'AQ Titulos (Lei 15.292)' : 'AQ Titulos';
+                const tituloLabel = isNovoAQ ? 'AQ Títulos (Lei 15.292)' : 'AQ Títulos';
                 const treinoLabel = isNovoAQ ? 'AQ Treinamento (Lei 15.292)' : 'AQ Treinamento';
                 const lines = buildCardTaxSummary(
                     [
@@ -1097,7 +1097,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 let descontoSubstAcumulado = 0;
 
                 const porFuncaoBruto = substitutionBreakdown.linhas.map((linha) => ({
-                    label: `Substituicao ${linha.key.toUpperCase()} (${linha.days} dia(s)) Bruto`,
+                    label: `Substituição ${linha.key.toUpperCase()} (${linha.days} dia(s)) Bruto`,
                     value: linha.value
                 }));
 
@@ -1109,18 +1109,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         : roundCurrency(substTotalDescontos * proporcao);
                     descontoSubstAcumulado += desconto;
                     return {
-                        label: `Substituicao ${linha.key.toUpperCase()} (${linha.days} dia(s)) Liquido`,
+                        label: `Substituição ${linha.key.toUpperCase()} (${linha.days} dia(s)) Liquido`,
                         value: roundCurrency(Math.max(0, linha.value - desconto))
                     };
                 });
 
                 const substTotalLiquido = roundCurrency(Math.max(0, substTotalBruto - substTotalDescontos));
-                const substIrLabel = currentEntry.isEA ? 'Desconto IR-EA (Substituicao)' : 'Desconto IR (Substituicao)';
+                const substIrLabel = currentEntry.isEA ? 'Desconto IR-EA (Substituição)' : 'Desconto IR (Substituição)';
 
                 return [
                     ...porFuncaoBruto,
                     { label: substIrLabel, value: substIr, isDiscount: true },
-                    { label: 'Desconto PSS (Substituicao)', value: substPss, isDiscount: true },
+                    { label: 'Desconto PSS (Substituição)', value: substPss, isDiscount: true },
                     ...porFuncaoLiquido,
                     { label: 'Total substituicao Bruto', value: substTotalBruto },
                     { label: 'Total substituicao Liquido', value: substTotalLiquido }
@@ -1128,8 +1128,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             }
             case 'licenca':
                 return buildCardTaxSummary(
-                    [{ label: 'Licenca compensatoria', value: state.licencaValor || 0 }],
-                    'Licenca compensatoria',
+                    [{ label: 'Licença compensatória', value: state.licencaValor || 0 }],
+                    'Licença compensatória',
                     0,
                     0
                 );
@@ -1261,7 +1261,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     {isNovoAQ ? (
                         <>
                             <div>
-                                <label className={styles.label}>Titulos (VR)</label>
+                                <label className={styles.label}>Títulos (VR)</label>
                                 <select className={styles.input} value={state.aqTituloVR} onChange={e => update('aqTituloVR', Number(e.target.value))}>
                                     <option value={0}>Nenhum</option>
                                     <option value={1.0}>Especializacao (1.0x VR)</option>
@@ -1283,7 +1283,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     ) : (
                         <>
                             <div>
-                                <label className={styles.label}>Titulos (%)</label>
+                                <label className={styles.label}>Títulos (%)</label>
                                 <select className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
                                     <option value={0}>0%</option>
                                     <option value={0.05}>5% (Graduacao)</option>
@@ -1421,7 +1421,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
                 <Settings className="w-4 h-4" />
-                Formulario dinamico do holerite
+                Formulário dinâmico do holerite
             </h3>
 
             <div className={styles.innerBox}>
@@ -1508,7 +1508,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 {showFunprespSection && previdenciaComplementar && (
                     <div className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
                         <h5 className="text-label font-bold uppercase tracking-widest text-neutral-600 dark:text-neutral-300">
-                            Previdencia Complementar (Funpresp)
+                            Previdência Complementar (Funpresp)
                         </h5>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
@@ -1518,12 +1518,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                     value={state.funprespParticipacao}
                                     onChange={e => handleFunprespParticipacaoChange(e.target.value as 'nao' | 'patrocinado')}
                                 >
-                                    <option value="nao">Nao</option>
+                                    <option value="nao">Não</option>
                                     <option value="patrocinado">Sim (Patrocinado)</option>
                                 </select>
                             </div>
                             <div>
-                                <label className={styles.label}>Contribuicao normal patrocinada</label>
+                                <label className={styles.label}>Contribuição normal patrocinada</label>
                                 <select
                                     className={styles.input}
                                     value={state.funprespAliq}
@@ -1536,7 +1536,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                 </select>
                             </div>
                             <div>
-                                <label className={styles.label}>Contribuicao facultativa (%)</label>
+                                <label className={styles.label}>Contribuição facultativa (%)</label>
                                 <input
                                     type="number"
                                     className={styles.input}
@@ -1561,7 +1561,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     <h4 className={styles.innerBoxTitle}>
                         <span className="flex items-center gap-2">
                             <Settings className="w-4 h-4" />
-                            Rubricas Pre-definidas
+                            Rubricas Pré-definidas
                         </span>
                     </h4>
                     <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">

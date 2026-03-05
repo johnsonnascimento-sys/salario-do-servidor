@@ -203,8 +203,8 @@ export const useCalculatorResults = (
             .filter(entry => entry.isEA)
             .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
 
-        if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUICAO DE FUNCAO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
-        if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUICAO DE FUNCAO (IR EA)', value: substitutionEaTotal, type: 'C' });
+        if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
+        if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: substitutionEaTotal, type: 'C' });
         const overtimeEntries = state.overtimeEntries;
         const totalPonderadoHe = overtimeEntries.reduce(
             (acc, entry) => acc + (Math.max(0, entry.qtd50 || 0) * 1.5) + (Math.max(0, entry.qtd100 || 0) * 2),
@@ -219,9 +219,9 @@ export const useCalculatorResults = (
             .reduce((acc, entry) => acc + (valorHoraHe * 1.5 * Math.max(0, entry.qtd50 || 0)) + (valorHoraHe * 2 * Math.max(0, entry.qtd100 || 0)), 0);
         const heExcluidoTotal = Math.max(0, (state.heTotal || 0) - heMensalTotal - heEaTotal);
 
-        if (heMensalTotal > 0) rows.push({ label: 'SERVICO EXTRAORDINARIO (IR MENSAL)', value: heMensalTotal, type: 'C' });
-        if (heEaTotal > 0) rows.push({ label: 'SERVICO EXTRAORDINARIO (IR EA)', value: heEaTotal, type: 'C' });
-        if (heExcluidoTotal > 0) rows.push({ label: 'SERVICO EXTRAORDINARIO (EXCLUIDO IR)', value: heExcluidoTotal, type: 'C' });
+        if (heMensalTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR MENSAL)', value: heMensalTotal, type: 'C' });
+        if (heEaTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR EA)', value: heEaTotal, type: 'C' });
+        if (heExcluidoTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (EXCLUÍDO IR)', value: heExcluidoTotal, type: 'C' });
         if (state.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: state.vpni_lei, type: 'C' });
         if (state.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: state.vpni_decisao, type: 'C' });
         if (state.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: state.ats, type: 'C' });
@@ -260,9 +260,9 @@ export const useCalculatorResults = (
         const irMensalOutrasRubricas = Math.max(0, (state.irMensal || 0) - heIrMensal);
         if (irMensalOutrasRubricas > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (DEMAIS RUBRICAS)', value: irMensalOutrasRubricas, type: 'D' });
         if (heIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (HORA EXTRA)', value: heIrMensal, type: 'D' });
-        if (substIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (SUBSTITUICAO)', value: substIrMensal, type: 'D' });
+        if (substIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (SUBSTITUIÇÃO)', value: substIrMensal, type: 'D' });
         if (heIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (HORA EXTRA)', value: heIrEA, type: 'D' });
-        if (substIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (SUBSTITUICAO)', value: substIrEA, type: 'D' });
+        if (substIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (SUBSTITUIÇÃO)', value: substIrEA, type: 'D' });
 
         const irEaTotal = Math.max(0, state.irEA || 0);
         const irEaRestanteParaRubricas = Math.max(0, irEaTotal - heIrEA - substIrEA);

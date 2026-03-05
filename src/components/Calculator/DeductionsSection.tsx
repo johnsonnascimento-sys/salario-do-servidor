@@ -13,11 +13,11 @@ export const DeductionsSection: React.FC<DeductionsSectionProps> = ({ state, upd
         <div className="space-y-6">
             <div className={styles.card}>
                 <h3 className={styles.sectionTitle}>
-                    <Minus className="w-4 h-4" />Descontos / Retencoes
+                    <Minus className="w-4 h-4" />Descontos / Retenções
                 </h3>
 
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Previdencia & IR</h4>
+                    <h4 className={styles.innerBoxTitle}>Previdência & IR</h4>
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -36,9 +36,9 @@ export const DeductionsSection: React.FC<DeductionsSectionProps> = ({ state, upd
                         {state.regimePrev === 'rpc' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className={styles.label}>Participacao Funpresp</label>
+                                    <label className={styles.label}>Participação Funpresp</label>
                                     <select className={styles.input} value={state.funprespParticipacao} onChange={e => update('funprespParticipacao', e.target.value)}>
-                                        <option value="nao">Nao</option>
+                                        <option value="nao">Não</option>
                                         <option value="patrocinado">Sim (Patrocinado)</option>
                                     </select>
                                 </div>
@@ -70,15 +70,15 @@ export const DeductionsSection: React.FC<DeductionsSectionProps> = ({ state, upd
                     <h4 className={styles.innerBoxTitle}>Outros Descontos</h4>
                     <div className="space-y-3">
                         <div>
-                            <label className={styles.label}>Saude / Odonto (Titular + Dep.)</label>
+                            <label className={styles.label}>Saúde / Odonto (Titular + Dep.)</label>
                             <input type="number" className={styles.input} value={state.planoSaude} onChange={e => update('planoSaude', Number(e.target.value))} />
                         </div>
                         <div>
-                            <label className={styles.label}>Pensao Alimenticia (R$)</label>
+                            <label className={styles.label}>Pensão Alimentícia (R$)</label>
                             <input type="number" className={styles.input} value={state.pensao} onChange={e => update('pensao', Number(e.target.value))} />
                         </div>
                         <div>
-                            <label className={styles.label}>Emprestimos / Consignados</label>
+                            <label className={styles.label}>Empréstimos / Consignados</label>
                             <input type="number" className={styles.input} value={state.emprestimos} onChange={e => update('emprestimos', Number(e.target.value))} />
                         </div>
                     </div>

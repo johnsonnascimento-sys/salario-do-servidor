@@ -17,7 +17,7 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
     const careerCatalog = courtConfig?.careerCatalog;
     const cargoOptions = Object.keys(currentTables.salario || {});
     const noFunctionCode = careerCatalog?.noFunctionCode ?? '';
-    const noFunctionLabel = careerCatalog?.noFunctionLabel ?? 'Sem Funcao';
+    const noFunctionLabel = careerCatalog?.noFunctionLabel ?? 'Sem função';
 
     return (
         <div className="space-y-6">
