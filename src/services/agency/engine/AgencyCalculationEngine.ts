@@ -185,6 +185,8 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 hePss: deductions.overtimePss,
                 substituicao: substitution,
                 substituicaoIr: deductions.substitutionIr,
+                substituicaoIrMensal: deductions.substitutionIrMensal,
+                substituicaoIrEA: deductions.substitutionIrEA,
                 substituicaoPss: deductions.substitutionPss,
 
                 // DiÃ¡rias e LicenÃ§a

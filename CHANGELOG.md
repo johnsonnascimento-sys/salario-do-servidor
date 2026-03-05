@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.11 - 05/03/2026
+- Fix: detalhamento de `IMPOSTO DE RENDA-EA` deixa de exibir linha generica e passa a separar por rubrica (Hora Extra, Substituicao e rubricas manuais EA).
+- Fix: motor de deducoes passa a expor `substitutionIrMensal` e `substitutionIrEA` para composicao correta do detalhamento.
+
 ## 2.1.10 - 05/03/2026
 - UX: campo de inclusao de rubricas pre-definidas agora sinaliza explicitamente quais cards permitem repeticao.
 - UX: badge visual `Multiplo` adicionado nos cards repetiveis para reforcar a regra em tela.

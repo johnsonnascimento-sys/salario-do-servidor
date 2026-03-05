@@ -87,6 +87,8 @@ export const useCalculatorResults = (
                         hePss: bd.hePss || 0,
                         substTotal: bd.substituicao || 0,
                         substIr: bd.substituicaoIr || 0,
+                        substIrMensal: bd.substituicaoIrMensal || 0,
+                        substIrEA: bd.substituicaoIrEA || 0,
                         substPss: bd.substituicaoPss || 0,
                         diariasValorTotal: bd.diariasValor || 0,
                         diariasBruto: bd.diariasBruto || 0,
@@ -246,12 +248,44 @@ export const useCalculatorResults = (
         if (state.valFunpresp > 0) rows.push({ label: 'FUNPRESP-JUD', value: state.valFunpresp, type: 'D' });
         const heIrMensal = Math.max(0, state.heIrMensal || 0);
         const heIrEA = Math.max(0, state.heIrEA || 0);
+        const substIrMensal = Math.max(0, state.substIrMensal || 0);
+        const substIrEA = Math.max(0, state.substIrEA || 0);
         const irMensalOutrasRubricas = Math.max(0, (state.irMensal || 0) - heIrMensal);
-        const irEaOutrasRubricas = Math.max(0, (state.irEA || 0) - heIrEA);
         if (irMensalOutrasRubricas > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (DEMAIS RUBRICAS)', value: irMensalOutrasRubricas, type: 'D' });
         if (heIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (HORA EXTRA)', value: heIrMensal, type: 'D' });
-        if (irEaOutrasRubricas > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (DEMAIS RUBRICAS)', value: irEaOutrasRubricas, type: 'D' });
+        if (substIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (SUBSTITUICAO)', value: substIrMensal, type: 'D' });
         if (heIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (HORA EXTRA)', value: heIrEA, type: 'D' });
+        if (substIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (SUBSTITUICAO)', value: substIrEA, type: 'D' });
+
+        const irEaTotal = Math.max(0, state.irEA || 0);
+        const irEaRestanteParaRubricas = Math.max(0, irEaTotal - heIrEA - substIrEA);
+        const rubricasManuaisEA = state.rubricasExtras
+            .filter(r => r.isEA && Number(r.valor) > 0)
+            .map((r, index) => ({
+                id: r.id,
+                descricao: (r.descricao || '').trim() || `RUBRICA MANUAL ${index + 1}`,
+                base: r.tipo === 'D' ? -Number(r.valor) : Number(r.valor)
+            }))
+            .filter(r => r.base > 0);
+
+        const totalBaseRubricasEA = rubricasManuaisEA.reduce((acc, item) => acc + item.base, 0);
+        if (irEaRestanteParaRubricas > 0 && totalBaseRubricasEA > 0) {
+            let alocado = 0;
+            rubricasManuaisEA.forEach((item, index) => {
+                const isLast = index === rubricasManuaisEA.length - 1;
+                const valor = isLast
+                    ? Math.max(0, Math.round((irEaRestanteParaRubricas - alocado) * 100) / 100)
+                    : Math.max(0, Math.round((irEaRestanteParaRubricas * (item.base / totalBaseRubricasEA)) * 100) / 100);
+                alocado += valor;
+                if (valor > 0) {
+                    rows.push({
+                        label: `IMPOSTO DE RENDA-EA (${item.descricao.toUpperCase()})`,
+                        value: valor,
+                        type: 'D'
+                    });
+                }
+            });
+        }
         if (state.irFerias > 0) rows.push({ label: 'IMPOSTO DE RENDA (FÉRIAS)', value: state.irFerias, type: 'D' });
         if (state.feriasDesc && state.feriasDesc > 0) rows.push({ label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', value: state.feriasDesc, type: 'D' });
         if (state.pss13 && state.pss13 > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC', value: state.pss13, type: 'D' });
@@ -309,4 +343,5 @@ export const useCalculatorResults = (
 
     return { resultRows };
 };
+
 

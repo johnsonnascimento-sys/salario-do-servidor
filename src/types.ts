@@ -288,6 +288,8 @@ export interface CalculatorState {
   heIrEA: number;
   hePss: number;
   substIr: number;
+  substIrMensal: number;
+  substIrEA: number;
   substPss: number;
   irFerias: number;
   valFunpresp: number;
@@ -439,6 +441,8 @@ export const INITIAL_STATE: CalculatorState = {
   heIrEA: 0,
   hePss: 0,
   substIr: 0,
+  substIrMensal: 0,
+  substIrEA: 0,
   substPss: 0,
   irFerias: 0,
   valFunpresp: 0,
