@@ -1,4 +1,5 @@
-import React from 'react';
+﻿import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
 import { GlobalSettings } from '../components/Calculator/GlobalSettings';
@@ -10,6 +11,25 @@ import { ActionFooter } from '../components/Calculator/ActionFooter';
 import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
 import { FieldCalculator } from '../components/Calculator/FieldCalculator';
 import DonationModal from '../components/DonationModal';
+import { CalculatorState, INITIAL_STATE } from '../types';
+
+const hydrateCalculatorState = (snapshot: unknown): CalculatorState => {
+    if (!snapshot || typeof snapshot !== 'object') {
+        return INITIAL_STATE;
+    }
+
+    const merged = {
+        ...INITIAL_STATE,
+        ...(snapshot as Partial<CalculatorState>),
+    };
+
+    return {
+        ...merged,
+        rubricasExtras: Array.isArray(merged.rubricasExtras) ? merged.rubricasExtras : [],
+        overtimeEntries: Array.isArray(merged.overtimeEntries) ? merged.overtimeEntries : [],
+        substitutionEntries: Array.isArray(merged.substitutionEntries) ? merged.substitutionEntries : [],
+    };
+};
 
 export default function Calculator() {
     const {
@@ -31,8 +51,39 @@ export default function Calculator() {
         updateRubrica,
         setState,
         agencyName,
-        configError
+        configError,
+        saveCurrentPayslip,
+        savingPayslip,
     } = useCalculator();
+
+    const location = useLocation();
+    const restoreAppliedRef = useRef(false);
+
+    useEffect(() => {
+        if (restoreAppliedRef.current) return;
+
+        const restorePayload = (location.state as { restoreSnapshot?: { calculatorState?: unknown } } | null)?.restoreSnapshot;
+        if (!restorePayload?.calculatorState) return;
+
+        const hydrated = hydrateCalculatorState(restorePayload.calculatorState);
+        setState(hydrated);
+        restoreAppliedRef.current = true;
+    }, [location.state, setState]);
+
+    const handleSavePayslip = async () => {
+        try {
+            const result = await saveCurrentPayslip();
+            if (result.success) {
+                alert('Holerite salvo com sucesso na sua área.');
+            } else if (result.reason === 'auth') {
+                alert('Faça login para salvar holerites na sua área.');
+            }
+        } catch (error) {
+            alert((error as Error).message || 'Falha ao salvar holerite.');
+        }
+    };
+
+    const openMyPayslips = () => navigate('/minha-area/holerites');
 
     if (loadingConfig) {
         return (
@@ -54,11 +105,12 @@ export default function Calculator() {
 
     return (
         <>
-            {/* Mobile Bottom Bar - Fixed */}
             <MobileResultsBar
                 liquido={state.liquido}
                 onExportPDF={initiateExportPDF}
                 onExportExcel={initiateExportExcel}
+                onSavePayslip={handleSavePayslip}
+                onOpenPayslips={openMyPayslips}
             />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-32">
@@ -70,6 +122,9 @@ export default function Calculator() {
                     styles={styles}
                     setState={setState}
                     agencyName={agencyName}
+                    onSavePayslip={handleSavePayslip}
+                    onOpenPayslips={openMyPayslips}
+                    savingPayslip={savingPayslip}
                 />
 
                 <div className="space-y-8 max-w-5xl mx-auto">
@@ -104,6 +159,9 @@ export default function Calculator() {
                     state={state}
                     onExportPDF={initiateExportPDF}
                     onExportExcel={initiateExportExcel}
+                    onSavePayslip={handleSavePayslip}
+                    onOpenPayslips={openMyPayslips}
+                    savingPayslip={savingPayslip}
                 />
 
                 <DonationModal

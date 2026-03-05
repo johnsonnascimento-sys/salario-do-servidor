@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 05/03/2026 17:02
+Atualizado em: 05/03/2026 18:05
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -134,3 +134,11 @@ Cada rubrica manual deve suportar:
 
 1. Toda alteracao neste arquivo deve atualizar obrigatoriamente o campo `Atualizado em:`.
 2. O campo `Atualizado em:` deve conter sempre data e hora no formato `dd/MM/yyyy HH:mm`.
+
+## 9. Area de usuario e holerites
+
+1. A autenticacao de usuario final deve ficar separada da autenticacao administrativa.
+2. Rotas `/admin*` exigem autorizacao explicita de admin (allowlist), nao apenas usuario autenticado.
+3. Persistencia de holerites salvos deve usar snapshot completo (`calculator_state` + `result_rows`) para preservar historico.
+4. CRUD de holerites deve ser isolado por usuario com RLS em `auth.uid()`.
+5. Cadastro de usuarios pode operar em beta fechado via allowlist (`cpf + email`) sem abrir acesso geral.

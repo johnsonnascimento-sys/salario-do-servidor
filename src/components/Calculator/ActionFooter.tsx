@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { FileText, Table as TableIcon } from 'lucide-react';
+﻿import React from 'react';
+import { FileText, Save, Table as TableIcon, User } from 'lucide-react';
 import { CalculatorState } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 import { VersionBadge } from '../ui/VersionBadge';
@@ -9,12 +8,22 @@ interface ActionFooterProps {
     state: CalculatorState;
     onExportPDF: () => void;
     onExportExcel: () => void;
+    onSavePayslip?: () => void;
+    onOpenPayslips?: () => void;
+    savingPayslip?: boolean;
 }
 
-export const ActionFooter: React.FC<ActionFooterProps> = ({ state, onExportPDF, onExportExcel }) => {
+export const ActionFooter: React.FC<ActionFooterProps> = ({
+    state,
+    onExportPDF,
+    onExportExcel,
+    onSavePayslip,
+    onOpenPayslips,
+    savingPayslip,
+}) => {
     return (
         <div className="hidden lg:block fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-700 py-4 px-6 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                 <div>
                     <p className="text-label font-bold text-neutral-400 uppercase tracking-widest mb-1">Resultado Líquido</p>
                     <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Considerando todos os descontos legais e opcionais.</p>
@@ -24,6 +33,21 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({ state, onExportPDF, 
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={onOpenPayslips}
+                            className="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-body-xs uppercase tracking-wide"
+                            title="Meus holerites"
+                        >
+                            <User size={20} /> <span>Meus Holerites</span>
+                        </button>
+                        <button
+                            onClick={onSavePayslip}
+                            className="bg-secondary-500/10 hover:bg-secondary-500 hover:text-white text-secondary-600 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-body-xs uppercase tracking-wide disabled:opacity-60"
+                            title="Salvar na minha área"
+                            disabled={savingPayslip}
+                        >
+                            <Save size={20} /> <span>{savingPayslip ? 'Salvando' : 'Salvar'}</span>
+                        </button>
                         <button
                             onClick={onExportPDF}
                             className="bg-error-500/10 hover:bg-error-500 hover:text-white text-error-600 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-body-xs uppercase tracking-wide"

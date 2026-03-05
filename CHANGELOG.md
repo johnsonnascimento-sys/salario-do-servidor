@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.16 - 05/03/2026
+- Feat(Auth): nova area de usuario com login/senha em `/acesso` e dashboard em `/minha-area`.
+- Feat(Auth): cadastro em beta fechado com allowlist (`cpf + email`) e mensagem de desenvolvimento para nao autorizados.
+- Feat(Data): migracao `20260305_user_area_auth_and_payslips.sql` com tabelas `user_profiles`, `signup_allowlist` e `user_payslips` + RLS por `auth.uid()`.
+- Feat(CRUD): CRUD completo de holerites salvos por usuario, permitindo multiplos registros no mesmo mes/ano.
+- Feat(Export): exportacao PDF/Excel para holerites salvos reaproveitando `exportService`.
+- Security: rotas `/admin*` agora usam guard administrativo por allowlist de email, bloqueando usuario comum autenticado.
+- UX: calculadora ganhou acoes `Salvar na Minha Area` e `Meus Holerites` no cabecalho e no rodape.
+
 ## 2.1.15 - 05/03/2026
 - Feat: rubrica pre-definida de `Substituicao de Funcao` agora aceita multiplas instancias no formulario, assim como `Horas Extras`.
 - Tech: novo estado `substitutionEntries` com calculo isolado por card (dias, incidencia IR EA e PSS EA por instancia).

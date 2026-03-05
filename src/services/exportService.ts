@@ -16,7 +16,16 @@ const EXPORT_BRAND_NAME = import.meta.env.VITE_EXPORT_BRAND_NAME || 'SIMULADOR D
 const EXPORT_SITE_NAME = import.meta.env.VITE_EXPORT_SITE_NAME || 'Salario do Servidor';
 const EXPORT_SITE_URL = import.meta.env.VITE_EXPORT_SITE_URL || 'www.salariodoservidor.com.br';
 
-export const exportToPDF = (state: CalculatorState, resultRows: any[], courtConfig: CourtConfig | null) => {
+interface ExportOptions {
+    filename?: string;
+}
+
+export const exportToPDF = (
+    state: CalculatorState,
+    resultRows: any[],
+    courtConfig: CourtConfig | null,
+    options?: ExportOptions
+) => {
     const doc = new jsPDF() as jsPDFWithAutoTable;
 
     // Configura o nome do órgão
@@ -93,10 +102,16 @@ export const exportToPDF = (state: CalculatorState, resultRows: any[], courtConf
     doc.text(splitDisclaimer, 105, pageHeight - 15, { align: "center" });
 
     const pdfBlob = doc.output('blob');
-    saveAs(pdfBlob, `Holerite_${state.mesRef}_${state.anoRef}.pdf`);
+    const filename = options?.filename?.trim() || `Holerite_${state.mesRef}_${state.anoRef}`;
+    saveAs(pdfBlob, `${filename}.pdf`);
 };
 
-export const exportToExcel = (state: CalculatorState, resultRows: any[], courtConfig: CourtConfig | null) => {
+export const exportToExcel = (
+    state: CalculatorState,
+    resultRows: any[],
+    courtConfig: CourtConfig | null,
+    options?: ExportOptions
+) => {
     const orgName = EXPORT_BRAND_NAME;
 
     const wb = XLSX.utils.book_new();
@@ -132,5 +147,6 @@ export const exportToExcel = (state: CalculatorState, resultRows: any[], courtCo
 
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(excelBlob, `Holerite_${state.mesRef}_${state.anoRef}.xlsx`);
+    const filename = options?.filename?.trim() || `Holerite_${state.mesRef}_${state.anoRef}`;
+    saveAs(excelBlob, `${filename}.xlsx`);
 };

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowLeft, Shield } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { isAdminEmail } from '../utils/auth/admin';
 
 export default function Login() {
     const { session, loading: authLoading } = useAuth();
@@ -19,7 +20,11 @@ export default function Login() {
 
     React.useEffect(() => {
         if (session && !authLoading) {
-            navigate('/admin');
+            if (isAdminEmail(session.user.email)) {
+                navigate('/admin');
+            } else {
+                setError('Sua conta não possui acesso administrativo.');
+            }
         }
     }, [session, authLoading, navigate]);
 

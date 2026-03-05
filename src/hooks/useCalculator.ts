@@ -8,15 +8,20 @@
  * - useCalculatorResults: Cálculos e resultados
  */
 
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCalculatorState } from './calculator/useCalculatorState';
 import { useCalculatorConfig } from './calculator/useCalculatorConfig';
 import { useCalculatorExport } from './calculator/useCalculatorExport';
 import { useCalculatorResults } from './calculator/useCalculatorResults';
+import { useUserAuth } from './user/useUserAuth';
+import { createPayslip } from '../services/user/payslipService';
 
 export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
+    const { user } = useUserAuth();
+    const [savingPayslip, setSavingPayslip] = useState(false);
 
     // 1. Gerenciamento de Estado
     const {
@@ -66,6 +71,44 @@ export const useCalculator = () => {
         });
     };
 
+    useEffect(() => {
+        try {
+            localStorage.setItem('user_area_last_calculator_state', JSON.stringify(state));
+            localStorage.setItem('user_area_last_result_rows', JSON.stringify(resultRows));
+        } catch (_error) {
+            // Ignora falhas de localStorage em modo privado/restrito.
+        }
+    }, [state, resultRows]);
+
+    const saveCurrentPayslip = useCallback(async () => {
+        if (!user) {
+            navigate(`/acesso?redirect=${encodeURIComponent(window.location.pathname)}`);
+            return { success: false, reason: 'auth' as const };
+        }
+
+        setSavingPayslip(true);
+        try {
+            const title = `Holerite ${state.mesRef}/${state.anoRef} - Simulacao`;
+            const created = await createPayslip({
+                title,
+                agency_slug: slug || 'jmu',
+                agency_name: agency?.name || 'Orgao nao identificado',
+                month_ref: state.mesRef,
+                year_ref: state.anoRef,
+                notes: state.observacoes || '',
+                tags: [],
+                calculator_state: state,
+                result_rows: resultRows,
+                liquido: state.liquido,
+                total_bruto: state.totalBruto,
+                total_descontos: state.totalDescontos,
+            });
+            return { success: true, id: created.id };
+        } finally {
+            setSavingPayslip(false);
+        }
+    }, [user, navigate, state, slug, agency?.name, resultRows]);
+
     return {
         state,
         update,
@@ -87,6 +130,9 @@ export const useCalculator = () => {
         setState,
         agencyName: agency?.name || 'Carregando...',
         loadingAgency,
-        configError
+        configError,
+        saveCurrentPayslip,
+        savingPayslip,
+        isUserAuthenticated: Boolean(user),
     };
 };

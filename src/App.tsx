@@ -11,10 +11,15 @@ import AdminGlobal from './pages/AdminGlobal';
 import AdminPower from './pages/AdminPower';
 import AdminOrg from './pages/AdminOrg';
 import AdminControlPanel from './pages/AdminControlPanel';
-import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
+import UserRoute from './components/UserRoute';
 import Donate from './pages/Donate';
 import About from './pages/About';
 import Privacy from './pages/Privacy';
+import UserAccess from './pages/UserAccess';
+import UserDashboard from './pages/UserDashboard';
+import UserPayslipsPage from './pages/UserPayslipsPage';
+import UserPayslipDetailPage from './pages/UserPayslipDetailPage';
 
 function App() {
   return (
@@ -29,30 +34,31 @@ function App() {
 
           {/* Rotas de Login/Admin */}
           <Route path="/login" element={<Login />} />
+          <Route path="/acesso" element={<UserAccess />} />
           <Route path="/admin" element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminControlPanel />
-            </ProtectedRoute>
+            </AdminRoute>
           } />
           <Route path="/admin/hub" element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminHub />
-            </ProtectedRoute>
+            </AdminRoute>
           } />
           <Route path="/admin/global" element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminGlobal />
-            </ProtectedRoute>
+            </AdminRoute>
           } />
           <Route path="/admin/power" element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminPower />
-            </ProtectedRoute>
+            </AdminRoute>
           } />
           <Route path="/admin/org" element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminOrg />
-            </ProtectedRoute>
+            </AdminRoute>
           } />
 
           {/* Rotas que USAM o MainLayout */}
@@ -62,6 +68,21 @@ function App() {
             <Route path="/apoiar" element={<Donate />} />
             <Route path="/quem-somos" element={<About />} />
             <Route path="/privacidade" element={<Privacy />} />
+            <Route path="/minha-area" element={
+              <UserRoute>
+                <UserDashboard />
+              </UserRoute>
+            } />
+            <Route path="/minha-area/holerites" element={
+              <UserRoute>
+                <UserPayslipsPage />
+              </UserRoute>
+            } />
+            <Route path="/minha-area/holerites/:id" element={
+              <UserRoute>
+                <UserPayslipDetailPage />
+              </UserRoute>
+            } />
           </Route>
 
           {/* Rota padrão para não encontrados */}

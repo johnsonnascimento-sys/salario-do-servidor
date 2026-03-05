@@ -39,6 +39,9 @@ const MainLayout: React.FC = () => {
                         </nav>
 
                         <div className="flex items-center gap-4">
+                            <Link to="/acesso" className="btn btn-sm border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                                Minha Área
+                            </Link>
                             <button
                                 onClick={toggleTheme}
                                 className="p-2 rounded-full hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800 transition-colors"
