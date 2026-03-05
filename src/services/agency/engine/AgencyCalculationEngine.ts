@@ -180,6 +180,8 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 heVal100: overtime.heVal100,
                 heTotal: overtime.heTotal,
                 heIr: deductions.overtimeIr,
+                heIrMensal: deductions.overtimeIrMensal,
+                heIrEA: deductions.overtimeIrEA,
                 hePss: deductions.overtimePss,
                 substituicao: substitution,
                 substituicaoIr: deductions.substitutionIr,

@@ -284,6 +284,8 @@ export interface CalculatorState {
   vantagensPss: number;
   abonoIr: number;
   heIr: number;
+  heIrMensal: number;
+  heIrEA: number;
   hePss: number;
   substIr: number;
   substPss: number;
@@ -433,6 +435,8 @@ export const INITIAL_STATE: CalculatorState = {
   vantagensPss: 0,
   abonoIr: 0,
   heIr: 0,
+  heIrMensal: 0,
+  heIrEA: 0,
   hePss: 0,
   substIr: 0,
   substPss: 0,

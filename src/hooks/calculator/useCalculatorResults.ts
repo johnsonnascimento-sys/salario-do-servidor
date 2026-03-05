@@ -82,6 +82,8 @@ export const useCalculatorResults = (
                         heVal100: bd.heVal100 || 0,
                         heTotal: bd.heTotal || 0,
                         heIr: bd.heIr || 0,
+                        heIrMensal: bd.heIrMensal || 0,
+                        heIrEA: bd.heIrEA || 0,
                         hePss: bd.hePss || 0,
                         substTotal: bd.substituicao || 0,
                         substIr: bd.substituicaoIr || 0,
@@ -186,24 +188,31 @@ export const useCalculatorResults = (
             const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
             rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO${suffix}`, value: state.substTotal, type: 'C' });
         }
-        if (state.heTotal > 0) {
-            const hasOvertimeEntries = state.overtimeEntries.length > 0;
-            const hasEaEntry = hasOvertimeEntries
-                ? state.overtimeEntries.some(entry => entry.isEA && !entry.excluirIR)
-                : state.heIsEA;
-            const hasMensalEntry = hasOvertimeEntries
-                ? state.overtimeEntries.some(entry => !entry.isEA && !entry.excluirIR)
-                : (!state.heIsEA && !state.heExcluirIR);
-            const hasExcludedEntry = hasOvertimeEntries
-                ? state.overtimeEntries.some(entry => entry.excluirIR)
-                : state.heExcluirIR;
-            const tags: string[] = [];
-            if (hasEaEntry && hasMensalEntry) tags.push('IR MENSAL + EA');
-            else if (hasEaEntry) tags.push('IR EA');
-            else if (hasExcludedEntry && !hasMensalEntry) tags.push('EXCLUIDO IR');
-            const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
-            rows.push({ label: `SERVICO EXTRAORDINARIO${suffix}`, value: state.heTotal, type: 'C' });
-        }
+        const overtimeEntries = state.overtimeEntries.length > 0
+            ? state.overtimeEntries
+            : [{
+                id: 'legacy',
+                qtd50: state.heQtd50 || 0,
+                qtd100: state.heQtd100 || 0,
+                isEA: state.heIsEA,
+                excluirIR: state.heExcluirIR
+            }];
+        const totalPonderadoHe = overtimeEntries.reduce(
+            (acc, entry) => acc + (Math.max(0, entry.qtd50 || 0) * 1.5) + (Math.max(0, entry.qtd100 || 0) * 2),
+            0
+        );
+        const valorHoraHe = totalPonderadoHe > 0 ? (state.heTotal || 0) / totalPonderadoHe : 0;
+        const heMensalTotal = overtimeEntries
+            .filter(entry => !entry.isEA && !entry.excluirIR)
+            .reduce((acc, entry) => acc + (valorHoraHe * 1.5 * Math.max(0, entry.qtd50 || 0)) + (valorHoraHe * 2 * Math.max(0, entry.qtd100 || 0)), 0);
+        const heEaTotal = overtimeEntries
+            .filter(entry => entry.isEA && !entry.excluirIR)
+            .reduce((acc, entry) => acc + (valorHoraHe * 1.5 * Math.max(0, entry.qtd50 || 0)) + (valorHoraHe * 2 * Math.max(0, entry.qtd100 || 0)), 0);
+        const heExcluidoTotal = Math.max(0, (state.heTotal || 0) - heMensalTotal - heEaTotal);
+
+        if (heMensalTotal > 0) rows.push({ label: 'SERVICO EXTRAORDINARIO (IR MENSAL)', value: heMensalTotal, type: 'C' });
+        if (heEaTotal > 0) rows.push({ label: 'SERVICO EXTRAORDINARIO (IR EA)', value: heEaTotal, type: 'C' });
+        if (heExcluidoTotal > 0) rows.push({ label: 'SERVICO EXTRAORDINARIO (EXCLUIDO IR)', value: heExcluidoTotal, type: 'C' });
         if (state.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: state.vpni_lei, type: 'C' });
         if (state.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: state.vpni_decisao, type: 'C' });
         if (state.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: state.ats, type: 'C' });
@@ -235,8 +244,14 @@ export const useCalculatorResults = (
         if (state.pssMensal > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS (PSS)', value: state.pssMensal, type: 'D' });
         if (state.pssEA > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-EA', value: state.pssEA, type: 'D' });
         if (state.valFunpresp > 0) rows.push({ label: 'FUNPRESP-JUD', value: state.valFunpresp, type: 'D' });
-        if (state.irMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC', value: state.irMensal, type: 'D' });
-        if (state.irEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA', value: state.irEA, type: 'D' });
+        const heIrMensal = Math.max(0, state.heIrMensal || 0);
+        const heIrEA = Math.max(0, state.heIrEA || 0);
+        const irMensalOutrasRubricas = Math.max(0, (state.irMensal || 0) - heIrMensal);
+        const irEaOutrasRubricas = Math.max(0, (state.irEA || 0) - heIrEA);
+        if (irMensalOutrasRubricas > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (DEMAIS RUBRICAS)', value: irMensalOutrasRubricas, type: 'D' });
+        if (heIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (HORA EXTRA)', value: heIrMensal, type: 'D' });
+        if (irEaOutrasRubricas > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (DEMAIS RUBRICAS)', value: irEaOutrasRubricas, type: 'D' });
+        if (heIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (HORA EXTRA)', value: heIrEA, type: 'D' });
         if (state.irFerias > 0) rows.push({ label: 'IMPOSTO DE RENDA (FÉRIAS)', value: state.irFerias, type: 'D' });
         if (state.feriasDesc && state.feriasDesc > 0) rows.push({ label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', value: state.feriasDesc, type: 'D' });
         if (state.pss13 && state.pss13 > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC', value: state.pss13, type: 'D' });

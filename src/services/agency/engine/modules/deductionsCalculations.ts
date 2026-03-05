@@ -29,6 +29,8 @@ export interface DeductionsResult {
     vantagensPss: number;
     abonoIr: number;
     overtimeIr: number;
+    overtimeIrMensal: number;
+    overtimeIrEA: number;
     overtimePss: number;
     substitutionIr: number;
     substitutionPss: number;
@@ -212,12 +214,15 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const irEA = calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
 
     let overtimeIr = 0;
+    let overtimeIrMensal = 0;
+    let overtimeIrEA = 0;
     let substitutionIr = 0;
 
     const heMensalBase = overtimeMensalBase;
     if (heMensalBase > 0) {
         const irSemHe = calculateIrrf(Math.max(0, baseIR - heMensalBase), payrollRules.irrfTopRate, deductionVal);
-        overtimeIr += Math.max(0, irMensal - irSemHe);
+        overtimeIrMensal = Math.max(0, irMensal - irSemHe);
+        overtimeIr += overtimeIrMensal;
     }
 
     const substMensalBase = !params.substIsEA ? substitution : 0;
@@ -229,7 +234,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const heEABase = overtimeEABase;
     if (heEABase > 0) {
         const irEaSemHe = calculateIrrf(Math.max(0, baseIREA - heEABase), payrollRules.irrfTopRate, deductionVal);
-        overtimeIr += Math.max(0, irEA - irEaSemHe);
+        overtimeIrEA = Math.max(0, irEA - irEaSemHe);
+        overtimeIr += overtimeIrEA;
     }
 
     const substEABase = params.substIsEA ? substitution : 0;
@@ -252,6 +258,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         vantagensPss,
         abonoIr,
         overtimeIr,
+        overtimeIrMensal,
+        overtimeIrEA,
         overtimePss,
         substitutionIr,
         substitutionPss,
