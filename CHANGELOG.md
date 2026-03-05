@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.13 - 05/03/2026
+- Fix: `Resumo calculado` da Hora Extra passa a ratear IR por card usando a base correta (`heIrMensal` para mensal e `heIrEA` para EA), sem reaproveitar IR de outra incidencia.
+- Fix: desconto de IR por card de Hora Extra agora e limitado ao proprio bruto da instancia, evitando liquido negativo por extrapolacao.
+- UX: linha de resumo da Hora Extra marcada como EA passa a exibir `Desconto IR-EA (Hora extra)` para evitar ambiguidade.
+
 ## 2.1.12 - 05/03/2026
 - Fix: detalhamento mobile agora preserva a coluna de valores sem corte, com ajustes responsivos de largura/padding e quebra de texto na rubrica.
 - Fix: modal/pagina de apoio tratam QR Code Pix com fallback quando a imagem configurada falha ao carregar.

@@ -861,7 +861,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     };
                     const overtimeEntry = entry || fallbackEntry;
 
-                    const totalPonderado = state.overtimeEntries.reduce(
+                    const overtimeBaseEntries = state.overtimeEntries.length > 0 ? state.overtimeEntries : [fallbackEntry];
+                    const totalPonderado = overtimeBaseEntries.reduce(
                         (acc, item) => acc + (Math.max(0, item.qtd50 || 0) * 1.5) + (Math.max(0, item.qtd100 || 0) * 2),
                         0
                     );
@@ -871,21 +872,23 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     const he100Bruto = roundCurrency(valorHora * 2.0 * Math.max(0, overtimeEntry.qtd100 || 0));
                     const heTotalBruto = roundCurrency(he50Bruto + he100Bruto);
 
-                    const mensalBaseTotal = state.overtimeEntries
+                    const mensalBaseTotal = overtimeBaseEntries
                         .filter(item => !item.isEA && !item.excluirIR)
                         .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
-                    const eaBaseTotal = state.overtimeEntries
+                    const eaBaseTotal = overtimeBaseEntries
                         .filter(item => item.isEA && !item.excluirIR)
                         .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
+                    const heIrMensalTotal = Math.max(0, state.heIrMensal || 0);
+                    const heIrEATotal = Math.max(0, state.heIrEA || 0);
 
                     let heIr = 0;
                     if (!overtimeEntry.excluirIR && !overtimeEntry.isEA && mensalBaseTotal > 0) {
-                        heIr += (state.heIr || 0) * (heTotalBruto / mensalBaseTotal);
+                        heIr += heIrMensalTotal * (heTotalBruto / mensalBaseTotal);
                     }
                     if (!overtimeEntry.excluirIR && overtimeEntry.isEA && eaBaseTotal > 0) {
-                        heIr += (state.heIr || 0) * (heTotalBruto / eaBaseTotal);
+                        heIr += heIrEATotal * (heTotalBruto / eaBaseTotal);
                     }
-                    heIr = roundCurrency(Math.max(0, heIr));
+                    heIr = roundCurrency(Math.min(Math.max(0, heIr), heTotalBruto));
 
                     const hePss = 0;
                     const heTotalDescontos = roundCurrency(heIr + hePss);
@@ -895,11 +898,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     const he50Liquido = roundCurrency(Math.max(0, he50Bruto - descontoHe50));
                     const he100Liquido = roundCurrency(Math.max(0, he100Bruto - descontoHe100));
                     const heTotalLiquido = roundCurrency(Math.max(0, heTotalBruto - heTotalDescontos));
+                    const irLabel = overtimeEntry.isEA
+                        ? 'Desconto IR-EA (Hora extra)'
+                        : 'Desconto IR (Hora extra)';
 
                     return [
                         { label: 'Hora extra 50% Bruto', value: he50Bruto },
                         { label: 'Hora extra 100% Bruto', value: he100Bruto },
-                        { label: 'Desconto IR (Hora extra)', value: heIr, isDiscount: true },
+                        { label: irLabel, value: heIr, isDiscount: true },
                         { label: 'Desconto PSS (Hora extra)', value: hePss, isDiscount: true },
                         { label: 'Hora extra 50% Liquido', value: he50Liquido },
                         { label: 'Hora extra 100% Liquido', value: he100Liquido },
