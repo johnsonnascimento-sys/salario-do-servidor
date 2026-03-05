@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, DollarSign, GripVertical, Minus, Plus, Settings, Trash2 } from 'lucide-react';
-import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica } from '../../types';
+import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
 import { VacationCard } from './cards/VacationCard';
 import { ThirteenthCard } from './cards/ThirteenthCard';
@@ -40,6 +40,7 @@ interface PresetInstance {
     key: string;
     presetId: PredefinedRubricId;
     overtimeEntryId?: string;
+    substitutionEntryId?: string;
 }
 
 interface DynamicPayrollFormProps {
@@ -66,8 +67,8 @@ const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
     { id: 'aux_transporte', label: 'Auxílio Transporte' },
     { id: 'diarias', label: 'Diárias de Viagem' }
 ];
-const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra']);
-const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras';
+const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra', 'substituicao']);
+const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras, Substituicao';
 
 const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
@@ -148,7 +149,16 @@ const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) =>
                 state.overtimeEntries.some(entry => entry.qtd50 > 0 || entry.qtd100 > 0 || entry.isEA || entry.excluirIR)
             );
         case 'substituicao':
-            return Object.values(state.substDias).some(days => days > 0) || state.substIsEA || state.substPssIsEA;
+            return (
+                Object.values(state.substDias).some(days => days > 0) ||
+                state.substIsEA ||
+                state.substPssIsEA ||
+                state.substitutionEntries.some(entry =>
+                    entry.isEA ||
+                    entry.pssIsEA ||
+                    Object.values(entry.dias || {}).some(days => Number(days) > 0)
+                )
+            );
         case 'licenca':
             return state.licencaDias > 0;
         case 'pre_escolar':
@@ -191,6 +201,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const showFunprespSection = Boolean(previdenciaComplementar?.enabled && isFunprespRegime);
     const funprespDefaultsAppliedRef = useRef(false);
     const overtimeLegacyMigratedRef = useRef(false);
+    const substitutionLegacyMigratedRef = useRef(false);
 
     const funprespNormalOptions = useMemo(
         () => buildRateOptions(
@@ -300,6 +311,16 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 });
                 return;
             }
+            if (presetId === 'substituicao' && state.substitutionEntries.length > 0) {
+                state.substitutionEntries.forEach((entry) => {
+                    instances.push({
+                        key: createUniqueId(`preset-${presetId}`),
+                        presetId,
+                        substitutionEntryId: entry.id
+                    });
+                });
+                return;
+            }
 
             instances.push({
                 key: createUniqueId(`preset-${presetId}`),
@@ -316,7 +337,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         [enabledPresets]
     );
     const availablePresets = PREDEFINED_OPTIONS.filter(
-        option => option.id === 'hora_extra' || !enabledPresetIds.has(option.id)
+        option => MULTI_INSTANCE_PRESETS.has(option.id) || !enabledPresetIds.has(option.id)
     );
     const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(PREDEFINED_OPTIONS[0]?.id || '');
     const [reorderMode, setReorderMode] = useState(false);
@@ -383,6 +404,64 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         }
     }, [enabledPresets, state.overtimeEntries, update]);
 
+    useEffect(() => {
+        const substInstances = enabledPresets.filter(item => item.presetId === 'substituicao');
+        if (substInstances.length === 0) {
+            if (state.substitutionEntries.length > 0) {
+                update('substitutionEntries', []);
+            }
+            return;
+        }
+
+        const existingEntries = state.substitutionEntries;
+        const existingById = new Map(existingEntries.map(entry => [entry.id, entry]));
+        const nextEntries: SubstitutionEntry[] = [];
+        const nextPresets = enabledPresets.map(instance => {
+            if (instance.presetId !== 'substituicao') {
+                return instance;
+            }
+
+            const currentEntry =
+                (instance.substitutionEntryId && existingById.get(instance.substitutionEntryId)) ||
+                createSubstitutionEntry();
+            nextEntries.push(currentEntry);
+
+            if (instance.substitutionEntryId !== currentEntry.id) {
+                return { ...instance, substitutionEntryId: currentEntry.id };
+            }
+            return instance;
+        });
+
+        const needsPresetSync = nextPresets.some((instance, index) => {
+            const current = enabledPresets[index];
+            return current?.substitutionEntryId !== instance.substitutionEntryId;
+        });
+        if (needsPresetSync) {
+            setEnabledPresets(nextPresets);
+        }
+
+        const sameLength = nextEntries.length === existingEntries.length;
+        const sameIdsAndValues = sameLength && nextEntries.every((entry, index) => {
+            const current = existingEntries[index];
+            const diasKeys = new Set([
+                ...Object.keys(entry.dias || {}),
+                ...Object.keys(current?.dias || {})
+            ]);
+            const diasEqual = Array.from(diasKeys).every((key) => (entry.dias?.[key] || 0) === (current?.dias?.[key] || 0));
+            return (
+                current &&
+                current.id === entry.id &&
+                current.isEA === entry.isEA &&
+                current.pssIsEA === entry.pssIsEA &&
+                diasEqual
+            );
+        });
+
+        if (!sameIdsAndValues) {
+            update('substitutionEntries', nextEntries);
+        }
+    }, [enabledPresets, state.substitutionEntries, update]);
+
     const totalCreditos = state.rubricasExtras
         .filter(rubrica => rubrica.tipo === 'C')
         .reduce((total, rubrica) => total + (rubrica.valor || 0), 0);
@@ -401,11 +480,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             ? (currentTables.funcoes[state.funcao] || 0)
             : 0;
 
-    const substitutionBreakdown = useMemo(() => {
+    const getSubstitutionBreakdown = (diasMap: Record<string, number>) => {
         const divisor = payrollRules?.monthDayDivisor ?? 30;
         const baseAbatimento = funcaoAtualValor + gratificacaoEspecificaCalculada;
 
-        const linhas = Object.entries(state.substDias || {})
+        const linhas = Object.entries(diasMap || {})
             .filter(([, days]) => Number(days) > 0)
             .map(([funcKey, days]) => {
                 const destino = currentTables.funcoes[funcKey] || 0;
@@ -418,18 +497,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     days: Number(days),
                     value: bruto
                 };
-            });
+            })
+            .filter((linha) => linha.value > 0);
 
         const total = roundCurrency(linhas.reduce((acc, linha) => acc + linha.value, 0));
-
         return { linhas, total };
-    }, [
-        state.substDias,
-        currentTables.funcoes,
-        payrollRules?.monthDayDivisor,
-        funcaoAtualValor,
-        gratificacaoEspecificaCalculada
-    ]);
+    };
 
     const handleCargoChange = (nextCargo: CalculatorState['cargo']) => {
         const nextPadroes = Object.keys(currentTables.salario[nextCargo] || {});
@@ -515,6 +588,34 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         overtimeLegacyMigratedRef.current = true;
     }, [state.overtimeEntries.length, state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, update]);
 
+    useEffect(() => {
+        if (substitutionLegacyMigratedRef.current) return;
+        if (state.substitutionEntries.length > 0) {
+            substitutionLegacyMigratedRef.current = true;
+            return;
+        }
+
+        const hasLegacySubstitution =
+            Object.values(state.substDias || {}).some(days => Number(days) > 0) ||
+            state.substIsEA ||
+            state.substPssIsEA;
+
+        if (!hasLegacySubstitution) {
+            substitutionLegacyMigratedRef.current = true;
+            return;
+        }
+
+        update('substitutionEntries', [
+            {
+                id: createUniqueId('subst-entry'),
+                dias: { ...(state.substDias || {}) },
+                isEA: Boolean(state.substIsEA),
+                pssIsEA: Boolean(state.substPssIsEA)
+            }
+        ]);
+        substitutionLegacyMigratedRef.current = true;
+    }, [state.substitutionEntries.length, state.substDias, state.substIsEA, state.substPssIsEA, update]);
+
     const createOvertimeEntry = (): OvertimeEntry => ({
         id: createUniqueId('he-entry'),
         qtd50: 0,
@@ -523,10 +624,26 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         excluirIR: false
     });
 
+    const createSubstitutionEntry = (): SubstitutionEntry => ({
+        id: createUniqueId('subst-entry'),
+        dias: {},
+        isEA: false,
+        pssIsEA: false
+    });
+
     const updateOvertimeEntry = (id: string, patch: Partial<OvertimeEntry>) => {
         update(
             'overtimeEntries',
             state.overtimeEntries.map((entry) => (
+                entry.id === id ? { ...entry, ...patch } : entry
+            ))
+        );
+    };
+
+    const updateSubstitutionEntry = (id: string, patch: Partial<SubstitutionEntry>) => {
+        update(
+            'substitutionEntries',
+            state.substitutionEntries.map((entry) => (
                 entry.id === id ? { ...entry, ...patch } : entry
             ))
         );
@@ -577,6 +694,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             case 'substituicao':
                 update('substIsEA', false);
                 update('substPssIsEA', false);
+                update('substitutionEntries', []);
                 functionKeys.forEach(key => updateSubstDays(key, 0));
                 break;
             case 'licenca':
@@ -629,6 +747,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             return;
         }
 
+        if (selectedPreset === 'substituicao') {
+            const newEntry = createSubstitutionEntry();
+            const hasActiveSubstitutionPreset = enabledPresets.some(item => item.presetId === 'substituicao');
+            update('substitutionEntries', hasActiveSubstitutionPreset ? [newEntry, ...state.substitutionEntries] : [newEntry]);
+            setEnabledPresets(prev => [
+                {
+                    key: createUniqueId('preset-substituicao'),
+                    presetId: 'substituicao',
+                    substitutionEntryId: newEntry.id
+                },
+                ...prev
+            ]);
+            return;
+        }
+
         if (enabledPresetIds.has(selectedPreset)) return;
         setEnabledPresets(prev => [
             { key: createUniqueId(`preset-${selectedPreset}`), presetId: selectedPreset },
@@ -644,6 +777,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             update(
                 'overtimeEntries',
                 state.overtimeEntries.filter(entry => entry.id !== instance.overtimeEntryId)
+            );
+        }
+        if (instance.presetId === 'substituicao' && instance.substitutionEntryId) {
+            update(
+                'substitutionEntries',
+                state.substitutionEntries.filter(entry => entry.id !== instance.substitutionEntryId)
             );
         }
 
@@ -914,9 +1053,46 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     ];
                 }
             case 'substituicao': {
+                const substitutionEntry = instance.substitutionEntryId
+                    ? state.substitutionEntries.find(item => item.id === instance.substitutionEntryId)
+                    : state.substitutionEntries[0];
+                const fallbackEntry: SubstitutionEntry = {
+                    id: 'legacy-subst',
+                    dias: { ...(state.substDias || {}) },
+                    isEA: state.substIsEA,
+                    pssIsEA: state.substPssIsEA
+                };
+                const currentEntry = substitutionEntry || fallbackEntry;
+                const substitutionEntries = state.substitutionEntries.length > 0 ? state.substitutionEntries : [fallbackEntry];
+
+                const substitutionBreakdown = getSubstitutionBreakdown(currentEntry.dias || {});
                 const substTotalBruto = roundCurrency(substitutionBreakdown.total);
-                const substIr = roundCurrency(Math.max(0, state.substIr || 0));
-                const substPss = roundCurrency(Math.max(0, state.substPss || 0));
+                const mensalBaseTotal = substitutionEntries
+                    .filter(item => !item.isEA)
+                    .reduce((acc, item) => acc + getSubstitutionBreakdown(item.dias || {}).total, 0);
+                const eaBaseTotal = substitutionEntries
+                    .filter(item => item.isEA)
+                    .reduce((acc, item) => acc + getSubstitutionBreakdown(item.dias || {}).total, 0);
+                const pssEaBaseTotal = substitutionEntries
+                    .filter(item => item.pssIsEA)
+                    .reduce((acc, item) => acc + getSubstitutionBreakdown(item.dias || {}).total, 0);
+
+                let substIr = 0;
+                if (currentEntry.isEA && eaBaseTotal > 0) {
+                    substIr = (state.substIrEA || 0) * (substTotalBruto / eaBaseTotal);
+                } else if (!currentEntry.isEA && mensalBaseTotal > 0) {
+                    substIr = (state.substIrMensal || 0) * (substTotalBruto / mensalBaseTotal);
+                }
+                let substPss = 0;
+                if (currentEntry.pssIsEA && pssEaBaseTotal > 0) {
+                    substPss = (state.substPss || 0) * (substTotalBruto / pssEaBaseTotal);
+                }
+                substIr = roundCurrency(Math.max(0, substIr));
+                substPss = roundCurrency(Math.max(0, substPss));
+                const substTotalCap = roundCurrency(Math.min(substTotalBruto, substIr + substPss));
+                if (substIr + substPss > substTotalCap && substIr > 0) {
+                    substIr = roundCurrency(Math.max(0, substTotalCap - substPss));
+                }
                 const substTotalDescontos = roundCurrency(substIr + substPss);
                 let descontoSubstAcumulado = 0;
 
@@ -939,10 +1115,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 });
 
                 const substTotalLiquido = roundCurrency(Math.max(0, substTotalBruto - substTotalDescontos));
+                const substIrLabel = currentEntry.isEA ? 'Desconto IR-EA (Substituicao)' : 'Desconto IR (Substituicao)';
 
                 return [
                     ...porFuncaoBruto,
-                    { label: 'Desconto IR (Substituicao)', value: substIr, isDiscount: true },
+                    { label: substIrLabel, value: substIr, isDiscount: true },
                     { label: 'Desconto PSS (Substituicao)', value: substPss, isDiscount: true },
                     ...porFuncaoLiquido,
                     { label: 'Total substituicao Bruto', value: substTotalBruto },
@@ -1199,7 +1376,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             return <OvertimeCard entry={overtimeEntry} updateEntry={updateOvertimeEntry} styles={styles} />;
         }
-        if (presetId === 'substituicao') return <SubstitutionCard state={state} update={update} updateSubstDays={updateSubstDays} functionKeys={functionKeys} styles={styles} />;
+        if (presetId === 'substituicao') {
+            const substitutionEntry = instance.substitutionEntryId
+                ? state.substitutionEntries.find(item => item.id === instance.substitutionEntryId)
+                : state.substitutionEntries[0];
+
+            if (!substitutionEntry) {
+                return (
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                        Card sem entrada vinculada.
+                    </p>
+                );
+            }
+
+            return <SubstitutionCard entry={substitutionEntry} updateEntry={updateSubstitutionEntry} functionKeys={functionKeys} styles={styles} />;
+        }
         if (presetId === 'licenca') return <LicenseCard state={state} update={update} styles={styles} />;
         if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} courtConfig={courtConfig} />;
 

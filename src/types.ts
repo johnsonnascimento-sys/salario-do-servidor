@@ -148,10 +148,18 @@ export interface OvertimeEntry {
   excluirIR: boolean;
 }
 
+export interface SubstitutionEntry {
+  id: string;
+  dias: Record<string, number>;
+  isEA: boolean;
+  pssIsEA: boolean;
+}
+
 export interface CalculatorState {
   // Rubricas Dinâmicas
   rubricasExtras: Rubrica[];
   overtimeEntries: OvertimeEntry[];
+  substitutionEntries: SubstitutionEntry[];
 
   // Dados de Impressão (UI)
   dadosBancarios: {
@@ -325,6 +333,7 @@ export interface CalculatorState {
 export const INITIAL_STATE: CalculatorState = {
   rubricasExtras: [],
   overtimeEntries: [],
+  substitutionEntries: [],
   dadosBancarios: { banco: '', agencia: '', conta: '' },
   lotacao: 'Xa AUD Xa CJM',
   observacoes: '',

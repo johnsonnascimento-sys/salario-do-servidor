@@ -5,7 +5,7 @@
  */
 
 import { ICalculationParams } from '../types';
-import { CourtConfig, OvertimeEntry, Rubrica } from '../../../types';
+import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../../types';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
@@ -58,6 +58,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     hePssIsEA: boolean;
     heExcluirIR: boolean;
     overtimeEntries?: OvertimeEntry[];
+    substitutionEntries?: SubstitutionEntry[];
     substDias: Record<string, number>; // Mapa de funcao -> dias
     substIsEA: boolean;
     substPssIsEA: boolean;

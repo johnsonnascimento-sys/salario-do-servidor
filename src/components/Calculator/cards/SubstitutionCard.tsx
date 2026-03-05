@@ -1,20 +1,23 @@
 import React from 'react';
 import { Briefcase } from 'lucide-react';
-import { CalculatorState } from '../../../types';
+import { SubstitutionEntry } from '../../../types';
 
 interface SubstitutionCardProps {
-    state: CalculatorState;
-    update: (field: keyof CalculatorState, value: any) => void;
-    updateSubstDays: (key: string, days: number) => void;
+    entry: SubstitutionEntry;
+    updateEntry: (id: string, patch: Partial<SubstitutionEntry>) => void;
     functionKeys: string[];
     styles: any;
 }
 
-export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, update, updateSubstDays, functionKeys, styles }) => {
+export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, styles }) => {
+    const updateDays = (key: string, days: number) => {
+        updateEntry(entry.id, { dias: { ...entry.dias, [key]: days } });
+    };
+
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Substituição de Função
+                <Briefcase className="w-4 h-4" /> Substituicao de Funcao
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
@@ -23,19 +26,19 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
                             <input
                                 type="checkbox"
                                 className={styles.checkbox}
-                                checked={state.substIsEA}
-                                onChange={e => update('substIsEA', e.target.checked)}
+                                checked={entry.isEA}
+                                onChange={e => updateEntry(entry.id, { isEA: e.target.checked })}
                             />
-                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
+                            <span>Incluir na base do IR (Exercicio Anterior - EA)</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
                                 className={styles.checkbox}
-                                checked={state.substPssIsEA}
-                                onChange={e => update('substPssIsEA', e.target.checked)}
+                                checked={entry.pssIsEA}
+                                onChange={e => updateEntry(entry.id, { pssIsEA: e.target.checked })}
                             />
-                            <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
+                            <span>Incluir na base do PSS (Exercicio Anterior - EA)</span>
                         </label>
                     </div>
 
@@ -47,8 +50,8 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ state, updat
                                     type="number"
                                     className={styles.input}
                                     min={0}
-                                    value={state.substDias[key] || 0}
-                                    onChange={e => updateSubstDays(key, Math.max(0, Number(e.target.value) || 0))}
+                                    value={entry.dias[key] || 0}
+                                    onChange={e => updateDays(key, Math.max(0, Number(e.target.value) || 0))}
                                     placeholder="Dias"
                                 />
                             </div>

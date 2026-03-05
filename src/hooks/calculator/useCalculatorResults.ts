@@ -130,7 +130,7 @@ export const useCalculatorResults = (
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.feriasDesc, state.feriasDescManual,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
-        state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA,
+        state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
@@ -182,14 +182,29 @@ export const useCalculatorResults = (
             if (state.funcao.startsWith('cj')) labelTipo = 'CARGO EM COMISSÃO';
             rows.push({ label: `${labelTipo} - ${state.funcao.toUpperCase()}`, value: valorFC, type: 'C' });
         }
+        const substitutionEntries = state.substitutionEntries.length > 0
+            ? state.substitutionEntries
+            : [{
+                id: 'legacy-subst',
+                dias: state.substDias || {},
+                isEA: state.substIsEA,
+                pssIsEA: state.substPssIsEA
+            }];
+        const substitutionTotal = Math.max(0, state.substTotal || 0);
+        const substitutionDaysTotal = substitutionEntries.reduce(
+            (acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0),
+            0
+        );
+        const substitutionDayValue = substitutionDaysTotal > 0 ? substitutionTotal / substitutionDaysTotal : 0;
+        const substitutionMensalTotal = substitutionEntries
+            .filter(entry => !entry.isEA)
+            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
+        const substitutionEaTotal = substitutionEntries
+            .filter(entry => entry.isEA)
+            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
 
-        if (state.substTotal > 0) {
-            const tags: string[] = [];
-            if (state.substIsEA) tags.push('IR EA');
-            if (state.substPssIsEA) tags.push('PSS EA');
-            const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
-            rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO${suffix}`, value: state.substTotal, type: 'C' });
-        }
+        if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUICAO DE FUNCAO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
+        if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUICAO DE FUNCAO (IR EA)', value: substitutionEaTotal, type: 'C' });
         const overtimeEntries = state.overtimeEntries;
         const totalPonderadoHe = overtimeEntries.reduce(
             (acc, entry) => acc + (Math.max(0, entry.qtd50 || 0) * 1.5) + (Math.max(0, entry.qtd100 || 0) * 2),

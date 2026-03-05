@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.15 - 05/03/2026
+- Feat: rubrica pre-definida de `Substituicao de Funcao` agora aceita multiplas instancias no formulario, assim como `Horas Extras`.
+- Tech: novo estado `substitutionEntries` com calculo isolado por card (dias, incidencia IR EA e PSS EA por instancia).
+- Fix: motor de deducoes passa a ratear Substituicao por base mensal/EA/PSS-EA a partir das instancias, evitando interferencia entre cards.
+- UX: resumo calculado do card de Substituicao agora usa somente os descontos proporcionais da propria instancia.
+
 ## 2.1.14 - 05/03/2026
 - Feat(Admin): configuracao de `Doacao/Pix` (chave Pix + upload de QR Code) migrada para o painel novo (`/admin`).
 - Refactor: removido atalho para painel legado e extinta rota `/admin/legacy`.

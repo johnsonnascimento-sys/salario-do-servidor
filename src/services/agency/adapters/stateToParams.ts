@@ -81,6 +81,7 @@ export function mapStateToAgencyParams(
         hePssIsEA: false,
         heExcluirIR: state.heExcluirIR,
         overtimeEntries: state.overtimeEntries,
+        substitutionEntries: state.substitutionEntries,
         substDias: state.substDias,
         substIsEA: state.substIsEA,
         substPssIsEA: state.substPssIsEA,

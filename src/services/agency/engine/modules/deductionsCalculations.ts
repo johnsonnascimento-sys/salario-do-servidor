@@ -123,6 +123,16 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const overtimeEABase = overtime.entries
         .filter((entry) => entry.isEA && !entry.excluirIR)
         .reduce((acc, entry) => acc + entry.heTotal, 0);
+    const hasSubstitutionEntries = (params.substitutionEntries?.length || 0) > 0;
+    const substitutionMensalBase = substitution.entries
+        .filter((entry) => !entry.isEA)
+        .reduce((acc, entry) => acc + entry.total, 0);
+    const substitutionEABase = substitution.entries
+        .filter((entry) => entry.isEA)
+        .reduce((acc, entry) => acc + entry.total, 0);
+    const substitutionPssEABase = substitution.entries
+        .filter((entry) => entry.pssIsEA)
+        .reduce((acc, entry) => acc + entry.total, 0);
 
     // PSS Base Calculation
     let basePSS = baseVencimento + gaj + aqTituloVal + (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
@@ -151,7 +161,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
 
         const basePssEA =
             (params.hePssIsEA && !hasOvertimeEntries ? overtime.heTotal : 0) +
-            (params.substPssIsEA ? substitution : 0) +
+            (hasSubstitutionEntries ? substitutionPssEABase : (params.substPssIsEA ? substitution.total : 0)) +
             rubricasAdjustments.pssEA;
 
         if (basePssEA !== 0) {
@@ -159,7 +169,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
             const aliquotaMarginal = getMarginalPssRate(baseReferenciaAliquota, pssTable);
             pssEA = basePssEA * aliquotaMarginal;
             overtimePss = (params.hePssIsEA && !hasOvertimeEntries ? overtime.heTotal : 0) * aliquotaMarginal;
-            substitutionPss = (params.substPssIsEA ? substitution : 0) * aliquotaMarginal;
+            substitutionPss = (hasSubstitutionEntries ? substitutionPssEABase : (params.substPssIsEA ? substitution.total : 0)) * aliquotaMarginal;
         }
     }
 
@@ -184,7 +194,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     // Hora extra / substituicao: entram no mensal apenas quando NAO marcadas como EA.
     // Regra HE: se heExcluirIR estiver ativo, nao entra em nenhuma base de IR.
     totalTrib += overtimeMensalBase;
-    if (!params.substIsEA) totalTrib += substitution;
+    totalTrib += substitutionMensalBase;
 
     totalTrib = Math.max(0, totalTrib + rubricasAdjustments.irMensal);
 
@@ -210,7 +220,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     // IR de Exercicio Anterior (EA): HE/Substituicao marcadas como EA.
     const baseEA =
         overtimeEABase +
-        (params.substIsEA ? substitution : 0) +
+        substitutionEABase +
         rubricasAdjustments.irEA;
     const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep));
     const irEA = calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
@@ -229,7 +239,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         overtimeIr += overtimeIrMensal;
     }
 
-    const substMensalBase = !params.substIsEA ? substitution : 0;
+    const substMensalBase = substitutionMensalBase;
     if (substMensalBase > 0) {
         const irSemSubst = calculateIrrf(Math.max(0, baseIR - substMensalBase), payrollRules.irrfTopRate, deductionVal);
         substitutionIrMensal = Math.max(0, irMensal - irSemSubst);
@@ -243,7 +253,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         overtimeIr += overtimeIrEA;
     }
 
-    const substEABase = params.substIsEA ? substitution : 0;
+    const substEABase = substitutionEABase;
     if (substEABase > 0) {
         const irEaSemSubst = calculateIrrf(Math.max(0, baseIREA - substEABase), payrollRules.irrfTopRate, deductionVal);
         substitutionIrEA = Math.max(0, irEA - irEaSemSubst);

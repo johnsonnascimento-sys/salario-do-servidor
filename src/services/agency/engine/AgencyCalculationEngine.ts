@@ -116,7 +116,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         // 5. Calcular Totais
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
             benefits.auxTransporte + vacation.value + thirteenth.gratNatalinaTotal + overtime.heTotal +
-            substitution + dailies.valor + compensatoryLeave + rubricasTotals.creditos;
+            substitution.total + dailies.valor + compensatoryLeave + rubricasTotals.creditos;
 
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
@@ -183,7 +183,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 heIrMensal: deductions.overtimeIrMensal,
                 heIrEA: deductions.overtimeIrEA,
                 hePss: deductions.overtimePss,
-                substituicao: substitution,
+                substituicao: substitution.total,
                 substituicaoIr: deductions.substitutionIr,
                 substituicaoIrMensal: deductions.substitutionIrMensal,
                 substituicaoIrEA: deductions.substitutionIrEA,
