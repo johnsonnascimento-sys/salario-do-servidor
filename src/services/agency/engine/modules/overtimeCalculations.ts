@@ -7,11 +7,12 @@
  * - Total de Hora Extra
  */
 
-import { CourtConfig } from '../../../../types';
+import { CourtConfig, OvertimeEntry } from '../../../../types';
 import { calculatePss } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
+import { pickPeriodFromScheduleByReference } from '../../../../components/Calculator/referenceDateUtils';
 
 export interface OvertimeResult {
     heVal50: number;
@@ -34,47 +35,132 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     return params.agencyConfig;
 };
 
-/**
- * Calcula Hora Extra (50% e 100%)
- */
-export async function calculateOvertime(params: IAgencyCalculationParams): Promise<OvertimeResult> {
+type OvertimeBaseContext = {
+    periodo: number;
+    cargo: string;
+    padrao: string;
+    funcao: string;
+    aqTituloPerc: number;
+    aqTreinoPerc: number;
+    aqTituloVR: number;
+    aqTreinoVR: number;
+    recebeAbono: boolean;
+    gratEspecificaTipo: '0' | 'gae' | 'gas';
+    vpni_lei: number;
+    vpni_decisao: number;
+    ats: number;
+    regimePrev: IAgencyCalculationParams['regimePrev'];
+    tabelaPSS: string;
+    pssSobreFC: boolean;
+    incidirPSSGrat: boolean;
+};
+
+const resolveEntryPeriod = (params: IAgencyCalculationParams, entry: OvertimeEntry) => {
+    if (!entry.competenciaAno || !entry.competenciaMes) {
+        return params.periodo;
+    }
+
+    const schedule = params.agencyConfig?.adjustment_schedule || [];
+    const resolved = pickPeriodFromScheduleByReference(
+        schedule,
+        entry.competenciaAno,
+        entry.competenciaMes
+    );
+
+    return resolved ?? params.periodo;
+};
+
+const buildContextFromParams = (params: IAgencyCalculationParams): OvertimeBaseContext => ({
+    periodo: params.periodo,
+    cargo: params.cargo,
+    padrao: params.padrao,
+    funcao: params.funcao,
+    aqTituloPerc: params.aqTituloPerc,
+    aqTreinoPerc: params.aqTreinoPerc,
+    aqTituloVR: params.aqTituloVR,
+    aqTreinoVR: params.aqTreinoVR,
+    recebeAbono: params.recebeAbono,
+    gratEspecificaTipo: params.gratEspecificaTipo,
+    vpni_lei: params.vpni_lei || 0,
+    vpni_decisao: params.vpni_decisao || 0,
+    ats: params.ats || 0,
+    regimePrev: params.regimePrev,
+    tabelaPSS: params.tabelaPSS,
+    pssSobreFC: params.pssSobreFC,
+    incidirPSSGrat: params.incidirPSSGrat
+});
+
+const buildContextFromEntry = (params: IAgencyCalculationParams, entry: OvertimeEntry): OvertimeBaseContext => {
+    const base = buildContextFromParams(params);
+    if (!entry.usarDadosCompetencia || !entry.competenciaSnapshot) {
+        return {
+            ...base,
+            periodo: resolveEntryPeriod(params, entry)
+        };
+    }
+
+    const snapshot = entry.competenciaSnapshot;
+    return {
+        ...base,
+        periodo: resolveEntryPeriod(params, entry),
+        cargo: snapshot.cargo,
+        padrao: snapshot.padrao,
+        funcao: snapshot.funcao,
+        aqTituloPerc: snapshot.aqTituloPerc,
+        aqTreinoPerc: snapshot.aqTreinoPerc,
+        aqTituloVR: snapshot.aqTituloVR,
+        aqTreinoVR: snapshot.aqTreinoVR,
+        recebeAbono: snapshot.recebeAbono,
+        gratEspecificaTipo: snapshot.gratEspecificaTipo,
+        vpni_lei: snapshot.vpni_lei || 0,
+        vpni_decisao: snapshot.vpni_decisao || 0,
+        ats: snapshot.ats || 0,
+        regimePrev: snapshot.regimePrev,
+        tabelaPSS: snapshot.tabelaPSS,
+        pssSobreFC: snapshot.pssSobreFC,
+        incidirPSSGrat: snapshot.incidirPSSGrat
+    };
+};
+
+const calculateEntryBaseAndHourly = async (
+    params: IAgencyCalculationParams,
+    context: OvertimeBaseContext
+) => {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
-    const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
+    const { salario, funcoes, valorVR } = await getDataForPeriod(context.periodo, config);
+    const baseVencimento = salario[context.cargo]?.[context.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
-    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+    const funcaoValor = isNoFunction(context.funcao, config) ? 0 : (funcoes[context.funcao] || 0);
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
-    if (params.periodo >= 1) {
-        aqTituloVal = valorVR * params.aqTituloVR;
-        aqTreinoVal = valorVR * params.aqTreinoVR;
+    if (context.periodo >= 1) {
+        aqTituloVal = valorVR * context.aqTituloVR;
+        aqTreinoVal = valorVR * context.aqTreinoVR;
     } else {
-        aqTituloVal = baseVencimento * normalizeAQPercent(params.aqTituloPerc);
-        aqTreinoVal = baseVencimento * normalizeAQPercent(params.aqTreinoPerc);
+        aqTituloVal = baseVencimento * normalizeAQPercent(context.aqTituloPerc);
+        aqTreinoVal = baseVencimento * normalizeAQPercent(context.aqTreinoPerc);
     }
 
     let gratVal = 0;
-    if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
+    if (context.gratEspecificaTipo === 'gae' || context.gratEspecificaTipo === 'gas') {
         gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
-    // Base para HE inclui todos os rendimentos + abono se aplicavel
     let baseHE = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
-        funcaoValor + gratVal + (params.vpni_lei || 0) +
-        (params.vpni_decisao || 0) + (params.ats || 0);
+        funcaoValor + gratVal + (context.vpni_lei || 0) +
+        (context.vpni_decisao || 0) + (context.ats || 0);
 
-    // Se recebe abono, adiciona a base de HE
-    if (params.recebeAbono) {
+    if (context.recebeAbono) {
         let baseForPSS = baseHE;
         baseForPSS -= aqTreinoVal;
-        if (!params.pssSobreFC) baseForPSS -= funcaoValor;
-        if (!params.incidirPSSGrat) baseForPSS -= gratVal;
+        if (!context.pssSobreFC) baseForPSS -= funcaoValor;
+        if (!context.incidirPSSGrat) baseForPSS -= gratVal;
 
-        const pssTable = config.historico_pss?.[params.tabelaPSS];
+        const pssTable = config.historico_pss?.[context.tabelaPSS];
         const teto = pssTable?.teto_rgps || 0;
-        const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
+        const usaTeto = context.regimePrev === 'migrado' || context.regimePrev === 'rpc';
 
         if (pssTable) {
             if (usaTeto) {
@@ -85,17 +171,26 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
         }
     }
 
-    // Valor da hora = Base / 175
-    const valorHora = baseHE / payrollRules.overtimeMonthHours;
+    return {
+        baseHE,
+        valorHora: baseHE / payrollRules.overtimeMonthHours
+    };
+};
 
+/**
+ * Calcula Hora Extra (50% e 100%)
+ */
+export async function calculateOvertime(params: IAgencyCalculationParams): Promise<OvertimeResult> {
     const overtimeEntries = params.overtimeEntries || [];
 
     if (overtimeEntries.length > 0) {
-        const entries = overtimeEntries.map((entry, index) => {
+        const entries = await Promise.all(overtimeEntries.map(async (entry, index) => {
+            const context = buildContextFromEntry(params, entry);
+            const baseCalc = await calculateEntryBaseAndHourly(params, context);
             const qtd50 = Math.max(0, Number(entry.qtd50 || 0));
             const qtd100 = Math.max(0, Number(entry.qtd100 || 0));
-            const heVal50 = valorHora * 1.5 * qtd50;
-            const heVal100 = valorHora * 2.0 * qtd100;
+            const heVal50 = baseCalc.valorHora * 1.5 * qtd50;
+            const heVal100 = baseCalc.valorHora * 2.0 * qtd100;
             const heTotal = heVal50 + heVal100;
 
             return {
@@ -106,7 +201,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 isEA: Boolean(entry.isEA),
                 excluirIR: Boolean(entry.excluirIR)
             };
-        });
+        }));
 
         const heVal50 = entries.reduce((acc, item) => acc + item.heVal50, 0);
         const heVal100 = entries.reduce((acc, item) => acc + item.heVal100, 0);
@@ -114,6 +209,10 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
 
         return { heVal50, heVal100, heTotal, entries };
     }
+
+    const legacyContext = buildContextFromParams(params);
+    const baseCalc = await calculateEntryBaseAndHourly(params, legacyContext);
+    const valorHora = baseCalc.valorHora;
 
     const heVal50 = valorHora * 1.5 * (params.heQtd50 || 0);
     const heVal100 = valorHora * 2.0 * (params.heQtd100 || 0);

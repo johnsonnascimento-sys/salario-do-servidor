@@ -146,6 +146,28 @@ export interface OvertimeEntry {
   qtd100: number;
   isEA: boolean;
   excluirIR: boolean;
+  competenciaMes?: number;
+  competenciaAno?: number;
+  usarDadosCompetencia?: boolean;
+  competenciaSnapshot?: {
+    periodo: number;
+    cargo: string;
+    padrao: string;
+    funcao: string;
+    aqTituloPerc: number;
+    aqTreinoPerc: number;
+    aqTituloVR: number;
+    aqTreinoVR: number;
+    recebeAbono: boolean;
+    gratEspecificaTipo: '0' | 'gae' | 'gas';
+    vpni_lei: number;
+    vpni_decisao: number;
+    ats: number;
+    regimePrev: 'antigo' | 'migrado' | 'novo_antigo' | 'rpc';
+    tabelaPSS: string;
+    pssSobreFC: boolean;
+    incidirPSSGrat: boolean;
+  };
 }
 
 export interface SubstitutionEntry {
