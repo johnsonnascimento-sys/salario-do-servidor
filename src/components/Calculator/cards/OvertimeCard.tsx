@@ -1,24 +1,18 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Clock } from 'lucide-react';
-import { CalculatorState } from '../../../types';
+import { OvertimeEntry } from '../../../types';
 
 interface OvertimeCardProps {
-    state: CalculatorState;
-    update: (field: keyof CalculatorState, value: any) => void;
+    entry: OvertimeEntry;
+    updateEntry: (id: string, patch: Partial<OvertimeEntry>) => void;
     styles: any;
 }
 
-export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, styles }) => {
-    useEffect(() => {
-        if (state.hePssIsEA) {
-            update('hePssIsEA', false);
-        }
-    }, [state.hePssIsEA, update]);
-
+export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, styles }) => {
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Clock className="w-4 h-4" /> Serviço Extraordinário (HE)
+                <Clock className="w-4 h-4" /> Servico Extraordinario (HE)
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
@@ -27,17 +21,23 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                             <input
                                 type="checkbox"
                                 className={styles.checkbox}
-                                checked={state.heIsEA}
-                                onChange={e => update('heIsEA', e.target.checked)}
+                                checked={entry.isEA}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateEntry(entry.id, { isEA: checked, excluirIR: checked ? false : entry.excluirIR });
+                                }}
                             />
-                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
+                            <span>Incluir na base do IR (Exercicio Anterior - EA)</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
                                 className={styles.checkbox}
-                                checked={state.heExcluirIR}
-                                onChange={e => update('heExcluirIR', e.target.checked)}
+                                checked={entry.excluirIR}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateEntry(entry.id, { excluirIR: checked, isEA: checked ? false : entry.isEA });
+                                }}
                             />
                             <span>Excluir da base do IR</span>
                         </label>
@@ -49,8 +49,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                                 type="number"
                                 className={styles.input}
                                 min={0}
-                                value={state.heQtd50}
-                                onChange={e => update('heQtd50', Math.max(0, Number(e.target.value) || 0))}
+                                value={entry.qtd50}
+                                onChange={e => updateEntry(entry.id, { qtd50: Math.max(0, Number(e.target.value) || 0) })}
                             />
                         </div>
                         <div>
@@ -59,8 +59,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ state, update, style
                                 type="number"
                                 className={styles.input}
                                 min={0}
-                                value={state.heQtd100}
-                                onChange={e => update('heQtd100', Math.max(0, Number(e.target.value) || 0))}
+                                value={entry.qtd100}
+                                onChange={e => updateEntry(entry.id, { qtd100: Math.max(0, Number(e.target.value) || 0) })}
                             />
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, DollarSign, GripVertical, Minus, Plus, Settings, Trash2 } from 'lucide-react';
-import { CalculatorState, CourtConfig, Rubrica } from '../../types';
+import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
 import { VacationCard } from './cards/VacationCard';
 import { ThirteenthCard } from './cards/ThirteenthCard';
@@ -34,6 +34,12 @@ interface PresetGrossLine {
     label: string;
     value: number;
     isDiscount?: boolean;
+}
+
+interface PresetInstance {
+    key: string;
+    presetId: PredefinedRubricId;
+    overtimeEntryId?: string;
 }
 
 interface DynamicPayrollFormProps {
@@ -99,6 +105,13 @@ const buildRateOptions = (min: number, max: number, step: number): number[] => {
 
     return options;
 };
+const createUniqueId = (prefix: string) => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}-${crypto.randomUUID()}`;
+    }
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const isDiscountLabel = (label: string) => /desconto|cota-parte|corte|abatimento|restitui|dedu[cç][aã]o|glosa/i.test(label);
 
 const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
@@ -122,7 +135,13 @@ const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) =>
                 state.segunda13FC > 0
             );
         case 'hora_extra':
-            return state.heQtd50 > 0 || state.heQtd100 > 0 || state.heIsEA || state.heExcluirIR;
+            return (
+                state.heQtd50 > 0 ||
+                state.heQtd100 > 0 ||
+                state.heIsEA ||
+                state.heExcluirIR ||
+                state.overtimeEntries.some(entry => entry.qtd50 > 0 || entry.qtd100 > 0 || entry.isEA || entry.excluirIR)
+            );
         case 'substituicao':
             return Object.values(state.substDias).some(days => days > 0) || state.substIsEA || state.substPssIsEA;
         case 'licenca':
@@ -166,6 +185,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const isFunprespRegime = state.regimePrev === 'rpc' || state.regimePrev === 'migrado';
     const showFunprespSection = Boolean(previdenciaComplementar?.enabled && isFunprespRegime);
     const funprespDefaultsAppliedRef = useRef(false);
+    const overtimeLegacyMigratedRef = useRef(false);
 
     const funprespNormalOptions = useMemo(
         () => buildRateOptions(
@@ -257,18 +277,45 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         funprespNormalOptionsSet
     ]);
 
-    const initialPresets = useMemo(() => {
-        const fromState = PREDEFINED_OPTIONS
-            .filter(option => hasPresetValue(option.id, state))
-            .map(option => option.id);
-        return Array.from(new Set([...DEFAULT_PRESETS, ...fromState]));
+    const initialPresetInstances = useMemo<PresetInstance[]>(() => {
+        const instances: PresetInstance[] = [];
+        const selectedIds = Array.from(new Set([
+            ...DEFAULT_PRESETS,
+            ...PREDEFINED_OPTIONS.filter(option => hasPresetValue(option.id, state)).map(option => option.id)
+        ]));
+
+        selectedIds.forEach((presetId) => {
+            if (presetId === 'hora_extra' && state.overtimeEntries.length > 0) {
+                state.overtimeEntries.forEach((entry) => {
+                    instances.push({
+                        key: createUniqueId(`preset-${presetId}`),
+                        presetId,
+                        overtimeEntryId: entry.id
+                    });
+                });
+                return;
+            }
+
+            instances.push({
+                key: createUniqueId(`preset-${presetId}`),
+                presetId
+            });
+        });
+
+        return instances;
     }, [state]);
 
-    const [enabledPresets, setEnabledPresets] = useState<PredefinedRubricId[]>(initialPresets);
-    const availablePresets = PREDEFINED_OPTIONS.filter(option => !enabledPresets.includes(option.id));
-    const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(availablePresets[0]?.id || '');
+    const [enabledPresets, setEnabledPresets] = useState<PresetInstance[]>(initialPresetInstances);
+    const enabledPresetIds = useMemo(
+        () => new Set(enabledPresets.map(instance => instance.presetId)),
+        [enabledPresets]
+    );
+    const availablePresets = PREDEFINED_OPTIONS.filter(
+        option => option.id === 'hora_extra' || !enabledPresetIds.has(option.id)
+    );
+    const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(PREDEFINED_OPTIONS[0]?.id || '');
     const [reorderMode, setReorderMode] = useState(false);
-    const [draggingPreset, setDraggingPreset] = useState<PredefinedRubricId | null>(null);
+    const [draggingPreset, setDraggingPreset] = useState<string | null>(null);
 
     useEffect(() => {
         if (enabledPresets.length < 2 && reorderMode) {
@@ -379,6 +426,53 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         funprespDefaultsAppliedRef.current = true;
     }, [state.regimePrev]);
 
+    useEffect(() => {
+        if (overtimeLegacyMigratedRef.current) return;
+        if (state.overtimeEntries.length > 0) {
+            overtimeLegacyMigratedRef.current = true;
+            return;
+        }
+
+        const hasLegacyOvertime =
+            (state.heQtd50 || 0) > 0 ||
+            (state.heQtd100 || 0) > 0 ||
+            state.heIsEA ||
+            state.heExcluirIR;
+
+        if (!hasLegacyOvertime) {
+            overtimeLegacyMigratedRef.current = true;
+            return;
+        }
+
+        update('overtimeEntries', [
+            {
+                id: createUniqueId('he-entry'),
+                qtd50: Math.max(0, state.heQtd50 || 0),
+                qtd100: Math.max(0, state.heQtd100 || 0),
+                isEA: Boolean(state.heIsEA),
+                excluirIR: Boolean(state.heExcluirIR)
+            }
+        ]);
+        overtimeLegacyMigratedRef.current = true;
+    }, [state.overtimeEntries.length, state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, update]);
+
+    const createOvertimeEntry = (): OvertimeEntry => ({
+        id: createUniqueId('he-entry'),
+        qtd50: 0,
+        qtd100: 0,
+        isEA: false,
+        excluirIR: false
+    });
+
+    const updateOvertimeEntry = (id: string, patch: Partial<OvertimeEntry>) => {
+        update(
+            'overtimeEntries',
+            state.overtimeEntries.map((entry) => (
+                entry.id === id ? { ...entry, ...patch } : entry
+            ))
+        );
+    };
+
     const clearPreset = (presetId: PredefinedRubricId) => {
         switch (presetId) {
             case 'aq':
@@ -419,6 +513,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 update('heIsEA', false);
                 update('hePssIsEA', false);
                 update('heExcluirIR', false);
+                update('overtimeEntries', []);
                 break;
             case 'substituicao':
                 update('substIsEA', false);
@@ -458,23 +553,53 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     };
 
     const includePreset = () => {
-        if (!selectedPreset || enabledPresets.includes(selectedPreset)) return;
-        setEnabledPresets(prev => [selectedPreset, ...prev]);
-        const nextAvailable = availablePresets.filter(option => option.id !== selectedPreset);
-        setSelectedPreset(nextAvailable[0]?.id || '');
+        if (!selectedPreset) return;
+
+        if (selectedPreset === 'hora_extra') {
+            const newEntry = createOvertimeEntry();
+            update('overtimeEntries', [newEntry, ...state.overtimeEntries]);
+            setEnabledPresets(prev => [
+                {
+                    key: createUniqueId('preset-hora_extra'),
+                    presetId: 'hora_extra',
+                    overtimeEntryId: newEntry.id
+                },
+                ...prev
+            ]);
+            return;
+        }
+
+        if (enabledPresetIds.has(selectedPreset)) return;
+        setEnabledPresets(prev => [
+            { key: createUniqueId(`preset-${selectedPreset}`), presetId: selectedPreset },
+            ...prev
+        ]);
     };
 
-    const removePreset = (presetId: PredefinedRubricId) => {
-        setEnabledPresets(prev => prev.filter(id => id !== presetId));
-        clearPreset(presetId);
+    const removePreset = (instance: PresetInstance) => {
+        const remainingInstances = enabledPresets.filter(item => item.key !== instance.key);
+        setEnabledPresets(remainingInstances);
+
+        if (instance.presetId === 'hora_extra' && instance.overtimeEntryId) {
+            update(
+                'overtimeEntries',
+                state.overtimeEntries.filter(entry => entry.id !== instance.overtimeEntryId)
+            );
+        }
+
+        const stillEnabled = remainingInstances.some(item => item.presetId === instance.presetId);
+        if (!stillEnabled) {
+            clearPreset(instance.presetId);
+        }
+
         if (!selectedPreset) {
-            setSelectedPreset(presetId);
+            setSelectedPreset(instance.presetId);
         }
     };
 
-    const handlePresetDragStart = (presetId: PredefinedRubricId) => {
+    const handlePresetDragStart = (presetKey: string) => {
         if (!reorderMode) return;
-        setDraggingPreset(presetId);
+        setDraggingPreset(presetKey);
     };
 
     const handlePresetDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -483,14 +608,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         e.dataTransfer.dropEffect = 'move';
     };
 
-    const handlePresetDrop = (targetPresetId: PredefinedRubricId) => {
-        if (!reorderMode || !draggingPreset || draggingPreset === targetPresetId) {
+    const handlePresetDrop = (targetPresetKey: string) => {
+        if (!reorderMode || !draggingPreset || draggingPreset === targetPresetKey) {
             return;
         }
 
         setEnabledPresets(prev => {
-            const fromIndex = prev.indexOf(draggingPreset);
-            const toIndex = prev.indexOf(targetPresetId);
+            const fromIndex = prev.findIndex(item => item.key === draggingPreset);
+            const toIndex = prev.findIndex(item => item.key === targetPresetKey);
             if (fromIndex < 0 || toIndex < 0) return prev;
 
             const next = [...prev];
@@ -556,7 +681,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         return lines;
     };
 
-    const getPresetGrossLines = (presetId: PredefinedRubricId): PresetGrossLine[] => {
+    const getPresetGrossLines = (instance: PresetInstance): PresetGrossLine[] => {
+        const presetId = instance.presetId;
         switch (presetId) {
             case 'aq': {
                 const tituloLabel = isNovoAQ ? 'AQ Titulos (Lei 15.292)' : 'AQ Titulos';
@@ -662,11 +788,46 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 }
             case 'hora_extra':
                 {
-                    const he50Bruto = roundCurrency(state.heVal50 || 0);
-                    const he100Bruto = roundCurrency(state.heVal100 || 0);
-                    const heTotalBruto = roundCurrency(state.heTotal || 0);
-                    const heIr = roundCurrency(Math.max(0, state.heIr || 0));
-                    const hePss = roundCurrency(Math.max(0, state.hePss || 0));
+                    const entry = instance.overtimeEntryId
+                        ? state.overtimeEntries.find(item => item.id === instance.overtimeEntryId)
+                        : state.overtimeEntries[0];
+
+                    const fallbackEntry: OvertimeEntry = {
+                        id: 'legacy-he',
+                        qtd50: state.heQtd50 || 0,
+                        qtd100: state.heQtd100 || 0,
+                        isEA: state.heIsEA,
+                        excluirIR: state.heExcluirIR
+                    };
+                    const overtimeEntry = entry || fallbackEntry;
+
+                    const totalPonderado = state.overtimeEntries.reduce(
+                        (acc, item) => acc + (Math.max(0, item.qtd50 || 0) * 1.5) + (Math.max(0, item.qtd100 || 0) * 2),
+                        0
+                    );
+                    const valorHora = totalPonderado > 0 ? (state.heTotal || 0) / totalPonderado : 0;
+
+                    const he50Bruto = roundCurrency(valorHora * 1.5 * Math.max(0, overtimeEntry.qtd50 || 0));
+                    const he100Bruto = roundCurrency(valorHora * 2.0 * Math.max(0, overtimeEntry.qtd100 || 0));
+                    const heTotalBruto = roundCurrency(he50Bruto + he100Bruto);
+
+                    const mensalBaseTotal = state.overtimeEntries
+                        .filter(item => !item.isEA && !item.excluirIR)
+                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
+                    const eaBaseTotal = state.overtimeEntries
+                        .filter(item => item.isEA && !item.excluirIR)
+                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
+
+                    let heIr = 0;
+                    if (!overtimeEntry.excluirIR && !overtimeEntry.isEA && mensalBaseTotal > 0) {
+                        heIr += (state.heIr || 0) * (heTotalBruto / mensalBaseTotal);
+                    }
+                    if (!overtimeEntry.excluirIR && overtimeEntry.isEA && eaBaseTotal > 0) {
+                        heIr += (state.heIr || 0) * (heTotalBruto / eaBaseTotal);
+                    }
+                    heIr = roundCurrency(Math.max(0, heIr));
+
+                    const hePss = 0;
                     const heTotalDescontos = roundCurrency(heIr + hePss);
                     const proporcaoHe50 = heTotalBruto > 0 ? he50Bruto / heTotalBruto : 0;
                     const descontoHe50 = roundCurrency(heTotalDescontos * proporcaoHe50);
@@ -818,8 +979,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         }
     };
 
-    const renderPresetGrossSummary = (presetId: PredefinedRubricId) => {
-        const lines = getPresetGrossLines(presetId);
+    const renderPresetGrossSummary = (instance: PresetInstance) => {
+        const lines = getPresetGrossLines(instance);
         if (lines.length === 0) {
             return null;
         }
@@ -849,7 +1010,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         );
     };
 
-    const renderPreset = (presetId: PredefinedRubricId) => {
+    const renderPreset = (instance: PresetInstance) => {
+        const presetId = instance.presetId;
         if (presetId === 'aq') {
             return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -956,7 +1118,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
         if (presetId === 'ferias') return <VacationCard state={state} update={update} styles={styles} />;
         if (presetId === 'decimo') return <ThirteenthCard state={state} update={update} styles={styles} />;
-        if (presetId === 'hora_extra') return <OvertimeCard state={state} update={update} styles={styles} />;
+        if (presetId === 'hora_extra') {
+            const overtimeEntry = instance.overtimeEntryId
+                ? state.overtimeEntries.find(item => item.id === instance.overtimeEntryId)
+                : state.overtimeEntries[0];
+
+            if (!overtimeEntry) {
+                return (
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                        Card sem entrada vinculada.
+                    </p>
+                );
+            }
+
+            return <OvertimeCard entry={overtimeEntry} updateEntry={updateOvertimeEntry} styles={styles} />;
+        }
         if (presetId === 'substituicao') return <SubstitutionCard state={state} update={update} updateSubstDays={updateSubstDays} functionKeys={functionKeys} styles={styles} />;
         if (presetId === 'licenca') return <LicenseCard state={state} update={update} styles={styles} />;
         if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} courtConfig={courtConfig} />;
@@ -1044,8 +1220,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             <div className={styles.innerBox}>
                 <h4 className={styles.innerBoxTitle}>Adicional de Qualificação</h4>
-                {renderPreset('aq')}
-                {renderPresetGrossSummary('aq')}
+                {renderPreset({ key: 'aq-fixed', presetId: 'aq' })}
+                {renderPresetGrossSummary({ key: 'aq-fixed', presetId: 'aq' })}
             </div>
 
             <div className={styles.innerBox}>
@@ -1173,19 +1349,19 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 )}
 
                 <div className="space-y-3">
-                    {enabledPresets.map(presetId => {
-                        const preset = PREDEFINED_OPTIONS.find(option => option.id === presetId);
+                    {enabledPresets.map(instance => {
+                        const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
                         if (!preset) return null;
 
                         return (
                             <div
-                                key={presetId}
+                                key={instance.key}
                                 draggable={reorderMode}
-                                onDragStart={() => handlePresetDragStart(presetId)}
+                                onDragStart={() => handlePresetDragStart(instance.key)}
                                 onDragOver={handlePresetDragOver}
-                                onDrop={() => handlePresetDrop(presetId)}
+                                onDrop={() => handlePresetDrop(instance.key)}
                                 onDragEnd={handlePresetDragEnd}
-                                className={`rounded-xl border bg-white dark:bg-neutral-900 p-4 space-y-4 transition-shadow ${draggingPreset === presetId ? 'border-primary/60 shadow-lg' : 'border-neutral-200 dark:border-neutral-700'} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                                className={`rounded-xl border bg-white dark:bg-neutral-900 p-4 space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-primary/60 shadow-lg' : 'border-neutral-200 dark:border-neutral-700'} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex items-center gap-2">
@@ -1194,15 +1370,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => removePreset(presetId)}
+                                        onClick={() => removePreset(instance)}
                                         className="text-neutral-400 hover:text-error-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                                         aria-label={`Remover ${preset.label}`}
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                {renderPreset(presetId)}
-                                {renderPresetGrossSummary(presetId)}
+                                {renderPreset(instance)}
+                                {renderPresetGrossSummary(instance)}
                             </div>
                         );
                     })}

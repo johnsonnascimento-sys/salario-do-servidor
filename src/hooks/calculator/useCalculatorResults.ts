@@ -126,7 +126,7 @@ export const useCalculatorResults = (
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.feriasDesc, state.feriasDescManual,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
-        state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.substDias, state.substIsEA, state.substPssIsEA,
+        state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
@@ -187,10 +187,22 @@ export const useCalculatorResults = (
             rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO${suffix}`, value: state.substTotal, type: 'C' });
         }
         if (state.heTotal > 0) {
+            const hasOvertimeEntries = state.overtimeEntries.length > 0;
+            const hasEaEntry = hasOvertimeEntries
+                ? state.overtimeEntries.some(entry => entry.isEA && !entry.excluirIR)
+                : state.heIsEA;
+            const hasMensalEntry = hasOvertimeEntries
+                ? state.overtimeEntries.some(entry => !entry.isEA && !entry.excluirIR)
+                : (!state.heIsEA && !state.heExcluirIR);
+            const hasExcludedEntry = hasOvertimeEntries
+                ? state.overtimeEntries.some(entry => entry.excluirIR)
+                : state.heExcluirIR;
             const tags: string[] = [];
-            if (state.heIsEA) tags.push('IR EA');
+            if (hasEaEntry && hasMensalEntry) tags.push('IR MENSAL + EA');
+            else if (hasEaEntry) tags.push('IR EA');
+            else if (hasExcludedEntry && !hasMensalEntry) tags.push('EXCLUIDO IR');
             const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
-            rows.push({ label: `SERVIÇO EXTRAORDINÁRIO${suffix}`, value: state.heTotal, type: 'C' });
+            rows.push({ label: `SERVICO EXTRAORDINARIO${suffix}`, value: state.heTotal, type: 'C' });
         }
         if (state.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: state.vpni_lei, type: 'C' });
         if (state.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: state.vpni_decisao, type: 'C' });
@@ -282,3 +294,4 @@ export const useCalculatorResults = (
 
     return { resultRows };
 };
+

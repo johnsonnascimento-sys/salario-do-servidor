@@ -17,6 +17,14 @@ export interface OvertimeResult {
     heVal50: number;
     heVal100: number;
     heTotal: number;
+    entries: Array<{
+        id: string;
+        heVal50: number;
+        heVal100: number;
+        heTotal: number;
+        isEA: boolean;
+        excluirIR: boolean;
+    }>;
 }
 
 const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
@@ -80,14 +88,50 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     // Valor da hora = Base / 175
     const valorHora = baseHE / payrollRules.overtimeMonthHours;
 
-    // HE 50% = hora * 1.5 * quantidade
+    const overtimeEntries = params.overtimeEntries || [];
+
+    if (overtimeEntries.length > 0) {
+        const entries = overtimeEntries.map((entry, index) => {
+            const qtd50 = Math.max(0, Number(entry.qtd50 || 0));
+            const qtd100 = Math.max(0, Number(entry.qtd100 || 0));
+            const heVal50 = valorHora * 1.5 * qtd50;
+            const heVal100 = valorHora * 2.0 * qtd100;
+            const heTotal = heVal50 + heVal100;
+
+            return {
+                id: entry.id || `he-${index}`,
+                heVal50,
+                heVal100,
+                heTotal,
+                isEA: Boolean(entry.isEA),
+                excluirIR: Boolean(entry.excluirIR)
+            };
+        });
+
+        const heVal50 = entries.reduce((acc, item) => acc + item.heVal50, 0);
+        const heVal100 = entries.reduce((acc, item) => acc + item.heVal100, 0);
+        const heTotal = entries.reduce((acc, item) => acc + item.heTotal, 0);
+
+        return { heVal50, heVal100, heTotal, entries };
+    }
+
     const heVal50 = valorHora * 1.5 * (params.heQtd50 || 0);
-
-    // HE 100% = hora * 2.0 * quantidade
     const heVal100 = valorHora * 2.0 * (params.heQtd100 || 0);
-
-    // Total HE
     const heTotal = heVal50 + heVal100;
 
-    return { heVal50, heVal100, heTotal };
+    return {
+        heVal50,
+        heVal100,
+        heTotal,
+        entries: [
+            {
+                id: 'legacy-he',
+                heVal50,
+                heVal100,
+                heTotal,
+                isEA: Boolean(params.heIsEA),
+                excluirIR: Boolean(params.heExcluirIR)
+            }
+        ]
+    };
 }

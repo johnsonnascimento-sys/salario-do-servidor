@@ -140,9 +140,18 @@ export interface Rubrica {
   pssCompetenciaSeparada: boolean;
 }
 
+export interface OvertimeEntry {
+  id: string;
+  qtd50: number;
+  qtd100: number;
+  isEA: boolean;
+  excluirIR: boolean;
+}
+
 export interface CalculatorState {
   // Rubricas Dinâmicas
   rubricasExtras: Rubrica[];
+  overtimeEntries: OvertimeEntry[];
 
   // Dados de Impressão (UI)
   dadosBancarios: {
@@ -311,6 +320,7 @@ export interface CalculatorState {
 
 export const INITIAL_STATE: CalculatorState = {
   rubricasExtras: [],
+  overtimeEntries: [],
   dadosBancarios: { banco: '', agencia: '', conta: '' },
   lotacao: 'Xa AUD Xa CJM',
   observacoes: '',

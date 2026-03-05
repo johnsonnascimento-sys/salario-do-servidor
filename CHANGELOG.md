@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.9 - 05/03/2026
+- Feat: rubrica pre-definida de Hora Extra agora suporta multiplos cards independentes no formulario.
+- Feat: cada card de Hora Extra passa a ter incidencia de IR isolada (mensal, EA ou excluida), sem interferencia entre cards.
+- Tech: motor de calculo adaptado para processar `overtimeEntries` e consolidar total/IR por entradas separadas.
+- UX: resumo calculado de Hora Extra exibido por card, com bruto/liquido por instancia.
+
 ## 2.1.8 - 28/02/2026
 - Feat: Funpresp no fluxo ativo da calculadora (`DynamicPayrollForm`) com participacao patrocinada, aliquota normal e facultativa.
 - Feat: nova chave data-driven `previdencia_complementar` mapeada de `power_config` para `CourtConfig`.
