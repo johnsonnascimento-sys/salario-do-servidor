@@ -15,7 +15,6 @@ import {
     resolveDailiesEmbarkationAdditional,
     summarizeDailiesPeriodMode
 } from '../../utils/dailiesRules';
-import { calculateOvertimeEntriesGross } from '../../utils/overtimeGross';
 
 type PredefinedRubricId =
     | 'aq'
@@ -197,44 +196,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const functionKeys = Object.keys(currentTables.funcoes || {});
     const pssOptions = Object.keys(courtConfig.historico_pss || {});
     const irOptions = Object.keys(courtConfig.historico_ir || {});
-    const referenceMonthIndex = toReferenceMonthIndex(state.mesRef) || 1;
-    const overtimeSnapshotDefaults = useMemo<NonNullable<OvertimeEntry['competenciaSnapshot']>>(() => ({
-        periodo: state.periodo,
-        cargo: state.cargo,
-        padrao: state.padrao,
-        funcao: state.funcao,
-        aqTituloPerc: state.aqTituloPerc,
-        aqTreinoPerc: state.aqTreinoPerc,
-        aqTituloVR: state.aqTituloVR,
-        aqTreinoVR: state.aqTreinoVR,
-        recebeAbono: state.recebeAbono,
-        gratEspecificaTipo: state.gratEspecificaTipo,
-        vpni_lei: state.vpni_lei,
-        vpni_decisao: state.vpni_decisao,
-        ats: state.ats,
-        regimePrev: state.regimePrev,
-        tabelaPSS: state.tabelaPSS,
-        pssSobreFC: state.pssSobreFC,
-        incidirPSSGrat: state.incidirPSSGrat
-    }), [
-        state.periodo,
-        state.cargo,
-        state.padrao,
-        state.funcao,
-        state.aqTituloPerc,
-        state.aqTreinoPerc,
-        state.aqTituloVR,
-        state.aqTreinoVR,
-        state.recebeAbono,
-        state.gratEspecificaTipo,
-        state.vpni_lei,
-        state.vpni_decisao,
-        state.ats,
-        state.regimePrev,
-        state.tabelaPSS,
-        state.pssSobreFC,
-        state.incidirPSSGrat
-    ]);
     const previdenciaComplementar = courtConfig.previdenciaComplementar;
     const isFunprespRegime = state.regimePrev === 'rpc' || state.regimePrev === 'migrado';
     const showFunprespSection = Boolean(previdenciaComplementar?.enabled && isFunprespRegime);
@@ -621,15 +582,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 qtd50: Math.max(0, state.heQtd50 || 0),
                 qtd100: Math.max(0, state.heQtd100 || 0),
                 isEA: Boolean(state.heIsEA),
-                excluirIR: Boolean(state.heExcluirIR),
-                competenciaMes: referenceMonthIndex,
-                competenciaAno: state.anoRef,
-                usarDadosCompetencia: false,
-                competenciaSnapshot: overtimeSnapshotDefaults
+                excluirIR: Boolean(state.heExcluirIR)
             }
         ]);
         overtimeLegacyMigratedRef.current = true;
-    }, [state.overtimeEntries.length, state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.anoRef, referenceMonthIndex, overtimeSnapshotDefaults, update]);
+    }, [state.overtimeEntries.length, state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, update]);
 
     useEffect(() => {
         if (substitutionLegacyMigratedRef.current) return;
@@ -664,11 +621,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         qtd50: 0,
         qtd100: 0,
         isEA: false,
-        excluirIR: false,
-        competenciaMes: referenceMonthIndex,
-        competenciaAno: state.anoRef,
-        usarDadosCompetencia: false,
-        competenciaSnapshot: overtimeSnapshotDefaults
+        excluirIR: false
     });
 
     const createSubstitutionEntry = (): SubstitutionEntry => ({
@@ -1043,31 +996,27 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         qtd50: state.heQtd50 || 0,
                         qtd100: state.heQtd100 || 0,
                         isEA: state.heIsEA,
-                        excluirIR: state.heExcluirIR,
-                        competenciaMes: referenceMonthIndex,
-                        competenciaAno: state.anoRef,
-                        usarDadosCompetencia: false,
-                        competenciaSnapshot: overtimeSnapshotDefaults
+                        excluirIR: state.heExcluirIR
                     };
                     const overtimeEntry = entry || fallbackEntry;
 
                     const overtimeBaseEntries = state.overtimeEntries.length > 0 ? state.overtimeEntries : [fallbackEntry];
-                    const overtimeGrossEntries = calculateOvertimeEntriesGross(overtimeBaseEntries, state, courtConfig);
-                    const entryGross = overtimeGrossEntries.find((item) => item.id === overtimeEntry.id) ||
-                        calculateOvertimeEntriesGross([overtimeEntry], state, courtConfig)[0];
+                    const totalPonderado = overtimeBaseEntries.reduce(
+                        (acc, item) => acc + (Math.max(0, item.qtd50 || 0) * 1.5) + (Math.max(0, item.qtd100 || 0) * 2),
+                        0
+                    );
+                    const valorHora = totalPonderado > 0 ? (state.heTotal || 0) / totalPonderado : 0;
 
-                    const he50Bruto = roundCurrency(entryGross?.heVal50 || 0);
-                    const he100Bruto = roundCurrency(entryGross?.heVal100 || 0);
-                    const heTotalBruto = roundCurrency(entryGross?.heTotal || 0);
+                    const he50Bruto = roundCurrency(valorHora * 1.5 * Math.max(0, overtimeEntry.qtd50 || 0));
+                    const he100Bruto = roundCurrency(valorHora * 2.0 * Math.max(0, overtimeEntry.qtd100 || 0));
+                    const heTotalBruto = roundCurrency(he50Bruto + he100Bruto);
 
                     const mensalBaseTotal = overtimeBaseEntries
-                        .map((item, index) => ({ item, gross: overtimeGrossEntries[index]?.heTotal || 0 }))
-                        .filter(({ item }) => !item.isEA && !item.excluirIR)
-                        .reduce((acc, current) => acc + current.gross, 0);
+                        .filter(item => !item.isEA && !item.excluirIR)
+                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
                     const eaBaseTotal = overtimeBaseEntries
-                        .map((item, index) => ({ item, gross: overtimeGrossEntries[index]?.heTotal || 0 }))
-                        .filter(({ item }) => item.isEA && !item.excluirIR)
-                        .reduce((acc, current) => acc + current.gross, 0);
+                        .filter(item => item.isEA && !item.excluirIR)
+                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
                     const heIrMensalTotal = Math.max(0, state.heIrMensal || 0);
                     const heIrEATotal = Math.max(0, state.heIrEA || 0);
 
@@ -1425,21 +1374,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             }
 
-            return (
-                <OvertimeCard
-                    entry={overtimeEntry}
-                    updateEntry={updateOvertimeEntry}
-                    styles={styles}
-                    currentSnapshotDefaults={overtimeSnapshotDefaults}
-                    currentReferenceMonth={referenceMonthIndex}
-                    currentReferenceYear={state.anoRef}
-                    salaryTable={currentTables.salario || {}}
-                    functionTable={currentTables.funcoes || {}}
-                    noFunctionCode={noFunctionCode}
-                    noFunctionLabel={noFunctionLabel}
-                    pssOptions={pssOptions}
-                />
-            );
+            return <OvertimeCard entry={overtimeEntry} updateEntry={updateOvertimeEntry} styles={styles} />;
         }
         if (presetId === 'substituicao') {
             const substitutionEntry = instance.substitutionEntryId
