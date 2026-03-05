@@ -66,6 +66,8 @@ const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
     { id: 'aux_transporte', label: 'Auxílio Transporte' },
     { id: 'diarias', label: 'Diárias de Viagem' }
 ];
+const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra']);
+const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras';
 
 const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
@@ -113,6 +115,9 @@ const createUniqueId = (prefix: string) => {
 };
 
 const isDiscountLabel = (label: string) => /desconto|cota-parte|corte|abatimento|restitui|dedu[cç][aã]o|glosa/i.test(label);
+const getPresetPickerLabel = (presetId: PredefinedRubricId, label: string) => (
+    MULTI_INSTANCE_PRESETS.has(presetId) ? `${label} (pode repetir)` : label
+);
 
 const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
     switch (presetId) {
@@ -323,6 +328,55 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             setDraggingPreset(null);
         }
     }, [enabledPresets.length, reorderMode]);
+
+    useEffect(() => {
+        const heInstances = enabledPresets.filter(item => item.presetId === 'hora_extra');
+        if (heInstances.length === 0) return;
+
+        const existingEntries = state.overtimeEntries;
+        const existingById = new Map(existingEntries.map(entry => [entry.id, entry]));
+        const nextEntries: OvertimeEntry[] = [];
+        const nextPresets = enabledPresets.map(instance => {
+            if (instance.presetId !== 'hora_extra') {
+                return instance;
+            }
+
+            const currentEntry =
+                (instance.overtimeEntryId && existingById.get(instance.overtimeEntryId)) ||
+                createOvertimeEntry();
+            nextEntries.push(currentEntry);
+
+            if (instance.overtimeEntryId !== currentEntry.id) {
+                return { ...instance, overtimeEntryId: currentEntry.id };
+            }
+            return instance;
+        });
+
+        const needsPresetSync = nextPresets.some((instance, index) => {
+            const current = enabledPresets[index];
+            return current?.overtimeEntryId !== instance.overtimeEntryId;
+        });
+        if (needsPresetSync) {
+            setEnabledPresets(nextPresets);
+        }
+
+        const sameLength = nextEntries.length === existingEntries.length;
+        const sameIdsAndValues = sameLength && nextEntries.every((entry, index) => {
+            const current = existingEntries[index];
+            return (
+                current &&
+                current.id === entry.id &&
+                current.qtd50 === entry.qtd50 &&
+                current.qtd100 === entry.qtd100 &&
+                current.isEA === entry.isEA &&
+                current.excluirIR === entry.excluirIR
+            );
+        });
+
+        if (!sameIdsAndValues) {
+            update('overtimeEntries', nextEntries);
+        }
+    }, [enabledPresets, state.overtimeEntries, update]);
 
     const totalCreditos = state.rubricasExtras
         .filter(rubrica => rubrica.tipo === 'C')
@@ -1326,9 +1380,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             >
                                 {availablePresets.length === 0 && <option value="">Todas adicionadas</option>}
                                 {availablePresets.map(option => (
-                                    <option key={option.id} value={option.id}>{option.label}</option>
+                                    <option key={option.id} value={option.id}>{getPresetPickerLabel(option.id, option.label)}</option>
                                 ))}
                             </select>
+                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                                Cards que podem ser adicionados mais de uma vez: {MULTI_INSTANCE_HINT_LABEL}.
+                            </p>
                             <button
                                 type="button"
                                 onClick={includePreset}
@@ -1367,6 +1424,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                     <div className="flex items-center gap-2">
                                         {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
                                         <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{preset.label}</span>
+                                        {MULTI_INSTANCE_PRESETS.has(instance.presetId) && (
+                                            <span className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700">
+                                                Multiplo
+                                            </span>
+                                        )}
                                     </div>
                                     <button
                                         type="button"
@@ -1539,6 +1601,3 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         </div>
     );
 };
-
-
-

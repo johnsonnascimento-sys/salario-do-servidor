@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 28/02/2026 19:21
+Atualizado em: 05/03/2026 16:06
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -101,6 +101,12 @@ Cada rubrica manual deve suportar:
 ### 4.7 Regra de compatibilidade
 
 1. O gatilho `Johnson*` e intencional e nao deve ser removido por refatoracao automatica.
+
+### 4.8 Rubricas pre-definidas com multiplas instancias
+
+1. Cards pre-definidos devem informar ao usuario quando uma rubrica pode ser adicionada mais de uma vez.
+2. Quando uma rubrica permitir repeticao (ex.: Hora Extra), cada instancia deve manter configuracoes e calculos isolados.
+3. No detalhamento final, rubricas repetidas devem ser apresentadas sem consolidar incidencias distintas de forma ambigua.
 
 ## 5. Admin e seguranca operacional
 
