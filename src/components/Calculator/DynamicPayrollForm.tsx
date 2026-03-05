@@ -331,7 +331,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     useEffect(() => {
         const heInstances = enabledPresets.filter(item => item.presetId === 'hora_extra');
-        if (heInstances.length === 0) return;
+        if (heInstances.length === 0) {
+            if (state.overtimeEntries.length > 0) {
+                update('overtimeEntries', []);
+            }
+            return;
+        }
 
         const existingEntries = state.overtimeEntries;
         const existingById = new Map(existingEntries.map(entry => [entry.id, entry]));
@@ -611,7 +616,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
         if (selectedPreset === 'hora_extra') {
             const newEntry = createOvertimeEntry();
-            update('overtimeEntries', [newEntry, ...state.overtimeEntries]);
+            const hasActiveOvertimePreset = enabledPresets.some(item => item.presetId === 'hora_extra');
+            update('overtimeEntries', hasActiveOvertimePreset ? [newEntry, ...state.overtimeEntries] : [newEntry]);
             setEnabledPresets(prev => [
                 {
                     key: createUniqueId('preset-hora_extra'),
@@ -1371,30 +1377,32 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             <GripVertical className="w-4 h-4" />
                             {reorderMode ? 'Concluir ordem' : 'Reordenar cards'}
                         </button>
-                        <div className="flex w-full items-center gap-2 sm:w-auto">
-                            <select
-                                className={`${styles.input} min-w-0 flex-1 sm:w-72`}
-                                value={selectedPreset}
-                                onChange={e => setSelectedPreset(e.target.value as PredefinedRubricId | '')}
-                                disabled={availablePresets.length === 0}
-                            >
-                                {availablePresets.length === 0 && <option value="">Todas adicionadas</option>}
-                                {availablePresets.map(option => (
-                                    <option key={option.id} value={option.id}>{getPresetPickerLabel(option.id, option.label)}</option>
-                                ))}
-                            </select>
-                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                        <div className="flex w-full flex-col gap-2 sm:w-auto">
+                            <div className="flex w-full items-center gap-2">
+                                <select
+                                    className={`${styles.input} w-full min-w-0 sm:w-72`}
+                                    value={selectedPreset}
+                                    onChange={e => setSelectedPreset(e.target.value as PredefinedRubricId | '')}
+                                    disabled={availablePresets.length === 0}
+                                >
+                                    {availablePresets.length === 0 && <option value="">Todas adicionadas</option>}
+                                    {availablePresets.map(option => (
+                                        <option key={option.id} value={option.id}>{getPresetPickerLabel(option.id, option.label)}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    type="button"
+                                    onClick={includePreset}
+                                    disabled={!selectedPreset}
+                                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50 shrink-0"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Incluir
+                                </button>
+                            </div>
+                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400 sm:max-w-72">
                                 Cards que podem ser adicionados mais de uma vez: {MULTI_INSTANCE_HINT_LABEL}.
                             </p>
-                            <button
-                                type="button"
-                                onClick={includePreset}
-                                disabled={!selectedPreset}
-                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors text-body-xs font-bold uppercase tracking-wider disabled:opacity-50 shrink-0"
-                            >
-                                <Plus className="w-4 h-4" />
-                                Incluir
-                            </button>
                         </div>
                     </div>
                 </div>

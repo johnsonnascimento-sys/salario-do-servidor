@@ -190,15 +190,7 @@ export const useCalculatorResults = (
             const suffix = tags.length > 0 ? ` (${tags.join(' | ')})` : '';
             rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO${suffix}`, value: state.substTotal, type: 'C' });
         }
-        const overtimeEntries = state.overtimeEntries.length > 0
-            ? state.overtimeEntries
-            : [{
-                id: 'legacy',
-                qtd50: state.heQtd50 || 0,
-                qtd100: state.heQtd100 || 0,
-                isEA: state.heIsEA,
-                excluirIR: state.heExcluirIR
-            }];
+        const overtimeEntries = state.overtimeEntries;
         const totalPonderadoHe = overtimeEntries.reduce(
             (acc, entry) => acc + (Math.max(0, entry.qtd50 || 0) * 1.5) + (Math.max(0, entry.qtd100 || 0) * 2),
             0
