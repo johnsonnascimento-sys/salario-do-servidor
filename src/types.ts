@@ -146,6 +146,7 @@ export interface OvertimeEntry {
   qtd100: number;
   isEA: boolean;
   excluirIR: boolean;
+  competenciaRef?: string;
 }
 
 export interface SubstitutionEntry {

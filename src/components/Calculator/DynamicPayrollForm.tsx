@@ -582,7 +582,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 qtd50: Math.max(0, state.heQtd50 || 0),
                 qtd100: Math.max(0, state.heQtd100 || 0),
                 isEA: Boolean(state.heIsEA),
-                excluirIR: Boolean(state.heExcluirIR)
+                excluirIR: Boolean(state.heExcluirIR),
+                competenciaRef: ''
             }
         ]);
         overtimeLegacyMigratedRef.current = true;
@@ -621,7 +622,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         qtd50: 0,
         qtd100: 0,
         isEA: false,
-        excluirIR: false
+        excluirIR: false,
+        competenciaRef: ''
     });
 
     const createSubstitutionEntry = (): SubstitutionEntry => ({

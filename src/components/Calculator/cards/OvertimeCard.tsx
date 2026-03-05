@@ -9,6 +9,15 @@ interface OvertimeCardProps {
 }
 
 export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, styles }) => {
+    const handleCompetenciaChange = (value: string) => {
+        const digits = value.replace(/\D/g, '').slice(0, 6);
+        if (digits.length <= 2) {
+            updateEntry(entry.id, { competenciaRef: digits });
+            return;
+        }
+        updateEntry(entry.id, { competenciaRef: `${digits.slice(0, 2)}/${digits.slice(2)}` });
+    };
+
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
@@ -63,6 +72,18 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                                 onChange={e => updateEntry(entry.id, { qtd100: Math.max(0, Number(e.target.value) || 0) })}
                             />
                         </div>
+                    </div>
+                    <div>
+                        <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                        <input
+                            type="text"
+                            className={styles.input}
+                            inputMode="numeric"
+                            maxLength={7}
+                            placeholder="MM/AAAA"
+                            value={entry.competenciaRef || ''}
+                            onChange={e => handleCompetenciaChange(e.target.value)}
+                        />
                     </div>
                 </div>
             </div>
