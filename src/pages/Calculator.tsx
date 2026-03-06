@@ -21,14 +21,35 @@ const createEntryId = (prefix: string) => {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
+const cloneCalculatorSnapshot = (snapshot: unknown): Partial<CalculatorState> => {
+    if (!snapshot || typeof snapshot !== 'object') {
+        return {};
+    }
+
+    try {
+        if (typeof structuredClone === 'function') {
+            return structuredClone(snapshot) as Partial<CalculatorState>;
+        }
+    } catch (_error) {
+        // fallback abaixo
+    }
+
+    try {
+        return JSON.parse(JSON.stringify(snapshot)) as Partial<CalculatorState>;
+    } catch (_error) {
+        return snapshot as Partial<CalculatorState>;
+    }
+};
+
 const hydrateCalculatorState = (snapshot: unknown): CalculatorState => {
     if (!snapshot || typeof snapshot !== 'object') {
         return INITIAL_STATE;
     }
 
+    const safeSnapshot = cloneCalculatorSnapshot(snapshot);
     const merged = {
         ...INITIAL_STATE,
-        ...(snapshot as Partial<CalculatorState>),
+        ...safeSnapshot,
     };
     const inferredFunctionFromSubstDias = Object.entries(merged.substDias || {}).find(([, days]) => Number(days || 0) > 0)?.[0] || '';
     const inferredFunctionFromEntries = Array.isArray(merged.substitutionEntries)
