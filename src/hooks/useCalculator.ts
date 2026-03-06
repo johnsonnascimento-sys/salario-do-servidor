@@ -22,6 +22,9 @@ export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const location = useLocation();
+    const stateEditPayslipId = (location.state as { editPayslipId?: string } | null)?.editPayslipId;
+    const queryEditPayslipId = new URLSearchParams(location.search).get('editPayslipId') || undefined;
+    const editPayslipId = stateEditPayslipId || queryEditPayslipId;
     const { user } = useUserAuth();
     const [savingPayslip, setSavingPayslip] = useState(false);
     const [loggedUserName, setLoggedUserName] = useState('');
@@ -198,6 +201,3 @@ export const useCalculator = () => {
         loggedUserName,
     };
 };
-    const stateEditPayslipId = (location.state as { editPayslipId?: string } | null)?.editPayslipId;
-    const queryEditPayslipId = new URLSearchParams(location.search).get('editPayslipId') || undefined;
-    const editPayslipId = stateEditPayslipId || queryEditPayslipId;
