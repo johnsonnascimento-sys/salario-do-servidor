@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Sun, Moon, Heart, Mail, MapPin } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { VersionBadge } from './ui/VersionBadge';
 
 const MainLayout: React.FC = () => {
     const [isDark, setIsDark] = useState(false);
@@ -124,6 +125,9 @@ const MainLayout: React.FC = () => {
                                 </li>
                             </ul>
                         </div>
+                    </div>
+                    <div className="flex justify-center mb-8 opacity-60 hover:opacity-100 transition-opacity">
+                        <VersionBadge />
                     </div>
                     <div className="pt-10 border-t border-neutral-800 text-center md:flex md:justify-between md:text-left items-center">
                         <p className="text-body-xs text-neutral-500 mb-4 md:mb-0">

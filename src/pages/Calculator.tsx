@@ -12,6 +12,7 @@ import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
 import { FieldCalculator } from '../components/Calculator/FieldCalculator';
 import DonationModal from '../components/DonationModal';
 import { CalculatorState, INITIAL_STATE } from '../types';
+import { getPayslipById } from '../services/user/payslipService';
 
 const createEntryId = (prefix: string) => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -29,9 +30,17 @@ const hydrateCalculatorState = (snapshot: unknown): CalculatorState => {
         ...INITIAL_STATE,
         ...(snapshot as Partial<CalculatorState>),
     };
+    const inferredFunctionFromSubstDias = Object.entries(merged.substDias || {}).find(([, days]) => Number(days || 0) > 0)?.[0] || '';
+    const inferredFunctionFromEntries = Array.isArray(merged.substitutionEntries)
+        ? merged.substitutionEntries
+            .flatMap((entry) => Object.entries(entry?.dias || {}))
+            .find(([, days]) => Number(days || 0) > 0)?.[0] || ''
+        : '';
+    const resolvedFuncao = String(merged.funcao || inferredFunctionFromSubstDias || inferredFunctionFromEntries || '').trim();
 
     return {
         ...merged,
+        funcao: resolvedFuncao,
         rubricasExtras: Array.isArray(merged.rubricasExtras) ? merged.rubricasExtras : [],
         overtimeEntries: Array.isArray(merged.overtimeEntries)
             ? merged.overtimeEntries.map((entry) => ({
@@ -83,6 +92,7 @@ export default function Calculator() {
     } = useCalculator();
 
     const location = useLocation();
+    const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
     const restoreAppliedRef = useRef(false);
     const [formKey, setFormKey] = useState(0);
 
@@ -90,13 +100,31 @@ export default function Calculator() {
         if (restoreAppliedRef.current) return;
 
         const restorePayload = (location.state as { restoreSnapshot?: { calculatorState?: unknown } } | null)?.restoreSnapshot;
-        if (!restorePayload?.calculatorState) return;
+        if (restorePayload?.calculatorState) {
+            const hydrated = hydrateCalculatorState(restorePayload.calculatorState);
+            setState(hydrated);
+            setFormKey((prev) => prev + 1);
+            restoreAppliedRef.current = true;
+            return;
+        }
 
-        const hydrated = hydrateCalculatorState(restorePayload.calculatorState);
-        setState(hydrated);
-        setFormKey((prev) => prev + 1);
-        restoreAppliedRef.current = true;
-    }, [location.state, setState]);
+        if (!editPayslipId) return;
+
+        let active = true;
+        getPayslipById(editPayslipId)
+            .then((payslip) => {
+                if (!active || restoreAppliedRef.current || !payslip?.calculator_state) return;
+                const hydrated = hydrateCalculatorState(payslip.calculator_state);
+                setState(hydrated);
+                setFormKey((prev) => prev + 1);
+                restoreAppliedRef.current = true;
+            })
+            .catch(() => undefined);
+
+        return () => {
+            active = false;
+        };
+    }, [location.state, editPayslipId, setState]);
 
     const handleSavePayslip = async () => {
         try {
