@@ -535,8 +535,28 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     useEffect(() => {
         if (!noFunctionCode) return;
         const validFunctions = new Set([noFunctionCode, ...functionKeys]);
-        if (!state.funcao || !validFunctions.has(state.funcao)) {
+        if (!state.funcao) {
             update('funcao', noFunctionCode);
+            return;
+        }
+
+        if (!validFunctions.has(state.funcao)) {
+            const normalizedCurrent = String(state.funcao).trim().toLowerCase();
+            const matchedFunction = functionKeys.find(
+                key => key.trim().toLowerCase() === normalizedCurrent
+            );
+
+            if (matchedFunction) {
+                update('funcao', matchedFunction);
+                return;
+            }
+
+            const sanitizedCurrent = normalizedCurrent.replace(/[^a-z0-9]/g, '');
+            const matchedByToken = functionKeys.find(
+                key => key.trim().toLowerCase().replace(/[^a-z0-9]/g, '') === sanitizedCurrent
+            );
+
+            update('funcao', matchedByToken || noFunctionCode);
         }
     }, [noFunctionCode, functionKeys, state.funcao, update]);
 

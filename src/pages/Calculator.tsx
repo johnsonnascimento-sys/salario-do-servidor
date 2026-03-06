@@ -1,4 +1,4 @@
-ï»¿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
@@ -13,6 +13,13 @@ import { FieldCalculator } from '../components/Calculator/FieldCalculator';
 import DonationModal from '../components/DonationModal';
 import { CalculatorState, INITIAL_STATE } from '../types';
 
+const createEntryId = (prefix: string) => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}-${crypto.randomUUID()}`;
+    }
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const hydrateCalculatorState = (snapshot: unknown): CalculatorState => {
     if (!snapshot || typeof snapshot !== 'object') {
         return INITIAL_STATE;
@@ -26,8 +33,25 @@ const hydrateCalculatorState = (snapshot: unknown): CalculatorState => {
     return {
         ...merged,
         rubricasExtras: Array.isArray(merged.rubricasExtras) ? merged.rubricasExtras : [],
-        overtimeEntries: Array.isArray(merged.overtimeEntries) ? merged.overtimeEntries : [],
-        substitutionEntries: Array.isArray(merged.substitutionEntries) ? merged.substitutionEntries : [],
+        overtimeEntries: Array.isArray(merged.overtimeEntries)
+            ? merged.overtimeEntries.map((entry) => ({
+                ...entry,
+                id: entry?.id || createEntryId('he-entry'),
+                qtd50: Math.max(0, Number(entry?.qtd50 || 0)),
+                qtd100: Math.max(0, Number(entry?.qtd100 || 0)),
+                isEA: Boolean(entry?.isEA),
+                excluirIR: Boolean(entry?.excluirIR),
+            }))
+            : [],
+        substitutionEntries: Array.isArray(merged.substitutionEntries)
+            ? merged.substitutionEntries.map((entry) => ({
+                ...entry,
+                id: entry?.id || createEntryId('subst-entry'),
+                dias: entry?.dias && typeof entry.dias === 'object' ? entry.dias : {},
+                isEA: Boolean(entry?.isEA),
+                pssIsEA: Boolean(entry?.pssIsEA),
+            }))
+            : [],
     };
 };
 
@@ -58,6 +82,7 @@ export default function Calculator() {
 
     const location = useLocation();
     const restoreAppliedRef = useRef(false);
+    const [formKey, setFormKey] = useState(0);
 
     useEffect(() => {
         if (restoreAppliedRef.current) return;
@@ -67,6 +92,7 @@ export default function Calculator() {
 
         const hydrated = hydrateCalculatorState(restorePayload.calculatorState);
         setState(hydrated);
+        setFormKey((prev) => prev + 1);
         restoreAppliedRef.current = true;
     }, [location.state, setState]);
 
@@ -74,9 +100,9 @@ export default function Calculator() {
         try {
             const result = await saveCurrentPayslip();
             if (result.success) {
-                alert('Holerite salvo com sucesso na sua Ã¡rea.');
+                alert('Holerite salvo com sucesso na sua área.');
             } else if (result.reason === 'auth') {
-                alert('FaÃ§a login para salvar holerites na sua Ã¡rea.');
+                alert('Faça login para salvar holerites na sua área.');
             }
         } catch (error) {
             alert((error as Error).message || 'Falha ao salvar holerite.');
@@ -135,6 +161,7 @@ export default function Calculator() {
                         styles={styles}
                     />
                     <DynamicPayrollForm
+                        key={`dynamic-payroll-form-${formKey}`}
                         state={state}
                         update={update}
                         updateSubstDays={updateSubstDays}
@@ -177,3 +204,4 @@ export default function Calculator() {
         </>
     );
 }
+

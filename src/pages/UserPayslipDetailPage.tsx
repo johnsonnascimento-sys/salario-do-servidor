@@ -48,6 +48,21 @@ export default function UserPayslipDetailPage() {
     return `${safeTitle || 'Holerite'}_${item.month_ref}_${item.year_ref}`;
   }, [item]);
 
+  const detailedRows = useMemo(() => {
+    const rows = Array.isArray(item?.result_rows) ? item.result_rows : [];
+    const credits = rows.filter((row) => row.type === 'C');
+    const debits = rows.filter((row) => row.type === 'D');
+    const totalCredits = credits.reduce((sum, row) => sum + Number(row.value || 0), 0);
+    const totalDebits = debits.reduce((sum, row) => sum + Number(row.value || 0), 0);
+
+    return {
+      credits,
+      debits,
+      totalCredits,
+      totalDebits,
+    };
+  }, [item]);
+
   const onExport = (type: 'pdf' | 'excel') => {
     if (!item) return;
 
@@ -179,6 +194,65 @@ export default function UserPayslipDetailPage() {
             <p className="text-label uppercase tracking-widest text-neutral-500">Líquido</p>
             <p className="text-body-xl font-bold">{formatCurrency(item.liquido)}</p>
           </div>
+        </div>
+
+        <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 space-y-4">
+          <h2 className="text-body-lg font-bold text-neutral-900 dark:text-neutral-100">Detalhamento de Créditos e Débitos</h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-success-300/40 dark:border-success-700/50">
+              <div className="px-4 py-3 border-b border-success-300/40 dark:border-success-700/50 bg-success-50/60 dark:bg-success-900/20">
+                <p className="text-body-xs font-bold uppercase tracking-widest text-success-700 dark:text-success-400">
+                  Créditos ({detailedRows.credits.length})
+                </p>
+                <p className="text-body font-semibold text-success-700 dark:text-success-400">
+                  {formatCurrency(detailedRows.totalCredits)}
+                </p>
+              </div>
+              <div className="max-h-72 overflow-auto">
+                {detailedRows.credits.length === 0 ? (
+                  <p className="p-4 text-body-xs text-neutral-500">Nenhum crédito encontrado neste holerite.</p>
+                ) : (
+                  detailedRows.credits.map((row, index) => (
+                    <div key={`credit-${index}-${row.label}`} className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
+                      <p className="text-body-xs text-neutral-700 dark:text-neutral-200">{row.label}</p>
+                      <p className="text-body-xs font-bold text-success-700 dark:text-success-400">{formatCurrency(row.value)}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-error-300/40 dark:border-error-700/50">
+              <div className="px-4 py-3 border-b border-error-300/40 dark:border-error-700/50 bg-error-50/60 dark:bg-error-900/20">
+                <p className="text-body-xs font-bold uppercase tracking-widest text-error-700 dark:text-error-400">
+                  Débitos ({detailedRows.debits.length})
+                </p>
+                <p className="text-body font-semibold text-error-700 dark:text-error-400">
+                  {formatCurrency(detailedRows.totalDebits)}
+                </p>
+              </div>
+              <div className="max-h-72 overflow-auto">
+                {detailedRows.debits.length === 0 ? (
+                  <p className="p-4 text-body-xs text-neutral-500">Nenhum débito encontrado neste holerite.</p>
+                ) : (
+                  detailedRows.debits.map((row, index) => (
+                    <div key={`debit-${index}-${row.label}`} className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
+                      <p className="text-body-xs text-neutral-700 dark:text-neutral-200">{row.label}</p>
+                      <p className="text-body-xs font-bold text-error-700 dark:text-error-400">{formatCurrency(row.value)}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 space-y-2">
+          <h2 className="text-body-lg font-bold text-neutral-900 dark:text-neutral-100">Notas Salvas</h2>
+          <p className="text-body whitespace-pre-wrap text-neutral-700 dark:text-neutral-200">
+            {notes?.trim() || 'Sem notas registradas para este holerite.'}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
