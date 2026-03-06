@@ -540,6 +540,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             return;
         }
 
+        // Evita sobrescrever snapshot restaurado enquanto as funções ainda não carregaram.
+        if (functionKeys.length === 0) {
+            return;
+        }
+
         if (!validFunctions.has(state.funcao)) {
             const normalizedCurrent = String(state.funcao).trim().toLowerCase();
             const matchedFunction = functionKeys.find(
