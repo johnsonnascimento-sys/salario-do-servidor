@@ -30,8 +30,7 @@ export default function Calculator() {
     pendingExportType,
     addRubrica,
     removeRubrica,
-    updateRubrica,
-    setState
+    updateRubrica
   } = useCalculator();
 
   const isNovoAQ = state.periodo >= 1;
@@ -62,7 +61,6 @@ export default function Calculator() {
         update={update}
         navigate={navigate}
         styles={styles}
-        setState={setState}
       />
 
       <GlobalSettings

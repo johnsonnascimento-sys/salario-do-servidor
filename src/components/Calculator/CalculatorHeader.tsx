@@ -8,7 +8,8 @@ interface CalculatorHeaderProps {
     update: (field: keyof CalculatorState, value: any) => void;
     navigate: (path: string) => void;
     styles: any;
-    setState: React.Dispatch<React.SetStateAction<CalculatorState>>;
+    isUserAuthenticated?: boolean;
+    loggedUserName?: string;
     agencyName?: string;
     onSavePayslip?: () => void;
     onOpenPayslips?: () => void;
@@ -21,7 +22,8 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
     update,
     navigate,
     styles,
-    setState,
+    isUserAuthenticated,
+    loggedUserName,
     agencyName,
     onSavePayslip,
     onOpenPayslips,
@@ -61,17 +63,11 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
                 <div className="w-full md:w-96">
                     <input
                         type="text"
-                        placeholder="Nome para impressão (Opcional)"
+                        placeholder={isUserAuthenticated ? '' : 'Nome para impressão (Opcional)'}
                         className={`${styles.input} w-full`}
-                        value={state.nome}
-                        onChange={e => {
-                            const val = e.target.value;
-                            if (val === 'Johnson*') {
-                                setState(prev => ({ ...prev, nome: val, planoSaude: 928.52, emprestimos: 3761.63 }));
-                            } else {
-                                update('nome', val);
-                            }
-                        }}
+                        value={isUserAuthenticated ? (loggedUserName || state.nome) : state.nome}
+                        onChange={e => update('nome', e.target.value)}
+                        readOnly={Boolean(isUserAuthenticated)}
                     />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 justify-end">

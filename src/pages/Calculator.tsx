@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+ï»¿import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
@@ -78,6 +78,8 @@ export default function Calculator() {
         configError,
         saveCurrentPayslip,
         savingPayslip,
+        isUserAuthenticated,
+        loggedUserName,
     } = useCalculator();
 
     const location = useLocation();
@@ -100,9 +102,9 @@ export default function Calculator() {
         try {
             const result = await saveCurrentPayslip();
             if (result.success) {
-                alert('Holerite salvo com sucesso na sua área.');
+                alert('Holerite salvo com sucesso na sua Ã¡rea.');
             } else if (result.reason === 'auth') {
-                alert('Faça login para salvar holerites na sua área.');
+                alert('FaÃ§a login para salvar holerites na sua Ã¡rea.');
             }
         } catch (error) {
             alert((error as Error).message || 'Falha ao salvar holerite.');
@@ -146,7 +148,8 @@ export default function Calculator() {
                     update={update}
                     navigate={navigate}
                     styles={styles}
-                    setState={setState}
+                    isUserAuthenticated={isUserAuthenticated}
+                    loggedUserName={loggedUserName}
                     agencyName={agencyName}
                     onSavePayslip={handleSavePayslip}
                     onOpenPayslips={openMyPayslips}
@@ -204,4 +207,5 @@ export default function Calculator() {
         </>
     );
 }
+
 

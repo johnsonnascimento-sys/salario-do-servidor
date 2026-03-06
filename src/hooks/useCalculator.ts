@@ -16,12 +16,14 @@ import { useCalculatorExport } from './calculator/useCalculatorExport';
 import { useCalculatorResults } from './calculator/useCalculatorResults';
 import { useUserAuth } from './user/useUserAuth';
 import { createPayslip } from '../services/user/payslipService';
+import { getMyProfile } from '../services/user/profileService';
 
 export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const { user } = useUserAuth();
     const [savingPayslip, setSavingPayslip] = useState(false);
+    const [loggedUserName, setLoggedUserName] = useState('');
 
     // 1. Gerenciamento de Estado
     const {
@@ -70,6 +72,45 @@ export const useCalculator = () => {
             console.error('Falha ao exportar arquivo:', error);
         });
     };
+
+    useEffect(() => {
+        if (!user) {
+            setLoggedUserName('');
+            return;
+        }
+
+        const metadataName = String(
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            ''
+        ).trim();
+
+        if (metadataName) {
+            setLoggedUserName(metadataName);
+        }
+
+        let active = true;
+        getMyProfile()
+            .then((profile) => {
+                if (!active) return;
+                const profileName = String(profile?.full_name || '').trim();
+                if (profileName) {
+                    setLoggedUserName(profileName);
+                }
+            })
+            .catch(() => null);
+
+        return () => {
+            active = false;
+        };
+    }, [user]);
+
+    useEffect(() => {
+        if (!user || !loggedUserName) return;
+        if (state.nome !== loggedUserName) {
+            update('nome', loggedUserName);
+        }
+    }, [user, loggedUserName, state.nome, update]);
 
     useEffect(() => {
         try {
@@ -134,5 +175,6 @@ export const useCalculator = () => {
         saveCurrentPayslip,
         savingPayslip,
         isUserAuthenticated: Boolean(user),
+        loggedUserName,
     };
 };
