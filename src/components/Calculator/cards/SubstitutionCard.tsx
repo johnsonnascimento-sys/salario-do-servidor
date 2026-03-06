@@ -22,11 +22,6 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
-                    <div>
-                        <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
-                        <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
-                    </div>
-
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <label className={styles.checkboxLabel}>
                             <input
