@@ -1,6 +1,11 @@
 ﻿import { supabase } from '../../lib/supabase';
 
 const BETA_CLOSED_MESSAGE = 'Cadastro de usuários ainda está em desenvolvimento. No momento, acesso restrito ao beta fechado.';
+const DEFAULT_AUTH_REDIRECT_URL = 'https://salariodoservidor.com.br';
+const AUTH_REDIRECT_URL = (
+  import.meta.env.VITE_AUTH_REDIRECT_URL ||
+  (window.location.hostname === 'localhost' ? window.location.origin : DEFAULT_AUTH_REDIRECT_URL)
+).replace(/\/$/, '');
 
 export interface SignUpPayload {
   fullName: string;
@@ -64,7 +69,7 @@ export const requestPasswordReset = async (email: string) => {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-    redirectTo: `${window.location.origin}/acesso?mode=reset`,
+    redirectTo: `${AUTH_REDIRECT_URL}/acesso?mode=reset`,
   });
 
   if (error) {
@@ -100,7 +105,7 @@ export const signUpUser = async (payload: SignUpPayload) => {
     email,
     password: payload.password,
     options: {
-      emailRedirectTo: `${window.location.origin}/acesso`,
+      emailRedirectTo: `${AUTH_REDIRECT_URL}/acesso`,
       data: {
         full_name: payload.fullName,
         cpf,
