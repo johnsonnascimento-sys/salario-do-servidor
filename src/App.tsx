@@ -10,6 +10,7 @@ import AdminHub from './pages/AdminHub';
 import AdminGlobal from './pages/AdminGlobal';
 import AdminPower from './pages/AdminPower';
 import AdminOrg from './pages/AdminOrg';
+import AdminUsers from './pages/AdminUsers';
 import AdminControlPanel from './pages/AdminControlPanel';
 import AdminRoute from './components/AdminRoute';
 import UserRoute from './components/UserRoute';
@@ -58,6 +59,11 @@ function App() {
           <Route path="/admin/org" element={
             <AdminRoute>
               <AdminOrg />
+            </AdminRoute>
+          } />
+          <Route path="/admin/users" element={
+            <AdminRoute>
+              <AdminUsers />
             </AdminRoute>
           } />
 

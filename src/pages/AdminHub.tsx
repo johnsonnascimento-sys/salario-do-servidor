@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Database, Layers, Building2 } from 'lucide-react';
+import { Database, Layers, Building2, Users } from 'lucide-react';
 import { AdminService } from '../services/admin/AdminService';
 
 const cards = [
@@ -21,6 +21,12 @@ const cards = [
     description: 'Overrides especificos por orgao.',
     to: '/admin/org',
     icon: Building2,
+  },
+  {
+    title: 'Usuarios',
+    description: 'CRUD de usuarios, allowlist beta e reset de senha.',
+    to: '/admin/users',
+    icon: Users,
   },
 ];
 
@@ -101,7 +107,7 @@ export default function AdminHub() {
           <p className="text-body text-gray-500">Escolha a area que deseja administrar.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {cards.map((card) => {
             const Icon = card.icon;
             return (

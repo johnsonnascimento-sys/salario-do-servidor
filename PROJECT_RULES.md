@@ -1,6 +1,6 @@
-# PROJECT_RULES
+﻿# PROJECT_RULES
 
-Atualizado em: 05/03/2026 18:05
+Atualizado em: 05/03/2026 21:29
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -100,7 +100,7 @@ Cada rubrica manual deve suportar:
 
 ### 4.7 Regra de compatibilidade
 
-1. O gatilho `Johnson*` e intencional e nao deve ser removido por refatoracao automatica.
+1. Nao manter gatilhos fixos hardcoded (incluindo `Johnson*`) para alterar calculos automaticamente.
 
 ### 4.8 Rubricas pre-definidas com multiplas instancias
 
@@ -142,3 +142,4 @@ Cada rubrica manual deve suportar:
 3. Persistencia de holerites salvos deve usar snapshot completo (`calculator_state` + `result_rows`) para preservar historico.
 4. CRUD de holerites deve ser isolado por usuario com RLS em `auth.uid()`.
 5. Cadastro de usuarios pode operar em beta fechado via allowlist (`cpf + email`) sem abrir acesso geral.
+

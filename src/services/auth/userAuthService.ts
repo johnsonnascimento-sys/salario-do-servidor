@@ -57,6 +57,32 @@ export const signInUser = async (email: string, password: string) => {
   return data;
 };
 
+export const requestPasswordReset = async (email: string) => {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error('Informe um email válido.');
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: `${window.location.origin}/acesso?mode=reset`,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+};
+
+export const updateUserPassword = async (password: string) => {
+  if (password.length < 8) {
+    throw new Error('A senha deve ter ao menos 8 caracteres.');
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    throw new Error(error.message);
+  }
+};
+
 export const signUpUser = async (payload: SignUpPayload) => {
   if (!isValidCpf(payload.cpf)) {
     throw new Error('CPF inválido. Verifique os números informados.');
