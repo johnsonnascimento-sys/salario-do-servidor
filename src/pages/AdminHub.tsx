@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Database, Layers, Building2, Users } from 'lucide-react';
+import { Database, Layers, Building2, Users, BookOpen } from 'lucide-react';
 
 const cards = [
   {
@@ -27,6 +27,12 @@ const cards = [
     to: '/admin/users',
     icon: Users,
   },
+  {
+    title: 'Manual',
+    description: 'Guia de uso do painel administrativo.',
+    to: '/admin/manual',
+    icon: BookOpen,
+  },
 ];
 
 export default function AdminHub() {
@@ -38,7 +44,7 @@ export default function AdminHub() {
           <p className="text-body text-gray-500">Escolha a area que deseja administrar.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {cards.map((card) => {
             const Icon = card.icon;
             return (

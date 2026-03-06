@@ -11,6 +11,7 @@ import AdminGlobal from './pages/AdminGlobal';
 import AdminPower from './pages/AdminPower';
 import AdminOrg from './pages/AdminOrg';
 import AdminUsers from './pages/AdminUsers';
+import AdminManual from './pages/AdminManual';
 import AdminRoute from './components/AdminRoute';
 import UserRoute from './components/UserRoute';
 import Donate from './pages/Donate';
@@ -58,6 +59,11 @@ function App() {
           <Route path="/admin/org" element={
             <AdminRoute>
               <AdminOrg />
+            </AdminRoute>
+          } />
+          <Route path="/admin/manual" element={
+            <AdminRoute>
+              <AdminManual />
             </AdminRoute>
           } />
           <Route path="/admin/users" element={
