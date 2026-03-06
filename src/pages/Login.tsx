@@ -6,6 +6,12 @@ import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowLeft, Shield } from 'lucide-
 import logo from '../assets/logo.png';
 import { isAdminEmail } from '../utils/auth/admin';
 
+const DEFAULT_AUTH_REDIRECT_URL = 'https://salariodoservidor.com.br';
+const AUTH_REDIRECT_URL = (
+    import.meta.env.VITE_AUTH_REDIRECT_URL ||
+    (window.location.hostname === 'localhost' ? window.location.origin : DEFAULT_AUTH_REDIRECT_URL)
+).replace(/\/$/, '');
+
 export default function Login() {
     const { session, loading: authLoading } = useAuth();
     const navigate = useNavigate();
@@ -64,7 +70,7 @@ export default function Login() {
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/admin`
+                    emailRedirectTo: `${AUTH_REDIRECT_URL}/admin`
                 }
             });
 
