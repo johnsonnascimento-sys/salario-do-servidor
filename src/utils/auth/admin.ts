@@ -1,4 +1,7 @@
-﻿const DEFAULT_ADMIN_EMAILS = ['johnson.nascimento@gmail.com'];
+const DEFAULT_ADMIN_EMAILS = [
+  'johnson.nascimento@gmail.com',
+  'admin@salariodoservidor.com.br',
+];
 
 const normalize = (email: string) => email.trim().toLowerCase();
 
@@ -16,3 +19,4 @@ export const isAdminEmail = (email?: string | null) => {
   if (!email) return false;
   return getAdminAllowlist().has(normalize(email));
 };
+
