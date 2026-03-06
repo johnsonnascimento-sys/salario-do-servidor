@@ -38,6 +38,11 @@ function App() {
           <Route path="/acesso" element={<UserAccess />} />
           <Route path="/admin" element={
             <AdminRoute>
+              <Navigate to="/admin/hub" replace />
+            </AdminRoute>
+          } />
+          <Route path="/admin/control" element={
+            <AdminRoute>
               <AdminControlPanel />
             </AdminRoute>
           } />
