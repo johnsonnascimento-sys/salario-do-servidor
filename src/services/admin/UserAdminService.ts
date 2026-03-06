@@ -11,6 +11,24 @@ export interface AdminUserRow {
   last_sign_in_at: string | null;
 }
 
+export interface SignupAllowlistRow {
+  full_name: string;
+  cpf: string;
+  email: string;
+  enabled: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminAllowlistRow {
+  email: string;
+  enabled: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AdminUpdateUserPayload {
   userId: string;
   fullName: string;
@@ -68,6 +86,42 @@ export class UserAdminService {
       p_email: payload.email.trim().toLowerCase(),
       p_enabled: payload.enabled,
       p_notes: payload.notes?.trim() || null,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  static async listSignupAllowlist(): Promise<SignupAllowlistRow[]> {
+    const { data, error } = await supabase.rpc('admin_list_signup_allowlist');
+    if (error) {
+      throw new Error(error.message);
+    }
+    return (data || []) as SignupAllowlistRow[];
+  }
+
+  static async listAdminAllowlist(): Promise<AdminAllowlistRow[]> {
+    const { data, error } = await supabase.rpc('admin_list_admin_allowlist');
+    if (error) {
+      throw new Error(error.message);
+    }
+    return (data || []) as AdminAllowlistRow[];
+  }
+
+  static async upsertAdminAllowlist(email: string, enabled: boolean, notes?: string): Promise<void> {
+    const { error } = await supabase.rpc('admin_upsert_admin_allowlist', {
+      p_email: email.trim().toLowerCase(),
+      p_enabled: enabled,
+      p_notes: notes?.trim() || null,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  static async deleteAdminAllowlist(email: string): Promise<void> {
+    const { error } = await supabase.rpc('admin_delete_admin_allowlist', {
+      p_email: email.trim().toLowerCase(),
     });
     if (error) {
       throw new Error(error.message);
