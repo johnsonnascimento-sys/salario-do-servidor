@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Database, Layers, Building2, Users, SlidersHorizontal } from 'lucide-react';
+import { Database, Layers, Building2, Users } from 'lucide-react';
 import { AdminService } from '../services/admin/AdminService';
 
 const cards = [
@@ -27,12 +27,6 @@ const cards = [
     description: 'CRUD de usuarios, allowlist beta e reset de senha.',
     to: '/admin/users',
     icon: Users,
-  },
-  {
-    title: 'Controle Avancado',
-    description: 'Painel legado com listagem completa e versionamento.',
-    to: '/admin/control',
-    icon: SlidersHorizontal,
   },
 ];
 
@@ -113,7 +107,7 @@ export default function AdminHub() {
           <p className="text-body text-gray-500">Escolha a area que deseja administrar.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {cards.map((card) => {
             const Icon = card.icon;
             return (
