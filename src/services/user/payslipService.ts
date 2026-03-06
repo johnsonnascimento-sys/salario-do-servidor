@@ -98,6 +98,10 @@ export const getPayslipById = async (id: string): Promise<UserPayslip | null> =>
 export const updatePayslip = async (id: string, payload: UpdatePayslipDTO): Promise<UserPayslip> => {
   const updatePayload: Record<string, unknown> = {
     ...(payload.title !== undefined ? { title: payload.title.trim() } : {}),
+    ...(payload.agency_slug !== undefined ? { agency_slug: payload.agency_slug } : {}),
+    ...(payload.agency_name !== undefined ? { agency_name: payload.agency_name } : {}),
+    ...(payload.month_ref !== undefined ? { month_ref: payload.month_ref } : {}),
+    ...(payload.year_ref !== undefined ? { year_ref: payload.year_ref } : {}),
     ...(payload.notes !== undefined ? { notes: payload.notes } : {}),
     ...(payload.tags !== undefined ? { tags: sanitizeTags(payload.tags) } : {}),
     ...(payload.calculator_state !== undefined ? { calculator_state: payload.calculator_state } : {}),

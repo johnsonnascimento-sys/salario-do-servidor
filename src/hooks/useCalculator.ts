@@ -9,18 +9,19 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useCalculatorState } from './calculator/useCalculatorState';
 import { useCalculatorConfig } from './calculator/useCalculatorConfig';
 import { useCalculatorExport } from './calculator/useCalculatorExport';
 import { useCalculatorResults } from './calculator/useCalculatorResults';
 import { useUserAuth } from './user/useUserAuth';
-import { createPayslip } from '../services/user/payslipService';
+import { createPayslip, updatePayslip } from '../services/user/payslipService';
 import { getMyProfile } from '../services/user/profileService';
 
 export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useUserAuth();
     const [savingPayslip, setSavingPayslip] = useState(false);
     const [loggedUserName, setLoggedUserName] = useState('');
@@ -130,6 +131,25 @@ export const useCalculator = () => {
         setSavingPayslip(true);
         try {
             const title = `Holerite ${state.mesRef}/${state.anoRef} - Simulacao`;
+
+            if (editPayslipId) {
+                const updated = await updatePayslip(editPayslipId, {
+                    title,
+                    agency_slug: slug || 'jmu',
+                    agency_name: agency?.name || 'Orgao nao identificado',
+                    month_ref: state.mesRef,
+                    year_ref: state.anoRef,
+                    notes: state.observacoes || '',
+                    tags: [],
+                    calculator_state: state,
+                    result_rows: resultRows,
+                    liquido: state.liquido,
+                    total_bruto: state.totalBruto,
+                    total_descontos: state.totalDescontos,
+                });
+                return { success: true, id: updated.id, mode: 'updated' as const };
+            }
+
             const created = await createPayslip({
                 title,
                 agency_slug: slug || 'jmu',
@@ -144,11 +164,11 @@ export const useCalculator = () => {
                 total_bruto: state.totalBruto,
                 total_descontos: state.totalDescontos,
             });
-            return { success: true, id: created.id };
+            return { success: true, id: created.id, mode: 'created' as const };
         } finally {
             setSavingPayslip(false);
         }
-    }, [user, navigate, state, slug, agency?.name, resultRows]);
+    }, [user, navigate, state, slug, agency?.name, resultRows, editPayslipId]);
 
     return {
         state,
@@ -178,3 +198,4 @@ export const useCalculator = () => {
         loggedUserName,
     };
 };
+    const editPayslipId = (location.state as { editPayslipId?: string } | null)?.editPayslipId;

@@ -132,6 +132,7 @@ export default function UserPayslipDetailPage() {
     if (!item) return;
     navigate(`/simulador/${item.agency_slug}`, {
       state: {
+        editPayslipId: item.id,
         restoreSnapshot: {
           calculatorState: item.calculator_state,
         },

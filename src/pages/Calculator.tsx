@@ -102,7 +102,9 @@ export default function Calculator() {
         try {
             const result = await saveCurrentPayslip();
             if (result.success) {
-                alert('Holerite salvo com sucesso na sua área.');
+                alert(result.mode === 'updated'
+                    ? 'Holerite atualizado com sucesso na sua área.'
+                    : 'Holerite salvo com sucesso na sua área.');
             } else if (result.reason === 'auth') {
                 alert('Faça login para salvar holerites na sua área.');
             }

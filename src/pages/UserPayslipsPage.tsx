@@ -144,7 +144,20 @@ export default function UserPayslipsPage() {
                     <button onClick={() => handleExport(item, 'pdf')} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Exportar PDF"><FileDown size={14} /></button>
                     <button onClick={() => handleExport(item, 'excel')} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Exportar Excel"><FileSpreadsheet size={14} /></button>
                     <button onClick={() => handleDuplicate(item)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Duplicar"><Copy size={14} /></button>
-                    <button onClick={() => navigate(`/minha-area/holerites/${item.id}`)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Editar"><Edit3 size={14} /></button>
+                    <button
+                      onClick={() => navigate(`/simulador/${item.agency_slug}`, {
+                        state: {
+                          editPayslipId: item.id,
+                          restoreSnapshot: {
+                            calculatorState: item.calculator_state,
+                          },
+                        },
+                      })}
+                      className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700"
+                      title="Editar"
+                    >
+                      <Edit3 size={14} />
+                    </button>
                     <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg border border-error-300 text-error-600" title="Excluir"><Trash2 size={14} /></button>
                   </div>
                 </td>

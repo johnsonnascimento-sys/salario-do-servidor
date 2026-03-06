@@ -52,6 +52,10 @@ export interface CreatePayslipDTO {
 
 export interface UpdatePayslipDTO {
   title?: string;
+  agency_slug?: string;
+  agency_name?: string;
+  month_ref?: string;
+  year_ref?: number;
   tags?: string[];
   notes?: string;
   calculator_state?: CalculatorState;
