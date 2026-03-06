@@ -59,11 +59,6 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, compe
             </h3>
 
             <div className="space-y-4">
-                <div>
-                    <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
-                    <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
-                </div>
-
                 <div className="flex items-center justify-between">
                     <label className={styles.label}>Adicional 1/3 Férias</label>
                     <label className={styles.checkboxLabel}>

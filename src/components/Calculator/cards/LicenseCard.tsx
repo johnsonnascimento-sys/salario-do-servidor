@@ -17,11 +17,6 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, compete
             </h3>
 
             <div className={styles.innerBox}>
-                <div>
-                    <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
-                    <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
-                </div>
-
                 <div className="space-y-4">
                     <div>
                         <label className={styles.label}>Qtd. Dias a indenizar</label>

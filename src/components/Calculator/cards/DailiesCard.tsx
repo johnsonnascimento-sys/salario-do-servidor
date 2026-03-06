@@ -118,11 +118,6 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
             </h3>
 
             <div className="space-y-6">
-                <div>
-                    <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
-                    <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
-                </div>
-
                 <div className={styles.innerBox}>
                     <h4 className={styles.innerBoxTitle}>Diarias de viagem</h4>
                     <div className="space-y-4">

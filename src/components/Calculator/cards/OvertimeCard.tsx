@@ -65,15 +65,6 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                             />
                         </div>
                     </div>
-                    <div>
-                        <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
-                        <input
-                            type="text"
-                            className={styles.input}
-                            value={competenciaReferencia}
-                            readOnly
-                        />
-                    </div>
                 </div>
             </div>
         </div>

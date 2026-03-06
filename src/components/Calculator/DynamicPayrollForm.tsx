@@ -1305,17 +1305,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const renderPreset = (instance: PresetInstance) => {
         const presetId = instance.presetId;
-        const renderReferenciaField = () => (
-            <div>
-                <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
-                <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
-            </div>
-        );
 
         if (presetId === 'aq') {
             return (
                 <div className="space-y-3">
-                    {renderReferenciaField()}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {isNovoAQ ? (
                         <>
@@ -1370,7 +1363,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (presetId === 'gratificacao') {
             return (
                 <div className="space-y-3">
-                    {renderReferenciaField()}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className={styles.label}>Tipo</label>
@@ -1397,7 +1389,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (presetId === 'vantagens') {
             return (
                 <div className="space-y-3">
-                    {renderReferenciaField()}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className={styles.label}>VPNI (Lei)</label>
@@ -1419,7 +1410,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (presetId === 'abono') {
             return (
                 <div className="space-y-3">
-                    {renderReferenciaField()}
                     <label className={styles.checkboxLabel}>
                         <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
                         <span>Recebe abono de permanência</span>
@@ -1477,7 +1467,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (presetId === 'pre_escolar') {
             return (
                 <div className="space-y-3">
-                    {renderReferenciaField()}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className={styles.label}>Qtd. dependentes</label>
@@ -1494,7 +1483,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
         return (
             <div className="space-y-3">
-                {renderReferenciaField()}
                 <div>
                     <label className={styles.label}>Gasto mensal de transporte</label>
                     <input type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
