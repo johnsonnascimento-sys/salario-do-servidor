@@ -198,4 +198,6 @@ export const useCalculator = () => {
         loggedUserName,
     };
 };
-    const editPayslipId = (location.state as { editPayslipId?: string } | null)?.editPayslipId;
+    const stateEditPayslipId = (location.state as { editPayslipId?: string } | null)?.editPayslipId;
+    const queryEditPayslipId = new URLSearchParams(location.search).get('editPayslipId') || undefined;
+    const editPayslipId = stateEditPayslipId || queryEditPayslipId;

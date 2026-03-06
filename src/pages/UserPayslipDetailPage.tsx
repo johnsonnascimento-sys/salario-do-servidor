@@ -130,7 +130,7 @@ export default function UserPayslipDetailPage() {
 
   const onReopen = () => {
     if (!item) return;
-    navigate(`/simulador/${item.agency_slug}`, {
+    navigate(`/simulador/${item.agency_slug}?editPayslipId=${item.id}`, {
       state: {
         editPayslipId: item.id,
         restoreSnapshot: {

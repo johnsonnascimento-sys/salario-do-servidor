@@ -145,7 +145,7 @@ export default function UserPayslipsPage() {
                     <button onClick={() => handleExport(item, 'excel')} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Exportar Excel"><FileSpreadsheet size={14} /></button>
                     <button onClick={() => handleDuplicate(item)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Duplicar"><Copy size={14} /></button>
                     <button
-                      onClick={() => navigate(`/simulador/${item.agency_slug}`, {
+                      onClick={() => navigate(`/simulador/${item.agency_slug}?editPayslipId=${item.id}`, {
                         state: {
                           editPayslipId: item.id,
                           restoreSnapshot: {
