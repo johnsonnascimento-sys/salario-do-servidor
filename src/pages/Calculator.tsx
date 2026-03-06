@@ -120,27 +120,28 @@ export default function Calculator() {
     useEffect(() => {
         if (restoreAppliedRef.current) return;
 
-        const restorePayload = (location.state as { restoreSnapshot?: { calculatorState?: unknown } } | null)?.restoreSnapshot;
-        if (restorePayload?.calculatorState) {
-            const hydrated = hydrateCalculatorState(restorePayload.calculatorState);
+        let active = true;
+
+        const applyHydratedState = (snapshot: unknown) => {
+            if (!active || restoreAppliedRef.current || !snapshot) return;
+            const hydrated = hydrateCalculatorState(snapshot);
             setState(hydrated);
             setFormKey((prev) => prev + 1);
             restoreAppliedRef.current = true;
-            return;
+        };
+
+        if (editPayslipId) {
+            getPayslipById(editPayslipId)
+                .then((payslip) => {
+                    applyHydratedState(payslip?.calculator_state);
+                })
+                .catch(() => undefined);
+        } else {
+            const restorePayload = (location.state as { restoreSnapshot?: { calculatorState?: unknown } } | null)?.restoreSnapshot;
+            if (restorePayload?.calculatorState) {
+                applyHydratedState(restorePayload.calculatorState);
+            }
         }
-
-        if (!editPayslipId) return;
-
-        let active = true;
-        getPayslipById(editPayslipId)
-            .then((payslip) => {
-                if (!active || restoreAppliedRef.current || !payslip?.calculator_state) return;
-                const hydrated = hydrateCalculatorState(payslip.calculator_state);
-                setState(hydrated);
-                setFormKey((prev) => prev + 1);
-                restoreAppliedRef.current = true;
-            })
-            .catch(() => undefined);
 
         return () => {
             active = false;
