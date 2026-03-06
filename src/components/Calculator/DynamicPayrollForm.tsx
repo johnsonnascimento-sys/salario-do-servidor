@@ -115,6 +115,11 @@ const createUniqueId = (prefix: string) => {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
+const formatReferenciaMesAno = (mesRef: string, anoRef: number) => {
+    const mes = toReferenceMonthIndex(mesRef) || 1;
+    return `${String(mes).padStart(2, '0')}/${anoRef}`;
+};
+
 const isDiscountLabel = (label: string) => /desconto|cota-parte|corte|abatimento|restitui|dedu[cç][aã]o|glosa/i.test(label);
 const getPresetPickerLabel = (presetId: PredefinedRubricId, label: string) => (
     MULTI_INSTANCE_PRESETS.has(presetId) ? `${label} (pode repetir)` : label
@@ -198,6 +203,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const irOptions = Object.keys(courtConfig.historico_ir || {});
     const previdenciaComplementar = courtConfig.previdenciaComplementar;
     const isFunprespRegime = state.regimePrev === 'rpc' || state.regimePrev === 'migrado';
+    const competenciaReferencia = formatReferenciaMesAno(state.mesRef, state.anoRef);
     const showFunprespSection = Boolean(previdenciaComplementar?.enabled && isFunprespRegime);
     const funprespDefaultsAppliedRef = useRef(false);
     const overtimeLegacyMigratedRef = useRef(false);
@@ -1257,9 +1263,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const renderPreset = (instance: PresetInstance) => {
         const presetId = instance.presetId;
+        const renderReferenciaField = () => (
+            <div>
+                <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
+            </div>
+        );
+
         if (presetId === 'aq') {
             return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                    {renderReferenciaField()}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {isNovoAQ ? (
                         <>
                             <div>
@@ -1305,13 +1320,16 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             </div>
                         </>
                     )}
+                    </div>
                 </div>
             );
         }
 
         if (presetId === 'gratificacao') {
             return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                    {renderReferenciaField()}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className={styles.label}>Tipo</label>
                         <select className={styles.input} value={state.gratEspecificaTipo} onChange={e => update('gratEspecificaTipo', e.target.value)}>
@@ -1329,13 +1347,16 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         />
                         <span>Incluir na base do PSS</span>
                     </label>
+                    </div>
                 </div>
             );
         }
 
         if (presetId === 'vantagens') {
             return (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-3">
+                    {renderReferenciaField()}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className={styles.label}>VPNI (Lei)</label>
                         <input type="number" className={styles.input} value={state.vpni_lei} onChange={e => update('vpni_lei', toPositiveNumber(e.target.value))} />
@@ -1348,21 +1369,25 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <label className={styles.label}>ATS</label>
                         <input type="number" className={styles.input} value={state.ats} onChange={e => update('ats', toPositiveNumber(e.target.value))} />
                     </div>
+                    </div>
                 </div>
             );
         }
 
         if (presetId === 'abono') {
             return (
-                <label className={styles.checkboxLabel}>
-                    <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
-                    <span>Recebe abono de permanência</span>
-                </label>
+                <div className="space-y-3">
+                    {renderReferenciaField()}
+                    <label className={styles.checkboxLabel}>
+                        <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
+                        <span>Recebe abono de permanência</span>
+                    </label>
+                </div>
             );
         }
 
-        if (presetId === 'ferias') return <VacationCard state={state} update={update} styles={styles} />;
-        if (presetId === 'decimo') return <ThirteenthCard state={state} update={update} styles={styles} />;
+        if (presetId === 'ferias') return <VacationCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} />;
+        if (presetId === 'decimo') return <ThirteenthCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} />;
         if (presetId === 'hora_extra') {
             const overtimeEntry = instance.overtimeEntryId
                 ? state.overtimeEntries.find(item => item.id === instance.overtimeEntryId)
@@ -1376,7 +1401,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             }
 
-            return <OvertimeCard entry={overtimeEntry} updateEntry={updateOvertimeEntry} styles={styles} />;
+            return <OvertimeCard
+                entry={overtimeEntry}
+                updateEntry={updateOvertimeEntry}
+                competenciaReferencia={competenciaReferencia}
+                styles={styles}
+            />;
         }
         if (presetId === 'substituicao') {
             const substitutionEntry = instance.substitutionEntryId
@@ -1391,30 +1421,42 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             }
 
-            return <SubstitutionCard entry={substitutionEntry} updateEntry={updateSubstitutionEntry} functionKeys={functionKeys} styles={styles} />;
+            return <SubstitutionCard
+                entry={substitutionEntry}
+                updateEntry={updateSubstitutionEntry}
+                functionKeys={functionKeys}
+                competenciaReferencia={competenciaReferencia}
+                styles={styles}
+            />;
         }
-        if (presetId === 'licenca') return <LicenseCard state={state} update={update} styles={styles} />;
-        if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} courtConfig={courtConfig} />;
+        if (presetId === 'licenca') return <LicenseCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} />;
+        if (presetId === 'diarias') return <DailiesCard state={state} update={update} styles={styles} courtConfig={courtConfig} competenciaReferencia={competenciaReferencia} />;
 
         if (presetId === 'pre_escolar') {
             return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className={styles.label}>Qtd. dependentes</label>
-                        <input type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
-                    </div>
-                    <div>
-                        <label className={styles.label}>Cota pré-escolar</label>
-                        <input type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
+                <div className="space-y-3">
+                    {renderReferenciaField()}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className={styles.label}>Qtd. dependentes</label>
+                            <input type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
+                        </div>
+                        <div>
+                            <label className={styles.label}>Cota pré-escolar</label>
+                            <input type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
+                        </div>
                     </div>
                 </div>
             );
         }
 
         return (
-            <div>
-                <label className={styles.label}>Gasto mensal de transporte</label>
-                <input type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
+            <div className="space-y-3">
+                {renderReferenciaField()}
+                <div>
+                    <label className={styles.label}>Gasto mensal de transporte</label>
+                    <input type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
+                </div>
             </div>
         );
     };

@@ -12,6 +12,7 @@ interface DailiesCardProps {
     update: (field: keyof CalculatorState, value: any) => void;
     styles: any;
     courtConfig?: CourtConfig | null;
+    competenciaReferencia: string;
 }
 
 const toNonNegativeNumber = (value: string) => Math.max(0, Number(value) || 0);
@@ -28,7 +29,7 @@ const formatCurrencyBr = (value: number) => value.toLocaleString('pt-BR', { styl
 const isEndBeforeStart = (startDate: string, endDate: string) =>
     isIsoDate(startDate) && isIsoDate(endDate) && endDate < startDate;
 
-export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig }) => {
+export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig, competenciaReferencia }) => {
     const dailiesConfig = courtConfig?.dailies;
     const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
     const isPeriodMode = state.diariasModoDesconto === 'periodo';
@@ -54,8 +55,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
     ), [state.diariasDataInicio, state.diariasDataFim, periodDiscountRules]);
 
-    const periodTravelDays = periodSummary?.totalDays ?? Math.max(0, state.diariasQtd || 0);
-    const paidDailiesQty = periodSummary?.payableDays ?? periodTravelDays;
+    const periodTravelQty = periodSummary?.totalDays ?? Math.max(0, state.diariasQtd || 0);
+    const paidDailiesQty = periodSummary?.payableDays ?? periodTravelQty;
     const automaticDiscountDays = periodSummary?.discountDays ?? paidDailiesQty;
     const hasValidDateRange = periodSummary !== null;
     const ldoCapEnabled = Boolean(dailiesConfig?.ldoCap?.enabled);
@@ -80,7 +81,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const holidayYearsLabel = holidayYears.length > 0 ? holidayYears.join(', ') : 'sem ano definido';
     const holidayCalendarLabel =
         discountRules.holidayCalendarLabel?.trim() ||
-        `Calendário oficial de feriados cadastrado no painel (${holidayYearsLabel})`;
+        `Calendario oficial de feriados cadastrado no painel (${holidayYearsLabel})`;
 
     const handleModeChange = (mode: 'periodo' | 'manual') => {
         update('diariasModoDesconto', mode);
@@ -113,12 +114,17 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Plane className="w-4 h-4" /> Diárias
+                <Plane className="w-4 h-4" /> Diarias
             </h3>
 
             <div className="space-y-6">
+                <div>
+                    <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                    <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
+                </div>
+
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Diárias de viagem</h4>
+                    <h4 className={styles.innerBoxTitle}>Diarias de viagem</h4>
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <label className={styles.checkboxLabel}>
@@ -129,7 +135,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     checked={isPeriodMode}
                                     onChange={() => handleModeChange('periodo')}
                                 />
-                                <span>Lançar por datas</span>
+                                <span>Lancar por datas</span>
                             </label>
                             <label className={styles.checkboxLabel}>
                                 <input
@@ -139,7 +145,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     checked={!isPeriodMode}
                                     onChange={() => handleModeChange('manual')}
                                 />
-                                <span>Lançar por quantidade de diárias</span>
+                                <span>Lancar por quantidade de diarias</span>
                             </label>
                         </div>
 
@@ -147,7 +153,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <div className="space-y-3">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={styles.label}>Data de início</label>
+                                        <label className={styles.label}>Data de inicio</label>
                                         <input
                                             type="date"
                                             className={styles.input}
@@ -171,25 +177,25 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     {hasValidDateRange
                                         ? (
                                             <>
-                                                <p>Quantidade de diárias no período (calendário): {periodTravelDays}.</p>
-                                                <p>Quantidade de diárias pagas no período: {paidDailiesQty}.</p>
+                                                <p>Quantidade de diarias no periodo (calendario): {periodTravelQty}.</p>
+                                                <p>Quantidade de diarias pagas no periodo: {paidDailiesQty}.</p>
                                                 {periodSummary?.halfDailyApplied ? (
                                                     <p>
-                                                        Retorno em {periodSummary.returnDateIsBusinessDay ? 'dia útil' : periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary.returnDate)}): meia diária aplicada ({formatCurrencyBr(halfDailyValue)}).
+                                                        Retorno em {periodSummary.returnDateIsBusinessDay ? 'dia util' : periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary.returnDate)}): meia diaria aplicada ({formatCurrencyBr(halfDailyValue)}).
                                                     </p>
                                                 ) : (
                                                     <p>
-                                                        Retorno em {periodSummary?.returnDateIsBusinessDay ? 'dia útil' : periodSummary?.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary!.returnDate)}), mas regra de meia diária está desativada.
+                                                        Retorno em {periodSummary?.returnDateIsBusinessDay ? 'dia util' : periodSummary?.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary!.returnDate)}), mas regra de meia diaria esta desativada.
                                                     </p>
                                                 )}
                                             </>
                                         )
-                                        : 'Preencha início e fim para calcular automaticamente a quantidade de diárias.'}
+                                        : 'Preencha inicio e fim para calcular automaticamente a quantidade de diarias.'}
                                 </div>
                             </div>
                         ) : (
                             <div>
-                                <label className={styles.label}>Quantidade de diárias</label>
+                                <label className={styles.label}>Quantidade de diarias</label>
                                 <input
                                     type="number"
                                     step="0.5"
@@ -217,22 +223,22 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         </div>
 
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
-                            <p>Valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
-                            <p>{holidayCalendarLabel} usado no desconto automático por datas.</p>
+                            <p>Valores de diarias seguem a tabela vigente e nao acompanham o mes/ano selecionado.</p>
+                            <p>{holidayCalendarLabel} usado no desconto automatico por datas.</p>
                             <p>Datas de feriados oficiais cadastradas: {formatDateList(configuredHolidayDates)}.</p>
-                            <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
-                            <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
+                            <p>Divisor do auxilio-alimentacao: {discountRules.foodDivisor} dias</p>
+                            <p>Divisor do auxilio-transporte: {discountRules.transportDivisor} dias</p>
                             <p>
                                 Regra de retorno:
-                                {discountRules.halfDailyOnBusinessReturnDay ? ' meia diária ativa em qualquer dia' : ' meia diária inativa'} e
-                                {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxílios apenas em dia útil' : ' meio desconto de auxílios inativo'}.
+                                {discountRules.halfDailyOnBusinessReturnDay ? ' meia diaria ativa em qualquer dia' : ' meia diaria inativa'} e
+                                {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxilios apenas em dia util' : ' meio desconto de auxilios inativo'}.
                             </p>
                             {ldoCapEnabled && ldoCapValue > 0 && (
                                 <p>
-                                    Teto LDO por diária: {formatCurrencyBr(ldoCapValue)}
+                                    Teto LDO por diaria: {formatCurrencyBr(ldoCapValue)}
                                 </p>
                             )}
-                            <p>Diária do ministro: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
+                            <p>Diaria do ministro: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'nao configurada'}.</p>
                         </div>
                     </div>
                 </div>
@@ -248,7 +254,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     checked={state.diariasDescontarAlimentacao}
                                     onChange={e => update('diariasDescontarAlimentacao', e.target.checked)}
                                 />
-                                <span>Descontar auxílio-alimentação</span>
+                                <span>Descontar auxilio-alimentacao</span>
                             </label>
                             <label className={styles.checkboxLabel}>
                                 <input
@@ -257,7 +263,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     checked={state.diariasDescontarTransporte}
                                     onChange={e => update('diariasDescontarTransporte', e.target.checked)}
                                 />
-                                <span>Descontar auxílio-transporte</span>
+                                <span>Descontar auxilio-transporte</span>
                             </label>
                         </div>
 
@@ -269,36 +275,36 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                             ? (
                                                 <>
                                                     <p>Dias usados no desconto: {automaticDiscountDays}.</p>
-                                                    <p>Dias não descontados por finais de semana e feriados: {periodSummary.excludedDays}.</p>
+                                                    <p>Dias nao descontados por finais de semana e feriados: {periodSummary.excludedDays}.</p>
                                                     {periodSummary.halfDiscountApplied ? (
                                                         <p>
-                                                            Retorno em dia útil ({formatIsoDatePtBr(periodSummary.returnDate)}): meio desconto de auxílios aplicado
-                                                            {state.diariasDescontarAlimentacao ? ` | alimentação: ${formatCurrencyBr(halfFoodDiscountValue)}` : ''}
+                                                            Retorno em dia util ({formatIsoDatePtBr(periodSummary.returnDate)}): meio desconto de auxilios aplicado
+                                                            {state.diariasDescontarAlimentacao ? ` | alimentacao: ${formatCurrencyBr(halfFoodDiscountValue)}` : ''}
                                                             {state.diariasDescontarTransporte ? ` | transporte: ${formatCurrencyBr(halfTransportDiscountValue)}` : ''}.
                                                         </p>
                                                     ) : (
                                                         !periodSummary.returnDateIsBusinessDay && (
                                                             <p>
-                                                                Retorno em {periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary.returnDate)}): sem desconto de auxílios no dia do retorno.
+                                                                Retorno em {periodSummary.returnDateIsWeekend ? 'fim de semana' : 'feriado'} ({formatIsoDatePtBr(periodSummary.returnDate)}): sem desconto de auxilios no dia do retorno.
                                                             </p>
                                                         )
                                                     )}
-                                                    <p>Finais de semana considerados para não desconto: {formatDateList(periodSummary.weekendExcludedDates)}.</p>
-                                                    <p>Feriados considerados para não desconto: {formatDateList(periodSummary.holidayExcludedDates)}.</p>
+                                                    <p>Finais de semana considerados para nao desconto: {formatDateList(periodSummary.weekendExcludedDates)}.</p>
+                                                    <p>Feriados considerados para nao desconto: {formatDateList(periodSummary.holidayExcludedDates)}.</p>
                                                 </>
                                             )
                                             : `Dias usados no desconto: ${automaticDiscountDays}.`
                                     )
-                                    : 'Preencha início e fim para calcular automaticamente os dias de desconto.'}
+                                    : 'Preencha inicio e fim para calcular automaticamente os dias de desconto.'}
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300">
-                                    No modo por quantidade, os dias de desconto dos auxílios devem ser informados manualmente.
+                                    No modo por quantidade, os dias de desconto dos auxilios devem ser informados manualmente.
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={styles.label}>Dias para desconto do auxílio-alimentação</label>
+                                        <label className={styles.label}>Dias para desconto do auxilio-alimentacao</label>
                                         <input
                                             type="number"
                                             min="0"
@@ -311,7 +317,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         />
                                     </div>
                                     <div>
-                                        <label className={styles.label}>Dias para desconto do auxílio-transporte</label>
+                                        <label className={styles.label}>Dias para desconto do auxilio-transporte</label>
                                         <input
                                             type="number"
                                             min="0"
@@ -330,7 +336,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                 </div>
 
                 <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Auxílios recebidos no deslocamento (glosa)</h4>
+                    <h4 className={styles.innerBoxTitle}>Auxilios recebidos no deslocamento (glosa)</h4>
                     <div className="space-y-2">
                         <label className={styles.checkboxLabel}>
                             <input
@@ -349,7 +355,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                 onChange={e => update('diariasExtAlimentacao', e.target.checked)}
                                 className={styles.checkbox}
                             />
-                            Alimentação fornecida
+                            Alimentacao fornecida
                         </label>
 
                         <label className={styles.checkboxLabel}>

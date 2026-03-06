@@ -6,6 +6,7 @@ import { formatCurrency } from '../../../utils/calculations';
 interface ThirteenthCardProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
+    competenciaReferencia: string;
     styles: any;
 }
 
@@ -14,7 +15,7 @@ const parseCurrencyInput = (value: string) => {
     return Number(raw) / 100;
 };
 
-export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, styles }) => {
+export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, competenciaReferencia, styles }) => {
     const renderAutoToggle = (enabled: boolean, amount: number, label: string, onToggle: () => void) => (
         <div
             className={styles.innerBox + ' cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors'}
@@ -45,6 +46,11 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
             </h3>
 
             <div className="space-y-4">
+                <div>
+                    <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                    <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
+                </div>
+
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                     1a parcela sem IR/PSS. Na 2a parcela, IR e PSS sobre o total (1a + 2a), sem PSS sobre FC/CJ, com abatimento da 1a parcela.
                 </p>

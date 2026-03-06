@@ -6,10 +6,11 @@ interface SubstitutionCardProps {
     entry: SubstitutionEntry;
     updateEntry: (id: string, patch: Partial<SubstitutionEntry>) => void;
     functionKeys: string[];
+    competenciaReferencia: string;
     styles: any;
 }
 
-export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, styles }) => {
+export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, competenciaReferencia, styles }) => {
     const updateDays = (key: string, days: number) => {
         updateEntry(entry.id, { dias: { ...entry.dias, [key]: days } });
     };
@@ -17,10 +18,15 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Substituição de Função
+                <Briefcase className="w-4 h-4" /> Substituicao de Funcao
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
+                    <div>
+                        <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                        <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
+                    </div>
+
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <label className={styles.checkboxLabel}>
                             <input
@@ -29,7 +35,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                                 checked={entry.isEA}
                                 onChange={e => updateEntry(entry.id, { isEA: e.target.checked })}
                             />
-                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
+                            <span>Incluir na base do IR (Exercicio Anterior - EA)</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input
@@ -38,7 +44,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                                 checked={entry.pssIsEA}
                                 onChange={e => updateEntry(entry.id, { pssIsEA: e.target.checked })}
                             />
-                            <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
+                            <span>Incluir na base do PSS (Exercicio Anterior - EA)</span>
                         </label>
                     </div>
 

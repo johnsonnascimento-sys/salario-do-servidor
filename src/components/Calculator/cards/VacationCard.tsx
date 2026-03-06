@@ -6,6 +6,7 @@ import { formatCurrency } from '../../../utils/calculations';
 interface VacationCardProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
+    competenciaReferencia: string;
     styles: any;
 }
 
@@ -14,7 +15,7 @@ const parseCurrencyInput = (value: string) => {
     return Number(raw) / 100;
 };
 
-export const VacationCard: React.FC<VacationCardProps> = ({ state, update, styles }) => {
+export const VacationCard: React.FC<VacationCardProps> = ({ state, update, competenciaReferencia, styles }) => {
     useEffect(() => {
         if (!state.feriasAntecipadas || state.feriasDescManual) {
             return;
@@ -58,6 +59,11 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
             </h3>
 
             <div className="space-y-4">
+                <div>
+                    <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                    <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
+                </div>
+
                 <div className="flex items-center justify-between">
                     <label className={styles.label}>Adicional 1/3 Férias</label>
                     <label className={styles.checkboxLabel}>

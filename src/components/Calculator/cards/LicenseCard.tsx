@@ -5,17 +5,23 @@ import { CalculatorState } from '../../../types';
 interface LicenseCardProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
+    competenciaReferencia: string;
     styles: any;
 }
 
-export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, styles }) => {
+export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, competenciaReferencia, styles }) => {
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Licença Compensatória
+                <Briefcase className="w-4 h-4" /> Licenca Compensatoria
             </h3>
 
             <div className={styles.innerBox}>
+                <div>
+                    <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                    <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
+                </div>
+
                 <div className="space-y-4">
                     <div>
                         <label className={styles.label}>Qtd. Dias a indenizar</label>

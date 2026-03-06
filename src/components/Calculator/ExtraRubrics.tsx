@@ -2,6 +2,7 @@
 import React from 'react';
 import { List, Plus, Trash2 } from 'lucide-react';
 import { CalculatorState, Rubrica } from '../../types';
+import { toReferenceMonthIndex } from './referenceDateUtils';
 
 interface ExtraRubricsProps {
     state: CalculatorState;
@@ -12,6 +13,8 @@ interface ExtraRubricsProps {
 }
 
 export const ExtraRubrics: React.FC<ExtraRubricsProps> = ({ state, addRubrica, removeRubrica, updateRubrica, styles }) => {
+    const competenciaReferencia = `${String(toReferenceMonthIndex(state.mesRef) || 1).padStart(2, '0')}/${state.anoRef}`;
+
     return (
         <div className={`${styles.card} mt-8`}>
             <h3 className={styles.sectionTitle}>
@@ -51,6 +54,10 @@ export const ExtraRubrics: React.FC<ExtraRubricsProps> = ({ state, addRubrica, r
                             value={rubrica.valor || ''}
                             onChange={e => updateRubrica(rubrica.id, 'valor', Number(e.target.value))}
                         />
+                        <div>
+                            <label className={styles.label}>Competencia da rubrica (MM/AAAA) - informativo</label>
+                            <input type="text" className={styles.input} value={competenciaReferencia} readOnly />
+                        </div>
                         <button onClick={() => removeRubrica(rubrica.id)} className="text-neutral-400 hover:text-error-500 p-2 rounded-lg hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-900/60 transition-colors">
                             <Trash2 size={16} />
                         </button>
