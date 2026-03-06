@@ -556,7 +556,29 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 key => key.trim().toLowerCase().replace(/[^a-z0-9]/g, '') === sanitizedCurrent
             );
 
-            update('funcao', matchedByToken || noFunctionCode);
+            if (matchedByToken) {
+                update('funcao', matchedByToken);
+                return;
+            }
+
+            // Fallback para snapshots legados em formato de texto/label
+            // Ex.: "Funcao Comissionada (Opcao) - FC4" ou "CJ-2"
+            const tokenMatch = normalizedCurrent.match(/(fc|cj)\s*[-_ ]?\s*(\d+)/i);
+            if (tokenMatch) {
+                const token = `${tokenMatch[1]}${tokenMatch[2]}`.toLowerCase();
+                const matchedByEmbeddedToken = functionKeys.find((key) => {
+                    const normalizedKey = key.trim().toLowerCase();
+                    const keyToken = normalizedKey.replace(/[^a-z0-9]/g, '');
+                    return normalizedKey.includes(token) || keyToken.includes(token);
+                });
+
+                if (matchedByEmbeddedToken) {
+                    update('funcao', matchedByEmbeddedToken);
+                    return;
+                }
+            }
+
+            update('funcao', noFunctionCode);
         }
     }, [noFunctionCode, functionKeys, state.funcao, update]);
 
