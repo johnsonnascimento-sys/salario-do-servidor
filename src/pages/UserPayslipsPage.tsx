@@ -1,6 +1,6 @@
 ﻿import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit3, Eye, FileDown, FileSpreadsheet, Search, Trash2 } from 'lucide-react';
+import { Copy, Edit3, Eye, FileDown, FileSpreadsheet, Search, Trash2 } from 'lucide-react';
 import { useUserPayslips } from '../hooks/user/useUserPayslips';
 import { formatCurrency } from '../utils/calculations';
 import { exportToExcel, exportToPDF } from '../services/exportService';
@@ -13,7 +13,7 @@ export default function UserPayslipsPage() {
   const [month, setMonth] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { result, loading, error, reload, remove } = useUserPayslips({ page: 1, pageSize: 10 });
+  const { result, loading, error, reload, create, remove } = useUserPayslips({ page: 1, pageSize: 10 });
 
   const yearOptions = useMemo(() => {
     const years = new Set(result.data.map((item) => item.year_ref));
@@ -58,6 +58,23 @@ export default function UserPayslipsPage() {
     const ok = window.confirm('Deseja excluir este holerite? Essa ação não pode ser desfeita.');
     if (!ok) return;
     await remove(id);
+  };
+
+  const handleDuplicate = async (item: UserPayslip) => {
+    await create({
+      title: `${item.title} - Cópia`,
+      agency_slug: item.agency_slug,
+      agency_name: item.agency_name,
+      month_ref: item.month_ref,
+      year_ref: item.year_ref,
+      tags: item.tags,
+      notes: item.notes,
+      calculator_state: item.calculator_state,
+      result_rows: item.result_rows,
+      liquido: item.liquido,
+      total_bruto: item.total_bruto,
+      total_descontos: item.total_descontos,
+    });
   };
 
   return (
@@ -126,6 +143,7 @@ export default function UserPayslipsPage() {
                     <button onClick={() => navigate(`/minha-area/holerites/${item.id}`)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Detalhes"><Eye size={14} /></button>
                     <button onClick={() => handleExport(item, 'pdf')} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Exportar PDF"><FileDown size={14} /></button>
                     <button onClick={() => handleExport(item, 'excel')} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Exportar Excel"><FileSpreadsheet size={14} /></button>
+                    <button onClick={() => handleDuplicate(item)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Duplicar"><Copy size={14} /></button>
                     <button onClick={() => navigate(`/minha-area/holerites/${item.id}`)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Editar"><Edit3 size={14} /></button>
                     <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg border border-error-300 text-error-600" title="Excluir"><Trash2 size={14} /></button>
                   </div>
