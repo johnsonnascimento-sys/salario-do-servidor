@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.17 - 12/03/2026
+- Fix: `Hora Extra` passa a aceitar `competenciaRef` por entrada e `valor bruto oficial` opcional para rubricas indenizatorias/excluidas do IR, permitindo reproduzir pagamentos retroativos do STM no proprio card.
+- Fix: motor de Hora Extra agora calcula cada entrada com base isolada e preserva os valores oficiais manuais nas rubricas excluidas do IR, sem contaminar as horas mensais com IR.
+- Fix: detalhamento final deixa de consolidar horas extras repetidas de forma ambigua e passa a separar as rubricas por incidencia/competencia quando houver multiplas entradas.
+- Fix: detalhamento de IR mensal deixa de contar `Substituicao` duas vezes no `result_rows`, alinhando o resumo salvo ao total efetivo de descontos.
+
 ## 2.1.16 - 05/03/2026
 - Feat(Auth): nova area de usuario com login/senha em `/acesso` e dashboard em `/minha-area`.
 - Feat(Auth): cadastro em beta fechado com allowlist (`cpf + email`) e mensagem de desenvolvimento para nao autorizados.

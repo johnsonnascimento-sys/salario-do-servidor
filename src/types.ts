@@ -147,6 +147,7 @@ export interface OvertimeEntry {
   isEA: boolean;
   excluirIR: boolean;
   competenciaRef?: string;
+  valorBrutoManual?: number;
 }
 
 export interface SubstitutionEntry {

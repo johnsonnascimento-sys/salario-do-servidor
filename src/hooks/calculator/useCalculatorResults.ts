@@ -14,6 +14,27 @@ import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalc
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
+import { buildOvertimeCreditLabel, calculateResolvedOvertimeEntries } from '../../utils/overtimeEntries';
+
+const getCompetenciaReferencia = (mesRef: string, anoRef: number) => {
+    const monthMap: Record<string, number> = {
+        JANEIRO: 1,
+        FEVEREIRO: 2,
+        'MARÇO': 3,
+        MARCO: 3,
+        ABRIL: 4,
+        MAIO: 5,
+        JUNHO: 6,
+        JULHO: 7,
+        AGOSTO: 8,
+        SETEMBRO: 9,
+        OUTUBRO: 10,
+        NOVEMBRO: 11,
+        DEZEMBRO: 12
+    };
+    const month = monthMap[String(mesRef || '').trim().toUpperCase()] || 1;
+    return `${String(month).padStart(2, '0')}/${anoRef}`;
+};
 
 export const useCalculatorResults = (
     state: CalculatorState,
@@ -205,23 +226,43 @@ export const useCalculatorResults = (
 
         if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
         if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: substitutionEaTotal, type: 'C' });
-        const overtimeEntries = state.overtimeEntries;
-        const totalPonderadoHe = overtimeEntries.reduce(
-            (acc, entry) => acc + (Math.max(0, entry.qtd50 || 0) * 1.5) + (Math.max(0, entry.qtd100 || 0) * 2),
-            0
+        const competenciaReferencia = getCompetenciaReferencia(state.mesRef, state.anoRef);
+        const overtimeEntries = state.overtimeEntries.length > 0
+            ? state.overtimeEntries
+            : [{
+                id: 'legacy-he',
+                qtd50: state.heQtd50 || 0,
+                qtd100: state.heQtd100 || 0,
+                isEA: state.heIsEA,
+                excluirIR: state.heExcluirIR,
+                competenciaRef: competenciaReferencia,
+                valorBrutoManual: 0
+            }];
+        const resolvedOvertimeEntries = calculateResolvedOvertimeEntries(
+            state,
+            courtConfig,
+            overtimeEntries,
+            { defaultCompetenciaRef: competenciaReferencia }
         );
-        const valorHoraHe = totalPonderadoHe > 0 ? (state.heTotal || 0) / totalPonderadoHe : 0;
-        const heMensalTotal = overtimeEntries
+        const shouldAnnotateOvertimeCompetencia =
+            resolvedOvertimeEntries.filter(entry => entry.heTotal > 0).length > 1 ||
+            resolvedOvertimeEntries.some(entry => entry.competenciaRef && entry.competenciaRef !== competenciaReferencia);
+        const heMensalTotal = resolvedOvertimeEntries
             .filter(entry => !entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + (valorHoraHe * 1.5 * Math.max(0, entry.qtd50 || 0)) + (valorHoraHe * 2 * Math.max(0, entry.qtd100 || 0)), 0);
-        const heEaTotal = overtimeEntries
+            .reduce((acc, entry) => acc + entry.heTotal, 0);
+        const heEaTotal = resolvedOvertimeEntries
             .filter(entry => entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + (valorHoraHe * 1.5 * Math.max(0, entry.qtd50 || 0)) + (valorHoraHe * 2 * Math.max(0, entry.qtd100 || 0)), 0);
-        const heExcluidoTotal = Math.max(0, (state.heTotal || 0) - heMensalTotal - heEaTotal);
+            .reduce((acc, entry) => acc + entry.heTotal, 0);
 
-        if (heMensalTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR MENSAL)', value: heMensalTotal, type: 'C' });
-        if (heEaTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR EA)', value: heEaTotal, type: 'C' });
-        if (heExcluidoTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (EXCLUÍDO IR)', value: heExcluidoTotal, type: 'C' });
+        resolvedOvertimeEntries
+            .filter(entry => entry.heTotal > 0)
+            .forEach((entry) => {
+                rows.push({
+                    label: buildOvertimeCreditLabel(entry, shouldAnnotateOvertimeCompetencia),
+                    value: entry.heTotal,
+                    type: 'C'
+                });
+            });
         if (state.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: state.vpni_lei, type: 'C' });
         if (state.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: state.vpni_decisao, type: 'C' });
         if (state.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: state.ats, type: 'C' });
@@ -257,7 +298,7 @@ export const useCalculatorResults = (
         const heIrEA = Math.max(0, state.heIrEA || 0);
         const substIrMensal = Math.max(0, state.substIrMensal || 0);
         const substIrEA = Math.max(0, state.substIrEA || 0);
-        const irMensalOutrasRubricas = Math.max(0, (state.irMensal || 0) - heIrMensal);
+        const irMensalOutrasRubricas = Math.max(0, (state.irMensal || 0) - heIrMensal - substIrMensal);
         if (irMensalOutrasRubricas > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (DEMAIS RUBRICAS)', value: irMensalOutrasRubricas, type: 'D' });
         if (heIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (HORA EXTRA)', value: heIrMensal, type: 'D' });
         if (substIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (SUBSTITUIÇÃO)', value: substIrMensal, type: 'D' });
