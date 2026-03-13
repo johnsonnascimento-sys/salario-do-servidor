@@ -71,8 +71,6 @@ const hydrateCalculatorState = (snapshot: unknown): CalculatorState => {
                 qtd100: Math.max(0, Number(entry?.qtd100 || 0)),
                 isEA: Boolean(entry?.isEA),
                 excluirIR: Boolean(entry?.excluirIR),
-                competenciaRef: String(entry?.competenciaRef || '').trim(),
-                valorBrutoManual: Math.max(0, Number(entry?.valorBrutoManual || 0)),
             }))
             : [],
         substitutionEntries: Array.isArray(merged.substitutionEntries)

@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, DollarSign, GripVertical, Minus, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
-import { calculateResolvedOvertimeEntries } from '../../utils/overtimeEntries';
 import { VacationCard } from './cards/VacationCard';
 import { ThirteenthCard } from './cards/ThirteenthCard';
 import { OvertimeCard } from './cards/OvertimeCard';
@@ -637,12 +636,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 qtd100: Math.max(0, state.heQtd100 || 0),
                 isEA: Boolean(state.heIsEA),
                 excluirIR: Boolean(state.heExcluirIR),
-                competenciaRef: competenciaReferencia,
-                valorBrutoManual: 0
+                competenciaRef: ''
             }
         ]);
         overtimeLegacyMigratedRef.current = true;
-    }, [competenciaReferencia, state.overtimeEntries.length, state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, update]);
+    }, [state.overtimeEntries.length, state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, update]);
 
     useEffect(() => {
         if (substitutionLegacyMigratedRef.current) return;
@@ -678,8 +676,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         qtd100: 0,
         isEA: false,
         excluirIR: false,
-        competenciaRef: competenciaReferencia,
-        valorBrutoManual: 0
+        competenciaRef: ''
     });
 
     const createSubstitutionEntry = (): SubstitutionEntry => ({
@@ -1054,31 +1051,27 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         qtd50: state.heQtd50 || 0,
                         qtd100: state.heQtd100 || 0,
                         isEA: state.heIsEA,
-                        excluirIR: state.heExcluirIR,
-                        competenciaRef: competenciaReferencia,
-                        valorBrutoManual: 0
+                        excluirIR: state.heExcluirIR
                     };
                     const overtimeEntry = entry || fallbackEntry;
 
                     const overtimeBaseEntries = state.overtimeEntries.length > 0 ? state.overtimeEntries : [fallbackEntry];
-                    const resolvedEntries = calculateResolvedOvertimeEntries(
-                        state,
-                        courtConfig,
-                        overtimeBaseEntries,
-                        { defaultCompetenciaRef: competenciaReferencia }
+                    const totalPonderado = overtimeBaseEntries.reduce(
+                        (acc, item) => acc + (Math.max(0, item.qtd50 || 0) * 1.5) + (Math.max(0, item.qtd100 || 0) * 2),
+                        0
                     );
-                    const resolvedEntry = resolvedEntries.find(item => item.id === overtimeEntry.id) || resolvedEntries[0];
+                    const valorHora = totalPonderado > 0 ? (state.heTotal || 0) / totalPonderado : 0;
 
-                    const he50Bruto = roundCurrency(resolvedEntry?.heVal50 || 0);
-                    const he100Bruto = roundCurrency(resolvedEntry?.heVal100 || 0);
+                    const he50Bruto = roundCurrency(valorHora * 1.5 * Math.max(0, overtimeEntry.qtd50 || 0));
+                    const he100Bruto = roundCurrency(valorHora * 2.0 * Math.max(0, overtimeEntry.qtd100 || 0));
                     const heTotalBruto = roundCurrency(he50Bruto + he100Bruto);
 
-                    const mensalBaseTotal = resolvedEntries
+                    const mensalBaseTotal = overtimeBaseEntries
                         .filter(item => !item.isEA && !item.excluirIR)
-                        .reduce((acc, item) => acc + item.heTotal, 0);
-                    const eaBaseTotal = resolvedEntries
+                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
+                    const eaBaseTotal = overtimeBaseEntries
                         .filter(item => item.isEA && !item.excluirIR)
-                        .reduce((acc, item) => acc + item.heTotal, 0);
+                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
                     const heIrMensalTotal = Math.max(0, state.heIrMensal || 0);
                     const heIrEATotal = Math.max(0, state.heIrEA || 0);
 
