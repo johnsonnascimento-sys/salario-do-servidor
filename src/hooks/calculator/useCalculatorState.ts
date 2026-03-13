@@ -11,6 +11,7 @@
 import { useState, useCallback } from 'react';
 import type { ChangeEvent } from 'react';
 import { INITIAL_STATE, CalculatorState, Rubrica } from '../../types';
+import { loadCalculatorDraftState } from '../../utils/calculatorState';
 
 const createRubricaId = () => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -20,7 +21,7 @@ const createRubricaId = () => {
 };
 
 export const useCalculatorState = () => {
-    const [state, setState] = useState<CalculatorState>(INITIAL_STATE);
+    const [state, setState] = useState<CalculatorState>(() => loadCalculatorDraftState());
 
     const update = useCallback((field: keyof CalculatorState, value: any) => {
         setState(prev => ({ ...prev, [field]: value }));
