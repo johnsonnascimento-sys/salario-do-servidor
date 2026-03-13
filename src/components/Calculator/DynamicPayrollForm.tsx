@@ -1064,27 +1064,57 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         qtd50: state.heQtd50 || 0,
                         qtd100: state.heQtd100 || 0,
                         isEA: state.heIsEA,
-                        excluirIR: state.heExcluirIR
+                        excluirIR: state.heExcluirIR,
+                        usarSubstituicaoFuncao: false
                     };
                     const overtimeEntry = entry || fallbackEntry;
 
                     const overtimeBaseEntries = state.overtimeEntries.length > 0 ? state.overtimeEntries : [fallbackEntry];
-                    const totalPonderado = overtimeBaseEntries.reduce(
-                        (acc, item) => acc + (Math.max(0, item.qtd50 || 0) * 1.5) + (Math.max(0, item.qtd100 || 0) * 2),
-                        0
-                    );
-                    const valorHora = totalPonderado > 0 ? (state.heTotal || 0) / totalPonderado : 0;
+                    const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 175;
+                    const baseOvertime = state.vencimento + state.gaj + state.aqTituloValor + state.aqTreinoValor +
+                        state.gratEspecificaValor + state.vpni_lei + state.vpni_decisao + state.ats + state.abonoPermanencia;
+                    const resolveFuncValue = (funcKey?: string) => {
+                        if (!funcKey || funcKey === noFunctionCode) return 0;
+                        return currentTables.funcoes[funcKey] || 0;
+                    };
+                    const calcSegment = (funcKey: string | undefined, qtd50: number, qtd100: number) => {
+                        const valorHora = overtimeDivisor > 0 ? (baseOvertime + resolveFuncValue(funcKey)) / overtimeDivisor : 0;
+                        return {
+                            he50: valorHora * 1.5 * Math.max(0, qtd50 || 0),
+                            he100: valorHora * 2.0 * Math.max(0, qtd100 || 0)
+                        };
+                    };
+                    const calcEntryTotals = (item: OvertimeEntry) => {
+                        const titular = calcSegment(state.funcao, item.qtd50 || 0, item.qtd100 || 0);
+                        let he50 = titular.he50;
+                        let he100 = titular.he100;
 
-                    const he50Bruto = roundCurrency(valorHora * 1.5 * Math.max(0, overtimeEntry.qtd50 || 0));
-                    const he100Bruto = roundCurrency(valorHora * 2.0 * Math.max(0, overtimeEntry.qtd100 || 0));
+                        if (item.usarSubstituicaoFuncao && item.horasPorFuncao) {
+                            Object.entries(item.horasPorFuncao).forEach(([funcKey, horas]) => {
+                                const segmento = calcSegment(funcKey, horas?.qtd50 || 0, horas?.qtd100 || 0);
+                                he50 += segmento.he50;
+                                he100 += segmento.he100;
+                            });
+                        }
+
+                        return {
+                            he50,
+                            he100,
+                            total: he50 + he100
+                        };
+                    };
+
+                    const currentHe = calcEntryTotals(overtimeEntry);
+                    const he50Bruto = roundCurrency(currentHe.he50);
+                    const he100Bruto = roundCurrency(currentHe.he100);
                     const heTotalBruto = roundCurrency(he50Bruto + he100Bruto);
 
                     const mensalBaseTotal = overtimeBaseEntries
                         .filter(item => !item.isEA && !item.excluirIR)
-                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
+                        .reduce((acc, item) => acc + calcEntryTotals(item).total, 0);
                     const eaBaseTotal = overtimeBaseEntries
                         .filter(item => item.isEA && !item.excluirIR)
-                        .reduce((acc, item) => acc + (valorHora * 1.5 * Math.max(0, item.qtd50 || 0)) + (valorHora * 2.0 * Math.max(0, item.qtd100 || 0)), 0);
+                        .reduce((acc, item) => acc + calcEntryTotals(item).total, 0);
                     const heIrMensalTotal = Math.max(0, state.heIrMensal || 0);
                     const heIrEATotal = Math.max(0, state.heIrEA || 0);
 
