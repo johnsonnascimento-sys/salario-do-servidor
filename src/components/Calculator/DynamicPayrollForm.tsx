@@ -929,7 +929,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 : roundCurrency(totalDiscounts * proportion);
             allocatedDiscount += discountShare;
             return {
-                label: `${item.label} Liquido`,
+                label: `${item.label} Líquido`,
                 value: roundCurrency(Math.max(0, item.value - discountShare))
             };
         });
@@ -945,7 +945,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (normalizedItems.length > 1) {
             lines.push(
                 { label: `${totalLabel} Bruto`, value: totalGross },
-                { label: `${totalLabel} Liquido`, value: totalNet }
+                { label: `${totalLabel} Líquido`, value: totalNet }
             );
         }
 
@@ -974,8 +974,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             }
             case 'gratificacao':
                 return buildCardTaxSummary(
-                    [{ label: 'Gratificacao especifica', value: gratificacaoEspecificaCalculada }],
-                    'Gratificacao especifica',
+                    [{ label: 'Gratificação específica', value: gratificacaoEspecificaCalculada }],
+                    'Gratificação específica',
                     state.gratIr || 0,
                     state.gratPss || 0
                 );
@@ -992,15 +992,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             case 'abono':
                 return buildCardTaxSummary(
-                    [{ label: 'Abono de permanencia', value: state.abonoPermanencia || 0 }],
-                    'Abono de permanencia',
+                    [{ label: 'Abono de permanência', value: state.abonoPermanencia || 0 }],
+                    'Abono de permanência',
                     state.abonoIr || 0,
                     0
                 );
             case 'ferias':
                 return buildCardTaxSummary(
-                    [{ label: 'Adicional 1/3 ferias', value: state.ferias1_3 || 0 }],
-                    'Adicional 1/3 ferias',
+                    [{ label: 'Adicional 1/3 férias', value: state.ferias1_3 || 0 }],
+                    'Adicional 1/3 férias',
                     state.irFerias || 0,
                     0
                 );
@@ -1037,24 +1037,24 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     );
 
                     return [
-                        { label: '1a parcela vencimento Bruto', value: primeira13VencBruto },
-                        { label: '1a parcela FC/CJ Bruto', value: primeira13FcBruto },
-                        { label: '2a parcela vencimento Bruto', value: segunda13VencBruto },
-                        { label: '2a parcela FC/CJ Bruto', value: segunda13FcBruto },
-                        { label: 'Abono 13o Bruto', value: abono13Bruto },
-                        { label: 'Desconto IR (Total 13o salario)', value: ir13, isDiscount: true },
-                        { label: 'Desconto PSS (Total 13o salario)', value: pss13, isDiscount: true },
-                        { label: '1a parcela vencimento Liquido', value: primeira13VencLiquido },
-                        { label: '1a parcela FC/CJ Liquido', value: primeira13FcLiquido },
-                        { label: '2a parcela vencimento Liquido', value: segunda13VencLiquido },
-                        { label: '2a parcela FC/CJ Liquido', value: segunda13FcLiquido },
-                        { label: 'Abono 13o Liquido', value: abono13Liquido },
-                        { label: 'Total 13o salario Bruto', value: total13Bruto },
-                        { label: 'Total 13o salario Liquido', value: total13Liquido },
-                        { label: 'Total 13o salario Bruto 1a Parcela', value: totalPrimeiraParcelaBruto },
-                        { label: 'Total 13o salario Liquido 1a Parcela', value: totalPrimeiraParcelaLiquido },
-                        { label: 'Total 13o salario Bruto 2a Parcela', value: totalSegundaParcelaBruto },
-                        { label: 'Total 13o salario Liquido 2a Parcela', value: totalSegundaParcelaLiquido }
+                        { label: '1ª parcela vencimento Bruto', value: primeira13VencBruto },
+                        { label: '1ª parcela FC/CJ Bruto', value: primeira13FcBruto },
+                        { label: '2ª parcela vencimento Bruto', value: segunda13VencBruto },
+                        { label: '2ª parcela FC/CJ Bruto', value: segunda13FcBruto },
+                        { label: 'Abono 13º Bruto', value: abono13Bruto },
+                        { label: 'Desconto IR (Total 13º salário)', value: ir13, isDiscount: true },
+                        { label: 'Desconto PSS (Total 13º salário)', value: pss13, isDiscount: true },
+                        { label: '1ª parcela vencimento Líquido', value: primeira13VencLiquido },
+                        { label: '1ª parcela FC/CJ Líquido', value: primeira13FcLiquido },
+                        { label: '2ª parcela vencimento Líquido', value: segunda13VencLiquido },
+                        { label: '2ª parcela FC/CJ Líquido', value: segunda13FcLiquido },
+                        { label: 'Abono 13º Líquido', value: abono13Liquido },
+                        { label: 'Total 13º salário Bruto', value: total13Bruto },
+                        { label: 'Total 13º salário Líquido', value: total13Liquido },
+                        { label: 'Total 13º salário Bruto 1ª Parcela', value: totalPrimeiraParcelaBruto },
+                        { label: 'Total 13º salário Líquido 1ª Parcela', value: totalPrimeiraParcelaLiquido },
+                        { label: 'Total 13º salário Bruto 2ª Parcela', value: totalSegundaParcelaBruto },
+                        { label: 'Total 13º salário Líquido 2ª Parcela', value: totalSegundaParcelaLiquido }
                     ];
                 }
             case 'hora_extra':
@@ -1148,10 +1148,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         { label: 'Hora extra 100% Bruto', value: he100Bruto },
                         { label: irLabel, value: heIr, isDiscount: true },
                         { label: 'Desconto PSS (Hora extra)', value: hePss, isDiscount: true },
-                        { label: 'Hora extra 50% Liquido', value: he50Liquido },
-                        { label: 'Hora extra 100% Liquido', value: he100Liquido },
+                        { label: 'Hora extra 50% Líquido', value: he50Liquido },
+                        { label: 'Hora extra 100% Líquido', value: he100Liquido },
                         { label: 'Total hora extra Bruto', value: heTotalBruto },
-                        { label: 'Total hora extra Liquido', value: heTotalLiquido }
+                        { label: 'Total hora extra Líquido', value: heTotalLiquido }
                     ];
                 }
             case 'substituicao': {
@@ -1212,7 +1212,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         : roundCurrency(substTotalDescontos * proporcao);
                     descontoSubstAcumulado += desconto;
                     return {
-                        label: `Substituição ${linha.key.toUpperCase()} (${linha.days} dia(s)) Liquido`,
+                        label: `Substituição ${linha.key.toUpperCase()} (${linha.days} dia(s)) Líquido`,
                         value: roundCurrency(Math.max(0, linha.value - desconto))
                     };
                 });
@@ -1225,8 +1225,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     { label: substIrLabel, value: substIr, isDiscount: true },
                     { label: 'Desconto PSS (Substituição)', value: substPss, isDiscount: true },
                     ...porFuncaoLiquido,
-                    { label: 'Total substituicao Bruto', value: substTotalBruto },
-                    { label: 'Total substituicao Liquido', value: substTotalLiquido }
+                    { label: 'Total substituição Bruto', value: substTotalBruto },
+                    { label: 'Total substituição Líquido', value: substTotalLiquido }
                 ];
             }
             case 'licenca':
@@ -1238,8 +1238,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             case 'pre_escolar':
                 return buildCardTaxSummary(
-                    [{ label: 'Auxilio pre-escolar', value: state.auxPreEscolarValor || 0 }],
-                    'Auxilio pre-escolar',
+                    [{ label: 'Auxílio pré-escolar', value: state.auxPreEscolarValor || 0 }],
+                    'Auxílio pré-escolar',
                     0,
                     0
                 );
@@ -1249,11 +1249,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     const cotaParte = roundCurrency(state.auxTransporteDesc || 0);
                     const transporteLiquido = roundCurrency(Math.max(0, transporteBruto - cotaParte));
                     return [
-                        { label: 'Auxilio transporte Bruto', value: transporteBruto },
+                        { label: 'Auxílio-transporte Bruto', value: transporteBruto },
                         { label: 'Cota-parte transporte', value: cotaParte, isDiscount: true },
-                        { label: 'Desconto IR (Auxilio transporte)', value: 0, isDiscount: true },
-                        { label: 'Desconto PSS (Auxilio transporte)', value: 0, isDiscount: true },
-                        { label: 'Auxilio transporte Liquido', value: transporteLiquido }
+                        { label: 'Desconto IR (Auxílio-transporte)', value: 0, isDiscount: true },
+                        { label: 'Desconto PSS (Auxílio-transporte)', value: 0, isDiscount: true },
+                        { label: 'Auxílio-transporte Líquido', value: transporteLiquido }
                     ];
                 }
             case 'diarias':
@@ -1288,18 +1288,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     const descAuxAlimDiariaInteira = roundCurrency(Math.max(0, totalDescAuxAlim - meioDescAuxAlimRetorno));
                     const descAuxTranspDiariaInteira = roundCurrency(Math.max(0, totalDescAuxTransp - meioDescAuxTranspRetorno));
                     const lines: PresetGrossLine[] = [
-                        { label: 'Diarias sem adicional de embarque', value: diariasSemEmbarque },
+                        { label: 'Diárias sem adicional de embarque', value: diariasSemEmbarque },
                         { label: 'Adicional de embarque', value: adicionalEmbarque },
-                        { label: 'Diarias brutas', value: roundCurrency(state.diariasBruto || 0) }
+                        { label: 'Diárias brutas', value: roundCurrency(state.diariasBruto || 0) }
                     ];
                     if (meiaDiariaRetorno > 0) {
-                        lines.push({ label: 'Meia diaria no retorno', value: meiaDiariaRetorno });
+                        lines.push({ label: 'Meia diária no retorno', value: meiaDiariaRetorno });
                     }
 
                     const ldoEnabled = Boolean(courtConfig?.dailies?.ldoCap?.enabled);
                     const ldoLimit = roundCurrency(Number(courtConfig?.dailies?.ldoCap?.perDiemLimit || 0));
                     if (ldoEnabled && ldoLimit > 0) {
-                        lines.push({ label: 'Limite LDO vigente (por diaria)', value: ldoLimit });
+                        lines.push({ label: 'Limite LDO vigente (por diária)', value: ldoLimit });
                         lines.push({
                             label: 'Valor enquadrado no limite LDO',
                             value: roundCurrency(Math.max(0, (state.diariasBruto || 0) - (state.diariasCorteLdo || 0)))
@@ -1309,14 +1309,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     lines.push(
                         { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0), isDiscount: true },
                         { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0), isDiscount: true },
-                        { label: 'Desconto aux. alimentacao (diária inteira)', value: descAuxAlimDiariaInteira, isDiscount: true },
-                        { label: 'Desconto aux. alimentacao (meia diária)', value: meioDescAuxAlimRetorno, isDiscount: true },
-                        { label: 'Desconto aux. tranporte (diária inteira)', value: descAuxTranspDiariaInteira, isDiscount: true },
-                        { label: 'Desconto aux. tranporte (meia diária)', value: meioDescAuxTranspRetorno, isDiscount: true },
-                        { label: 'Desconto IR (Diarias)', value: 0, isDiscount: true },
-                        { label: 'Desconto PSS (Diarias)', value: 0, isDiscount: true }
+                        { label: 'Desconto aux. alimentação (diária inteira)', value: descAuxAlimDiariaInteira, isDiscount: true },
+                        { label: 'Desconto aux. alimentação (meia diária)', value: meioDescAuxAlimRetorno, isDiscount: true },
+                        { label: 'Desconto aux. transporte (diária inteira)', value: descAuxTranspDiariaInteira, isDiscount: true },
+                        { label: 'Desconto aux. transporte (meia diária)', value: meioDescAuxTranspRetorno, isDiscount: true },
+                        { label: 'Desconto IR (Diárias)', value: 0, isDiscount: true },
+                        { label: 'Desconto PSS (Diárias)', value: 0, isDiscount: true }
                     );
-                    lines.push({ label: 'Total diarias liquidas', value: roundCurrency(state.diariasValorTotal || 0) });
+                    lines.push({ label: 'Total diárias líquidas', value: roundCurrency(state.diariasValorTotal || 0) });
 
                     return lines;
                 }
@@ -1755,7 +1755,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                         <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{preset.label}</span>
                                         {MULTI_INSTANCE_PRESETS.has(instance.presetId) && (
                                             <span className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700">
-                                                Multiplo
+                                                Múltiplo
                                             </span>
                                         )}
                                     </div>

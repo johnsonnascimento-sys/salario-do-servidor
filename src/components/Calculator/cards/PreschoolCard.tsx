@@ -12,15 +12,15 @@ export const PreschoolCard: React.FC<PreschoolCardProps> = ({ state, update, sty
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Baby className="w-4 h-4" /> Auxilios e Pre-Escolar
+                <Baby className="w-4 h-4" /> Auxílios e Pré-Escolar
             </h3>
 
             <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Pre-Escolar e Transporte</h4>
+                <h4 className={styles.innerBoxTitle}>Pré-Escolar e Transporte</h4>
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className={styles.label}>Qtd. Dependentes (Pre-Escolar)</label>
+                            <label className={styles.label}>Qtd. Dependentes (Pré-Escolar)</label>
                             <input
                                 type="number"
                                 className={styles.input}
@@ -29,7 +29,7 @@ export const PreschoolCard: React.FC<PreschoolCardProps> = ({ state, update, sty
                             />
                         </div>
                         <div>
-                            <label className={styles.label}>Cota-Parte Pre-Escolar</label>
+                            <label className={styles.label}>Cota-Parte Pré-Escolar</label>
                             <input
                                 type="number"
                                 className={styles.input}
@@ -39,7 +39,7 @@ export const PreschoolCard: React.FC<PreschoolCardProps> = ({ state, update, sty
                         </div>
                     </div>
                     <div>
-                        <label className={styles.label}>Gasto Mensal Transporte (R$)</label>
+                        <label className={styles.label}>Gasto Mensal com Transporte (R$)</label>
                         <input
                             type="number"
                             className={styles.input}

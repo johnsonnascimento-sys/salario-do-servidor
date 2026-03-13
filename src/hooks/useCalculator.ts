@@ -133,13 +133,13 @@ export const useCalculator = () => {
 
         setSavingPayslip(true);
         try {
-            const title = `Holerite ${state.mesRef}/${state.anoRef} - Simulacao`;
+            const title = `Holerite ${state.mesRef}/${state.anoRef} - Simulação`;
 
             if (editPayslipId) {
                 const updated = await updatePayslip(editPayslipId, {
                     title,
                     agency_slug: slug || 'jmu',
-                    agency_name: agency?.name || 'Orgao nao identificado',
+                    agency_name: agency?.name || 'Órgão não identificado',
                     month_ref: state.mesRef,
                     year_ref: state.anoRef,
                     notes: state.observacoes || '',
@@ -156,7 +156,7 @@ export const useCalculator = () => {
             const created = await createPayslip({
                 title,
                 agency_slug: slug || 'jmu',
-                agency_name: agency?.name || 'Orgao nao identificado',
+                agency_name: agency?.name || 'Órgão não identificado',
                 month_ref: state.mesRef,
                 year_ref: state.anoRef,
                 notes: state.observacoes || '',

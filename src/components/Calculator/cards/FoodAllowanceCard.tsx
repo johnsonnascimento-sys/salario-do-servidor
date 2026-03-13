@@ -11,7 +11,7 @@ export const FoodAllowanceCard: React.FC<FoodAllowanceCardProps> = ({ value, sty
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Utensils className="w-4 h-4" /> Auxilio Alimentacao
+                <Utensils className="w-4 h-4" /> Auxílio-alimentação
             </h3>
 
             <div className={styles.innerBox}>

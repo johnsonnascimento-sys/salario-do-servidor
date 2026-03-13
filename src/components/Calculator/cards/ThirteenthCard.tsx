@@ -42,12 +42,12 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
                 <Gift className="w-4 h-4" />
-                Gratificacao Natalina
+                Gratificação Natalina
             </h3>
 
             <div className="space-y-4">
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                    1a parcela sem IR/PSS. Na 2a parcela, IR e PSS sobre o total (1a + 2a), sem PSS sobre FC/CJ, com abatimento da 1a parcela.
+                    1ª parcela sem IR/PSS. Na 2ª parcela, IR e PSS sobre o total (1ª + 2ª), sem PSS sobre FC/CJ, com abatimento da 1ª parcela.
                 </p>
 
                 <div className="flex justify-end">
@@ -64,7 +64,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
 
                 <div className="space-y-4">
                     <div>
-                        <label className={styles.label}>Adiant. 1a Parcela (Vencimento)</label>
+                        <label className={styles.label}>Adiant. 1ª Parcela (Vencimento)</label>
                         {state.manualAdiant13 ? (
                             <input
                                 type="text"
@@ -94,7 +94,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
                     </div>
 
                     <div>
-                        <label className={styles.label}>Adiant. 1a Parcela (FC/CJ)</label>
+                        <label className={styles.label}>Adiant. 1ª Parcela (FC/CJ)</label>
                         {state.manualAdiant13 ? (
                             <input
                                 type="text"
@@ -124,7 +124,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
                     </div>
 
                     <div>
-                        <label className={styles.label}>2a Parcela (Vencimento)</label>
+                        <label className={styles.label}>2ª Parcela (Vencimento)</label>
                         {state.manualAdiant13 ? (
                             <input
                                 type="text"
@@ -154,7 +154,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
                     </div>
 
                     <div>
-                        <label className={styles.label}>2a Parcela (FC/CJ)</label>
+                        <label className={styles.label}>2ª Parcela (FC/CJ)</label>
                         {state.manualAdiant13 ? (
                             <input
                                 type="text"

@@ -440,7 +440,7 @@ export const FieldCalculator: React.FC = () => {
                 >
                     <div className="mb-3 flex items-center justify-between">
                         <h4 className="text-body font-bold text-neutral-700 dark:text-neutral-100">
-                            Calculadora rapida
+                            Calculadora rápida
                         </h4>
                         <button
                             type="button"
