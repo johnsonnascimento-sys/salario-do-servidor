@@ -20,14 +20,13 @@ const MainLayout: React.FC = () => {
 
     return (
         <div className="font-display bg-background-light dark:bg-background-dark text-neutral-900 dark:text-neutral-100 min-h-screen flex flex-col transition-colors duration-300">
-            {/* Header */}
             <header className="sticky top-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-20">
-                        <div className="flex items-center gap-3">
-                            <Link to="/beta-access" className="flex items-center gap-3">
-                                <img src={logo} alt="Salário do Servidor" className="w-16 h-16 object-contain" />
-                                <span className="text-h4 font-extrabold tracking-tight text-neutral-800 dark:text-white">
+                    <div className="flex items-start justify-between gap-3 py-3 md:items-center md:h-20">
+                        <div className="min-w-0 flex-1">
+                            <Link to="/beta-access" className="flex items-center gap-2 md:gap-3 min-w-0">
+                                <img src={logo} alt="Salário do Servidor" className="w-14 h-14 md:w-16 md:h-16 object-contain shrink-0" />
+                                <span className="min-w-0 text-[1.6rem] leading-[0.95] md:text-h4 font-extrabold tracking-tight text-neutral-800 dark:text-white">
                                     Salário do <span className="gradient-text">Servidor</span>
                                 </span>
                             </Link>
@@ -39,8 +38,8 @@ const MainLayout: React.FC = () => {
                             <Link to="/quem-somos" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Quem Somos</Link>
                         </nav>
 
-                        <div className="flex items-center gap-4">
-                            <Link to="/acesso" className="btn btn-sm border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                            <Link to="/acesso" className="btn btn-sm px-3 md:px-4 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs md:text-sm leading-tight text-center">
                                 Minha Área
                             </Link>
                             <button
@@ -58,12 +57,10 @@ const MainLayout: React.FC = () => {
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="flex-grow">
                 <Outlet />
             </main>
 
-            {/* Footer */}
             <footer className="bg-navy-dark text-neutral-400 pt-20 pb-10 transition-colors duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
@@ -145,4 +142,3 @@ const MainLayout: React.FC = () => {
 };
 
 export default MainLayout;
-

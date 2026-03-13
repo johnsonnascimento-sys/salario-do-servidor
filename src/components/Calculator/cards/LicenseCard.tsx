@@ -13,7 +13,7 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, compete
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Licenca Compensatoria
+                <Briefcase className="w-4 h-4" /> Licença Compensatória
             </h3>
 
             <div className={styles.innerBox}>

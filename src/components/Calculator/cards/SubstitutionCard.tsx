@@ -18,7 +18,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Substituicao de Funcao
+                <Briefcase className="w-4 h-4" /> Substituição de Função
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
@@ -30,7 +30,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                                 checked={entry.isEA}
                                 onChange={e => updateEntry(entry.id, { isEA: e.target.checked, excluirIR: e.target.checked ? false : entry.excluirIR })}
                             />
-                            <span>Incluir na base do IR (Exercicio Anterior - EA)</span>
+                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input
@@ -48,7 +48,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                                 checked={entry.pssIsEA}
                                 onChange={e => updateEntry(entry.id, { pssIsEA: e.target.checked })}
                             />
-                            <span>Incluir na base do PSS (Exercicio Anterior - EA)</span>
+                            <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
                         </label>
                     </div>
 

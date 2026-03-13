@@ -16,7 +16,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
-                <Clock className="w-4 h-4" /> Servico Extraordinario (HE)
+                <Clock className="w-4 h-4" /> Serviço Extraordinário (HE)
             </h3>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
@@ -31,7 +31,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                                     updateEntry(entry.id, { isEA: checked, excluirIR: checked ? false : entry.excluirIR });
                                 }}
                             />
-                            <span>Incluir na base do IR (Exercicio Anterior - EA)</span>
+                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input
@@ -63,7 +63,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                                     });
                                 }}
                             />
-                            <span>Calcular por funcao substituida</span>
+                            <span>Calcular por função substituída.</span>
                         </label>
                     </div>
 
@@ -92,8 +92,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                         </div>
                     ) : (
                         <div className="mt-4 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-                            <div className="bg-gray-50 dark:bg-[#1f2937]/50 p-2 text-xs font-semibold text-gray-600 dark:text-gray-300 grid grid-cols-3 gap-2">
-                                <div className="col-span-1">Funcao substituida no dia</div>
+                            <div className="hidden sm:grid bg-gray-50 dark:bg-[#1f2937]/50 p-2 text-xs font-semibold text-gray-600 dark:text-gray-300 grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2">
+                                <div>Função substituída no dia</div>
                                 <div className="text-center">Horas (50%)</div>
                                 <div className="text-center">Horas (100%)</div>
                             </div>
@@ -103,11 +103,17 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                                     const h100 = entry.horasPorFuncao?.[func]?.qtd100 || 0;
 
                                     return (
-                                        <div key={func} className="p-2 grid grid-cols-3 gap-2 items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <div
+                                            key={func}
+                                            className="p-3 sm:p-2 grid grid-cols-1 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 sm:items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                        >
+                                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 break-words">
                                                 {func.toUpperCase()}
                                             </div>
-                                            <div>
+                                            <div className="grid grid-cols-2 gap-2 sm:contents">
+                                                <div className="sm:hidden text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                                    Horas (50%)
+                                                </div>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -125,8 +131,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                                                     className={`${styles.input} text-center h-8`}
                                                     placeholder="0"
                                                 />
-                                            </div>
-                                            <div>
+                                                <div className="sm:hidden text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                                    Horas (100%)
+                                                </div>
                                                 <input
                                                     type="number"
                                                     min="0"
