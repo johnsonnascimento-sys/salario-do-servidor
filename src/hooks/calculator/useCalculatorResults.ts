@@ -205,19 +205,47 @@ export const useCalculatorResults = (
 
         if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
         if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: substitutionEaTotal, type: 'C' });
-        const overtimeEntries = state.overtimeEntries;
-        const totalPonderadoHe = overtimeEntries.reduce(
-            (acc, entry) => acc + (Math.max(0, entry.qtd50 || 0) * 1.5) + (Math.max(0, entry.qtd100 || 0) * 2),
-            0
-        );
-        const valorHoraHe = totalPonderadoHe > 0 ? (state.heTotal || 0) / totalPonderadoHe : 0;
+        const overtimeEntries = state.overtimeEntries.length > 0
+            ? state.overtimeEntries
+            : [{
+                id: 'legacy-he',
+                qtd50: state.heQtd50 || 0,
+                qtd100: state.heQtd100 || 0,
+                isEA: state.heIsEA,
+                excluirIR: state.heExcluirIR,
+                usarSubstituicaoFuncao: false
+            }];
+        const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 175;
+        const baseOvertime = state.vencimento + state.gaj + state.aqTituloValor + state.aqTreinoValor +
+            state.gratEspecificaValor + state.vpni_lei + state.vpni_decisao + state.ats + state.abonoPermanencia;
+        const calcEntryOvertimeTotal = (entry: typeof overtimeEntries[number]) => {
+            const resolveFuncValue = (funcKey?: string) => {
+                if (!funcKey || funcKey === noFunctionCode || !currentTables) return 0;
+                return currentTables.funcoes[funcKey] || 0;
+            };
+            const calcSegment = (funcKey: string | undefined, qtd50: number, qtd100: number) => {
+                const valorHora = overtimeDivisor > 0 ? (baseOvertime + resolveFuncValue(funcKey)) / overtimeDivisor : 0;
+                return (valorHora * 1.5 * Math.max(0, qtd50 || 0)) + (valorHora * 2 * Math.max(0, qtd100 || 0));
+            };
+
+            let total = calcSegment(state.funcao, entry.qtd50 || 0, entry.qtd100 || 0);
+            if (entry.usarSubstituicaoFuncao && entry.horasPorFuncao) {
+                total += Object.entries(entry.horasPorFuncao).reduce((acc, [funcKey, horas]) => (
+                    acc + calcSegment(funcKey, horas?.qtd50 || 0, horas?.qtd100 || 0)
+                ), 0);
+            }
+            return total;
+        };
+
         const heMensalTotal = overtimeEntries
             .filter(entry => !entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + (valorHoraHe * 1.5 * Math.max(0, entry.qtd50 || 0)) + (valorHoraHe * 2 * Math.max(0, entry.qtd100 || 0)), 0);
+            .reduce((acc, entry) => acc + calcEntryOvertimeTotal(entry), 0);
         const heEaTotal = overtimeEntries
             .filter(entry => entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + (valorHoraHe * 1.5 * Math.max(0, entry.qtd50 || 0)) + (valorHoraHe * 2 * Math.max(0, entry.qtd100 || 0)), 0);
-        const heExcluidoTotal = Math.max(0, (state.heTotal || 0) - heMensalTotal - heEaTotal);
+            .reduce((acc, entry) => acc + calcEntryOvertimeTotal(entry), 0);
+        const heExcluidoTotal = overtimeEntries
+            .filter(entry => entry.excluirIR)
+            .reduce((acc, entry) => acc + calcEntryOvertimeTotal(entry), 0);
 
         if (heMensalTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR MENSAL)', value: heMensalTotal, type: 'C' });
         if (heEaTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR EA)', value: heEaTotal, type: 'C' });

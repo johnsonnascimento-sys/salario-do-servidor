@@ -395,13 +395,24 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         const sameLength = nextEntries.length === existingEntries.length;
         const sameIdsAndValues = sameLength && nextEntries.every((entry, index) => {
             const current = existingEntries[index];
+            const horasPorFuncaoKeys = new Set([
+                ...Object.keys(entry.horasPorFuncao || {}),
+                ...Object.keys(current?.horasPorFuncao || {})
+            ]);
+            const horasPorFuncaoEqual = Array.from(horasPorFuncaoKeys).every((key) => (
+                (entry.horasPorFuncao?.[key]?.qtd50 || 0) === (current?.horasPorFuncao?.[key]?.qtd50 || 0) &&
+                (entry.horasPorFuncao?.[key]?.qtd100 || 0) === (current?.horasPorFuncao?.[key]?.qtd100 || 0)
+            ));
             return (
                 current &&
                 current.id === entry.id &&
                 current.qtd50 === entry.qtd50 &&
                 current.qtd100 === entry.qtd100 &&
                 current.isEA === entry.isEA &&
-                current.excluirIR === entry.excluirIR
+                current.excluirIR === entry.excluirIR &&
+                current.usarSubstituicaoFuncao === entry.usarSubstituicaoFuncao &&
+                current.competenciaRef === entry.competenciaRef &&
+                horasPorFuncaoEqual
             );
         });
 
@@ -636,6 +647,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 qtd100: Math.max(0, state.heQtd100 || 0),
                 isEA: Boolean(state.heIsEA),
                 excluirIR: Boolean(state.heExcluirIR),
+                usarSubstituicaoFuncao: false,
                 competenciaRef: ''
             }
         ]);
@@ -676,6 +688,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         qtd100: 0,
         isEA: false,
         excluirIR: false,
+        usarSubstituicaoFuncao: false,
         competenciaRef: ''
     });
 

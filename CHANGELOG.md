@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.17 - 13/03/2026
+- Fix: grade de Hora Extra por funcao substituida foi desacoplada do checkbox `Excluir da base do IR`, permitindo combinacoes independentes de incidencia e base.
+- Fix: motor de Hora Extra passa a ignorar `horasPorFuncao` quando o card nao estiver marcado para calcular por funcao substituida, evitando uso oculto da grade.
+- Fix: detalhamento final de Hora Extra deixa de ratear por `valor-hora medio` quando ha grade por funcao e passa a refletir a composicao real da instancia.
+
 ## 2.1.16 - 05/03/2026
 - Feat(Auth): nova area de usuario com login/senha em `/acesso` e dashboard em `/minha-area`.
 - Feat(Auth): cadastro em beta fechado com allowlist (`cpf + email`) e mensagem de desenvolvimento para nao autorizados.

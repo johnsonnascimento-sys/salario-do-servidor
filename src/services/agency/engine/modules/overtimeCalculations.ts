@@ -24,6 +24,7 @@ export interface OvertimeResult {
         heTotal: number;
         isEA: boolean;
         excluirIR: boolean;
+        usarSubstituicaoFuncao: boolean;
     }>;
 }
 
@@ -43,7 +44,6 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
-    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
@@ -111,7 +111,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             }
 
             // Se houver grid de horas por função, calcula dinamicamente para cada uma
-            if (entry.horasPorFuncao) {
+            if (entry.usarSubstituicaoFuncao && entry.horasPorFuncao) {
                 for (const [funcKey, horas] of Object.entries(entry.horasPorFuncao)) {
                     const h50 = Math.max(0, Number(horas.qtd50 || 0));
                     const h100 = Math.max(0, Number(horas.qtd100 || 0));
@@ -131,7 +131,8 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 heVal100,
                 heTotal,
                 isEA: Boolean(entry.isEA),
-                excluirIR: Boolean(entry.excluirIR)
+                excluirIR: Boolean(entry.excluirIR),
+                usarSubstituicaoFuncao: Boolean(entry.usarSubstituicaoFuncao)
             };
         });
 
@@ -159,7 +160,8 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 heVal100,
                 heTotal,
                 isEA: Boolean(params.heIsEA),
-                excluirIR: Boolean(params.heExcluirIR)
+                excluirIR: Boolean(params.heExcluirIR),
+                usarSubstituicaoFuncao: false
             }
         ]
     };

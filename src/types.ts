@@ -146,6 +146,7 @@ export interface OvertimeEntry {
   qtd100: number;
   isEA: boolean;
   excluirIR: boolean;
+  usarSubstituicaoFuncao?: boolean;
   competenciaRef?: string;
   valorBrutoManual?: number; // Para retrocompatibilidade/dados importados
   horasPorFuncao?: Record<string, { qtd50: number; qtd100: number }>;
