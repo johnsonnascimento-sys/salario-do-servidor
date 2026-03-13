@@ -28,9 +28,18 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                                 type="checkbox"
                                 className={styles.checkbox}
                                 checked={entry.isEA}
-                                onChange={e => updateEntry(entry.id, { isEA: e.target.checked })}
+                                onChange={e => updateEntry(entry.id, { isEA: e.target.checked, excluirIR: e.target.checked ? false : entry.excluirIR })}
                             />
                             <span>Incluir na base do IR (Exercicio Anterior - EA)</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={Boolean(entry.excluirIR)}
+                                onChange={e => updateEntry(entry.id, { excluirIR: e.target.checked, isEA: e.target.checked ? false : entry.isEA })}
+                            />
+                            <span>Excluir da base do IR</span>
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input

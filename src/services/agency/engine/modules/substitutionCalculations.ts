@@ -16,6 +16,7 @@ export interface SubstitutionResult {
         id: string;
         total: number;
         isEA: boolean;
+        excluirIR: boolean;
         pssIsEA: boolean;
     }>;
 }
@@ -63,6 +64,7 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                 id: entry.id || `subst-${index}`,
                 total: Math.round(entryTotal * 100) / 100,
                 isEA: Boolean(entry.isEA),
+                excluirIR: Boolean(entry.excluirIR),
                 pssIsEA: Boolean(entry.pssIsEA)
             };
         });
@@ -92,6 +94,7 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                 id: 'legacy-subst',
                 total,
                 isEA: Boolean(params.substIsEA),
+                excluirIR: false,
                 pssIsEA: Boolean(params.substPssIsEA)
             }
         ]

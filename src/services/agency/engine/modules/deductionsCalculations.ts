@@ -125,10 +125,10 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         .reduce((acc, entry) => acc + entry.heTotal, 0);
     const hasSubstitutionEntries = (params.substitutionEntries?.length || 0) > 0;
     const substitutionMensalBase = substitution.entries
-        .filter((entry) => !entry.isEA)
+        .filter((entry) => !entry.isEA && !entry.excluirIR)
         .reduce((acc, entry) => acc + entry.total, 0);
     const substitutionEABase = substitution.entries
-        .filter((entry) => entry.isEA)
+        .filter((entry) => entry.isEA && !entry.excluirIR)
         .reduce((acc, entry) => acc + entry.total, 0);
     const substitutionPssEABase = substitution.entries
         .filter((entry) => entry.pssIsEA)

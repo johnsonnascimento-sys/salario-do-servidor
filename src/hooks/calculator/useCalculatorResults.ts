@@ -188,6 +188,7 @@ export const useCalculatorResults = (
                 id: 'legacy-subst',
                 dias: state.substDias || {},
                 isEA: state.substIsEA,
+                excluirIR: false,
                 pssIsEA: state.substPssIsEA
             }];
         const substitutionTotal = Math.max(0, state.substTotal || 0);
@@ -197,14 +198,18 @@ export const useCalculatorResults = (
         );
         const substitutionDayValue = substitutionDaysTotal > 0 ? substitutionTotal / substitutionDaysTotal : 0;
         const substitutionMensalTotal = substitutionEntries
-            .filter(entry => !entry.isEA)
+            .filter(entry => !entry.isEA && !entry.excluirIR)
             .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
         const substitutionEaTotal = substitutionEntries
-            .filter(entry => entry.isEA)
+            .filter(entry => entry.isEA && !entry.excluirIR)
+            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
+        const substitutionExcluidoTotal = substitutionEntries
+            .filter(entry => entry.excluirIR)
             .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
 
         if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
         if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: substitutionEaTotal, type: 'C' });
+        if (substitutionExcluidoTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (EXCLUÍDO IR)', value: substitutionExcluidoTotal, type: 'C' });
         const overtimeEntries = state.overtimeEntries.length > 0
             ? state.overtimeEntries
             : [{
@@ -285,7 +290,7 @@ export const useCalculatorResults = (
         const heIrEA = Math.max(0, state.heIrEA || 0);
         const substIrMensal = Math.max(0, state.substIrMensal || 0);
         const substIrEA = Math.max(0, state.substIrEA || 0);
-        const irMensalOutrasRubricas = Math.max(0, (state.irMensal || 0) - heIrMensal);
+        const irMensalOutrasRubricas = Math.max(0, (state.irMensal || 0) - heIrMensal - substIrMensal);
         if (irMensalOutrasRubricas > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (DEMAIS RUBRICAS)', value: irMensalOutrasRubricas, type: 'D' });
         if (heIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (HORA EXTRA)', value: heIrMensal, type: 'D' });
         if (substIrMensal > 0) rows.push({ label: 'IMPOSTO DE RENDA-EC (SUBSTITUIÇÃO)', value: substIrMensal, type: 'D' });

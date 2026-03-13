@@ -156,6 +156,7 @@ export interface SubstitutionEntry {
   id: string;
   dias: Record<string, number>;
   isEA: boolean;
+  excluirIR?: boolean;
   pssIsEA: boolean;
 }
 

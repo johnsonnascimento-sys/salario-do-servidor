@@ -160,6 +160,7 @@ const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) =>
                 state.substPssIsEA ||
                 state.substitutionEntries.some(entry =>
                     entry.isEA ||
+                    entry.excluirIR ||
                     entry.pssIsEA ||
                     Object.values(entry.dias || {}).some(days => Number(days) > 0)
                 )
@@ -469,6 +470,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 current &&
                 current.id === entry.id &&
                 current.isEA === entry.isEA &&
+                current.excluirIR === entry.excluirIR &&
                 current.pssIsEA === entry.pssIsEA &&
                 diasEqual
             );
@@ -676,6 +678,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 id: createUniqueId('subst-entry'),
                 dias: { ...(state.substDias || {}) },
                 isEA: Boolean(state.substIsEA),
+                excluirIR: false,
                 pssIsEA: Boolean(state.substPssIsEA)
             }
         ]);
@@ -696,6 +699,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         id: createUniqueId('subst-entry'),
         dias: {},
         isEA: false,
+        excluirIR: false,
         pssIsEA: false
     });
 
@@ -1158,6 +1162,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     id: 'legacy-subst',
                     dias: { ...(state.substDias || {}) },
                     isEA: state.substIsEA,
+                    excluirIR: false,
                     pssIsEA: state.substPssIsEA
                 };
                 const currentEntry = substitutionEntry || fallbackEntry;
@@ -1166,19 +1171,19 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 const substitutionBreakdown = getSubstitutionBreakdown(currentEntry.dias || {});
                 const substTotalBruto = roundCurrency(substitutionBreakdown.total);
                 const mensalBaseTotal = substitutionEntries
-                    .filter(item => !item.isEA)
+                    .filter(item => !item.isEA && !item.excluirIR)
                     .reduce((acc, item) => acc + getSubstitutionBreakdown(item.dias || {}).total, 0);
                 const eaBaseTotal = substitutionEntries
-                    .filter(item => item.isEA)
+                    .filter(item => item.isEA && !item.excluirIR)
                     .reduce((acc, item) => acc + getSubstitutionBreakdown(item.dias || {}).total, 0);
                 const pssEaBaseTotal = substitutionEntries
                     .filter(item => item.pssIsEA)
                     .reduce((acc, item) => acc + getSubstitutionBreakdown(item.dias || {}).total, 0);
 
                 let substIr = 0;
-                if (currentEntry.isEA && eaBaseTotal > 0) {
+                if (!currentEntry.excluirIR && currentEntry.isEA && eaBaseTotal > 0) {
                     substIr = (state.substIrEA || 0) * (substTotalBruto / eaBaseTotal);
-                } else if (!currentEntry.isEA && mensalBaseTotal > 0) {
+                } else if (!currentEntry.excluirIR && !currentEntry.isEA && mensalBaseTotal > 0) {
                     substIr = (state.substIrMensal || 0) * (substTotalBruto / mensalBaseTotal);
                 }
                 let substPss = 0;
