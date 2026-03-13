@@ -366,7 +366,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         }
 
         const existingEntries = state.overtimeEntries;
-        const existingById = new Map(existingEntries.map(entry => [entry.id, entry]));
+        const existingById = new Map<string, OvertimeEntry>(existingEntries.map(entry => [entry.id, entry]));
         const nextEntries: OvertimeEntry[] = [];
         const nextPresets = enabledPresets.map(instance => {
             if (instance.presetId !== 'hora_extra') {
@@ -420,7 +420,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         }
 
         const existingEntries = state.substitutionEntries;
-        const existingById = new Map(existingEntries.map(entry => [entry.id, entry]));
+        const existingById = new Map<string, SubstitutionEntry>(existingEntries.map(entry => [entry.id, entry]));
         const nextEntries: SubstitutionEntry[] = [];
         const nextPresets = enabledPresets.map(instance => {
             if (instance.presetId !== 'substituicao') {
@@ -1441,6 +1441,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             return <OvertimeCard
                 entry={overtimeEntry}
                 updateEntry={updateOvertimeEntry}
+                functionKeys={functionKeys}
                 competenciaReferencia={competenciaReferencia}
                 styles={styles}
             />;
