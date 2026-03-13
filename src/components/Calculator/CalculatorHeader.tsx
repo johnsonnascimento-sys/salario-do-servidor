@@ -1,5 +1,5 @@
 ﻿import React, { useMemo } from 'react';
-import { ArrowLeft, Save, User } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Save, User } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 
 interface CalculatorHeaderProps {
@@ -14,6 +14,7 @@ interface CalculatorHeaderProps {
     onSavePayslip?: () => void;
     onOpenPayslips?: () => void;
     savingPayslip?: boolean;
+    onClearCalculator?: () => void;
 }
 
 export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
@@ -28,6 +29,7 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
     onSavePayslip,
     onOpenPayslips,
     savingPayslip,
+    onClearCalculator,
 }) => {
     const referenceSalaryLabel = useMemo(() => {
         const schedule = courtConfig?.adjustment_schedule || [];
@@ -71,6 +73,14 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
                     />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 justify-end">
+                    <button
+                        type="button"
+                        onClick={onClearCalculator}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 text-body-xs font-semibold text-neutral-700 dark:text-neutral-200"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        Limpar
+                    </button>
                     <button
                         type="button"
                         onClick={onOpenPayslips}

@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { FileText, Save, Table as TableIcon, User } from 'lucide-react';
+import { FileText, RotateCcw, Save, Table as TableIcon, User } from 'lucide-react';
 import { CalculatorState } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 import { VersionBadge } from '../ui/VersionBadge';
@@ -11,6 +11,7 @@ interface ActionFooterProps {
     onSavePayslip?: () => void;
     onOpenPayslips?: () => void;
     savingPayslip?: boolean;
+    onClearCalculator?: () => void;
 }
 
 export const ActionFooter: React.FC<ActionFooterProps> = ({
@@ -20,6 +21,7 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
     onSavePayslip,
     onOpenPayslips,
     savingPayslip,
+    onClearCalculator,
 }) => {
     return (
         <div className="hidden lg:block fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-700 py-4 px-6 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
@@ -33,6 +35,13 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
                 </div>
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={onClearCalculator}
+                            className="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-body-xs uppercase tracking-wide"
+                            title="Limpar calculadora"
+                        >
+                            <RotateCcw size={20} /> <span>Limpar</span>
+                        </button>
                         <button
                             onClick={onOpenPayslips}
                             className="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 p-3 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold text-body-xs uppercase tracking-wide"

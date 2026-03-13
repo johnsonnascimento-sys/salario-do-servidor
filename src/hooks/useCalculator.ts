@@ -17,6 +17,11 @@ import { useCalculatorResults } from './calculator/useCalculatorResults';
 import { useUserAuth } from './user/useUserAuth';
 import { createPayslip, updatePayslip } from '../services/user/payslipService';
 import { getMyProfile } from '../services/user/profileService';
+import {
+    CALCULATOR_DRAFT_STORAGE_KEY,
+    USER_AREA_LAST_CALCULATOR_STATE_KEY,
+    USER_AREA_LAST_RESULT_ROWS_KEY,
+} from '../constants/storage';
 
 export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -118,8 +123,9 @@ export const useCalculator = () => {
 
     useEffect(() => {
         try {
-            localStorage.setItem('user_area_last_calculator_state', JSON.stringify(state));
-            localStorage.setItem('user_area_last_result_rows', JSON.stringify(resultRows));
+            localStorage.setItem(USER_AREA_LAST_CALCULATOR_STATE_KEY, JSON.stringify(state));
+            localStorage.setItem(USER_AREA_LAST_RESULT_ROWS_KEY, JSON.stringify(resultRows));
+            localStorage.setItem(CALCULATOR_DRAFT_STORAGE_KEY, JSON.stringify(state));
         } catch (_error) {
             // Ignora falhas de localStorage em modo privado/restrito.
         }

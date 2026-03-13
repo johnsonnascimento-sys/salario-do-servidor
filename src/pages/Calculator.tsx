@@ -13,6 +13,11 @@ import { FieldCalculator } from '../components/Calculator/FieldCalculator';
 import DonationModal from '../components/DonationModal';
 import { CalculatorState, INITIAL_STATE } from '../types';
 import { getPayslipById } from '../services/user/payslipService';
+import {
+    CALCULATOR_DRAFT_STORAGE_KEY,
+    USER_AREA_LAST_CALCULATOR_STATE_KEY,
+    USER_AREA_LAST_RESULT_ROWS_KEY,
+} from '../constants/storage';
 
 const createEntryId = (prefix: string) => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -140,6 +145,15 @@ export default function Calculator() {
             const restorePayload = (location.state as { restoreSnapshot?: { calculatorState?: unknown } } | null)?.restoreSnapshot;
             if (restorePayload?.calculatorState) {
                 applyHydratedState(restorePayload.calculatorState);
+            } else {
+                try {
+                    const rawDraft = localStorage.getItem(CALCULATOR_DRAFT_STORAGE_KEY);
+                    if (rawDraft) {
+                        applyHydratedState(JSON.parse(rawDraft));
+                    }
+                } catch (_error) {
+                    // ignora rascunho inválido
+                }
             }
         }
 
@@ -164,6 +178,23 @@ export default function Calculator() {
     };
 
     const openMyPayslips = () => navigate('/minha-area/holerites');
+
+    const handleClearCalculator = () => {
+        const confirmed = window.confirm('Limpar todos os dados preenchidos da calculadora?');
+        if (!confirmed) return;
+
+        try {
+            localStorage.removeItem(CALCULATOR_DRAFT_STORAGE_KEY);
+            localStorage.removeItem(USER_AREA_LAST_CALCULATOR_STATE_KEY);
+            localStorage.removeItem(USER_AREA_LAST_RESULT_ROWS_KEY);
+        } catch (_error) {
+            // ignora falhas de localStorage
+        }
+
+        setState(hydrateCalculatorState(INITIAL_STATE));
+        setFormKey((prev) => prev + 1);
+        restoreAppliedRef.current = true;
+    };
 
     if (loadingConfig) {
         return (
@@ -191,6 +222,7 @@ export default function Calculator() {
                 onExportExcel={initiateExportExcel}
                 onSavePayslip={handleSavePayslip}
                 onOpenPayslips={openMyPayslips}
+                onClearCalculator={handleClearCalculator}
             />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-32">
@@ -206,6 +238,7 @@ export default function Calculator() {
                     onSavePayslip={handleSavePayslip}
                     onOpenPayslips={openMyPayslips}
                     savingPayslip={savingPayslip}
+                    onClearCalculator={handleClearCalculator}
                 />
 
                 <div className="space-y-8 max-w-5xl mx-auto">
@@ -244,6 +277,7 @@ export default function Calculator() {
                     onSavePayslip={handleSavePayslip}
                     onOpenPayslips={openMyPayslips}
                     savingPayslip={savingPayslip}
+                    onClearCalculator={handleClearCalculator}
                 />
 
                 <DonationModal

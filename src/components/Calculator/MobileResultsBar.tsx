@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, FileText, Save, Table as TableIcon, User } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileText, RotateCcw, Save, Table as TableIcon, User } from 'lucide-react';
 import { VersionBadge } from '../ui/VersionBadge';
 import { formatCurrency } from '../../utils/calculations';
 
@@ -9,6 +9,7 @@ interface MobileResultsBarProps {
     onExportExcel: () => void;
     onSavePayslip?: () => void;
     onOpenPayslips?: () => void;
+    onClearCalculator?: () => void;
 }
 
 export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
@@ -17,6 +18,7 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
     onExportExcel,
     onSavePayslip,
     onOpenPayslips,
+    onClearCalculator,
 }) => {
     const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
@@ -44,6 +46,13 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
                 {isAccordionOpen && (
                     <div className="mt-3 space-y-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
                         <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={onClearCalculator}
+                                className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-100 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
+                            >
+                                <RotateCcw size={18} />
+                                <span>Limpar</span>
+                            </button>
                             <button
                                 onClick={onOpenPayslips}
                                 className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-100 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
