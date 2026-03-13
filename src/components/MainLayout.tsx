@@ -22,35 +22,46 @@ const MainLayout: React.FC = () => {
         <div className="font-display bg-background-light dark:bg-background-dark text-neutral-900 dark:text-neutral-100 min-h-screen flex flex-col transition-colors duration-300">
             <header className="sticky top-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-start justify-between gap-3 py-3 md:items-center md:h-20">
-                        <div className="min-w-0 flex-1">
-                            <Link to="/beta-access" className="flex items-center gap-2 md:gap-3 min-w-0">
-                                <img src={logo} alt="Salário do Servidor" className="w-14 h-14 md:w-16 md:h-16 object-contain shrink-0" />
-                                <span className="min-w-0 text-[1.6rem] leading-[0.95] md:text-h4 font-extrabold tracking-tight text-neutral-800 dark:text-white">
-                                    Salário do <span className="gradient-text">Servidor</span>
-                                </span>
+                    <div className="py-3 md:h-20 md:flex md:items-center md:justify-between">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <Link to="/beta-access" className="flex items-center gap-2 md:gap-3 min-w-0">
+                                    <img src={logo} alt="Salário do Servidor" className="w-14 h-14 md:w-16 md:h-16 object-contain shrink-0" />
+                                    <span className="min-w-0 text-[1.6rem] leading-[0.95] md:text-h4 font-extrabold tracking-tight text-neutral-800 dark:text-white">
+                                        Salário do <span className="gradient-text">Servidor</span>
+                                    </span>
+                                </Link>
+                            </div>
+
+                            <nav className="hidden md:flex items-center gap-10">
+                                <Link to="/beta-access" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Início</Link>
+                                <Link to="/beta-access#simulators" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Simuladores</Link>
+                                <Link to="/quem-somos" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Quem Somos</Link>
+                            </nav>
+
+                            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                                <button
+                                    onClick={toggleTheme}
+                                    className="p-2 rounded-full hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800 transition-colors"
+                                >
+                                    {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                                </button>
+                                <Link to="/apoiar" className="btn btn-sm bg-gradient-to-r from-error-500 to-pink-500 text-white rounded-full font-bold hover:shadow-lg hover:shadow-error-500/30 transition-all">
+                                    <Heart className="w-4 h-4" />
+                                    Apoiar
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 flex justify-end md:hidden">
+                            <Link to="/acesso" className="btn btn-sm px-3 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs leading-tight text-center">
+                                Minha Área
                             </Link>
                         </div>
 
-                        <nav className="hidden md:flex items-center gap-10">
-                            <Link to="/beta-access" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Início</Link>
-                            <Link to="/beta-access#simulators" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Simuladores</Link>
-                            <Link to="/quem-somos" className="text-body font-semibold text-neutral-600 dark:text-neutral-300 hover:text-secondary dark:hover:text-primary transition-colors">Quem Somos</Link>
-                        </nav>
-
-                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            <Link to="/acesso" className="btn btn-sm px-3 md:px-4 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs md:text-sm leading-tight text-center">
+                        <div className="hidden md:flex items-center gap-4 shrink-0">
+                            <Link to="/acesso" className="btn btn-sm px-4 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-sm leading-tight text-center">
                                 Minha Área
-                            </Link>
-                            <button
-                                onClick={toggleTheme}
-                                className="p-2 rounded-full hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800 transition-colors"
-                            >
-                                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                            </button>
-                            <Link to="/apoiar" className="btn btn-sm bg-gradient-to-r from-error-500 to-pink-500 text-white rounded-full font-bold hover:shadow-lg hover:shadow-error-500/30 transition-all">
-                                <Heart className="w-4 h-4" />
-                                Apoiar
                             </Link>
                         </div>
                     </div>
