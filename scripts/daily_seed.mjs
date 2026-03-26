@@ -178,7 +178,12 @@ async function main() {
   console.log(`  ${new Date().toLocaleString('pt-BR')}`);
   console.log('═══════════════════════════════════════════════\n');
 
-  const client = new Client({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  const client = new Client({
+    connectionString: DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    // Força IPv4 – GitHub Actions falha com IPv6 ao Supabase (ENETUNREACH)
+    family: 4,
+  });
   await client.connect();
 
   try {
