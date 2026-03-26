@@ -1,0 +1,58 @@
+name: Daily Seed – Salário do Servidor
+
+on:
+  # Executa todo dia às 06:00 UTC = 03:00 Brasília (UTC-3)
+  schedule:
+    - cron: "0 6 * * *"
+
+  # Permite rodar manualmente pelo GitHub (aba Actions → Run workflow)
+  workflow_dispatch:
+    inputs:
+      n_records:
+        description: "Quantidade de registros a inserir"
+        required: false
+        default: "5"
+      only_clean:
+        description: "Apenas limpar (sem inserir)? (true/false)"
+        required: false
+        default: "false"
+
+jobs:
+  seed:
+    name: Inserir e limpar dados de seed
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependências (pg)
+        run: npm install --ignore-scripts
+        # Instala apenas o necessário (pg já está no devDependencies)
+
+      - name: Executar seed diário
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.n_records }}" != "" ]; then
+            ARGS="--n ${{ github.event.inputs.n_records }}"
+          fi
+          if [ "${{ github.event.inputs.only_clean }}" = "true" ]; then
+            ARGS="--only-clean"
+          fi
+          node scripts/daily_seed.mjs $ARGS
+
+      - name: Resumo do job
+        if: always()
+        run: |
+          echo "### Seed Diário – $(date '+%d/%m/%Y %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
