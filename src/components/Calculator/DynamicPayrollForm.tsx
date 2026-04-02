@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { ChevronDown, GripVertical, Plus, Settings, Trash2 } from 'lucide-react';
+import { GripVertical, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
 import { VacationCard } from './cards/VacationCard';
@@ -9,6 +9,7 @@ import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { ManualRubricasSection } from './ManualRubricasSection';
+import { PresetGrossSummary } from './PresetGrossSummary';
 import { useFunprespForm } from './hooks/useFunprespForm';
 import { useDynamicPresetInstances } from './hooks/useDynamicPresetInstances';
 import { pickBestKeyByReference, toReferenceMonthIndex } from './referenceDateUtils';
@@ -25,7 +26,6 @@ import {
     toDecimalRateFromPercentInput,
     createUniqueId,
     formatReferenciaMesAno,
-    isDiscountLabel,
     getPresetPickerLabel
 } from './dynamicPayrollForm.helpers';
 import {
@@ -684,37 +684,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         }
     };
 
-    const renderPresetGrossSummary = (instance: PresetInstance) => {
-        const lines = getPresetGrossLines(instance);
-        if (lines.length === 0) {
-            return null;
-        }
-
-        return (
-            <details className="group rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
-                    <p className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                        Resumo calculado
-                    </p>
-                    <ChevronDown className="h-4 w-4 text-neutral-400 transition-transform duration-200 group-open:rotate-180 dark:text-neutral-500" />
-                </summary>
-                <div className="space-y-1.5 pt-2">
-                    {lines.map((line) => {
-                        const isDiscount = Boolean(line.isDiscount || isDiscountLabel(line.label));
-                        return (
-                            <div key={line.label} className="flex items-center justify-between gap-3 text-body-xs">
-                                <span className="text-neutral-600 dark:text-neutral-300">{line.label}</span>
-                                <span className={`font-mono font-semibold ${isDiscount ? 'text-error-600 dark:text-error-400' : 'text-neutral-700 dark:text-neutral-200'}`}>
-                                    {formatCurrency(line.value || 0)}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </details>
-        );
-    };
-
     const renderPreset = (instance: PresetInstance) => {
         const presetId = instance.presetId;
 
@@ -966,7 +935,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <div className={styles.innerBox}>
                 <h4 className={styles.innerBoxTitle}>Adicional de Qualificação</h4>
                 {renderPreset({ key: 'aq-fixed', presetId: 'aq' })}
-                {renderPresetGrossSummary({ key: 'aq-fixed', presetId: 'aq' })}
+                <PresetGrossSummary lines={getPresetGrossLines({ key: 'aq-fixed', presetId: 'aq' })} />
             </div>
 
             <div className={styles.innerBox}>
@@ -1135,7 +1104,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             </button>
                         </div>
                         {renderPreset(instance)}
-                        {renderPresetGrossSummary(instance)}
+                        <PresetGrossSummary lines={getPresetGrossLines(instance)} />
                     </div>
                 );
             })}
