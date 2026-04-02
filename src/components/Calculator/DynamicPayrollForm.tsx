@@ -263,24 +263,16 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     };
 
     const getPresetGrossLines = (instance: PresetInstance): PresetGrossLine[] => {
-        const presetId = instance.presetId;
-        if (
-            presetId === 'decimo' ||
-            presetId === 'hora_extra' ||
-            presetId === 'substituicao' ||
-            presetId === 'diarias'
-        ) {
-            return buildPresetGrossLines({
-                instance,
-                state,
-                courtConfig,
-                currentTables,
-                isNovoAQ,
-                noFunctionCode,
-                currentFunctionValue: funcaoAtualValor,
-                gratificacaoEspecificaCalculada
-            });
-        }
+        return buildPresetGrossLines({
+            instance,
+            state,
+            courtConfig,
+            currentTables,
+            isNovoAQ,
+            noFunctionCode,
+            currentFunctionValue: funcaoAtualValor,
+            gratificacaoEspecificaCalculada
+        });
 
         switch (instance.presetId) {
             case 'aq': {
