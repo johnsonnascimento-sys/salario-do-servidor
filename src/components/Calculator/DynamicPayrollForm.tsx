@@ -1546,7 +1546,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     };
 
     return (
-        <div className={styles.card}>
+        <>
+            <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
                 <Settings className="w-4 h-4" />
                 Formulário dinâmico do holerite
@@ -1683,15 +1684,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     </div>
                 )}
             </div>
+        </div>
 
-            <div className={styles.innerBox}>
-                <div className="mb-4 space-y-3">
-                    <h4 className={styles.innerBoxTitle}>
-                        <span className="flex items-center gap-2">
-                            <Settings className="w-4 h-4" />
-                            Rubricas Pré-definidas
-                        </span>
-                    </h4>
+            <div className={styles.card}>
+                <h3 className={styles.sectionTitle}>
+                    <Settings className="w-4 h-4" />
+                    Rubricas Pré-definidas
+                </h3>
+
+                <div className="space-y-3">
                     <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
                         <select
                             className={`${styles.input} w-full min-w-0 sm:flex-1 sm:min-w-[20rem]`}
@@ -1734,56 +1735,62 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     </p>
                 )}
 
-                <div className="space-y-3">
-                    {enabledPresets.map(instance => {
-                        const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
-                        if (!preset) return null;
-
-                        return (
-                            <div
-                                key={instance.key}
-                                draggable={reorderMode}
-                                onDragStart={() => handlePresetDragStart(instance.key)}
-                                onDragOver={handlePresetDragOver}
-                                onDrop={() => handlePresetDrop(instance.key)}
-                                onDragEnd={handlePresetDragEnd}
-                                className={`rounded-xl border bg-white dark:bg-neutral-900 p-4 space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-primary/60 shadow-lg' : 'border-neutral-200 dark:border-neutral-700'} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-center gap-2">
-                                        {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
-                                        <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{preset.label}</span>
-                                        {MULTI_INSTANCE_PRESETS.has(instance.presetId) && (
-                                            <span className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700">
-                                                Múltiplo
-                                            </span>
-                                        )}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => removePreset(instance)}
-                                        className="text-neutral-400 hover:text-error-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                        aria-label={`Remover ${preset.label}`}
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                {renderPreset(instance)}
-                                {renderPresetGrossSummary(instance)}
-                            </div>
-                        );
-                    })}
-                </div>
+                {enabledPresets.length === 0 && (
+                    <p className="text-body text-neutral-400 italic pt-1">
+                        Nenhuma rubrica pré-definida adicionada.
+                    </p>
+                )}
             </div>
 
-            <div className={styles.innerBox}>
+            {enabledPresets.map(instance => {
+                const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
+                if (!preset) return null;
+
+                return (
+                    <div
+                        key={instance.key}
+                        draggable={reorderMode}
+                        onDragStart={() => handlePresetDragStart(instance.key)}
+                        onDragOver={handlePresetDragOver}
+                        onDrop={() => handlePresetDrop(instance.key)}
+                        onDragEnd={handlePresetDragEnd}
+                        className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-primary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
+                                <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{preset.label}</span>
+                                {MULTI_INSTANCE_PRESETS.has(instance.presetId) && (
+                                    <span className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700">
+                                        Múltiplo
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => removePreset(instance)}
+                                className="text-neutral-400 hover:text-error-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                aria-label={`Remover ${preset.label}`}
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                        {renderPreset(instance)}
+                        {renderPresetGrossSummary(instance)}
+                    </div>
+                );
+            })}
+
+            <div className={styles.card}>
+                <h3 className={styles.sectionTitle}>
+                    <DollarSign className="w-4 h-4" />
+                    Rubricas Manuais
+                </h3>
+
                 <div className="flex items-center justify-between gap-4 flex-wrap">
-                    <h4 className={styles.innerBoxTitle}>
-                        <span className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4" />
-                            Rubricas Manuais
-                        </span>
-                    </h4>
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                        Cada rubrica manual adicionada aparece em um card independente abaixo.
+                    </p>
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
@@ -1804,129 +1811,129 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     </div>
                 </div>
 
-                <div className="space-y-3 mt-4">
-                    {state.rubricasExtras.map((rubrica, index) => (
-                        <div key={rubrica.id} className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 space-y-3">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-center gap-2">
-                                    <span className={`px-2.5 py-1 rounded-full text-body-xs font-bold ${rubrica.tipo === 'C'
-                                        ? 'bg-success-500/10 text-success-700 dark:text-success-400'
-                                        : 'bg-error-500/10 text-error-700 dark:text-error-400'
-                                        }`}>
-                                        {rubrica.tipo === 'C' ? 'Crédito' : 'Desconto'} #{index + 1}
-                                    </span>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => removeRubrica(rubrica.id)}
-                                    className="text-neutral-400 hover:text-error-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                    aria-label="Remover rubrica"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                <div>
-                                    <label className={styles.label}>Tipo</label>
-                                    <select className={styles.input} value={rubrica.tipo} onChange={e => updateRubrica(rubrica.id, 'tipo', e.target.value as Rubrica['tipo'])}>
-                                        <option value="C">Crédito (+)</option>
-                                        <option value="D">Desconto (-)</option>
-                                    </select>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className={styles.label}>Descrição</label>
-                                    <input type="text" className={styles.input} value={rubrica.descricao} onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className={styles.label}>Valor</label>
-                                    <input type="number" className={styles.input} value={rubrica.valor || ''} onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))} />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 flex-wrap">
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={rubrica.incideIR}
-                                        onChange={e => {
-                                            const checked = e.target.checked;
-                                            updateRubrica(rubrica.id, 'incideIR', checked);
-                                            if (checked) {
-                                                updateRubrica(rubrica.id, 'isEA', false);
-                                            }
-                                        }}
-                                    />
-                                    <span>Incluir na base do IR</span>
-                                </label>
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={rubrica.isEA}
-                                        onChange={e => {
-                                            const checked = e.target.checked;
-                                            updateRubrica(rubrica.id, 'isEA', checked);
-                                            if (checked) {
-                                                updateRubrica(rubrica.id, 'incideIR', false);
-                                            }
-                                        }}
-                                    />
-                                    <span>Incluir na base do IR (Exercício Anterior - EA)</span>
-                                </label>
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={rubrica.incidePSS}
-                                        onChange={e => {
-                                            const checked = e.target.checked;
-                                            updateRubrica(rubrica.id, 'incidePSS', checked);
-                                            if (checked) {
-                                                updateRubrica(rubrica.id, 'pssCompetenciaSeparada', false);
-                                            }
-                                        }}
-                                    />
-                                    <span>Incluir na base do PSS</span>
-                                </label>
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={rubrica.pssCompetenciaSeparada}
-                                        onChange={e => {
-                                            const checked = e.target.checked;
-                                            updateRubrica(rubrica.id, 'pssCompetenciaSeparada', checked);
-                                            if (checked) {
-                                                updateRubrica(rubrica.id, 'incidePSS', false);
-                                            }
-                                        }}
-                                    />
-                                    <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
-                                </label>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
                 {state.rubricasExtras.length === 0 && (
                     <p className="text-body text-neutral-400 italic py-4">
                         Nenhuma rubrica manual adicionada.
                     </p>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="rounded-xl border border-success-500/20 bg-success-500/5 px-4 py-3">
-                        <p className="text-label font-bold uppercase tracking-widest text-success-700 dark:text-success-400">Total Créditos Dinâmicos</p>
-                        <p className="text-body font-bold font-mono text-success-700 dark:text-success-400">{formatCurrency(totalCreditos)}</p>
+                {state.rubricasExtras.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div className="rounded-xl border border-success-500/20 bg-success-500/5 px-4 py-3">
+                            <p className="text-label font-bold uppercase tracking-widest text-success-700 dark:text-success-400">Total Créditos Dinâmicos</p>
+                            <p className="text-body font-bold font-mono text-success-700 dark:text-success-400">{formatCurrency(totalCreditos)}</p>
+                        </div>
+                        <div className="rounded-xl border border-error-500/20 bg-error-500/5 px-4 py-3">
+                            <p className="text-label font-bold uppercase tracking-widest text-error-700 dark:text-error-400">Total Descontos Dinâmicos</p>
+                            <p className="text-body font-bold font-mono text-error-700 dark:text-error-400">{formatCurrency(totalDescontos)}</p>
+                        </div>
                     </div>
-                    <div className="rounded-xl border border-error-500/20 bg-error-500/5 px-4 py-3">
-                        <p className="text-label font-bold uppercase tracking-widest text-error-700 dark:text-error-400">Total Descontos Dinâmicos</p>
-                        <p className="text-body font-bold font-mono text-error-700 dark:text-error-400">{formatCurrency(totalDescontos)}</p>
+                )}
+            </div>
+
+            {state.rubricasExtras.map((rubrica, index) => (
+                <div key={rubrica.id} className={`${styles.card} space-y-4`}>
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-1 rounded-full text-body-xs font-bold ${rubrica.tipo === 'C'
+                                ? 'bg-success-500/10 text-success-700 dark:text-success-400'
+                                : 'bg-error-500/10 text-error-700 dark:text-error-400'
+                                }`}>
+                                {rubrica.tipo === 'C' ? 'Crédito' : 'Desconto'} #{index + 1}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => removeRubrica(rubrica.id)}
+                            className="text-neutral-400 hover:text-error-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                            aria-label="Remover rubrica"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div>
+                            <label className={styles.label}>Tipo</label>
+                            <select className={styles.input} value={rubrica.tipo} onChange={e => updateRubrica(rubrica.id, 'tipo', e.target.value as Rubrica['tipo'])}>
+                                <option value="C">Crédito (+)</option>
+                                <option value="D">Desconto (-)</option>
+                            </select>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className={styles.label}>Descrição</label>
+                            <input type="text" className={styles.input} value={rubrica.descricao} onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)} />
+                        </div>
+                        <div>
+                            <label className={styles.label}>Valor</label>
+                            <input type="number" className={styles.input} value={rubrica.valor || ''} onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))} />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 flex-wrap">
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={rubrica.incideIR}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateRubrica(rubrica.id, 'incideIR', checked);
+                                    if (checked) {
+                                        updateRubrica(rubrica.id, 'isEA', false);
+                                    }
+                                }}
+                            />
+                            <span>Incluir na base do IR</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={rubrica.isEA}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateRubrica(rubrica.id, 'isEA', checked);
+                                    if (checked) {
+                                        updateRubrica(rubrica.id, 'incideIR', false);
+                                    }
+                                }}
+                            />
+                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={rubrica.incidePSS}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateRubrica(rubrica.id, 'incidePSS', checked);
+                                    if (checked) {
+                                        updateRubrica(rubrica.id, 'pssCompetenciaSeparada', false);
+                                    }
+                                }}
+                            />
+                            <span>Incluir na base do PSS</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={rubrica.pssCompetenciaSeparada}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateRubrica(rubrica.id, 'pssCompetenciaSeparada', checked);
+                                    if (checked) {
+                                        updateRubrica(rubrica.id, 'incidePSS', false);
+                                    }
+                                }}
+                            />
+                            <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
+                        </label>
                     </div>
                 </div>
-            </div>
-        </div>
+            ))}
+        </>
     );
 };
