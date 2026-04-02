@@ -23,6 +23,7 @@ Importante:
 - Tarefas ideais:
   - transformar um pedido amplo em subtarefas claras
   - decidir quais especialistas entram e em que ordem
+  - classificar o nivel de raciocinio necessario para a tarefa
   - consolidar diffs, riscos, validacoes e proximo passo
 - Ownership principal:
   - planejamento operacional
@@ -31,6 +32,35 @@ Importante:
 - Papel runtime preferencial: `default`
 - Modelo preferencial: `GPT-5.4`
 - Fallback aceitavel: nenhum para tarefas amplas; em tarefa simples, o agente principal pode operar sozinho sem delegacao formal
+
+#### Politica de raciocinio do Codex Orchestrator
+
+O `Codex Orchestrator` deve definir um nivel de raciocinio recomendado antes de executar a tarefa:
+
+- `Baixa`:
+  - buscas simples
+  - alteracoes pequenas e localizadas em 1 arquivo
+  - ajustes visuais pontuais sem impacto estrutural
+- `Media`:
+  - mudancas normais de frontend ou backend com impacto limitado
+  - pequenas integracoes entre 2 ou 3 modulos
+  - ajustes documentais ou operacionais com alguma validacao
+- `Alta`:
+  - refactors acoplados
+  - mudancas de estado complexo, autenticacao, fluxo de dados ou UI com multiplas interacoes
+  - alteracoes em calculo sem mudanca estrutural de banco
+- `Altissima`:
+  - calculo oficial
+  - migrations, seeds, RLS ou schema com risco relevante
+  - mudancas amplas com varios modulos criticos e alta chance de regressao
+
+Regras de aplicacao:
+
+1. Se a tarefa tocar calculo oficial, schema, seeds, RLS ou configuracao administrativa sensivel, o nivel minimo recomendado e `Alta`, com preferencia por `Altissima` quando houver risco estrutural.
+2. Se a tarefa estiver concentrada em um unico arquivo e sem impacto funcional relevante, o nivel recomendado tende a `Baixa` ou `Media`.
+3. Quando houver duvida entre dois niveis, o `Codex Orchestrator` deve escolher o mais alto.
+4. Se o runtime permitir selecionar o nivel de raciocinio, o orquestrador deve aplicar o nivel escolhido.
+5. Se o runtime nao permitir essa selecao direta, o orquestrador deve ao menos registrar ou comunicar a recomendacao operacional.
 
 ### 2. Rules Guardian
 

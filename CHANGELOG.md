@@ -4,6 +4,7 @@
 - Docs: adicionada secao de governanca de subagentes Codex em `PROJECT_RULES.md`.
 - Docs: criado `src/docs/CODEX_SPECIALISTS.md` com catalogo versionado de especialistas por tarefa, ownership, papel runtime e modelo preferencial.
 - Docs: adicionado papel de coordenacao `Codex Orchestrator` para orquestrar especialistas e integrar diffs.
+- Docs: adicionada politica de nivel de raciocinio (`Baixa`, `Media`, `Alta`, `Altissima`) para uso do `Codex Orchestrator`.
 - Docs: `AGENTS.md` e `README.md` atualizados para apontar para o catalogo de especialistas.
 
 ## 2.1.17 - 13/03/2026
