@@ -7,6 +7,7 @@ import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { SimplePresetFields } from './SimplePresetFields';
+import { UnlinkedPresetEntryNotice } from './UnlinkedPresetEntryNotice';
 import { PresetInstance } from './dynamicPayrollForm.helpers';
 
 interface PresetCardContentProps {
@@ -69,7 +70,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
             : state.overtimeEntries[0];
 
         if (!overtimeEntry) {
-            return <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Card sem entrada vinculada.</p>;
+            return <UnlinkedPresetEntryNotice />;
         }
 
         return (
@@ -89,7 +90,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
             : state.substitutionEntries[0];
 
         if (!substitutionEntry) {
-            return <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Card sem entrada vinculada.</p>;
+            return <UnlinkedPresetEntryNotice />;
         }
 
         return (
