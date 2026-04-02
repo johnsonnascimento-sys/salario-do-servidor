@@ -48,23 +48,38 @@ export default function Calculator() {
     } = useCalculator();
 
     const location = useLocation();
+    const navigationState = location.state as { startBlank?: boolean; restoreSnapshot?: { calculatorState?: unknown } } | null;
     const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
-    const startBlank = Boolean((location.state as { startBlank?: boolean } | null)?.startBlank);
-    const restoreAppliedRef = useRef(false);
+    const startBlank = Boolean(navigationState?.startBlank);
+    const restoreSnapshot = navigationState?.restoreSnapshot;
+    const lastRestoreSourceRef = useRef('');
     const [formKey, setFormKey] = useState(0);
 
     useEffect(() => {
-        if (restoreAppliedRef.current) return;
-
         let active = true;
 
         const applyHydratedState = (snapshot: unknown) => {
-            if (!active || restoreAppliedRef.current || !snapshot) return;
+            if (!active || !snapshot) return;
             const hydrated = hydrateCalculatorState(snapshot);
             setState(hydrated);
             setFormKey((prev) => prev + 1);
-            restoreAppliedRef.current = true;
         };
+
+        const restoreSource = startBlank
+            ? 'blank'
+            : editPayslipId
+                ? `edit:${editPayslipId}`
+                : restoreSnapshot?.calculatorState
+                    ? `restore:${location.key}`
+                    : 'draft';
+
+        if (lastRestoreSourceRef.current === restoreSource) {
+            return () => {
+                active = false;
+            };
+        }
+
+        lastRestoreSourceRef.current = restoreSource;
 
         if (startBlank) {
             try {
@@ -75,7 +90,6 @@ export default function Calculator() {
 
             setState(hydrateCalculatorState(INITIAL_STATE));
             setFormKey((prev) => prev + 1);
-            restoreAppliedRef.current = true;
         } else if (editPayslipId) {
             getPayslipById(editPayslipId)
                 .then((payslip) => {
@@ -83,9 +97,8 @@ export default function Calculator() {
                 })
                 .catch(() => undefined);
         } else {
-            const restorePayload = (location.state as { restoreSnapshot?: { calculatorState?: unknown } } | null)?.restoreSnapshot;
-            if (restorePayload?.calculatorState) {
-                applyHydratedState(restorePayload.calculatorState);
+            if (restoreSnapshot?.calculatorState) {
+                applyHydratedState(restoreSnapshot.calculatorState);
             } else {
                 try {
                     const rawDraft = localStorage.getItem(CALCULATOR_DRAFT_STORAGE_KEY);
@@ -101,7 +114,7 @@ export default function Calculator() {
         return () => {
             active = false;
         };
-    }, [location.state, editPayslipId, setState, startBlank]);
+    }, [editPayslipId, location.key, restoreSnapshot, setState, startBlank]);
 
     const handleSavePayslip = async () => {
         try {
@@ -134,7 +147,7 @@ export default function Calculator() {
 
         setState(hydrateCalculatorState(INITIAL_STATE));
         setFormKey((prev) => prev + 1);
-        restoreAppliedRef.current = true;
+        lastRestoreSourceRef.current = 'blank';
     };
 
     if (loadingConfig) {
