@@ -3,3 +3,5 @@
 Este projeto usa um unico documento de regras: [PROJECT_RULES.md](./PROJECT_RULES.md).
 
 Leia e siga o `PROJECT_RULES.md` antes de qualquer alteracao em codigo, schema, seeds ou documentacao.
+
+Para subagentes especializados do Codex, consulte o catalogo operacional em [src/docs/CODEX_SPECIALISTS.md](./src/docs/CODEX_SPECIALISTS.md) depois de ler o `PROJECT_RULES.md`.

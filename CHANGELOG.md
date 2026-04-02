@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.18 - 02/04/2026
+- Docs: adicionada secao de governanca de subagentes Codex em `PROJECT_RULES.md`.
+- Docs: criado `src/docs/CODEX_SPECIALISTS.md` com catalogo versionado de especialistas por tarefa, ownership, papel runtime e modelo preferencial.
+- Docs: adicionado papel de coordenacao `Codex Orchestrator` para orquestrar especialistas e integrar diffs.
+- Docs: `AGENTS.md` e `README.md` atualizados para apontar para o catalogo de especialistas.
+
 ## 2.1.17 - 13/03/2026
 - Fix: grade de Hora Extra por funcao substituida foi desacoplada do checkbox `Excluir da base do IR`, permitindo combinacoes independentes de incidencia e base.
 - Fix: motor de Hora Extra passa a ignorar `horasPorFuncao` quando o card nao estiver marcado para calcular por funcao substituida, evitando uso oculto da grade.

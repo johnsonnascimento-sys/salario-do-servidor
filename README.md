@@ -65,6 +65,7 @@ npm run preview
 
 - [Regras do projeto (fonte canonica)](./PROJECT_RULES.md)
 - [Guia para agentes](./AGENTS.md)
+- [Catalogo de especialistas Codex](./src/docs/CODEX_SPECIALISTS.md)
 - [Historico de mudancas](./CHANGELOG.md)
 - [Formulas legadas (referencia)](./src/docs/LEGACY_FORMULAS.md)
 
