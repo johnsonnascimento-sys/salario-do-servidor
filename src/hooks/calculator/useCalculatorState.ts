@@ -13,6 +13,7 @@ import type { ChangeEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { INITIAL_STATE, CalculatorState, Rubrica } from '../../types';
 import { loadCalculatorDraftState } from '../../utils/calculatorState';
+import { CalculatorNavigationState } from '../../types/calculatorRestore';
 
 const createRubricaId = () => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -23,7 +24,7 @@ const createRubricaId = () => {
 
 export const useCalculatorState = () => {
     const location = useLocation();
-    const navigationState = location.state as { startBlank?: boolean; restoreSnapshot?: { calculatorState?: unknown } } | null;
+    const navigationState = location.state as CalculatorNavigationState | null;
     const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
     const shouldBypassDraftRestore = Boolean(
         editPayslipId ||

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, Heart, Image, Save, Upload } from 'lucide-react';
 import JsonEditor from '../components/Admin/JsonEditor';
 import { AdminService } from '../services/admin/AdminService';
+import { configService } from '../services/config';
 import { getPixKey, getPixQrCode, updatePixKey, uploadPixQrCode } from '../services/settingsService';
 import { GlobalConfig, JsonObject, OrgConfig, PowerConfig } from '../types/admin';
 
@@ -327,23 +328,30 @@ export default function AdminControlPanel() {
         if (editor.mode === 'version') {
           const current = globals.find((g) => g.config_key === editor.config_key && g.valid_to === null);
           if (current) {
+            await AdminService.versionGlobalConfig({
+              previous_id: current.id,
+              config_key: editor.config_key,
+              config_value: editor.config_value,
+              valid_from: editor.valid_from,
+              valid_to: editor.valid_to,
+            });
+          } else {
             await AdminService.upsertGlobalConfig({
-              id: current.id,
-              config_key: current.config_key,
-              config_value: current.config_value,
-              valid_from: current.valid_from,
-              valid_to: dayBefore(editor.valid_from),
+              config_key: editor.config_key,
+              config_value: editor.config_value,
+              valid_from: editor.valid_from,
+              valid_to: editor.valid_to,
             });
           }
+        } else {
+          await AdminService.upsertGlobalConfig({
+            id: editor.mode === 'edit' ? editor.id : undefined,
+            config_key: editor.config_key,
+            config_value: editor.config_value,
+            valid_from: editor.valid_from,
+            valid_to: editor.valid_to,
+          });
         }
-
-        await AdminService.upsertGlobalConfig({
-          id: editor.mode === 'edit' ? editor.id : undefined,
-          config_key: editor.config_key,
-          config_value: editor.config_value,
-          valid_from: editor.valid_from,
-          valid_to: editor.valid_to,
-        });
       } else {
         if (editor.mode === 'version') {
           const current = powers.find(
@@ -353,27 +361,36 @@ export default function AdminControlPanel() {
               p.valid_to === null
           );
           if (current) {
+            await AdminService.versionPowerConfig({
+              previous_id: current.id,
+              power_name: editor.power_name,
+              config_key: editor.config_key,
+              config_value: editor.config_value,
+              valid_from: editor.valid_from,
+              valid_to: editor.valid_to,
+            });
+          } else {
             await AdminService.upsertPowerConfig({
-              id: current.id,
-              power_name: current.power_name,
-              config_key: current.config_key,
-              config_value: current.config_value,
-              valid_from: current.valid_from,
-              valid_to: dayBefore(editor.valid_from),
+              power_name: editor.power_name,
+              config_key: editor.config_key,
+              config_value: editor.config_value,
+              valid_from: editor.valid_from,
+              valid_to: editor.valid_to,
             });
           }
+        } else {
+          await AdminService.upsertPowerConfig({
+            id: editor.mode === 'edit' ? editor.id : undefined,
+            power_name: editor.power_name,
+            config_key: editor.config_key,
+            config_value: editor.config_value,
+            valid_from: editor.valid_from,
+            valid_to: editor.valid_to,
+          });
         }
-
-        await AdminService.upsertPowerConfig({
-          id: editor.mode === 'edit' ? editor.id : undefined,
-          power_name: editor.power_name,
-          config_key: editor.config_key,
-          config_value: editor.config_value,
-          valid_from: editor.valid_from,
-          valid_to: editor.valid_to,
-        });
       }
 
+      configService.clearCache();
       await loadAll();
       setEditorOpen(false);
     } catch (err) {

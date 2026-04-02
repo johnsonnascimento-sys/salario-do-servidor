@@ -155,6 +155,14 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     const lastReferenceKeyRef = useRef('');
     const preserveRestoredGlobalsRef = useRef(preserveRestoredGlobals);
 
+    useEffect(() => {
+        preserveRestoredGlobalsRef.current = preserveRestoredGlobals;
+        if (preserveRestoredGlobals) {
+            manualPeriodSelectionRef.current = false;
+            lastReferenceKeyRef.current = '';
+        }
+    }, [preserveRestoredGlobals]);
+
     const rawReferenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
     const rawReferenceYear = Number.isFinite(state.anoRef) ? state.anoRef : new Date().getFullYear();
     const clampedReference = clampReference(

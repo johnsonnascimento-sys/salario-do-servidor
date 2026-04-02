@@ -1,12 +1,8 @@
-﻿import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
+import { getAuthRedirectUrl } from '../../constants/auth';
 
 const BETA_CLOSED_MESSAGE = 'Cadastro de usuários ainda está em desenvolvimento. No momento, acesso restrito ao beta fechado.';
-const DEFAULT_AUTH_REDIRECT_URL = 'https://www.salariodoservidor.com.br';
-const AUTH_REDIRECT_URL = (
-  window.location.hostname === 'localhost'
-    ? (import.meta.env.VITE_AUTH_REDIRECT_URL || window.location.origin)
-    : DEFAULT_AUTH_REDIRECT_URL
-).replace(/\/$/, '');
+const AUTH_REDIRECT_URL = getAuthRedirectUrl();
 
 export interface SignUpPayload {
   fullName: string;

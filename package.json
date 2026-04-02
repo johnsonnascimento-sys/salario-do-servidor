@@ -7,6 +7,7 @@
     "dev": "vite",
     "prebuild": "node scripts/generate-version.js",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "audit": "node scripts/audit-project.cjs",
     "audit:design": "node scripts/audit-design-system.cjs"

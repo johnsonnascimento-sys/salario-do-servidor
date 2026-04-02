@@ -16,8 +16,12 @@ export default function UserPayslipsPage() {
   const { result, loading, error, reload, create, remove } = useUserPayslips({ page: 1, pageSize: 10 });
 
   const yearOptions = useMemo(() => {
-    const years = new Set(result.data.map((item) => item.year_ref));
-    return Array.from(years).sort((a, b) => b - a);
+    const years = new Set<number>(
+      result.data
+        .map((item) => Number(item.year_ref))
+        .filter((value): value is number => Number.isFinite(value))
+    );
+    return Array.from<number>(years).sort((a, b) => b - a);
   }, [result.data]);
 
   const handleFilter = async () => {
@@ -151,7 +155,9 @@ export default function UserPayslipsPage() {
                     <button onClick={() => handleExport(item, 'excel')} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Exportar Excel"><FileSpreadsheet size={14} /></button>
                     <button onClick={() => handleDuplicate(item)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Duplicar"><Copy size={14} /></button>
                     <button
-                      onClick={() => navigate(`/simulador/${item.agency_slug}?editPayslipId=${item.id}`)}
+                      onClick={() => navigate(`/simulador/${item.agency_slug}?editPayslipId=${item.id}`, {
+                        state: { editPayslipId: item.id },
+                      })}
                       className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700"
                       title="Editar"
                     >

@@ -1,10 +1,7 @@
 import { supabase } from '../../lib/supabase';
-const DEFAULT_AUTH_REDIRECT_URL = 'https://www.salariodoservidor.com.br';
-const AUTH_REDIRECT_URL = (
-  window.location.hostname === 'localhost'
-    ? (import.meta.env.VITE_AUTH_REDIRECT_URL || window.location.origin)
-    : DEFAULT_AUTH_REDIRECT_URL
-).replace(/\/$/, '');
+import { getAuthRedirectUrl } from '../../constants/auth';
+
+const AUTH_REDIRECT_URL = getAuthRedirectUrl();
 
 export interface AdminUserRow {
   user_id: string;

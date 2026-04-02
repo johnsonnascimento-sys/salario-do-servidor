@@ -19,6 +19,7 @@ import {
     USER_AREA_LAST_RESULT_ROWS_KEY,
 } from '../constants/storage';
 import { hydrateCalculatorState } from '../utils/calculatorState';
+import { CalculatorNavigationState, CalculatorRestoreSource } from '../types/calculatorRestore';
 
 export default function Calculator() {
     const {
@@ -48,14 +49,14 @@ export default function Calculator() {
     } = useCalculator();
 
     const location = useLocation();
-    const navigationState = location.state as { startBlank?: boolean; restoreSnapshot?: { calculatorState?: unknown } } | null;
+    const navigationState = location.state as CalculatorNavigationState | null;
     const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
     const startBlank = Boolean(navigationState?.startBlank);
     const restoreSnapshot = navigationState?.restoreSnapshot;
     const preserveRestoredGlobals = Boolean(editPayslipId || restoreSnapshot?.calculatorState);
     const lastRestoreSourceRef = useRef('');
     const [formKey, setFormKey] = useState(0);
-    const [restoreReady, setRestoreReady] = useState(!editPayslipId);
+    const [restoreReady, setRestoreReady] = useState(!(editPayslipId || restoreSnapshot?.calculatorState));
 
     useEffect(() => {
         let active = true;
@@ -68,13 +69,18 @@ export default function Calculator() {
             setRestoreReady(true);
         };
 
-        const restoreSource = startBlank
+        const restoreKind: CalculatorRestoreSource = startBlank
             ? 'blank'
             : editPayslipId
-                ? `edit:${editPayslipId}`
+                ? 'savedPayslip'
                 : restoreSnapshot?.calculatorState
-                    ? `restore:${location.key}`
+                    ? 'navigationRestore'
                     : 'draft';
+        const restoreSource = restoreKind === 'savedPayslip'
+            ? `${restoreKind}:${editPayslipId}`
+            : restoreKind === 'navigationRestore'
+                ? `${restoreKind}:${location.key}`
+                : restoreKind;
 
         if (lastRestoreSourceRef.current === restoreSource) {
             return () => {

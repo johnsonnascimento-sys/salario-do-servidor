@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import ConfigTable from '../components/Admin/ConfigTable';
 import JsonEditor from '../components/Admin/JsonEditor';
 import { AdminService } from '../services/admin/AdminService';
+import { configService } from '../services/config';
 import { PowerConfig } from '../types/admin';
 
 export default function AdminPower() {
@@ -58,6 +59,7 @@ export default function AdminPower() {
         valid_to: editing.valid_to,
       };
       await AdminService.upsertPowerConfig(payload);
+      configService.clearCache();
       await loadConfigs();
       setEditing(null);
     } catch (err) {

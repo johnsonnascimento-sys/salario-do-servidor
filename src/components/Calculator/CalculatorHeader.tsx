@@ -65,11 +65,10 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
                 <div className="w-full md:w-96">
                     <input
                         type="text"
-                        placeholder={isUserAuthenticated ? '' : 'Nome para impressão (Opcional)'}
+                        placeholder={isUserAuthenticated ? (loggedUserName || 'Nome para impressão') : 'Nome para impressão (Opcional)'}
                         className={`${styles.input} w-full`}
-                        value={isUserAuthenticated ? (loggedUserName || state.nome) : state.nome}
+                        value={state.nome}
                         onChange={e => update('nome', e.target.value)}
-                        readOnly={Boolean(isUserAuthenticated)}
                     />
                 </div>
                 <div className="flex flex-wrap items-center gap-2 justify-end">

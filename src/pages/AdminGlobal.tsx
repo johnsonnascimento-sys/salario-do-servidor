@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ConfigTable from '../components/Admin/ConfigTable';
 import JsonEditor from '../components/Admin/JsonEditor';
 import { AdminService } from '../services/admin/AdminService';
+import { configService } from '../services/config';
 import { GlobalConfig } from '../types/admin';
 
 export default function AdminGlobal() {
@@ -46,6 +47,7 @@ export default function AdminGlobal() {
         valid_to: editing.valid_to,
       };
       await AdminService.upsertGlobalConfig(payload);
+      configService.clearCache();
       await loadConfigs();
       setEditing(null);
     } catch (err) {

@@ -38,6 +38,16 @@ const sanitizePayload = <T extends Record<string, unknown>>(payload: T) => {
 };
 
 export class AdminService {
+  static async getAdminAccessStatus(): Promise<boolean> {
+    const { data, error } = await supabase.rpc('is_admin_user');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return Boolean(data);
+  }
+
   static async listGlobalConfigs(): Promise<GlobalConfig[]> {
     const { data, error } = await supabase
       .from('global_config')
@@ -83,6 +93,21 @@ export class AdminService {
     return data as GlobalConfig;
   }
 
+  static async versionGlobalConfig(payload: UpsertGlobalConfigDTO & { previous_id: string }): Promise<void> {
+    const configValue = parseJsonIfString(payload.config_value, 'config_value');
+    const { error } = await supabase.rpc('admin_version_global_config', {
+      p_previous_id: payload.previous_id,
+      p_config_key: payload.config_key,
+      p_config_value: configValue,
+      p_valid_from: payload.valid_from,
+      p_valid_to: payload.valid_to,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
   static async listPowerConfigs(): Promise<PowerConfig[]> {
     const { data, error } = await supabase
       .from('power_config')
@@ -112,6 +137,22 @@ export class AdminService {
     }
 
     return data as PowerConfig;
+  }
+
+  static async versionPowerConfig(payload: UpsertPowerConfigDTO & { previous_id: string }): Promise<void> {
+    const configValue = parseJsonIfString(payload.config_value, 'config_value');
+    const { error } = await supabase.rpc('admin_version_power_config', {
+      p_previous_id: payload.previous_id,
+      p_power_name: payload.power_name,
+      p_config_key: payload.config_key,
+      p_config_value: configValue,
+      p_valid_from: payload.valid_from,
+      p_valid_to: payload.valid_to,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 
   static async listOrgConfigs(): Promise<OrgConfig[]> {

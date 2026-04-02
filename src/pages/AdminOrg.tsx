@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import ConfigTable from '../components/Admin/ConfigTable';
 import JsonEditor from '../components/Admin/JsonEditor';
 import { AdminService } from '../services/admin/AdminService';
+import { configService } from '../services/config';
 import { OrgConfig } from '../types/admin';
 
 export default function AdminOrg() {
@@ -53,6 +54,7 @@ export default function AdminOrg() {
         configuration: editValue,
       };
       await AdminService.upsertOrgConfig(payload);
+      configService.clearCache();
       await loadConfigs();
       setEditing(null);
     } catch (err) {

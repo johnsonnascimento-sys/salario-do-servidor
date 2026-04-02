@@ -39,7 +39,6 @@ function normalizePixQrValue(rawValue: string | null): string | null {
     return data?.publicUrl || null;
 }
 
-// Buscar uma configuração pelo nome da chave
 export async function getSetting(key: string): Promise<string | null> {
     const { data, error } = await supabase
         .from('site_settings')
@@ -55,7 +54,6 @@ export async function getSetting(key: string): Promise<string | null> {
     return data?.value || null;
 }
 
-// Atualizar ou criar uma configuração
 export async function updateSetting(key: string, value: string): Promise<boolean> {
     const { error } = await supabase
         .from('site_settings')
@@ -72,32 +70,27 @@ export async function updateSetting(key: string, value: string): Promise<boolean
     return true;
 }
 
-// Buscar chave Pix especificamente
 export async function getPixKey(): Promise<string> {
     const pixKey = await getSetting('pix_key');
-    return pixKey || 'seu-pix-aqui@email.com'; // Fallback se não existir
+    return pixKey || 'seu-pix-aqui@email.com';
 }
 
-// Atualizar chave Pix
 export async function updatePixKey(pixKey: string): Promise<boolean> {
     return updateSetting('pix_key', pixKey);
 }
 
-// Buscar URL do QR Code Pix
 export async function getPixQrCode(): Promise<string | null> {
     const qrCodeValue = await getSetting('pix_qrcode_url');
     return normalizePixQrValue(qrCodeValue);
 }
 
-// Upload de QR Code para o Storage e salvar URL
 export async function uploadPixQrCode(file: File): Promise<string | null> {
     const fileExt = file.name.split('.').pop();
     const fileName = `pix-qrcode-${Date.now()}.${fileExt}`;
     const filePath = `qrcodes/${fileName}`;
 
-    // Upload para o bucket 'assets'
     const { error: uploadError } = await supabase.storage
-        .from('assets')
+        .from(PIX_QR_BUCKET)
         .upload(filePath, file, {
             cacheControl: '3600',
             upsert: true
@@ -108,15 +101,16 @@ export async function uploadPixQrCode(file: File): Promise<string | null> {
         return null;
     }
 
-    // Obter URL pública
     const { data } = supabase.storage
         .from(PIX_QR_BUCKET)
         .getPublicUrl(filePath);
 
     const publicUrl = data.publicUrl;
-
-    // Salvar URL nas configurações
-    await updateSetting('pix_qrcode_url', publicUrl);
+    const settingUpdated = await updateSetting('pix_qrcode_url', publicUrl);
+    if (!settingUpdated) {
+        await supabase.storage.from(PIX_QR_BUCKET).remove([filePath]);
+        return null;
+    }
 
     return publicUrl;
 }

@@ -22,14 +22,17 @@ import {
     USER_AREA_LAST_CALCULATOR_STATE_KEY,
     USER_AREA_LAST_RESULT_ROWS_KEY,
 } from '../constants/storage';
+import { CalculatorNavigationState } from '../types/calculatorRestore';
 
 export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const stateEditPayslipId = (location.state as { editPayslipId?: string } | null)?.editPayslipId;
+    const navigationState = location.state as (CalculatorNavigationState & { editPayslipId?: string }) | null;
+    const stateEditPayslipId = navigationState?.editPayslipId;
     const queryEditPayslipId = new URLSearchParams(location.search).get('editPayslipId') || undefined;
     const editPayslipId = stateEditPayslipId || queryEditPayslipId;
+    const isRestoringSavedSnapshot = Boolean(editPayslipId || navigationState?.restoreSnapshot?.calculatorState);
     const { user } = useUserAuth();
     const [savingPayslip, setSavingPayslip] = useState(false);
     const [loggedUserName, setLoggedUserName] = useState('');
@@ -115,11 +118,11 @@ export const useCalculator = () => {
     }, [user]);
 
     useEffect(() => {
-        if (!user || !loggedUserName) return;
-        if (state.nome !== loggedUserName) {
+        if (!user || !loggedUserName || isRestoringSavedSnapshot) return;
+        if (!state.nome.trim()) {
             update('nome', loggedUserName);
         }
-    }, [user, loggedUserName, state.nome, update]);
+    }, [user, loggedUserName, state.nome, update, isRestoringSavedSnapshot]);
 
     useEffect(() => {
         try {

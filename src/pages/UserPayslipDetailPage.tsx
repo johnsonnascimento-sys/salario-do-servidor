@@ -23,7 +23,6 @@ export default function UserPayslipDetailPage() {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
-  const [refreshSnapshot, setRefreshSnapshot] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -84,33 +83,8 @@ export default function UserPayslipDetailPage() {
         tags: parseTags(tagsText),
       };
 
-      if (refreshSnapshot) {
-        try {
-          const rawState = localStorage.getItem('user_area_last_calculator_state');
-          const rawRows = localStorage.getItem('user_area_last_result_rows');
-
-          if (!rawState || !rawRows) {
-            alert('Nenhuma simulação recente encontrada no navegador para atualizar o snapshot.');
-            return;
-          }
-
-          const parsedState = JSON.parse(rawState);
-          const parsedRows = JSON.parse(rawRows);
-
-          payload.calculator_state = parsedState;
-          payload.result_rows = parsedRows;
-          payload.liquido = Number(parsedState.liquido || 0);
-          payload.total_bruto = Number(parsedState.totalBruto || 0);
-          payload.total_descontos = Number(parsedState.totalDescontos || 0);
-        } catch (_error) {
-          alert('Falha ao ler a última simulação do navegador.');
-          return;
-        }
-      }
-
       const updated = await updatePayslip(item.id, payload);
       setItem(updated);
-      setRefreshSnapshot(false);
       alert('Holerite atualizado com sucesso.');
     } catch (err) {
       alert((err as Error).message);
@@ -130,7 +104,9 @@ export default function UserPayslipDetailPage() {
 
   const onReopen = () => {
     if (!item) return;
-    navigate(`/simulador/${item.agency_slug}?editPayslipId=${item.id}`);
+    navigate(`/simulador/${item.agency_slug}?editPayslipId=${item.id}`, {
+      state: { editPayslipId: item.id },
+    });
   };
 
   if (loading) {
@@ -170,10 +146,11 @@ export default function UserPayslipDetailPage() {
           </div>
         </div>
 
-        <label className="inline-flex items-center gap-2 text-body-xs text-neutral-600 dark:text-neutral-300">
-          <input type="checkbox" checked={refreshSnapshot} onChange={(e) => setRefreshSnapshot(e.target.checked)} />
-          Atualizar snapshot com o estado atual da calculadora
-        </label>
+        <div className="rounded-xl border border-warning-300/40 bg-warning-50/60 dark:border-warning-700/40 dark:bg-warning-900/10 px-4 py-3">
+          <p className="text-body-xs text-warning-900 dark:text-warning-200">
+            O snapshot deste holerite só pode ser atualizado reabrindo-o na calculadora e salvando novamente.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-3">

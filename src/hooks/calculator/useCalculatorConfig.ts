@@ -87,6 +87,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
             } catch (err) {
                 console.error("Failed to load config from ConfigService", err);
                 try {
+                    console.warn("Falling back to legacy courts config for org:", resolvedSlug);
                     const court = resolvedSlug ? await getCourtBySlug(resolvedSlug) : null;
                     if (court) {
                         setCourtConfig(court.config);

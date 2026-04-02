@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useUserAuth } from '../hooks/user/useUserAuth';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowLeft, Shield } from 'lucide-react';
 import logo from '../assets/logo.png';
-import { isAdminEmail } from '../utils/auth/admin';
-
-const DEFAULT_AUTH_REDIRECT_URL = 'https://salariodoservidor.com.br';
-const AUTH_REDIRECT_URL = (
-    import.meta.env.VITE_AUTH_REDIRECT_URL ||
-    (window.location.hostname === 'localhost' ? window.location.origin : DEFAULT_AUTH_REDIRECT_URL)
-).replace(/\/$/, '');
 
 export default function Login() {
-    const { session, loading: authLoading } = useAuth();
+    const { session, loading: authLoading, isAdmin } = useUserAuth();
     const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
@@ -24,13 +17,13 @@ export default function Login() {
 
     React.useEffect(() => {
         if (session && !authLoading) {
-            if (isAdminEmail(session.user.email)) {
+            if (isAdmin) {
                 navigate('/admin');
             } else {
                 setError('Sua conta não possui acesso administrativo.');
             }
         }
-    }, [session, authLoading, navigate]);
+    }, [session, authLoading, isAdmin, navigate]);
 
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,7 +45,7 @@ export default function Login() {
                     setError(error.message);
                 }
             }
-        } catch (err) {
+        } catch (_err) {
             setError('Erro de conexão. Tente novamente.');
         } finally {
             setLoading(false);
@@ -69,7 +62,6 @@ export default function Login() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex flex-col">
-            {/* Header */}
             <header className="p-6">
                 <Link to="/" className="inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-body font-medium">
                     <ArrowLeft className="w-4 h-4" />
@@ -77,10 +69,8 @@ export default function Login() {
                 </Link>
             </header>
 
-            {/* Main Content */}
             <main className="flex-1 flex items-center justify-center px-4 pb-12">
                 <div className="w-full max-w-md">
-                    {/* Logo & Title */}
                     <div className="text-center mb-8">
                         <div className="flex justify-center mb-4">
                             <div className="w-20 h-20 bg-white/10 dark:bg-neutral-900/40 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
@@ -91,10 +81,7 @@ export default function Login() {
                         <p className="text-neutral-400 text-body">Acesso restrito para administradores</p>
                     </div>
 
-                    {/* Login Card */}
                     <div className="bg-white/5 dark:bg-neutral-900/40 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl">
-
-                        {/* Error Message */}
                         {error && (
                             <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl flex items-start gap-3">
                                 <AlertCircle className="w-5 h-5 text-error-400 flex-shrink-0 mt-0.5" />
@@ -102,9 +89,7 @@ export default function Login() {
                             </div>
                         )}
 
-                        {/* Login Form */}
                         <form onSubmit={handleEmailLogin} className="space-y-5">
-                            {/* Email Field */}
                             <div>
                                 <label className="block text-body font-medium text-neutral-300 mb-2">Email</label>
                                 <div className="relative">
@@ -120,7 +105,6 @@ export default function Login() {
                                 </div>
                             </div>
 
-                            {/* Password Field */}
                             <div>
                                 <label className="block text-body font-medium text-neutral-300 mb-2">Senha</label>
                                 <div className="relative">
@@ -143,7 +127,6 @@ export default function Login() {
                                 </div>
                             </div>
 
-                            {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={loading}
@@ -163,13 +146,11 @@ export default function Login() {
                             </button>
                         </form>
 
-                        {/* Help Text */}
                         <p className="mt-6 text-center text-neutral-500 text-body-xs">
                             Use suas credenciais de administrador para acessar.
                         </p>
                     </div>
 
-                    {/* Footer */}
                     <p className="mt-8 text-center text-neutral-600 dark:text-neutral-400 text-body-xs">
                         © 2024 Salário do Servidor. Área restrita.
                     </p>
