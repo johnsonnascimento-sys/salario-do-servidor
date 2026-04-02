@@ -34,7 +34,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
     update
 }) => (
     <div className={styles.innerBox}>
-        <h4 className={styles.innerBoxTitle}>Base obrigatoria</h4>
+        <h4 className={styles.innerBoxTitle}>Base obrigatória</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label className={styles.label}>Cargo</label>
@@ -47,7 +47,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                 </select>
             </div>
             <div>
-                <label className={styles.label}>Classe/Padrao</label>
+                <label className={styles.label}>Classe/Padrão</label>
                 <select className={styles.input} value={state.padrao} onChange={e => update('padrao', e.target.value)}>
                     {padroes.map(padrao => (
                         <option key={padrao} value={padrao}>{padrao}</option>
@@ -55,7 +55,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                 </select>
             </div>
             <div>
-                <label className={styles.label}>Funcao (FC/CJ)</label>
+                <label className={styles.label}>Função (FC/CJ)</label>
                 <select className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
                     {noFunctionCode && <option value={noFunctionCode}>{noFunctionLabel}</option>}
                     {functionKeys.map(funcao => (
@@ -69,7 +69,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                <p className={styles.label}>Salario Base</p>
+                <p className={styles.label}>Salário Base</p>
                 <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(baseVencimento)}</p>
             </div>
             <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
@@ -77,7 +77,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                 <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
             </div>
             <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Auxilio Alimentacao</p>
+                <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Auxílio Alimentação</p>
                 <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(state.auxAlimentacao || 0)}</p>
             </div>
         </div>

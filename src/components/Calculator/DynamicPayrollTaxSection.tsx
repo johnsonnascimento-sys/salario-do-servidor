@@ -26,13 +26,13 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     funprespValidationError
 }) => (
     <div className={styles.innerBox}>
-        <h4 className={styles.innerBoxTitle}>Configuracoes tributarias</h4>
+        <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label className={styles.label}>Regime previdenciario</label>
+                <label className={styles.label}>Regime previdenciário</label>
                 <select className={styles.input} value={state.regimePrev} onChange={e => handleRegimePrevChange(e.target.value)}>
                     <option value="antigo">RPPS - sem teto</option>
-                    <option value="novo_antigo">RPPS - novo sem migracao</option>
+                    <option value="novo_antigo">RPPS - novo sem migração</option>
                     <option value="migrado">RPPS migrado (com teto)</option>
                     <option value="rpc">RPC (com teto)</option>
                 </select>
@@ -52,7 +52,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         {showFunprespSection && previdenciaComplementar && (
             <div className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
                 <h5 className="text-label font-bold uppercase tracking-widest text-neutral-600 dark:text-neutral-300">
-                    Previdencia Complementar (Funpresp)
+                    Previdência Complementar (Funpresp)
                 </h5>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -62,12 +62,12 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                             value={state.funprespParticipacao}
                             onChange={e => handleFunprespParticipacaoChange(e.target.value as 'nao' | 'patrocinado')}
                         >
-                            <option value="nao">Nao</option>
+                            <option value="nao">Não</option>
                             <option value="patrocinado">Sim (Patrocinado)</option>
                         </select>
                     </div>
                     <div>
-                        <label className={styles.label}>Contribuicao normal patrocinada</label>
+                        <label className={styles.label}>Contribuição normal patrocinada</label>
                         <select
                             className={styles.input}
                             value={state.funprespAliq}
@@ -80,7 +80,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                         </select>
                     </div>
                     <div>
-                        <label className={styles.label}>Contribuicao facultativa (%)</label>
+                        <label className={styles.label}>Contribuição facultativa (%)</label>
                         <input
                             type="number"
                             className={styles.input}

@@ -16,7 +16,7 @@ export const DynamicPayrollAQSection: React.FC<DynamicPayrollAQSectionProps> = (
     getPresetGrossLines
 }) => (
     <div className={styles.innerBox}>
-        <h4 className={styles.innerBoxTitle}>Adicional de Qualificacao</h4>
+        <h4 className={styles.innerBoxTitle}>Adicional de Qualificação</h4>
         {renderPreset(AQ_INSTANCE)}
         <PresetGrossSummary lines={getPresetGrossLines(AQ_INSTANCE)} />
     </div>
