@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { GripVertical, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
@@ -13,6 +13,7 @@ import { PresetGrossSummary } from './PresetGrossSummary';
 import { SimplePresetFields } from './SimplePresetFields';
 import { useFunprespForm } from './hooks/useFunprespForm';
 import { useDynamicPresetInstances } from './hooks/useDynamicPresetInstances';
+import { buildPresetGrossLines } from './presetGrossLines';
 import { pickBestKeyByReference, toReferenceMonthIndex } from './referenceDateUtils';
 import {
     PredefinedRubricId,
@@ -263,7 +264,25 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const getPresetGrossLines = (instance: PresetInstance): PresetGrossLine[] => {
         const presetId = instance.presetId;
-        switch (presetId) {
+        if (
+            presetId === 'decimo' ||
+            presetId === 'hora_extra' ||
+            presetId === 'substituicao' ||
+            presetId === 'diarias'
+        ) {
+            return buildPresetGrossLines({
+                instance,
+                state,
+                courtConfig,
+                currentTables,
+                isNovoAQ,
+                noFunctionCode,
+                currentFunctionValue: funcaoAtualValor,
+                gratificacaoEspecificaCalculada
+            });
+        }
+
+        switch (instance.presetId) {
             case 'aq': {
                 const tituloLabel = isNovoAQ ? 'AQ Títulos (Lei 15.292)' : 'AQ Títulos';
                 const treinoLabel = isNovoAQ ? 'AQ Treinamento (Lei 15.292)' : 'AQ Treinamento';
