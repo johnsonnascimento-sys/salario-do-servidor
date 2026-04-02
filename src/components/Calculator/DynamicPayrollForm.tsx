@@ -206,7 +206,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const isFunprespRegime = state.regimePrev === 'rpc' || state.regimePrev === 'migrado';
     const competenciaReferencia = formatReferenciaMesAno(state.mesRef, state.anoRef);
     const showFunprespSection = Boolean(previdenciaComplementar?.enabled && isFunprespRegime);
-    const funprespDefaultsAppliedRef = useRef(false);
     const overtimeLegacyMigratedRef = useRef(false);
     const substitutionLegacyMigratedRef = useRef(false);
 
@@ -617,12 +616,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             update('tabelaIR', nextTabelaIR);
         }
     }, [irOptions, state.tabelaIR, state.anoRef, state.mesRef, update]);
-
-    useEffect(() => {
-        if (funprespDefaultsAppliedRef.current) return;
-        applyFunprespDefaultsForRegime(state.regimePrev);
-        funprespDefaultsAppliedRef.current = true;
-    }, [state.regimePrev]);
 
     useEffect(() => {
         if (overtimeLegacyMigratedRef.current) return;
