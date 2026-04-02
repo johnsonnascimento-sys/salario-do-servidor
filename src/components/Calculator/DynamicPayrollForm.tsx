@@ -151,7 +151,16 @@ const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) =>
                 state.heQtd100 > 0 ||
                 state.heIsEA ||
                 state.heExcluirIR ||
-                state.overtimeEntries.some(entry => entry.qtd50 > 0 || entry.qtd100 > 0 || entry.isEA || entry.excluirIR)
+                state.overtimeEntries.some(entry =>
+                    entry.qtd50 > 0 ||
+                    entry.qtd100 > 0 ||
+                    entry.isEA ||
+                    entry.excluirIR ||
+                    entry.usarSubstituicaoFuncao ||
+                    Object.values(entry.horasPorFuncao || {}).some(horas =>
+                        Number(horas?.qtd50 || 0) > 0 || Number(horas?.qtd100 || 0) > 0
+                    )
+                )
             );
         case 'substituicao':
             return (
@@ -349,6 +358,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const [reorderMode, setReorderMode] = useState(false);
     const [draggingPreset, setDraggingPreset] = useState<string | null>(null);
 
+    const hasLegacyOvertime =
+        (state.heQtd50 || 0) > 0 ||
+        (state.heQtd100 || 0) > 0 ||
+        state.heIsEA ||
+        state.heExcluirIR;
+
+    const hasLegacySubstitution =
+        Object.values(state.substDias || {}).some(days => Number(days) > 0) ||
+        state.substIsEA ||
+        state.substPssIsEA;
+
     useEffect(() => {
         if (enabledPresets.length < 2 && reorderMode) {
             setReorderMode(false);
@@ -375,7 +395,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             const currentEntry =
                 (instance.overtimeEntryId && existingById.get(instance.overtimeEntryId)) ||
-                createOvertimeEntry();
+                (existingEntries.length === 0 && hasLegacyOvertime
+                    ? {
+                        id: createUniqueId('he-entry'),
+                        qtd50: Math.max(0, state.heQtd50 || 0),
+                        qtd100: Math.max(0, state.heQtd100 || 0),
+                        isEA: Boolean(state.heIsEA),
+                        excluirIR: Boolean(state.heExcluirIR),
+                        usarSubstituicaoFuncao: false,
+                        competenciaRef: ''
+                    }
+                    : createOvertimeEntry());
             nextEntries.push(currentEntry);
 
             if (instance.overtimeEntryId !== currentEntry.id) {
@@ -419,7 +449,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (!sameIdsAndValues) {
             update('overtimeEntries', nextEntries);
         }
-    }, [enabledPresets, state.overtimeEntries, update]);
+    }, [enabledPresets, hasLegacyOvertime, state.heExcluirIR, state.heIsEA, state.heQtd100, state.heQtd50, state.overtimeEntries, update]);
 
     useEffect(() => {
         const substInstances = enabledPresets.filter(item => item.presetId === 'substituicao');
@@ -440,7 +470,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             const currentEntry =
                 (instance.substitutionEntryId && existingById.get(instance.substitutionEntryId)) ||
-                createSubstitutionEntry();
+                (existingEntries.length === 0 && hasLegacySubstitution
+                    ? {
+                        id: createUniqueId('subst-entry'),
+                        dias: { ...(state.substDias || {}) },
+                        isEA: Boolean(state.substIsEA),
+                        excluirIR: false,
+                        pssIsEA: Boolean(state.substPssIsEA)
+                    }
+                    : createSubstitutionEntry());
             nextEntries.push(currentEntry);
 
             if (instance.substitutionEntryId !== currentEntry.id) {
@@ -478,7 +516,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         if (!sameIdsAndValues) {
             update('substitutionEntries', nextEntries);
         }
-    }, [enabledPresets, state.substitutionEntries, update]);
+    }, [enabledPresets, hasLegacySubstitution, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries, update]);
 
     const totalCreditos = state.rubricasExtras
         .filter(rubrica => rubrica.tipo === 'C')
@@ -624,12 +662,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             return;
         }
 
-        const hasLegacyOvertime =
-            (state.heQtd50 || 0) > 0 ||
-            (state.heQtd100 || 0) > 0 ||
-            state.heIsEA ||
-            state.heExcluirIR;
-
         if (!hasLegacyOvertime) {
             overtimeLegacyMigratedRef.current = true;
             return;
@@ -655,11 +687,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             substitutionLegacyMigratedRef.current = true;
             return;
         }
-
-        const hasLegacySubstitution =
-            Object.values(state.substDias || {}).some(days => Number(days) > 0) ||
-            state.substIsEA ||
-            state.substPssIsEA;
 
         if (!hasLegacySubstitution) {
             substitutionLegacyMigratedRef.current = true;
