@@ -26,7 +26,7 @@ export interface UserPayslip {
   year_ref: number;
   tags: string[];
   notes: string;
-  calculator_state: CalculatorState;
+  calculator_state: Partial<CalculatorState>;
   result_rows: PayslipResultRow[];
   liquido: number;
   total_bruto: number;
@@ -43,7 +43,7 @@ export interface CreatePayslipDTO {
   year_ref: number;
   tags?: string[];
   notes?: string;
-  calculator_state: CalculatorState;
+  calculator_state: Partial<CalculatorState>;
   result_rows: PayslipResultRow[];
   liquido: number;
   total_bruto: number;
@@ -58,7 +58,7 @@ export interface UpdatePayslipDTO {
   year_ref?: number;
   tags?: string[];
   notes?: string;
-  calculator_state?: CalculatorState;
+  calculator_state?: Partial<CalculatorState>;
   result_rows?: PayslipResultRow[];
   liquido?: number;
   total_bruto?: number;

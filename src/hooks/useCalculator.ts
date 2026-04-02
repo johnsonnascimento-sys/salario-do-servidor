@@ -1,6 +1,6 @@
 /**
  * Hook Principal da Calculadora - Orquestrador
- * 
+ *
  * Compõe hooks especializados para fornecer interface unificada:
  * - useCalculatorState: Gerenciamento de estado
  * - useCalculatorConfig: Carregamento de configuração
@@ -23,6 +23,7 @@ import {
     USER_AREA_LAST_RESULT_ROWS_KEY,
 } from '../constants/storage';
 import { CalculatorNavigationState } from '../types/calculatorRestore';
+import { stripCalculatedFieldsFromCalculatorState } from '../utils/calculatorState';
 
 export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -37,7 +38,6 @@ export const useCalculator = () => {
     const [savingPayslip, setSavingPayslip] = useState(false);
     const [loggedUserName, setLoggedUserName] = useState('');
 
-    // 1. Gerenciamento de Estado
     const {
         state,
         setState,
@@ -49,7 +49,6 @@ export const useCalculator = () => {
         handleTipoCalculoChange
     } = useCalculatorState();
 
-    // 2. Configuração e Carregamento
     const {
         agency,
         agencyService,
@@ -59,7 +58,6 @@ export const useCalculator = () => {
         configError
     } = useCalculatorConfig(slug);
 
-    // 3. Exportação
     const {
         donationModalOpen,
         setDonationModalOpen,
@@ -69,18 +67,16 @@ export const useCalculator = () => {
         handleDonationComplete: handleDonationCompleteBase
     } = useCalculatorExport();
 
-    // 4. Cálculos e Resultados
-    const { resultRows } = useCalculatorResults(
+    const { calculatedState, resultRows } = useCalculatorResults(
         state,
-        setState,
         agencyService,
         courtConfig,
         agency
     );
+    const effectiveState = { ...state, ...calculatedState };
 
-    // Wrapper para handleDonationComplete com parâmetros corretos
     const handleDonationComplete = () => {
-        handleDonationCompleteBase(state, resultRows, courtConfig).catch((error) => {
+        handleDonationCompleteBase(effectiveState, resultRows, courtConfig).catch((error) => {
             console.error('Falha ao exportar arquivo:', error);
         });
     };
@@ -126,9 +122,10 @@ export const useCalculator = () => {
 
     useEffect(() => {
         try {
-            localStorage.setItem(USER_AREA_LAST_CALCULATOR_STATE_KEY, JSON.stringify(state));
+            const persistedState = stripCalculatedFieldsFromCalculatorState(state);
+            localStorage.setItem(USER_AREA_LAST_CALCULATOR_STATE_KEY, JSON.stringify(persistedState));
             localStorage.setItem(USER_AREA_LAST_RESULT_ROWS_KEY, JSON.stringify(resultRows));
-            localStorage.setItem(CALCULATOR_DRAFT_STORAGE_KEY, JSON.stringify(state));
+            localStorage.setItem(CALCULATOR_DRAFT_STORAGE_KEY, JSON.stringify(persistedState));
         } catch (_error) {
             // Ignora falhas de localStorage em modo privado/restrito.
         }
@@ -143,6 +140,7 @@ export const useCalculator = () => {
         setSavingPayslip(true);
         try {
             const title = `Holerite ${state.mesRef}/${state.anoRef} - Simulação`;
+            const persistedState = stripCalculatedFieldsFromCalculatorState(state);
 
             if (editPayslipId) {
                 const updated = await updatePayslip(editPayslipId, {
@@ -153,11 +151,11 @@ export const useCalculator = () => {
                     year_ref: state.anoRef,
                     notes: state.observacoes || '',
                     tags: [],
-                    calculator_state: state,
+                    calculator_state: persistedState,
                     result_rows: resultRows,
-                    liquido: state.liquido,
-                    total_bruto: state.totalBruto,
-                    total_descontos: state.totalDescontos,
+                    liquido: calculatedState.liquido,
+                    total_bruto: calculatedState.totalBruto,
+                    total_descontos: calculatedState.totalDescontos,
                 });
                 return { success: true, id: updated.id, mode: 'updated' as const };
             }
@@ -170,20 +168,22 @@ export const useCalculator = () => {
                 year_ref: state.anoRef,
                 notes: state.observacoes || '',
                 tags: [],
-                calculator_state: state,
+                calculator_state: persistedState,
                 result_rows: resultRows,
-                liquido: state.liquido,
-                total_bruto: state.totalBruto,
-                total_descontos: state.totalDescontos,
+                liquido: calculatedState.liquido,
+                total_bruto: calculatedState.totalBruto,
+                total_descontos: calculatedState.totalDescontos,
             });
             return { success: true, id: created.id, mode: 'created' as const };
         } finally {
             setSavingPayslip(false);
         }
-    }, [user, navigate, state, slug, agency?.name, resultRows, editPayslipId]);
+    }, [user, navigate, state, slug, agency?.name, resultRows, editPayslipId, calculatedState]);
 
     return {
         state,
+        calculatedState,
+        effectiveState,
         update,
         courtConfig,
         loadingConfig,

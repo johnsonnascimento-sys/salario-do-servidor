@@ -1,5 +1,78 @@
 import { CALCULATOR_DRAFT_STORAGE_KEY } from '../constants/storage';
-import { CalculatorState, INITIAL_STATE } from '../types';
+import { CalculatorState, CalculatedPayrollState, INITIAL_STATE } from '../types';
+
+export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
+    'vencimento',
+    'gaj',
+    'aqTituloValor',
+    'aqTreinoValor',
+    'gratEspecificaValor',
+    'pssMensal',
+    'pssEA',
+    'valFunpresp',
+    'irMensal',
+    'irEA',
+    'aqIr',
+    'aqPss',
+    'gratIr',
+    'gratPss',
+    'vantagensIr',
+    'vantagensPss',
+    'abonoIr',
+    'abonoPermanencia',
+    'auxPreEscolarValor',
+    'auxTransporteValor',
+    'auxTransporteDesc',
+    'ferias1_3',
+    'feriasDesc',
+    'irFerias',
+    'gratNatalinaTotal',
+    'abonoPerm13',
+    'pss13',
+    'ir13',
+    'debitoPrimeiraParcela13',
+    'adiant13Venc',
+    'adiant13FC',
+    'segunda13Venc',
+    'segunda13FC',
+    'heVal50',
+    'heVal100',
+    'heTotal',
+    'heIr',
+    'heIrMensal',
+    'heIrEA',
+    'hePss',
+    'substTotal',
+    'substIr',
+    'substIrMensal',
+    'substIrEA',
+    'substPss',
+    'diariasValorTotal',
+    'diariasBruto',
+    'diariasGlosa',
+    'diariasCorteLdo',
+    'diariasDescAlim',
+    'diariasDescTransp',
+    'diariasDiasDescontoAlimentacaoCalc',
+    'diariasDiasDescontoTransporteCalc',
+    'licencaValor',
+    'totalBruto',
+    'totalDescontos',
+    'liquido',
+];
+
+export const getEmptyCalculatedPayrollState = (): CalculatedPayrollState =>
+    Object.fromEntries(
+        CALCULATED_STATE_KEYS.map((key) => [key, INITIAL_STATE[key]])
+    ) as CalculatedPayrollState;
+
+export const stripCalculatedFieldsFromCalculatorState = (state: CalculatorState): Partial<CalculatorState> => {
+    const snapshot: Partial<CalculatorState> = { ...state };
+    CALCULATED_STATE_KEYS.forEach((key) => {
+        delete snapshot[key];
+    });
+    return snapshot;
+};
 
 const createEntryId = (prefix: string) => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {

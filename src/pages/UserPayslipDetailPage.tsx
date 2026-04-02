@@ -4,6 +4,7 @@ import { ArrowLeft, FileDown, FileSpreadsheet, Save, Trash2 } from 'lucide-react
 import { getPayslipById, deletePayslip, updatePayslip } from '../services/user/payslipService';
 import { UpdatePayslipDTO, UserPayslip } from '../types/user';
 import { exportToExcel, exportToPDF } from '../services/exportService';
+import { CalculatorState } from '../types';
 import { formatCurrency } from '../utils/calculations';
 
 const parseTags = (value: string) =>
@@ -64,11 +65,17 @@ export default function UserPayslipDetailPage() {
 
   const onExport = (type: 'pdf' | 'excel') => {
     if (!item) return;
+    const exportState = {
+      ...item.calculator_state,
+      liquido: item.liquido,
+      totalBruto: item.total_bruto,
+      totalDescontos: item.total_descontos,
+    } as CalculatorState;
 
     if (type === 'pdf') {
-      exportToPDF(item.calculator_state, item.result_rows, null, { filename });
+      exportToPDF(exportState, item.result_rows, null, { filename });
     } else {
-      exportToExcel(item.calculator_state, item.result_rows, null, { filename });
+      exportToExcel(exportState, item.result_rows, null, { filename });
     }
   };
 

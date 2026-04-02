@@ -24,6 +24,7 @@ import { CalculatorNavigationState, CalculatorRestoreSource } from '../types/cal
 export default function Calculator() {
     const {
         state,
+        effectiveState,
         update,
         updateSubstDays,
         courtConfig,
@@ -196,10 +197,10 @@ export default function Calculator() {
         );
     }
 
-    return (
+        return (
         <>
             <MobileResultsBar
-                liquido={state.liquido}
+                liquido={effectiveState.liquido}
                 onExportPDF={initiateExportPDF}
                 onExportExcel={initiateExportExcel}
                 onSavePayslip={handleSavePayslip}
@@ -210,7 +211,7 @@ export default function Calculator() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-32">
                 <CalculatorHeader
                     courtConfig={courtConfig}
-                    state={state}
+                    state={effectiveState}
                     update={update}
                     navigate={navigate}
                     styles={styles}
@@ -225,7 +226,7 @@ export default function Calculator() {
 
                 <div className="space-y-8 max-w-5xl mx-auto">
                     <GlobalSettings
-                        state={state}
+                        state={effectiveState}
                         update={update}
                         courtConfig={courtConfig}
                         styles={styles}
@@ -233,7 +234,7 @@ export default function Calculator() {
                     />
                     <DynamicPayrollForm
                         key={`dynamic-payroll-form-${formKey}`}
-                        state={state}
+                        state={effectiveState}
                         update={update}
                         updateSubstDays={updateSubstDays}
                         courtConfig={courtConfig}
@@ -243,18 +244,18 @@ export default function Calculator() {
                         styles={styles}
                     />
                     <ObservationsSection
-                        state={state}
+                        state={effectiveState}
                         update={update}
                         styles={styles}
                     />
                     <ResultsSummary
-                        state={state}
+                        state={effectiveState}
                         resultRows={resultRows}
                     />
                 </div>
 
                 <ActionFooter
-                    state={state}
+                    state={effectiveState}
                     onExportPDF={initiateExportPDF}
                     onExportExcel={initiateExportExcel}
                     onSavePayslip={handleSavePayslip}

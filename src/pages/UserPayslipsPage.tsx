@@ -4,6 +4,7 @@ import { Copy, Edit3, Eye, FileDown, FileSpreadsheet, Search, Trash2 } from 'luc
 import { useUserPayslips } from '../hooks/user/useUserPayslips';
 import { formatCurrency } from '../utils/calculations';
 import { exportToExcel, exportToPDF } from '../services/exportService';
+import { CalculatorState } from '../types';
 import { UserPayslip } from '../types/user';
 
 export default function UserPayslipsPage() {
@@ -50,11 +51,17 @@ export default function UserPayslipsPage() {
   const handleExport = (item: UserPayslip, type: 'pdf' | 'excel') => {
     const safeTitle = item.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim().replace(/\s+/g, '_');
     const filename = `${safeTitle || 'Holerite'}_${item.month_ref}_${item.year_ref}`;
+    const exportState = {
+      ...item.calculator_state,
+      liquido: item.liquido,
+      totalBruto: item.total_bruto,
+      totalDescontos: item.total_descontos,
+    } as CalculatorState;
 
     if (type === 'pdf') {
-      exportToPDF(item.calculator_state, item.result_rows, null, { filename });
+      exportToPDF(exportState, item.result_rows, null, { filename });
     } else {
-      exportToExcel(item.calculator_state, item.result_rows, null, { filename });
+      exportToExcel(exportState, item.result_rows, null, { filename });
     }
   };
 
