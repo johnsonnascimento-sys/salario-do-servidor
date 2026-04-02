@@ -101,6 +101,58 @@ export const getPresetPickerLabel = (presetId: PredefinedRubricId, label: string
     MULTI_INSTANCE_PRESETS.has(presetId) ? `${label} (pode repetir)` : label
 );
 
+export const buildCardTaxSummary = (
+    items: Array<{ label: string; value: number }>,
+    totalLabel: string,
+    irDiscount: number,
+    pssDiscount: number
+): PresetGrossLine[] => {
+    const normalizedItems = items.map(item => ({
+        label: item.label,
+        value: roundCurrency(item.value || 0)
+    }));
+    const totalGross = roundCurrency(normalizedItems.reduce((acc, item) => acc + item.value, 0));
+    const irVal = roundCurrency(Math.max(0, irDiscount || 0));
+    const pssVal = roundCurrency(Math.max(0, pssDiscount || 0));
+    const totalDiscounts = roundCurrency(irVal + pssVal);
+
+    const grossLines: PresetGrossLine[] = normalizedItems.map(item => ({
+        label: `${item.label} Bruto`,
+        value: item.value
+    }));
+
+    let allocatedDiscount = 0;
+    const netLines: PresetGrossLine[] = normalizedItems.map((item, index) => {
+        const isLast = index === normalizedItems.length - 1;
+        const proportion = totalGross > 0 ? item.value / totalGross : 0;
+        const discountShare = isLast
+            ? roundCurrency(Math.max(0, totalDiscounts - allocatedDiscount))
+            : roundCurrency(totalDiscounts * proportion);
+        allocatedDiscount += discountShare;
+        return {
+            label: `${item.label} Liquido`,
+            value: roundCurrency(Math.max(0, item.value - discountShare))
+        };
+    });
+
+    const totalNet = roundCurrency(Math.max(0, totalGross - totalDiscounts));
+    const lines: PresetGrossLine[] = [
+        ...grossLines,
+        { label: `Desconto IR (${totalLabel})`, value: irVal, isDiscount: true },
+        { label: `Desconto PSS (${totalLabel})`, value: pssVal, isDiscount: true },
+        ...netLines
+    ];
+
+    if (normalizedItems.length > 1) {
+        lines.push(
+            { label: `${totalLabel} Bruto`, value: totalGross },
+            { label: `${totalLabel} Liquido`, value: totalNet }
+        );
+    }
+
+    return lines;
+};
+
 export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorState) => {
     switch (presetId) {
         case 'aq':
