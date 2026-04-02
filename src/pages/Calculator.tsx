@@ -52,8 +52,10 @@ export default function Calculator() {
     const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
     const startBlank = Boolean(navigationState?.startBlank);
     const restoreSnapshot = navigationState?.restoreSnapshot;
+    const preserveRestoredGlobals = Boolean(editPayslipId || restoreSnapshot?.calculatorState);
     const lastRestoreSourceRef = useRef('');
     const [formKey, setFormKey] = useState(0);
+    const [restoreReady, setRestoreReady] = useState(!editPayslipId);
 
     useEffect(() => {
         let active = true;
@@ -63,6 +65,7 @@ export default function Calculator() {
             const hydrated = hydrateCalculatorState(snapshot);
             setState(hydrated);
             setFormKey((prev) => prev + 1);
+            setRestoreReady(true);
         };
 
         const restoreSource = startBlank
@@ -90,12 +93,18 @@ export default function Calculator() {
 
             setState(hydrateCalculatorState(INITIAL_STATE));
             setFormKey((prev) => prev + 1);
+            setRestoreReady(true);
         } else if (editPayslipId) {
+            setRestoreReady(false);
             getPayslipById(editPayslipId)
                 .then((payslip) => {
                     applyHydratedState(payslip?.calculator_state);
                 })
-                .catch(() => undefined);
+                .catch(() => {
+                    if (active) {
+                        setRestoreReady(true);
+                    }
+                });
         } else {
             if (restoreSnapshot?.calculatorState) {
                 applyHydratedState(restoreSnapshot.calculatorState);
@@ -104,9 +113,12 @@ export default function Calculator() {
                     const rawDraft = localStorage.getItem(CALCULATOR_DRAFT_STORAGE_KEY);
                     if (rawDraft) {
                         applyHydratedState(JSON.parse(rawDraft));
+                    } else {
+                        setRestoreReady(true);
                     }
                 } catch (_error) {
                     // ignora rascunho inválido
+                    setRestoreReady(true);
                 }
             }
         }
@@ -168,6 +180,16 @@ export default function Calculator() {
         );
     }
 
+    if (!restoreReady) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
+                <p className="text-neutral-500 dark:text-neutral-300">
+                    Carregando holerite salvo...
+                </p>
+            </div>
+        );
+    }
+
     return (
         <>
             <MobileResultsBar
@@ -201,6 +223,7 @@ export default function Calculator() {
                         update={update}
                         courtConfig={courtConfig}
                         styles={styles}
+                        preserveRestoredGlobals={preserveRestoredGlobals}
                     />
                     <DynamicPayrollForm
                         key={`dynamic-payroll-form-${formKey}`}

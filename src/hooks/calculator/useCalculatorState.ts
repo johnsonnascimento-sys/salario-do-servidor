@@ -10,6 +10,7 @@
 
 import { useState, useCallback } from 'react';
 import type { ChangeEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { INITIAL_STATE, CalculatorState, Rubrica } from '../../types';
 import { loadCalculatorDraftState } from '../../utils/calculatorState';
 
@@ -21,7 +22,18 @@ const createRubricaId = () => {
 };
 
 export const useCalculatorState = () => {
-    const [state, setState] = useState<CalculatorState>(() => loadCalculatorDraftState());
+    const location = useLocation();
+    const navigationState = location.state as { startBlank?: boolean; restoreSnapshot?: { calculatorState?: unknown } } | null;
+    const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
+    const shouldBypassDraftRestore = Boolean(
+        editPayslipId ||
+        navigationState?.startBlank ||
+        navigationState?.restoreSnapshot?.calculatorState
+    );
+
+    const [state, setState] = useState<CalculatorState>(() => (
+        shouldBypassDraftRestore ? INITIAL_STATE : loadCalculatorDraftState()
+    ));
 
     const update = useCallback((field: keyof CalculatorState, value: any) => {
         setState(prev => ({ ...prev, [field]: value }));

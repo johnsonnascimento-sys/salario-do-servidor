@@ -19,6 +19,7 @@ interface GlobalSettingsProps {
     update: (field: keyof CalculatorState, value: any) => void;
     courtConfig: CourtConfig;
     styles: any;
+    preserveRestoredGlobals?: boolean;
 }
 
 const getMonthLabel = (monthIndex: number) =>
@@ -61,7 +62,13 @@ const clampReference = (
     return current;
 };
 
-export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, courtConfig, styles }) => {
+export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
+    state,
+    update,
+    courtConfig,
+    styles,
+    preserveRestoredGlobals = false,
+}) => {
     const compactInput = `${styles.input} py-2 px-3 text-body`;
     const compactLabel = 'block text-label font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1';
 
@@ -146,6 +153,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
     const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, idx) => getMonthLabel(idx)), []);
     const manualPeriodSelectionRef = useRef(false);
     const lastReferenceKeyRef = useRef('');
+    const preserveRestoredGlobalsRef = useRef(preserveRestoredGlobals);
 
     const rawReferenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
     const rawReferenceYear = Number.isFinite(state.anoRef) ? state.anoRef : new Date().getFullYear();
@@ -197,6 +205,11 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ state, update, c
             return;
         }
         lastReferenceKeyRef.current = referenceKey;
+
+        if (preserveRestoredGlobalsRef.current) {
+            preserveRestoredGlobalsRef.current = false;
+            return;
+        }
 
         const nextPeriod = pickPeriodFromScheduleByReference(schedules, clampedReference.year, clampedReference.month);
         if (!manualPeriodSelectionRef.current && nextPeriod !== null && nextPeriod !== state.periodo) {
