@@ -7,6 +7,7 @@ import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { SimplePresetFields } from './SimplePresetFields';
+import { resolveOvertimeEntry, resolveSubstitutionEntry } from './presetEntryResolvers';
 import { UnlinkedPresetEntryNotice } from './UnlinkedPresetEntryNotice';
 import { PresetInstance } from './dynamicPayrollForm.helpers';
 
@@ -65,9 +66,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     }
 
     if (presetId === 'hora_extra') {
-        const overtimeEntry = instance.overtimeEntryId
-            ? state.overtimeEntries.find(item => item.id === instance.overtimeEntryId)
-            : state.overtimeEntries[0];
+        const overtimeEntry = resolveOvertimeEntry(instance, state);
 
         if (!overtimeEntry) {
             return <UnlinkedPresetEntryNotice />;
@@ -85,9 +84,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     }
 
     if (presetId === 'substituicao') {
-        const substitutionEntry = instance.substitutionEntryId
-            ? state.substitutionEntries.find(item => item.id === instance.substitutionEntryId)
-            : state.substitutionEntries[0];
+        const substitutionEntry = resolveSubstitutionEntry(instance, state);
 
         if (!substitutionEntry) {
             return <UnlinkedPresetEntryNotice />;
