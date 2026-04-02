@@ -9,6 +9,7 @@ import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { ManualRubricasSection } from './ManualRubricasSection';
+import { useFunprespForm } from './hooks/useFunprespForm';
 import { pickBestKeyByReference, toReferenceMonthIndex } from './referenceDateUtils';
 import {
     PredefinedRubricId,
@@ -22,8 +23,6 @@ import {
     roundCurrency,
     toPercentLabel,
     toDecimalRateFromPercentInput,
-    isStepAligned,
-    buildRateOptions,
     createUniqueId,
     formatReferenciaMesAno,
     isDiscountLabel,
@@ -73,101 +72,20 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const pssOptions = Object.keys(courtConfig.historico_pss || {});
     const irOptions = Object.keys(courtConfig.historico_ir || {});
     const previdenciaComplementar = courtConfig.previdenciaComplementar;
-    const isFunprespRegime = state.regimePrev === 'rpc' || state.regimePrev === 'migrado';
     const competenciaReferencia = formatReferenciaMesAno(state.mesRef, state.anoRef);
-    const showFunprespSection = Boolean(previdenciaComplementar?.enabled && isFunprespRegime);
     const overtimeLegacyMigratedRef = useRef(false);
     const substitutionLegacyMigratedRef = useRef(false);
-
-    const funprespNormalOptions = useMemo(
-        () => buildRateOptions(
-            previdenciaComplementar?.sponsoredRate?.min ?? 0,
-            previdenciaComplementar?.sponsoredRate?.max ?? 0,
-            previdenciaComplementar?.sponsoredRate?.step ?? 0
-        ),
-        [
-            previdenciaComplementar?.sponsoredRate?.min,
-            previdenciaComplementar?.sponsoredRate?.max,
-            previdenciaComplementar?.sponsoredRate?.step
-        ]
-    );
-
-    const funprespNormalOptionsSet = useMemo(
-        () => new Set(funprespNormalOptions.map((value) => Number(value.toFixed(6)))),
-        [funprespNormalOptions]
-    );
-
-    const applyFunprespDefaultsForRegime = (nextRegime: CalculatorState['regimePrev']) => {
-        if (!previdenciaComplementar?.enabled) return;
-
-        if (nextRegime === 'rpc') {
-            update('funprespParticipacao', 'patrocinado');
-            update('funprespAliq', previdenciaComplementar.sponsoredRate.defaultRpc);
-            update('funprespFacul', previdenciaComplementar.facultativeRate.default);
-            return;
-        }
-
-        update('funprespParticipacao', 'nao');
-        update('funprespAliq', 0);
-        update('funprespFacul', 0);
-    };
-
-    const handleRegimePrevChange = (nextRegimeValue: string) => {
-        const nextRegime = nextRegimeValue as CalculatorState['regimePrev'];
-        update('regimePrev', nextRegime);
-        applyFunprespDefaultsForRegime(nextRegime);
-    };
-
-    const handleFunprespParticipacaoChange = (nextParticipacao: 'nao' | 'patrocinado') => {
-        update('funprespParticipacao', nextParticipacao);
-        if (nextParticipacao === 'nao') {
-            update('funprespAliq', 0);
-            update('funprespFacul', 0);
-            return;
-        }
-
-        if (state.funprespAliq <= 0) {
-            update('funprespAliq', previdenciaComplementar?.sponsoredRate.defaultRpc ?? 0);
-        }
-    };
-
-    const funprespValidationError = useMemo(() => {
-        if (!showFunprespSection || state.funprespParticipacao !== 'patrocinado' || !previdenciaComplementar) {
-            return null;
-        }
-
-        const normal = Number(state.funprespAliq.toFixed(6));
-        if (!funprespNormalOptionsSet.has(normal)) {
-            return 'Contribuição normal fora da grade permitida.';
-        }
-
-        const facultativa = Number(state.funprespFacul.toFixed(6));
-        if (facultativa < 0) {
-            return 'Contribuição facultativa não pode ser negativa.';
-        }
-
-        if (facultativa > 0) {
-            if (facultativa < previdenciaComplementar.facultativeRate.minIfPositive) {
-                return `Contribuição facultativa mínima: ${toPercentLabel(previdenciaComplementar.facultativeRate.minIfPositive)}.`;
-            }
-            if (!isStepAligned(facultativa, previdenciaComplementar.facultativeRate.step)) {
-                return `Contribuição facultativa deve seguir passo de ${toPercentLabel(previdenciaComplementar.facultativeRate.step)}.`;
-            }
-        }
-
-        if (facultativa > previdenciaComplementar.facultativeRate.max) {
-            return `Contribuição facultativa máxima: ${toPercentLabel(previdenciaComplementar.facultativeRate.max)}.`;
-        }
-
-        return null;
-    }, [
+    const {
         showFunprespSection,
-        state.funprespParticipacao,
-        state.funprespAliq,
-        state.funprespFacul,
-        previdenciaComplementar,
-        funprespNormalOptionsSet
-    ]);
+        funprespNormalOptions,
+        handleRegimePrevChange,
+        handleFunprespParticipacaoChange,
+        funprespValidationError
+    } = useFunprespForm({
+        state,
+        update,
+        previdenciaComplementar
+    });
 
     const initialPresetInstances = useMemo<PresetInstance[]>(() => {
         const instances: PresetInstance[] = [];
