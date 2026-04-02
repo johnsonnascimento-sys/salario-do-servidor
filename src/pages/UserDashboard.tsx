@@ -48,7 +48,11 @@ export default function UserDashboard() {
         <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-6">
           <p className="text-label uppercase tracking-widest text-neutral-500">Nova simulação</p>
           <p className="text-body text-neutral-600 dark:text-neutral-300 mt-2">Abra a calculadora para salvar novos snapshots.</p>
-          <Link to="/simulador/jmu" className="inline-flex items-center gap-2 mt-4 text-secondary-600 font-semibold">
+          <Link
+            to="/simulador/jmu"
+            state={{ startBlank: true }}
+            className="inline-flex items-center gap-2 mt-4 text-secondary-600 font-semibold"
+          >
             <PlusCircle size={16} /> Abrir calculadora
           </Link>
         </div>

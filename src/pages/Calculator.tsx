@@ -49,6 +49,7 @@ export default function Calculator() {
 
     const location = useLocation();
     const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
+    const startBlank = Boolean((location.state as { startBlank?: boolean } | null)?.startBlank);
     const restoreAppliedRef = useRef(false);
     const [formKey, setFormKey] = useState(0);
 
@@ -65,7 +66,17 @@ export default function Calculator() {
             restoreAppliedRef.current = true;
         };
 
-        if (editPayslipId) {
+        if (startBlank) {
+            try {
+                localStorage.removeItem(CALCULATOR_DRAFT_STORAGE_KEY);
+            } catch (_error) {
+                // ignora falhas de localStorage
+            }
+
+            setState(hydrateCalculatorState(INITIAL_STATE));
+            setFormKey((prev) => prev + 1);
+            restoreAppliedRef.current = true;
+        } else if (editPayslipId) {
             getPayslipById(editPayslipId)
                 .then((payslip) => {
                     applyHydratedState(payslip?.calculator_state);
@@ -90,7 +101,7 @@ export default function Calculator() {
         return () => {
             active = false;
         };
-    }, [location.state, editPayslipId, setState]);
+    }, [location.state, editPayslipId, setState, startBlank]);
 
     const handleSavePayslip = async () => {
         try {

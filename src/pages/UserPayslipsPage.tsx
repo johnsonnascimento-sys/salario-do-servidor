@@ -84,7 +84,13 @@ export default function UserPayslipsPage() {
           <h1 className="text-h3 font-bold text-neutral-900 dark:text-neutral-100">Meus Holerites</h1>
           <p className="text-neutral-500 dark:text-neutral-300 text-body">Gerencie snapshots da calculadora e exporte quando quiser.</p>
         </div>
-        <Link to="/simulador/jmu" className="rounded-xl bg-secondary-600 text-white px-4 py-2 font-semibold">Nova simulação</Link>
+        <Link
+          to="/simulador/jmu"
+          state={{ startBlank: true }}
+          className="rounded-xl bg-secondary-600 text-white px-4 py-2 font-semibold"
+        >
+          Nova simulação
+        </Link>
       </div>
 
       <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
