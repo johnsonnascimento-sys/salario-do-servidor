@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
 import { GripVertical, Plus, Settings, Trash2 } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
-import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
+import { getTablesForPeriod } from '../../utils/calculations';
 import { ManualRubricasSection } from './ManualRubricasSection';
+import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
+import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
+import { DynamicPayrollTaxSection } from './DynamicPayrollTaxSection';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { useFunprespForm } from './hooks/useFunprespForm';
@@ -17,8 +20,6 @@ import {
     MULTI_INSTANCE_PRESETS,
     MULTI_INSTANCE_HINT_LABEL,
     toPositiveNumber,
-    toPercentLabel,
-    toDecimalRateFromPercentInput,
     createUniqueId,
     formatReferenciaMesAno,
     getPresetPickerLabel
@@ -235,7 +236,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             currentFunctionValue: funcaoAtualValor,
             gratificacaoEspecificaCalculada
         });
-
     };
     const renderPreset = (instance: PresetInstance) => (
         <PresetCardContent
@@ -255,143 +255,45 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     return (
         <>
             <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-                <Settings className="w-4 h-4" />
-                Formulário dinâmico do holerite
-            </h3>
+                <h3 className={styles.sectionTitle}>
+                    <Settings className="w-4 h-4" />
+                    Formulário dinâmico do holerite
+                </h3>
 
-            <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Base obrigatória</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label className={styles.label}>Cargo</label>
-                        <select className={styles.input} value={state.cargo} onChange={e => handleCargoChange(e.target.value)}>
-                            {cargoOptions.map(cargo => (
-                                <option key={cargo} value={cargo}>
-                                    {careerCatalog?.cargoLabels?.[cargo] || cargo.toUpperCase()}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className={styles.label}>Classe/Padrão</label>
-                        <select className={styles.input} value={state.padrao} onChange={e => update('padrao', e.target.value)}>
-                            {padroes.map(padrao => (
-                                <option key={padrao} value={padrao}>{padrao}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className={styles.label}>Função (FC/CJ)</label>
-                        <select className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
-                            {noFunctionCode && <option value={noFunctionCode}>{noFunctionLabel}</option>}
-                            {functionKeys.map(funcao => (
-                                <option key={funcao} value={funcao}>
-                                    {funcao.toUpperCase()} - {formatCurrency(currentTables.funcoes[funcao])}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+                <DynamicPayrollBaseSection
+                    styles={styles}
+                    state={state}
+                    cargoOptions={cargoOptions}
+                    padroes={padroes}
+                    functionKeys={functionKeys}
+                    functionValues={currentTables.funcoes}
+                    cargoLabels={careerCatalog?.cargoLabels}
+                    noFunctionCode={noFunctionCode}
+                    noFunctionLabel={noFunctionLabel}
+                    baseVencimento={baseVencimento}
+                    gaj={gaj}
+                    handleCargoChange={handleCargoChange}
+                    update={update}
+                />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                        <p className={styles.label}>Salário Base</p>
-                        <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(baseVencimento)}</p>
-                    </div>
-                    <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                        <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">GAJ (140%)</p>
-                        <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
-                    </div>
-                    <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                        <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Auxílio Alimentação</p>
-                        <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(state.auxAlimentacao || 0)}</p>
-                    </div>
-                </div>
+                <DynamicPayrollAQSection
+                    styles={styles}
+                    renderPreset={renderPreset}
+                    getPresetGrossLines={getPresetGrossLines}
+                />
 
+                <DynamicPayrollTaxSection
+                    styles={styles}
+                    state={state}
+                    update={update}
+                    handleRegimePrevChange={handleRegimePrevChange}
+                    showFunprespSection={showFunprespSection}
+                    previdenciaComplementar={previdenciaComplementar}
+                    funprespNormalOptions={funprespNormalOptions}
+                    handleFunprespParticipacaoChange={handleFunprespParticipacaoChange}
+                    funprespValidationError={funprespValidationError}
+                />
             </div>
-
-            <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Adicional de Qualificação</h4>
-                {renderPreset({ key: 'aq-fixed', presetId: 'aq' })}
-                <PresetGrossSummary lines={getPresetGrossLines({ key: 'aq-fixed', presetId: 'aq' })} />
-            </div>
-
-            <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label className={styles.label}>Regime previdenciário</label>
-                        <select className={styles.input} value={state.regimePrev} onChange={e => handleRegimePrevChange(e.target.value)}>
-                            <option value="antigo">RPPS - sem teto</option>
-                            <option value="novo_antigo">RPPS - novo sem migração</option>
-                            <option value="migrado">RPPS migrado (com teto)</option>
-                            <option value="rpc">RPC (com teto)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className={styles.label}>Dependentes (IR)</label>
-                        <input type="number" className={styles.input} value={state.dependentes} onChange={e => update('dependentes', toPositiveNumber(e.target.value))} />
-                    </div>
-                    <div className="flex flex-col justify-end gap-3">
-                        <label className={styles.checkboxLabel}>
-                            <input type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
-                            <span>PSS sobre FC/CJ</span>
-                        </label>
-                    </div>
-                </div>
-
-                {showFunprespSection && previdenciaComplementar && (
-                    <div className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
-                        <h5 className="text-label font-bold uppercase tracking-widest text-neutral-600 dark:text-neutral-300">
-                            Previdência Complementar (Funpresp)
-                        </h5>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className={styles.label}>Participa Funpresp</label>
-                                <select
-                                    className={styles.input}
-                                    value={state.funprespParticipacao}
-                                    onChange={e => handleFunprespParticipacaoChange(e.target.value as 'nao' | 'patrocinado')}
-                                >
-                                    <option value="nao">Não</option>
-                                    <option value="patrocinado">Sim (Patrocinado)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className={styles.label}>Contribuição normal patrocinada</label>
-                                <select
-                                    className={styles.input}
-                                    value={state.funprespAliq}
-                                    onChange={e => update('funprespAliq', Number(e.target.value))}
-                                    disabled={state.funprespParticipacao !== 'patrocinado'}
-                                >
-                                    {funprespNormalOptions.map(rate => (
-                                        <option key={rate} value={rate}>{toPercentLabel(rate)}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className={styles.label}>Contribuição facultativa (%)</label>
-                                <input
-                                    type="number"
-                                    className={styles.input}
-                                    min={0}
-                                    max={previdenciaComplementar.facultativeRate.max * 100}
-                                    step={previdenciaComplementar.facultativeRate.step * 100}
-                                    value={Number((state.funprespFacul * 100).toFixed(1))}
-                                    onChange={e => update('funprespFacul', toDecimalRateFromPercentInput(e.target.value))}
-                                    disabled={state.funprespParticipacao !== 'patrocinado'}
-                                />
-                            </div>
-                        </div>
-                        {funprespValidationError && (
-                            <p className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>
-                        )}
-                    </div>
-                )}
-            </div>
-        </div>
 
             <div className={styles.card}>
                 <h3 className={styles.sectionTitle}>
