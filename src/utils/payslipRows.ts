@@ -23,7 +23,7 @@ const IR_GROUPS = [
 ] as const;
 
 export const groupPayslipRowsForDisplay = <T extends RowLike>(rows: T[]): PayslipDisplayRow[] => {
-  const groupedRows: PayslipDisplayRow[] = [];
+  const groupedRowsByIndex = new Map<number, PayslipDisplayRow>();
   const consumedIndexes = new Set<number>();
 
   IR_GROUPS.forEach((group) => {
@@ -36,7 +36,7 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(rows: T[]): Paysli
     }
 
     details.forEach(({ index }) => consumedIndexes.add(index));
-    groupedRows.push({
+    groupedRowsByIndex.set(details[0].index, {
       label: group.totalLabel,
       value: details.reduce((sum, { row }) => sum + Number(row.value || 0), 0),
       type: 'D',
@@ -48,17 +48,21 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(rows: T[]): Paysli
     });
   });
 
-  rows.forEach((row, index) => {
-    if (consumedIndexes.has(index)) {
-      return;
+  return rows.reduce<PayslipDisplayRow[]>((acc, row, index) => {
+    const groupedRow = groupedRowsByIndex.get(index);
+    if (groupedRow) {
+      acc.push(groupedRow);
+      return acc;
     }
 
-    groupedRows.push({
-      label: row.label,
-      value: Number(row.value || 0),
-      type: row.type,
-    });
-  });
+    if (!consumedIndexes.has(index)) {
+      acc.push({
+        label: row.label,
+        value: Number(row.value || 0),
+        type: row.type,
+      });
+    }
 
-  return groupedRows;
+    return acc;
+  }, []);
 };
