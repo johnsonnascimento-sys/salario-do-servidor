@@ -6,6 +6,7 @@ import { UpdatePayslipDTO, UserPayslip } from '../types/user';
 import { exportToExcel, exportToPDF } from '../services/exportService';
 import { CalculatorState } from '../types';
 import { formatCurrency } from '../utils/calculations';
+import { groupPayslipRowsForDisplay, PayslipDisplayRow } from '../utils/payslipRows';
 
 const parseTags = (value: string) =>
   value
@@ -49,7 +50,7 @@ export default function UserPayslipDetailPage() {
   }, [item]);
 
   const detailedRows = useMemo(() => {
-    const rows = Array.isArray(item?.result_rows) ? item.result_rows : [];
+    const rows = groupPayslipRowsForDisplay(Array.isArray(item?.result_rows) ? item.result_rows : []);
     const credits = rows.filter((row) => row.type === 'C');
     const debits = rows.filter((row) => row.type === 'D');
     const totalCredits = credits.reduce((sum, row) => sum + Number(row.value || 0), 0);
@@ -62,6 +63,45 @@ export default function UserPayslipDetailPage() {
       totalDebits,
     };
   }, [item]);
+
+  const renderDetailRow = (row: PayslipDisplayRow, tone: 'credit' | 'debit', key: string) => {
+    const valueClass = tone === 'credit'
+      ? 'text-body-xs font-bold text-success-700 dark:text-success-400'
+      : 'text-body-xs font-bold text-error-700 dark:text-error-400';
+
+    if (!row.details || row.details.length === 0) {
+      return (
+        <div key={key} className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
+          <p className="text-body-xs text-neutral-700 dark:text-neutral-200">{row.label}</p>
+          <p className={valueClass}>{formatCurrency(row.value)}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div key={key} className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-body-xs text-neutral-700 dark:text-neutral-200">{row.label}</p>
+          <p className={valueClass}>{formatCurrency(row.value)}</p>
+        </div>
+        <details className="mt-2 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-900/50">
+          <summary className="cursor-pointer text-body-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            Ver detalhamento
+          </summary>
+          <div className="mt-3 space-y-2">
+            {row.details.map((detail, index) => (
+              <div key={`${key}-detail-${index}`} className="flex items-start justify-between gap-3">
+                <p className="text-body-xs text-neutral-600 dark:text-neutral-300">{detail.label}</p>
+                <p className="text-body-xs font-semibold text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
+                  {formatCurrency(detail.value)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </details>
+      </div>
+    );
+  };
 
   const onExport = (type: 'pdf' | 'excel') => {
     if (!item) return;
@@ -191,12 +231,7 @@ export default function UserPayslipDetailPage() {
                 {detailedRows.credits.length === 0 ? (
                   <p className="p-4 text-body-xs text-neutral-500">Nenhum crédito encontrado neste holerite.</p>
                 ) : (
-                  detailedRows.credits.map((row, index) => (
-                    <div key={`credit-${index}-${row.label}`} className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
-                      <p className="text-body-xs text-neutral-700 dark:text-neutral-200">{row.label}</p>
-                      <p className="text-body-xs font-bold text-success-700 dark:text-success-400">{formatCurrency(row.value)}</p>
-                    </div>
-                  ))
+                  detailedRows.credits.map((row, index) => renderDetailRow(row, 'credit', `credit-${index}-${row.label}`))
                 )}
               </div>
             </div>
@@ -214,12 +249,7 @@ export default function UserPayslipDetailPage() {
                 {detailedRows.debits.length === 0 ? (
                   <p className="p-4 text-body-xs text-neutral-500">Nenhum débito encontrado neste holerite.</p>
                 ) : (
-                  detailedRows.debits.map((row, index) => (
-                    <div key={`debit-${index}-${row.label}`} className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
-                      <p className="text-body-xs text-neutral-700 dark:text-neutral-200">{row.label}</p>
-                      <p className="text-body-xs font-bold text-error-700 dark:text-error-400">{formatCurrency(row.value)}</p>
-                    </div>
-                  ))
+                  detailedRows.debits.map((row, index) => renderDetailRow(row, 'debit', `debit-${index}-${row.label}`))
                 )}
               </div>
             </div>

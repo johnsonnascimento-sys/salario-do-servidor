@@ -2,6 +2,7 @@ import React from 'react';
 import { Receipt } from 'lucide-react';
 import { CalculatorState } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
+import { groupPayslipRowsForDisplay, PayslipDisplayRow } from '../../utils/payslipRows';
 
 interface ResultsSummaryProps {
     state: CalculatorState;
@@ -10,7 +11,7 @@ interface ResultsSummaryProps {
 
 interface SummarySectionProps {
     title: string;
-    rows: Array<{ label: string; value: number; type: 'C' | 'D' }>;
+    rows: PayslipDisplayRow[];
     totals: Array<{ label: string; value: number; tone?: 'default' | 'error' | 'success' }>;
 }
 
@@ -36,12 +37,42 @@ const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tota
         <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
             {rows.map((row, idx) => (
                 <div key={`${row.type}-${row.label}-${idx}`} className="px-4 py-3">
-                    <p className={`text-body-xs font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
-                        {row.label}
-                    </p>
-                    <p className="mt-1 text-right font-mono text-body font-semibold text-neutral-700 dark:text-neutral-200 break-all">
-                        {formatCurrency(row.value)}
-                    </p>
+                    {row.details && row.details.length > 0 ? (
+                        <details className="group">
+                            <summary className="list-none cursor-pointer">
+                                <div className="flex items-start justify-between gap-3">
+                                    <p className={`text-body-xs font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
+                                        {row.label}
+                                    </p>
+                                    <p className="text-right font-mono text-body font-semibold text-neutral-700 dark:text-neutral-200 break-all">
+                                        {formatCurrency(row.value)}
+                                    </p>
+                                </div>
+                                <p className="mt-1 text-body-xs text-neutral-500 group-open:hidden">
+                                    Ver detalhamento
+                                </p>
+                            </summary>
+                            <div className="mt-3 space-y-2 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-900/50">
+                                {row.details.map((detail, detailIndex) => (
+                                    <div key={`${detail.label}-${detailIndex}`} className="flex items-start justify-between gap-3">
+                                        <p className="text-body-xs text-neutral-600 dark:text-neutral-300">{detail.label}</p>
+                                        <p className="text-body-xs font-semibold text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
+                                            {formatCurrency(detail.value)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </details>
+                    ) : (
+                        <>
+                            <p className={`text-body-xs font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
+                                {row.label}
+                            </p>
+                            <p className="mt-1 text-right font-mono text-body font-semibold text-neutral-700 dark:text-neutral-200 break-all">
+                                {formatCurrency(row.value)}
+                            </p>
+                        </>
+                    )}
                 </div>
             ))}
             {totals.map((total, idx) => (
@@ -77,7 +108,24 @@ const DesktopSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tot
                     {rows.map((row, idx) => (
                         <tr key={`${row.type}-${row.label}-${idx}`} className="hover:bg-neutral-50 dark:bg-transparent dark:hover:bg-neutral-700/30 transition">
                             <td className={`px-6 py-4 font-medium break-words ${labelToneClasses(row.type)}`}>
-                                {row.label}
+                                <div>{row.label}</div>
+                                {row.details && row.details.length > 0 && (
+                                    <details className="mt-2 rounded-lg bg-neutral-50 p-3 text-neutral-600 dark:bg-neutral-900/50 dark:text-neutral-300">
+                                        <summary className="cursor-pointer text-body-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                                            Ver detalhamento
+                                        </summary>
+                                        <div className="mt-3 space-y-2">
+                                            {row.details.map((detail, detailIndex) => (
+                                                <div key={`${detail.label}-${detailIndex}`} className="flex items-start justify-between gap-3">
+                                                    <span className="text-body-xs">{detail.label}</span>
+                                                    <span className="text-body-xs font-semibold whitespace-nowrap">
+                                                        {formatCurrency(detail.value)}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </details>
+                                )}
                             </td>
                             <td className="px-6 py-4 text-right font-mono text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
                                 {formatCurrency(row.value)}
@@ -112,8 +160,8 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
         return normalized.includes('DIARIA') || normalized.includes('ABATIMENTO BENEF. EXTERNO');
     };
 
-    const payrollRows = resultRows.filter((row) => !isDailiesRow(row.label));
-    const dailiesRows = resultRows.filter((row) => isDailiesRow(row.label));
+    const payrollRows = groupPayslipRowsForDisplay(resultRows.filter((row) => !isDailiesRow(row.label)));
+    const dailiesRows = groupPayslipRowsForDisplay(resultRows.filter((row) => isDailiesRow(row.label)));
 
     const payrollCredits = payrollRows
         .filter((row) => row.type === 'C')
