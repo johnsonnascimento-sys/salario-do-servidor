@@ -46,7 +46,8 @@ const normalizeLabel = (label: string) =>
   label
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase();
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '');
 
 const findCreditRow = (rows: RowLike[], predicate: (row: RowLike) => boolean) =>
   rows.find((row) => row.type === 'C' && Number(row.value || 0) > 0 && predicate(row));
@@ -57,9 +58,24 @@ const allocateDetailRows = (
   total: number,
   items: Array<{ label: string; base: number }>
 ): Array<{ label: string; value: number; type: 'D' }> => {
-  const positiveItems = items
-    .map((item) => ({ label: item.label, base: roundDetail(item.base) }))
-    .filter((item) => item.base > 0);
+  const mergedItems = items.reduce<Array<{ label: string; base: number; key: string }>>((acc, item) => {
+    const base = roundDetail(item.base);
+    if (base <= 0) {
+      return acc;
+    }
+
+    const key = normalizeLabel(item.label);
+    const existing = acc.find((entry) => entry.key === key);
+    if (existing) {
+      existing.base = roundDetail(existing.base + base);
+      return acc;
+    }
+
+    acc.push({ label: item.label, base, key });
+    return acc;
+  }, []);
+
+  const positiveItems = mergedItems;
 
   if (positiveItems.length === 0 || total <= 0) {
     return [];
@@ -104,8 +120,8 @@ const buildPssDetails = (
   if (!state || Number(state.pssMensal || 0) <= 0) return [];
 
   const functionRow = findCreditRow(rows, (row) =>
-    normalizeLabel(row.label).includes('FUNCAO COMISSIONADA') ||
-    normalizeLabel(row.label).includes('CARGO EM COMISSAO')
+    normalizeLabel(row.label).includes('FUNCAOCOMISSIONADA') ||
+    normalizeLabel(row.label).includes('CARGOEMCOMISSAO')
   );
 
   const items = [
@@ -156,24 +172,24 @@ const buildIrrfDetails = (
   if (!state) return [];
 
   const functionRow = findCreditRow(rows, (row) =>
-    normalizeLabel(row.label).includes('FUNCAO COMISSIONADA') ||
-    normalizeLabel(row.label).includes('CARGO EM COMISSAO')
+    normalizeLabel(row.label).includes('FUNCAOCOMISSIONADA') ||
+    normalizeLabel(row.label).includes('CARGOEMCOMISSAO')
   );
   const heMonthlyRow = findCreditRow(
     rows,
-    (row) => normalizeLabel(row.label).includes('SERVICO EXTRAORDINARIO') && !normalizeLabel(row.label).includes('(IR EA)')
+    (row) => normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && !normalizeLabel(row.label).includes('IREA')
   );
   const heEaRow = findCreditRow(
     rows,
-    (row) => normalizeLabel(row.label).includes('SERVICO EXTRAORDINARIO') && normalizeLabel(row.label).includes('(IR EA)')
+    (row) => normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && normalizeLabel(row.label).includes('IREA')
   );
   const substMonthlyRow = findCreditRow(
     rows,
-    (row) => normalizeLabel(row.label).includes('SUBSTITUICAO DE FUNCAO') && !normalizeLabel(row.label).includes('(IR EA)')
+    (row) => normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && !normalizeLabel(row.label).includes('IREA')
   );
   const substEaRow = findCreditRow(
     rows,
-    (row) => normalizeLabel(row.label).includes('SUBSTITUICAO DE FUNCAO') && normalizeLabel(row.label).includes('(IR EA)')
+    (row) => normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && normalizeLabel(row.label).includes('IREA')
   );
 
   const items = isEa
@@ -221,10 +237,10 @@ const buildPssEaDetails = (
   if (!state || Number(state.pssEA || 0) <= 0) return [];
 
   const heEaRow = findCreditRow(rows, (row) =>
-    normalizeLabel(row.label).includes('SERVICO EXTRAORDINARIO') && normalizeLabel(row.label).includes('(IR EA)')
+    normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && normalizeLabel(row.label).includes('IREA')
   );
   const substEaRow = findCreditRow(rows, (row) =>
-    normalizeLabel(row.label).includes('SUBSTITUICAO DE FUNCAO') && normalizeLabel(row.label).includes('(IR EA)')
+    normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && normalizeLabel(row.label).includes('IREA')
   );
 
   const items = [
