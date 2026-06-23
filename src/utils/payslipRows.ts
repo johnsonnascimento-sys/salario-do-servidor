@@ -102,26 +102,18 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
   const consumedIndexes = new Set<number>();
 
   IR_GROUPS.forEach((group) => {
-    const parent = rows
-      .map((row, index) => ({ row, index }))
-      .find(({ row }) => row.type === 'D' && row.label === group.totalLabel);
-
-    if (!parent) {
-      return;
-    }
-
     const details = rows
       .map((row, index) => ({ row, index }))
-      .filter(({ row, index }) => index !== parent.index && row.type === 'D' && row.label.startsWith(group.detailPrefix));
+      .filter(({ row }) => row.type === 'D' && row.label.startsWith(group.detailPrefix));
 
     if (details.length === 0) {
       return;
     }
 
     details.forEach(({ index }) => consumedIndexes.add(index));
-    groupedRowsByIndex.set(parent.index, {
+    groupedRowsByIndex.set(details[0].index, {
       label: group.totalLabel,
-      value: Number(parent.row.value || 0),
+      value: details.reduce((sum, { row }) => sum + Number(row.value || 0), 0),
       type: 'D',
       details: details.map(({ row }) => ({
         label: row.label,
