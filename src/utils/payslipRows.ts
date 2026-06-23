@@ -123,6 +123,11 @@ const buildPssDetails = (
     normalizeLabel(row.label).includes('FUNCAOCOMISSIONADA') ||
     normalizeLabel(row.label).includes('CARGOEMCOMISSAO')
   );
+  const aqTitleRow = findCreditRow(rows, (row) =>
+    normalizeLabel(row.label).includes('AQTITULOS') ||
+    normalizeLabel(row.label).includes('ADICIONALQUALIFICACAO') ||
+    normalizeLabel(row.label).includes('ADICIONALDEQUALIFICACAO1XVRJANEIROAJUNHO')
+  );
 
   const items = [
     { label: 'VENCIMENTO-ATIVO EC', base: state.vencimento || 0 },
@@ -130,7 +135,7 @@ const buildPssDetails = (
     { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
     {
       label: state.periodo >= 1 ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)' : 'AQ TÍTULOS',
-      base: state.aqTituloValor || 0,
+      base: aqTitleRow?.value || 0,
     },
     { label: 'GRATIFICAÇÃO ESPECÍFICA', base: state.incidirPSSGrat ? (state.gratEspecificaValor || 0) : 0 },
     { label: 'VPNI - LEI 9.527/97', base: state.vpni_lei || 0 },
@@ -175,6 +180,16 @@ const buildIrrfDetails = (
     normalizeLabel(row.label).includes('FUNCAOCOMISSIONADA') ||
     normalizeLabel(row.label).includes('CARGOEMCOMISSAO')
   );
+  const aqTitleRow = findCreditRow(rows, (row) =>
+    normalizeLabel(row.label).includes('AQTITULOS') ||
+    normalizeLabel(row.label).includes('ADICIONALQUALIFICACAO') ||
+    normalizeLabel(row.label).includes('ADICIONALDEQUALIFICACAO1XVRJANEIROAJUNHO')
+  );
+  const aqTreinoRow = findCreditRow(rows, (row) =>
+    normalizeLabel(row.label).includes('AQTREINAMENTO') ||
+    normalizeLabel(row.label).includes('ADICIONALQUALIFICACAO') ||
+    normalizeLabel(row.label).includes('ADICIONALDEQUALIFICACAO1XVRJANEIROAJUNHO')
+  );
   const heMonthlyRow = findCreditRow(
     rows,
     (row) => normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && !normalizeLabel(row.label).includes('IREA')
@@ -209,9 +224,9 @@ const buildIrrfDetails = (
         { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
         {
           label: state.periodo >= 1 ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)' : 'AQ TÍTULOS',
-          base: state.aqTituloValor || 0,
+          base: aqTitleRow?.value || 0,
         },
-        { label: 'AQ TREINAMENTO', base: state.aqTreinoValor || 0 },
+        { label: 'AQ TREINAMENTO', base: aqTreinoRow?.value || 0 },
         { label: 'GRATIFICAÇÃO ESPECÍFICA', base: state.gratEspecificaValor || 0 },
         { label: 'VPNI - LEI 9.527/97', base: state.vpni_lei || 0 },
         { label: 'VPNI - DECISÃO JUDICIAL', base: state.vpni_decisao || 0 },
