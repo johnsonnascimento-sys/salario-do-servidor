@@ -134,7 +134,7 @@ const buildPssDetails = (
     { label: 'GRAT. ATIV. JUD. (GAJ)', base: state.gaj || 0 },
     { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
     {
-      label: state.periodo >= 1 ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)' : 'AQ TÍTULOS',
+      label: state.periodo >= 1 ? 'AQ TÍTULOS (LEI 15.292)' : 'AQ TÍTULOS',
       base: aqTitleRow?.value || 0,
     },
     { label: 'GRATIFICAÇÃO ESPECÍFICA', base: state.incidirPSSGrat ? (state.gratEspecificaValor || 0) : 0 },
@@ -223,10 +223,10 @@ const buildIrrfDetails = (
         { label: 'GRAT. ATIV. JUD. (GAJ)', base: state.gaj || 0 },
         { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
         {
-          label: state.periodo >= 1 ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)' : 'AQ TÍTULOS',
+          label: state.periodo >= 1 ? 'AQ TÍTULOS (LEI 15.292)' : 'AQ TÍTULOS',
           base: aqTitleRow?.value || 0,
         },
-        { label: 'AQ TREINAMENTO', base: aqTreinoRow?.value || 0 },
+        { label: state.periodo >= 1 ? 'AQ TREINAMENTO (LEI 15.292)' : 'AQ TREINAMENTO', base: aqTreinoRow?.value || 0 },
         { label: 'GRATIFICAÇÃO ESPECÍFICA', base: state.gratEspecificaValor || 0 },
         { label: 'VPNI - LEI 9.527/97', base: state.vpni_lei || 0 },
         { label: 'VPNI - DECISÃO JUDICIAL', base: state.vpni_decisao || 0 },
