@@ -119,11 +119,13 @@ const buildIrrfDetails = (
 };
 
 const buildPssEaDetails = (
-  state?: Pick<CalculatorState, 'pssEA' | 'rubricasExtras'>
+  state?: Pick<CalculatorState, 'pssEA' | 'heTotal' | 'substTotal' | 'rubricasExtras'>
 ): Array<{ label: string; value: number; type: 'D' }> => {
   if (!state || Number(state.pssEA || 0) <= 0) return [];
 
   const rows = [
+    toRow('HORA EXTRA (BASE PSS-EA)', state.heTotal),
+    toRow('SUBSTITUIÇÃO (BASE PSS-EA)', state.substTotal),
     ...(state.rubricasExtras || [])
       .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0)
       .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
@@ -168,6 +170,8 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
     | 'substTotal'
     | 'pssMensal'
     | 'pssEA'
+    | 'heTotal'
+    | 'substTotal'
     | 'pss13'
     | 'adiant13Venc'
     | 'adiant13FC'
