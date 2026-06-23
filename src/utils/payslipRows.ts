@@ -17,10 +17,12 @@ const IR_GROUPS = [
   {
     detailPrefix: 'IMPOSTO DE RENDA-EC (',
     totalLabel: 'IMPOSTO DE RENDA-EC (EXERCÍCIO CORRENTE)',
+    isEa: false,
   },
   {
     detailPrefix: 'IMPOSTO DE RENDA-EA (',
     totalLabel: 'IMPOSTO DE RENDA-EA (EXERCÍCIO ANTERIOR)',
+    isEa: true,
   },
 ] as const;
 
@@ -30,184 +32,147 @@ const PSS_13_TOTAL_LABEL = 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC';
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
-const allocateProportionally = (
-  total: number,
-  items: Array<{ label: string; weight: number }>
-): Array<{ label: string; value: number; type: 'D' }> => {
-  const normalizedItems = items
-    .map((item) => ({ label: item.label, weight: Math.max(0, Number(item.weight || 0)) }))
-    .filter((item) => item.weight > 0);
-
-  if (total <= 0 || normalizedItems.length === 0) {
-    return [];
-  }
-
-  const totalWeight = normalizedItems.reduce((sum, item) => sum + item.weight, 0);
-  if (totalWeight <= 0) {
-    return [];
-  }
-
-  let allocated = 0;
-  return normalizedItems.map((item, index) => {
-    const isLast = index === normalizedItems.length - 1;
-    const value = isLast
-      ? roundCurrency(Math.max(0, total - allocated))
-      : roundCurrency(total * (item.weight / totalWeight));
-    allocated += value;
-    return { label: item.label, value, type: 'D' as const };
-  }).filter((item) => item.value > 0);
+const toRow = (label: string, value: number): { label: string; value: number; type: 'D' } | null => {
+  const rounded = roundCurrency(Math.max(0, Number(value || 0)));
+  return rounded > 0 ? { label, value: rounded, type: 'D' } : null;
 };
 
-const normalizeRubricaLabel = (rubrica: Rubrica, fallbackIndex: number) => {
+const rubricaLabel = (rubrica: Rubrica, fallbackIndex: number) => {
   const descricao = (rubrica.descricao || '').trim();
-  return descricao ? descricao.toUpperCase() : `RUBRICA MANUAL ${fallbackIndex + 1}`;
+  return (descricao || `RUBRICA MANUAL ${fallbackIndex + 1}`).toUpperCase();
 };
 
 const buildPssDetails = (
   state?: Pick<
     CalculatorState,
-    'pssMensal' | 'aqPss' | 'gratPss' | 'vantagensPss' | 'rubricasExtras'
+    'periodo' | 'aqTituloValor' | 'gratEspecificaValor' | 'vpni_lei' | 'vpni_decisao' | 'ats' | 'rubricasExtras'
   >
 ): Array<{ label: string; value: number; type: 'D' }> => {
-  if (!state || Number(state.pssMensal || 0) <= 0) {
-    return [];
-  }
+  if (!state) return [];
 
-  const componentRows: Array<{ label: string; value: number }> = [
-    { label: 'AQ TÍTULOS', value: roundCurrency(Math.max(0, Number(state.aqPss || 0))) },
-    { label: 'GRATIFICAÇÃO ESPECÍFICA', value: roundCurrency(Math.max(0, Number(state.gratPss || 0))) },
-    { label: 'VANTAGENS (VPNI/ATS)', value: roundCurrency(Math.max(0, Number(state.vantagensPss || 0))) },
+  const rows = [
+    toRow(
+      state.periodo >= 1
+        ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)'
+        : 'AQ TÍTULOS',
+      state.aqTituloValor
+    ),
+    toRow('GRATIFICAÇÃO ESPECÍFICA', state.gratEspecificaValor),
+    toRow('VANTAGENS (VPNI/ATS)', Number(state.vpni_lei || 0) + Number(state.vpni_decisao || 0) + Number(state.ats || 0)),
+    ...(state.rubricasExtras || [])
+      .filter((rubrica) => rubrica.incidePSS && !rubrica.pssCompetenciaSeparada && !rubrica.isEA)
+      .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
+      .filter((row): row is NonNullable<typeof row> => Boolean(row)),
   ];
 
-  const subtotal = roundCurrency(componentRows.reduce((sum, item) => sum + item.value, 0));
-  const remaining = roundCurrency(Math.max(0, Number(state.pssMensal || 0) - subtotal));
-  const manualRubricas = (state.rubricasExtras || [])
-    .filter((rubrica) => rubrica.incidePSS && !rubrica.pssCompetenciaSeparada && !rubrica.isEA && Number(rubrica.valor) > 0)
-    .map((rubrica, index) => ({
-      label: normalizeRubricaLabel(rubrica, index),
-      weight: Number(rubrica.valor || 0),
-    }));
-
-  const manualDetails = allocateProportionally(remaining, manualRubricas);
-
-  return [
-    ...componentRows
-      .filter((item) => item.value > 0)
-      .map((item) => ({ label: item.label, value: item.value, type: 'D' as const })),
-    ...manualDetails,
-  ];
-};
-
-const buildPssEaDetails = (
-  state?: Pick<
-    CalculatorState,
-    'pssEA' | 'hePss' | 'substPss' | 'rubricasExtras'
-  >
-): Array<{ label: string; value: number; type: 'D' }> => {
-  if (!state || Number(state.pssEA || 0) <= 0) {
-    return [];
-  }
-
-  const componentRows: Array<{ label: string; value: number }> = [
-    { label: 'HORA EXTRA (PSS-EA)', value: roundCurrency(Math.max(0, Number(state.hePss || 0))) },
-    { label: 'SUBSTITUIÇÃO (PSS-EA)', value: roundCurrency(Math.max(0, Number(state.substPss || 0))) },
-  ];
-
-  const subtotal = roundCurrency(componentRows.reduce((sum, item) => sum + item.value, 0));
-  const remaining = roundCurrency(Math.max(0, Number(state.pssEA || 0) - subtotal));
-  const manualRubricas = (state.rubricasExtras || [])
-    .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0)
-    .map((rubrica, index) => ({
-      label: normalizeRubricaLabel(rubrica, index),
-      weight: Number(rubrica.valor || 0),
-    }));
-
-  const manualDetails = allocateProportionally(remaining, manualRubricas);
-
-  return [
-    ...componentRows
-      .filter((item) => item.value > 0)
-      .map((item) => ({ label: item.label, value: item.value, type: 'D' as const })),
-    ...manualDetails,
-  ];
-};
-
-const buildThirteenthPssDetails = (
-  state?: Pick<CalculatorState, 'pss13' | 'segunda13Venc' | 'segunda13FC' | 'rubricasExtras'>
-): Array<{ label: string; value: number; type: 'D' }> => {
-  if (!state || Number(state.pss13 || 0) <= 0) {
-    return [];
-  }
-
-  const pss13 = roundCurrency(Math.max(0, Number(state.pss13 || 0)));
-  const segundaVenc = roundCurrency(Math.max(0, Number(state.segunda13Venc || 0)));
-  const segundaFC = roundCurrency(Math.max(0, Number(state.segunda13FC || 0)));
-  const baseTotal = roundCurrency(segundaVenc + segundaFC);
-  const manualRubricas = (state.rubricasExtras || [])
-    .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0)
-    .map((rubrica, index) => ({
-      label: normalizeRubricaLabel(rubrica, index),
-      weight: Number(rubrica.valor || 0),
-    }));
-
-  const fallbackDetails = baseTotal > 0
-    ? allocateProportionally(pss13, [
-        ...(segundaVenc > 0 ? [{ label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC', weight: segundaVenc }] : []),
-        ...(segundaFC > 0 ? [{ label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - FC/CJ', weight: segundaFC }] : []),
-      ])
-    : [];
-
-  const manualDetails = allocateProportionally(
-    roundCurrency(Math.max(0, pss13 - fallbackDetails.reduce((sum, item) => sum + item.value, 0))),
-    manualRubricas
-  );
-
-  return [
-    ...fallbackDetails,
-    ...manualDetails,
-  ];
+  return rows.filter((row): row is NonNullable<typeof row> => Boolean(row));
 };
 
 const buildIrrfDetails = (
-  total: number,
-  components: Array<{ label: string; value: number }>,
-  manualRubricas: Array<{ label: string; weight: number }>
-) => {
-  const componentRows = components
-    .filter((item) => item.value > 0)
-    .map((item) => ({ label: item.label, value: roundCurrency(item.value), type: 'D' as const }));
+  state?: Pick<
+    CalculatorState,
+    | 'periodo'
+    | 'aqTituloValor'
+    | 'aqTreinoValor'
+    | 'gratEspecificaValor'
+    | 'vpni_lei'
+    | 'vpni_decisao'
+    | 'ats'
+    | 'abonoPermanencia'
+    | 'heTotal'
+    | 'substTotal'
+    | 'rubricasExtras'
+  >,
+  isEa = false
+): Array<{ label: string; value: number; type: 'D' }> => {
+  if (!state) return [];
 
-  const subtotal = roundCurrency(componentRows.reduce((sum, item) => sum + item.value, 0));
-  const remaining = roundCurrency(Math.max(0, total - subtotal));
-  const manualDetails = allocateProportionally(remaining, manualRubricas);
+  const rows = isEa
+    ? [
+        toRow('HORA EXTRA (IR EA)', state.heTotal),
+        toRow('SUBSTITUIÇÃO (IR EA)', state.substTotal),
+        ...(state.rubricasExtras || [])
+          .filter((rubrica) => rubrica.incideIR && rubrica.isEA)
+          .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
+          .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+      ]
+    : [
+        toRow(
+          state.periodo >= 1
+            ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)'
+            : 'AQ TÍTULOS',
+          state.aqTituloValor
+        ),
+        toRow('AQ TREINAMENTO', state.aqTreinoValor),
+        toRow('GRATIFICAÇÃO ESPECÍFICA', state.gratEspecificaValor),
+        toRow('VANTAGENS (VPNI/ATS)', Number(state.vpni_lei || 0) + Number(state.vpni_decisao || 0) + Number(state.ats || 0)),
+        toRow('ABONO DE PERMANÊNCIA', state.abonoPermanencia),
+        toRow('HORA EXTRA', state.heTotal),
+        toRow('SUBSTITUIÇÃO', state.substTotal),
+        ...(state.rubricasExtras || [])
+          .filter((rubrica) => rubrica.incideIR && !rubrica.isEA)
+          .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
+          .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+      ];
 
-  return [...componentRows, ...manualDetails];
+  return rows.filter((row): row is NonNullable<typeof row> => Boolean(row));
+};
+
+const buildPssEaDetails = (
+  state?: Pick<CalculatorState, 'pssEA' | 'rubricasExtras'>
+): Array<{ label: string; value: number; type: 'D' }> => {
+  if (!state || Number(state.pssEA || 0) <= 0) return [];
+
+  const rows = [
+    ...(state.rubricasExtras || [])
+      .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0)
+      .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
+      .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+  ];
+
+  return rows;
+};
+
+const buildThirteenthPssDetails = (
+  state?: Pick<CalculatorState, 'pss13' | 'adiant13Venc' | 'adiant13FC' | 'segunda13Venc' | 'segunda13FC' | 'rubricasExtras'>
+): Array<{ label: string; value: number; type: 'D' }> => {
+  if (!state || Number(state.pss13 || 0) <= 0) return [];
+
+  const rows = [
+    toRow('PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - VENCIMENTO/ATIVO EC', state.adiant13Venc),
+    toRow('PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - FC/CJ', state.adiant13FC),
+    toRow('PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC', state.segunda13Venc),
+    toRow('PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - FC/CJ', state.segunda13FC),
+    ...(state.rubricasExtras || [])
+      .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0)
+      .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
+      .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+  ];
+
+  return rows.filter((row): row is NonNullable<typeof row> => Boolean(row));
 };
 
 export const groupPayslipRowsForDisplay = <T extends RowLike>(
   rows: T[],
   calculatorState?: Pick<
     CalculatorState,
+    | 'periodo'
+    | 'aqTituloValor'
+    | 'aqTreinoValor'
+    | 'gratEspecificaValor'
+    | 'vpni_lei'
+    | 'vpni_decisao'
+    | 'ats'
+    | 'abonoPermanencia'
+    | 'heTotal'
+    | 'substTotal'
     | 'pssMensal'
     | 'pssEA'
-    | 'aqPss'
-    | 'gratPss'
-    | 'vantagensPss'
     | 'pss13'
+    | 'adiant13Venc'
+    | 'adiant13FC'
     | 'segunda13Venc'
     | 'segunda13FC'
-    | 'irMensal'
-    | 'irEA'
-    | 'aqIr'
-    | 'gratIr'
-    | 'vantagensIr'
-    | 'abonoIr'
-    | 'heIrMensal'
-    | 'heIrEA'
-    | 'substIrMensal'
-    | 'substIrEA'
-    | 'hePss'
-    | 'substPss'
     | 'rubricasExtras'
   >
 ): PayslipDisplayRow[] => {
@@ -219,101 +184,54 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
       .map((row, index) => ({ row, index }))
       .filter(({ row }) => row.type === 'D' && row.label.startsWith(group.detailPrefix));
 
-    if (detailRows.length === 0) {
-      return;
-    }
+    if (detailRows.length === 0) return;
 
     detailRows.forEach(({ index }) => consumedIndexes.add(index));
-
-    const isEaGroup = group.totalLabel.includes('EXERCÃCIO ANTERIOR');
-    const detailRowsByGroup = isEaGroup
-      ? buildIrrfDetails(
-          Number(calculatorState?.irEA || 0),
-          [
-            { label: 'HORA EXTRA (IR-EA)', value: Number(calculatorState?.heIrEA || 0) },
-            { label: 'SUBSTITUIÇÃO (IR-EA)', value: Number(calculatorState?.substIrEA || 0) },
-          ],
-          (calculatorState?.rubricasExtras || [])
-            .filter((rubrica) => rubrica.isEA && rubrica.incideIR && Number(rubrica.valor) > 0)
-            .map((rubrica, index) => ({
-              label: normalizeRubricaLabel(rubrica, index),
-              weight: Number(rubrica.valor || 0),
-            }))
-        )
-      : buildIrrfDetails(
-          Number(calculatorState?.irMensal || 0),
-          [
-            { label: 'AQ TÍTULOS (IR)', value: Number(calculatorState?.aqIr || 0) },
-            { label: 'GRATIFICAÇÃO ESPECÍFICA (IR)', value: Number(calculatorState?.gratIr || 0) },
-            { label: 'VANTAGENS (VPNI/ATS) (IR)', value: Number(calculatorState?.vantagensIr || 0) },
-            { label: 'ABONO DE PERMANÊNCIA (IR)', value: Number(calculatorState?.abonoIr || 0) },
-            { label: 'HORA EXTRA (IR)', value: Number(calculatorState?.heIrMensal || 0) },
-            { label: 'SUBSTITUIÇÃO (IR)', value: Number(calculatorState?.substIrMensal || 0) },
-          ],
-          (calculatorState?.rubricasExtras || [])
-            .filter((rubrica) => !rubrica.isEA && rubrica.incideIR && Number(rubrica.valor) > 0)
-            .map((rubrica, index) => ({
-              label: normalizeRubricaLabel(rubrica, index),
-              weight: Number(rubrica.valor || 0),
-            }))
-        );
 
     groupedRowsByIndex.set(detailRows[0].index, {
       label: group.totalLabel,
       value: detailRows.reduce((sum, { row }) => sum + Number(row.value || 0), 0),
       type: 'D',
-      details: detailRowsByGroup.length > 0
-        ? detailRowsByGroup
-        : detailRows.map(({ row }) => ({
-        label: row.label,
-        value: Number(row.value || 0),
-        type: row.type,
-      })),
+      details: buildIrrfDetails(calculatorState, group.isEa),
     });
   });
 
-  const pssParent = rows
-    .map((row, index) => ({ row, index }))
-    .find(({ row }) => row.type === 'D' && row.label === PSS_TOTAL_LABEL);
-
+  const pssParent = rows.find((row) => row.type === 'D' && row.label === PSS_TOTAL_LABEL);
   if (pssParent) {
     const pssDetails = buildPssDetails(calculatorState);
     if (pssDetails.length > 0) {
-      groupedRowsByIndex.set(pssParent.index, {
+      const index = rows.findIndex((row) => row.type === 'D' && row.label === PSS_TOTAL_LABEL);
+      groupedRowsByIndex.set(index, {
         label: PSS_TOTAL_LABEL,
-        value: Number(pssParent.row.value || 0),
+        value: Number(pssParent.value || 0),
         type: 'D',
         details: pssDetails,
       });
     }
   }
 
-  const pssEaParent = rows
-    .map((row, index) => ({ row, index }))
-    .find(({ row }) => row.type === 'D' && row.label === PSS_EA_TOTAL_LABEL);
-
+  const pssEaParent = rows.find((row) => row.type === 'D' && row.label === PSS_EA_TOTAL_LABEL);
   if (pssEaParent) {
     const pssEaDetails = buildPssEaDetails(calculatorState);
     if (pssEaDetails.length > 0) {
-      groupedRowsByIndex.set(pssEaParent.index, {
+      const index = rows.findIndex((row) => row.type === 'D' && row.label === PSS_EA_TOTAL_LABEL);
+      groupedRowsByIndex.set(index, {
         label: PSS_EA_TOTAL_LABEL,
-        value: Number(pssEaParent.row.value || 0),
+        value: Number(pssEaParent.value || 0),
         type: 'D',
         details: pssEaDetails,
       });
     }
   }
 
-  const pss13Parent = rows
-    .map((row, index) => ({ row, index }))
-    .find(({ row }) => row.type === 'D' && row.label === PSS_13_TOTAL_LABEL);
-
+  const pss13Parent = rows.find((row) => row.type === 'D' && row.label === PSS_13_TOTAL_LABEL);
   if (pss13Parent) {
     const pss13Details = buildThirteenthPssDetails(calculatorState);
     if (pss13Details.length > 0) {
-      groupedRowsByIndex.set(pss13Parent.index, {
+      const index = rows.findIndex((row) => row.type === 'D' && row.label === PSS_13_TOTAL_LABEL);
+      groupedRowsByIndex.set(index, {
         label: PSS_13_TOTAL_LABEL,
-        value: Number(pss13Parent.row.value || 0),
+        value: Number(pss13Parent.value || 0),
         type: 'D',
         details: pss13Details,
       });
