@@ -160,8 +160,8 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
         return normalized.includes('DIARIA') || normalized.includes('ABATIMENTO BENEF. EXTERNO');
     };
 
-    const payrollRows = groupPayslipRowsForDisplay(resultRows.filter((row) => !isDailiesRow(row.label)));
-    const dailiesRows = groupPayslipRowsForDisplay(resultRows.filter((row) => isDailiesRow(row.label)));
+    const payrollRows = groupPayslipRowsForDisplay(resultRows.filter((row) => !isDailiesRow(row.label)), state);
+    const dailiesRows = groupPayslipRowsForDisplay(resultRows.filter((row) => isDailiesRow(row.label)), state);
 
     const payrollCredits = payrollRows
         .filter((row) => row.type === 'C')

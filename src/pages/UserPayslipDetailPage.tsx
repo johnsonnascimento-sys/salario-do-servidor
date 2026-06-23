@@ -50,7 +50,10 @@ export default function UserPayslipDetailPage() {
   }, [item]);
 
   const detailedRows = useMemo(() => {
-    const rows = groupPayslipRowsForDisplay(Array.isArray(item?.result_rows) ? item.result_rows : []);
+    const rows = groupPayslipRowsForDisplay(
+      Array.isArray(item?.result_rows) ? item.result_rows : [],
+      item?.calculator_state || undefined
+    );
     const credits = rows.filter((row) => row.type === 'C');
     const debits = rows.filter((row) => row.type === 'D');
     const totalCredits = credits.reduce((sum, row) => sum + Number(row.value || 0), 0);
