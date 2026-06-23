@@ -42,36 +42,102 @@ const rubricaLabel = (rubrica: Rubrica, fallbackIndex: number) => {
   return (descricao || `RUBRICA MANUAL ${fallbackIndex + 1}`).toUpperCase();
 };
 
-const buildPssDetails = (
-  state?: Pick<
-    CalculatorState,
-    'periodo' | 'aqTituloValor' | 'gratEspecificaValor' | 'vpni_lei' | 'vpni_decisao' | 'ats' | 'rubricasExtras'
-  >
+const normalizeLabel = (label: string) =>
+  label
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
+
+const findCreditRow = (rows: RowLike[], predicate: (row: RowLike) => boolean) =>
+  rows.find((row) => row.type === 'C' && Number(row.value || 0) > 0 && predicate(row));
+
+const roundDetail = (value: number) => roundCurrency(Math.max(0, Number(value || 0)));
+
+const allocateDetailRows = (
+  total: number,
+  items: Array<{ label: string; base: number }>
 ): Array<{ label: string; value: number; type: 'D' }> => {
-  if (!state) return [];
+  const positiveItems = items
+    .map((item) => ({ label: item.label, base: roundDetail(item.base) }))
+    .filter((item) => item.base > 0);
 
-  const rows = [
-    toRow(
-      state.periodo >= 1
-        ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)'
-        : 'AQ TÍTULOS',
-      state.aqTituloValor
-    ),
-    toRow('GRATIFICAÇÃO ESPECÍFICA', state.gratEspecificaValor),
-    toRow('VANTAGENS (VPNI/ATS)', Number(state.vpni_lei || 0) + Number(state.vpni_decisao || 0) + Number(state.ats || 0)),
-    ...(state.rubricasExtras || [])
-      .filter((rubrica) => rubrica.incidePSS && !rubrica.pssCompetenciaSeparada && !rubrica.isEA)
-      .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
-      .filter((row): row is NonNullable<typeof row> => Boolean(row)),
-  ];
+  if (positiveItems.length === 0 || total <= 0) {
+    return [];
+  }
 
-  return rows.filter((row): row is NonNullable<typeof row> => Boolean(row));
+  const totalBase = positiveItems.reduce((sum, item) => sum + item.base, 0);
+  if (totalBase <= 0) {
+    return [];
+  }
+
+  let allocated = 0;
+
+  return positiveItems
+    .map((item, index) => {
+      const isLast = index === positiveItems.length - 1;
+      const value = isLast
+        ? roundDetail(Math.max(0, total - allocated))
+        : roundDetail(total * (item.base / totalBase));
+      allocated += value;
+      return toRow(item.label, value);
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row));
 };
 
-const buildIrrfDetails = (
+const buildPssDetails = (
+  rows: RowLike[],
   state?: Pick<
     CalculatorState,
     | 'periodo'
+    | 'vencimento'
+    | 'gaj'
+    | 'aqTituloValor'
+    | 'gratEspecificaValor'
+    | 'vpni_lei'
+    | 'vpni_decisao'
+    | 'ats'
+    | 'incidirPSSGrat'
+    | 'rubricasExtras'
+    | 'pssMensal'
+  >
+): Array<{ label: string; value: number; type: 'D' }> => {
+  if (!state || Number(state.pssMensal || 0) <= 0) return [];
+
+  const functionRow = findCreditRow(rows, (row) =>
+    normalizeLabel(row.label).includes('FUNCAO COMISSIONADA') ||
+    normalizeLabel(row.label).includes('CARGO EM COMISSAO')
+  );
+
+  const items = [
+    { label: 'VENCIMENTO-ATIVO EC', base: state.vencimento || 0 },
+    { label: 'GRAT. ATIV. JUD. (GAJ)', base: state.gaj || 0 },
+    { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
+    {
+      label: state.periodo >= 1 ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)' : 'AQ TÍTULOS',
+      base: state.aqTituloValor || 0,
+    },
+    { label: 'GRATIFICAÇÃO ESPECÍFICA', base: state.incidirPSSGrat ? (state.gratEspecificaValor || 0) : 0 },
+    { label: 'VPNI - LEI 9.527/97', base: state.vpni_lei || 0 },
+    { label: 'VPNI - DECISÃO JUDICIAL', base: state.vpni_decisao || 0 },
+    { label: 'ADICIONAL TEMPO DE SERVIÇO', base: state.ats || 0 },
+    ...(state.rubricasExtras || [])
+      .filter((rubrica) => rubrica.incidePSS && !rubrica.pssCompetenciaSeparada && !rubrica.isEA && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
+      .map((rubrica, index) => ({
+        label: rubricaLabel(rubrica, index),
+        base: rubrica.valor,
+      })),
+  ];
+
+  return allocateDetailRows(state.pssMensal || 0, items);
+};
+
+const buildIrrfDetails = (
+  rows: RowLike[],
+  state?: Pick<
+    CalculatorState,
+    | 'periodo'
+    | 'vencimento'
+    | 'gaj'
     | 'aqTituloValor'
     | 'aqTreinoValor'
     | 'gratEspecificaValor'
@@ -82,76 +148,112 @@ const buildIrrfDetails = (
     | 'heTotal'
     | 'substTotal'
     | 'rubricasExtras'
+    | 'irMensal'
+    | 'irEA'
   >,
   isEa = false
 ): Array<{ label: string; value: number; type: 'D' }> => {
   if (!state) return [];
 
-  const rows = isEa
+  const functionRow = findCreditRow(rows, (row) =>
+    normalizeLabel(row.label).includes('FUNCAO COMISSIONADA') ||
+    normalizeLabel(row.label).includes('CARGO EM COMISSAO')
+  );
+  const heMonthlyRow = findCreditRow(
+    rows,
+    (row) => normalizeLabel(row.label).includes('SERVICO EXTRAORDINARIO') && !normalizeLabel(row.label).includes('(IR EA)')
+  );
+  const heEaRow = findCreditRow(
+    rows,
+    (row) => normalizeLabel(row.label).includes('SERVICO EXTRAORDINARIO') && normalizeLabel(row.label).includes('(IR EA)')
+  );
+  const substMonthlyRow = findCreditRow(
+    rows,
+    (row) => normalizeLabel(row.label).includes('SUBSTITUICAO DE FUNCAO') && !normalizeLabel(row.label).includes('(IR EA)')
+  );
+  const substEaRow = findCreditRow(
+    rows,
+    (row) => normalizeLabel(row.label).includes('SUBSTITUICAO DE FUNCAO') && normalizeLabel(row.label).includes('(IR EA)')
+  );
+
+  const items = isEa
     ? [
-        toRow('HORA EXTRA (IR EA)', state.heTotal),
-        toRow('SUBSTITUIÇÃO (IR EA)', state.substTotal),
+        { label: 'HORA EXTRA (IR EA)', base: heEaRow?.value || 0 },
+        { label: 'SUBSTITUIÇÃO (IR EA)', base: substEaRow?.value || 0 },
         ...(state.rubricasExtras || [])
-          .filter((rubrica) => rubrica.incideIR && rubrica.isEA)
-          .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
-          .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+          .filter((rubrica) => rubrica.incideIR && rubrica.isEA && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
+          .map((rubrica, index) => ({
+            label: rubricaLabel(rubrica, index),
+            base: rubrica.valor,
+          })),
       ]
     : [
-        toRow(
-          state.periodo >= 1
-            ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)'
-            : 'AQ TÍTULOS',
-          state.aqTituloValor
-        ),
-        toRow('AQ TREINAMENTO', state.aqTreinoValor),
-        toRow('GRATIFICAÇÃO ESPECÍFICA', state.gratEspecificaValor),
-        toRow('VANTAGENS (VPNI/ATS)', Number(state.vpni_lei || 0) + Number(state.vpni_decisao || 0) + Number(state.ats || 0)),
-        toRow('ABONO DE PERMANÊNCIA', state.abonoPermanencia),
-        toRow('HORA EXTRA', state.heTotal),
-        toRow('SUBSTITUIÇÃO', state.substTotal),
+        { label: 'VENCIMENTO-ATIVO EC', base: state.vencimento || 0 },
+        { label: 'GRAT. ATIV. JUD. (GAJ)', base: state.gaj || 0 },
+        { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
+        {
+          label: state.periodo >= 1 ? 'ADICIONAL DE QUALIFICAÇÃO 1X VR (JANEIRO A JUNHO)' : 'AQ TÍTULOS',
+          base: state.aqTituloValor || 0,
+        },
+        { label: 'AQ TREINAMENTO', base: state.aqTreinoValor || 0 },
+        { label: 'GRATIFICAÇÃO ESPECÍFICA', base: state.gratEspecificaValor || 0 },
+        { label: 'VPNI - LEI 9.527/97', base: state.vpni_lei || 0 },
+        { label: 'VPNI - DECISÃO JUDICIAL', base: state.vpni_decisao || 0 },
+        { label: 'ADICIONAL TEMPO DE SERVIÇO', base: state.ats || 0 },
+        { label: 'ABONO DE PERMANÊNCIA', base: state.abonoPermanencia || 0 },
+        { label: 'HORA EXTRA (IR MENSAL)', base: heMonthlyRow?.value || 0 },
+        { label: 'SUBSTITUIÇÃO (IR MENSAL)', base: substMonthlyRow?.value || 0 },
         ...(state.rubricasExtras || [])
-          .filter((rubrica) => rubrica.incideIR && !rubrica.isEA)
-          .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
-          .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+          .filter((rubrica) => rubrica.incideIR && !rubrica.isEA && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
+          .map((rubrica, index) => ({
+            label: rubricaLabel(rubrica, index),
+            base: rubrica.valor,
+          })),
       ];
 
-  return rows.filter((row): row is NonNullable<typeof row> => Boolean(row));
+  return allocateDetailRows(isEa ? (state.irEA || 0) : (state.irMensal || 0), items);
 };
 
 const buildPssEaDetails = (
-  state?: Pick<CalculatorState, 'pssEA' | 'heTotal' | 'substTotal' | 'rubricasExtras'>
+  rows: RowLike[],
+  state?: Pick<CalculatorState, 'pssEA' | 'heTotal' | 'substTotal' | 'hePssIsEA' | 'substPssIsEA' | 'rubricasExtras'>
 ): Array<{ label: string; value: number; type: 'D' }> => {
   if (!state || Number(state.pssEA || 0) <= 0) return [];
 
-  const rows = [
-    toRow('HORA EXTRA (BASE PSS-EA)', state.heTotal),
-    toRow('SUBSTITUIÇÃO (BASE PSS-EA)', state.substTotal),
+  const heEaRow = findCreditRow(rows, (row) =>
+    normalizeLabel(row.label).includes('SERVICO EXTRAORDINARIO') && normalizeLabel(row.label).includes('(IR EA)')
+  );
+  const substEaRow = findCreditRow(rows, (row) =>
+    normalizeLabel(row.label).includes('SUBSTITUICAO DE FUNCAO') && normalizeLabel(row.label).includes('(IR EA)')
+  );
+
+  const items = [
+    { label: 'HORA EXTRA (BASE PSS-EA)', base: state.hePssIsEA ? (heEaRow?.value || 0) : 0 },
+    { label: 'SUBSTITUIÇÃO (BASE PSS-EA)', base: state.substPssIsEA ? (substEaRow?.value || 0) : 0 },
     ...(state.rubricasExtras || [])
-      .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0)
-      .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
-      .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+      .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
+      .map((rubrica, index) => ({
+        label: rubricaLabel(rubrica, index),
+        base: rubrica.valor,
+      })),
   ];
 
-  return rows;
+  return allocateDetailRows(state.pssEA || 0, items);
 };
 
 const buildThirteenthPssDetails = (
-  state?: Pick<CalculatorState, 'pss13' | 'adiant13Venc' | 'adiant13FC' | 'segunda13Venc' | 'segunda13FC' | 'rubricasExtras'>
+  state?: Pick<CalculatorState, 'pss13' | 'adiant13Venc' | 'adiant13FC' | 'segunda13Venc' | 'segunda13FC'>
 ): Array<{ label: string; value: number; type: 'D' }> => {
   if (!state || Number(state.pss13 || 0) <= 0) return [];
 
-  const rows = [
-    toRow('PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - VENCIMENTO/ATIVO EC', state.adiant13Venc),
-    toRow('PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - FC/CJ', state.adiant13FC),
-    toRow('PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC', state.segunda13Venc),
-    toRow('PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - FC/CJ', state.segunda13FC),
-    ...(state.rubricasExtras || [])
-      .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0)
-      .map((rubrica, index) => toRow(rubricaLabel(rubrica, index), rubrica.valor))
-      .filter((row): row is NonNullable<typeof row> => Boolean(row)),
+  const items = [
+    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - VENCIMENTO/ATIVO EC', base: state.adiant13Venc || 0 },
+    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - FC/CJ', base: state.adiant13FC || 0 },
+    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC', base: state.segunda13Venc || 0 },
+    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - FC/CJ', base: state.segunda13FC || 0 },
   ];
 
-  return rows.filter((row): row is NonNullable<typeof row> => Boolean(row));
+  return allocateDetailRows(state.pss13 || 0, items);
 };
 
 export const groupPayslipRowsForDisplay = <T extends RowLike>(
@@ -159,19 +261,24 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
   calculatorState?: Pick<
     CalculatorState,
     | 'periodo'
+    | 'vencimento'
+    | 'gaj'
     | 'aqTituloValor'
     | 'aqTreinoValor'
     | 'gratEspecificaValor'
+    | 'incidirPSSGrat'
     | 'vpni_lei'
     | 'vpni_decisao'
     | 'ats'
     | 'abonoPermanencia'
     | 'heTotal'
     | 'substTotal'
+    | 'hePssIsEA'
+    | 'substPssIsEA'
+    | 'irMensal'
+    | 'irEA'
     | 'pssMensal'
     | 'pssEA'
-    | 'heTotal'
-    | 'substTotal'
     | 'pss13'
     | 'adiant13Venc'
     | 'adiant13FC'
@@ -196,13 +303,13 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
       label: group.totalLabel,
       value: detailRows.reduce((sum, { row }) => sum + Number(row.value || 0), 0),
       type: 'D',
-      details: buildIrrfDetails(calculatorState, group.isEa),
+      details: buildIrrfDetails(rows, calculatorState, group.isEa),
     });
   });
 
   const pssParent = rows.find((row) => row.type === 'D' && row.label === PSS_TOTAL_LABEL);
   if (pssParent) {
-    const pssDetails = buildPssDetails(calculatorState);
+    const pssDetails = buildPssDetails(rows, calculatorState);
     if (pssDetails.length > 0) {
       const index = rows.findIndex((row) => row.type === 'D' && row.label === PSS_TOTAL_LABEL);
       groupedRowsByIndex.set(index, {
@@ -216,7 +323,7 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
 
   const pssEaParent = rows.find((row) => row.type === 'D' && row.label === PSS_EA_TOTAL_LABEL);
   if (pssEaParent) {
-    const pssEaDetails = buildPssEaDetails(calculatorState);
+    const pssEaDetails = buildPssEaDetails(rows, calculatorState);
     if (pssEaDetails.length > 0) {
       const index = rows.findIndex((row) => row.type === 'D' && row.label === PSS_EA_TOTAL_LABEL);
       groupedRowsByIndex.set(index, {
