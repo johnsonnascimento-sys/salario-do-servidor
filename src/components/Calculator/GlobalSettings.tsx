@@ -165,11 +165,16 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
     const rawReferenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
     const rawReferenceYear = Number.isFinite(state.anoRef) ? state.anoRef : new Date().getFullYear();
-    const clampedReference = clampReference(
-        { year: rawReferenceYear, month: rawReferenceMonth },
-        referenceBounds.min,
-        referenceBounds.max
-    );
+    const restoredReferenceRef = useRef(`${state.anoRef}:${state.mesRef}`);
+    const preserveSavedReference = preserveRestoredGlobals &&
+        restoredReferenceRef.current === `${state.anoRef}:${state.mesRef}`;
+    const clampedReference = preserveSavedReference
+        ? { year: rawReferenceYear, month: rawReferenceMonth }
+        : clampReference(
+            { year: rawReferenceYear, month: rawReferenceMonth },
+            referenceBounds.min,
+            referenceBounds.max
+        );
 
     const allowedYears = useMemo(() => {
         if (!referenceBounds.min || !referenceBounds.max) {
@@ -179,6 +184,10 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         const years: number[] = [];
         for (let year = referenceBounds.min.year; year <= referenceBounds.max.year; year += 1) {
             years.push(year);
+        }
+        if (!years.includes(clampedReference.year)) {
+            years.push(clampedReference.year);
+            years.sort((a, b) => a - b);
         }
         return years;
     }, [referenceBounds.min, referenceBounds.max, clampedReference.year]);
@@ -193,8 +202,9 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
         return monthOptions
             .map((label, index) => ({ label, month: index + 1 }))
-            .filter((item) => item.month >= minMonth && item.month <= maxMonth);
-    }, [referenceBounds.min, referenceBounds.max, clampedReference.year, monthOptions]);
+            .filter((item) => (item.month >= minMonth && item.month <= maxMonth) ||
+                (preserveSavedReference && item.month === clampedReference.month));
+    }, [referenceBounds.min, referenceBounds.max, clampedReference.year, clampedReference.month, monthOptions, preserveSavedReference]);
 
     useEffect(() => {
         if (clampedReference.year !== state.anoRef) {

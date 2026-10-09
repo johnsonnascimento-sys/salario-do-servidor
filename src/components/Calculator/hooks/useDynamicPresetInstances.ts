@@ -12,6 +12,7 @@ import {
 
 interface UseDynamicPresetInstancesParams {
     state: CalculatorState;
+    initialState?: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     functionKeys: string[];
@@ -37,6 +38,7 @@ const createSubstitutionEntry = (): SubstitutionEntry => ({
 
 export const useDynamicPresetInstances = ({
     state,
+    initialState = state,
     update,
     updateSubstDays,
     functionKeys
@@ -48,7 +50,7 @@ export const useDynamicPresetInstances = ({
         const instances: PresetInstance[] = [];
         const selectedIds = Array.from(new Set([
             ...DEFAULT_PRESETS,
-            ...PREDEFINED_OPTIONS.filter(option => hasPresetValue(option.id, state)).map(option => option.id)
+            ...PREDEFINED_OPTIONS.filter(option => hasPresetValue(option.id, initialState)).map(option => option.id)
         ]));
 
         selectedIds.forEach((presetId) => {
@@ -80,7 +82,7 @@ export const useDynamicPresetInstances = ({
         });
 
         return instances;
-    }, [state]);
+    }, [state, initialState]);
 
     const [enabledPresets, setEnabledPresets] = useState<PresetInstance[]>(initialPresetInstances);
     const enabledPresetIds = useMemo(

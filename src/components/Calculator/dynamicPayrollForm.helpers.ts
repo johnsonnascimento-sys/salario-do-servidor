@@ -164,9 +164,10 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
         case 'abono':
             return state.recebeAbono;
         case 'ferias':
-            return state.manualFerias || state.ferias1_3 > 0 || state.feriasAntecipadas;
+            return state.tipoCalculo === 'jan' || state.manualFerias || state.ferias1_3 > 0 || state.feriasAntecipadas;
         case 'decimo':
             return (
+                ['jan', 'jun', 'nov'].includes(state.tipoCalculo) ||
                 state.manualAdiant13 ||
                 state.adiant13Venc > 0 ||
                 state.adiant13FC > 0 ||
@@ -175,6 +176,7 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
             );
         case 'hora_extra':
             return (
+                state.overtimeEntries.length > 0 ||
                 state.heQtd50 > 0 ||
                 state.heQtd100 > 0 ||
                 state.heIsEA ||
@@ -192,6 +194,7 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
             );
         case 'substituicao':
             return (
+                state.substitutionEntries.length > 0 ||
                 Object.values(state.substDias).some(days => days > 0) ||
                 state.substIsEA ||
                 state.substPssIsEA ||

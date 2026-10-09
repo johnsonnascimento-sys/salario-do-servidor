@@ -1,5 +1,12 @@
 # Changelog
 
+## Não publicado - 09/10/2026
+- Fix: persistência de holerites e rascunhos preserva entradas de férias e parcelas do 13º, inclusive valores manuais e seleções automáticas.
+- Fix: edição recupera campos ausentes em snapshots antigos a partir do detalhamento salvo, sem sobrescrever valores explícitos.
+- Fix: cards restaurados usam as entradas originais antes do cálculo assíncrono; instâncias vazias de hora extra/substituição são preservadas.
+- Fix: carregamento de edição suporta a repetição de efeitos no StrictMode e exibe erros sem abrir um formulário vazio para atualização.
+- Fix: restauração preserva competência e tabelas PSS/IR válidas salvas até alteração da competência pelo usuário.
+
 ## 2.1.18 - 02/04/2026
 - Docs: adicionada secao de governanca de subagentes Codex em `PROJECT_RULES.md`.
 - Docs: criado `src/docs/CODEX_SPECIALISTS.md` com catalogo versionado de especialistas por tarefa, ownership, papel runtime e modelo preferencial.

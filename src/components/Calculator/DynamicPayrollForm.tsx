@@ -24,6 +24,8 @@ import {
 
 interface DynamicPayrollFormProps {
     state: CalculatorState;
+    inputState?: CalculatorState;
+    preserveRestoredGlobals?: boolean;
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     courtConfig: CourtConfig;
@@ -35,6 +37,8 @@ interface DynamicPayrollFormProps {
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     state,
+    inputState,
+    preserveRestoredGlobals = false,
     update,
     updateSubstDays,
     courtConfig,
@@ -88,6 +92,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         handlePresetDragEnd
     } = useDynamicPresetInstances({
         state,
+        initialState: inputState,
         update,
         updateSubstDays,
         functionKeys
@@ -120,7 +125,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         noFunctionCode,
         pssOptions,
         irOptions,
-        salaryTable: currentTables.salario || {}
+        salaryTable: currentTables.salario || {},
+        preserveRestoredGlobals
     });
 
     const updateOvertimeEntry = (id: string, patch: Partial<OvertimeEntry>) => {
