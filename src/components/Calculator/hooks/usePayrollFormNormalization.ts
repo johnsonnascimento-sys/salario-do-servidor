@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { CalculatorState } from '../../../types';
 import { pickBestKeyByReference, toReferenceMonthIndex } from '../referenceDateUtils';
 
@@ -12,6 +12,7 @@ interface UsePayrollFormNormalizationParams {
     pssOptions: string[];
     irOptions: string[];
     salaryTable: Record<string, Record<string, number>>;
+    preserveRestoredGlobals?: boolean;
 }
 
 interface UsePayrollFormNormalizationResult {
@@ -27,8 +28,12 @@ export const usePayrollFormNormalization = ({
     noFunctionCode,
     pssOptions,
     irOptions,
-    salaryTable
+    salaryTable,
+    preserveRestoredGlobals = false
 }: UsePayrollFormNormalizationParams): UsePayrollFormNormalizationResult => {
+    const restoredReference = useRef(`${state.anoRef}:${state.mesRef}`);
+    const preserveSavedTables = preserveRestoredGlobals &&
+        restoredReference.current === `${state.anoRef}:${state.mesRef}`;
     const handleCargoChange = (nextCargo: CalculatorState['cargo']) => {
         const nextPadroes = Object.keys(salaryTable[nextCargo] || {});
         const fallbackPadrao = nextPadroes[0] || state.padrao;
@@ -104,22 +109,24 @@ export const usePayrollFormNormalization = ({
     }, [noFunctionCode, functionKeys, state.funcao, update]);
 
     useEffect(() => {
+        if (preserveSavedTables && pssOptions.includes(state.tabelaPSS)) return;
         if (pssOptions.length === 0) return;
         const referenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
         const nextTabelaPSS = pickBestKeyByReference(pssOptions, state.anoRef, referenceMonth);
         if (nextTabelaPSS && state.tabelaPSS !== nextTabelaPSS) {
             update('tabelaPSS', nextTabelaPSS);
         }
-    }, [pssOptions, state.tabelaPSS, state.anoRef, state.mesRef, update]);
+    }, [pssOptions, state.tabelaPSS, state.anoRef, state.mesRef, update, preserveSavedTables]);
 
     useEffect(() => {
+        if (preserveSavedTables && irOptions.includes(state.tabelaIR)) return;
         if (irOptions.length === 0) return;
         const referenceMonth = toReferenceMonthIndex(state.mesRef) || 12;
         const nextTabelaIR = pickBestKeyByReference(irOptions, state.anoRef, referenceMonth);
         if (nextTabelaIR && state.tabelaIR !== nextTabelaIR) {
             update('tabelaIR', nextTabelaIR);
         }
-    }, [irOptions, state.tabelaIR, state.anoRef, state.mesRef, update]);
+    }, [irOptions, state.tabelaIR, state.anoRef, state.mesRef, update, preserveSavedTables]);
 
     return { handleCargoChange };
 };

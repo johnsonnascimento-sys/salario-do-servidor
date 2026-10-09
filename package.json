@@ -8,6 +8,7 @@
     "prebuild": "node scripts/generate-version.js",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
+    "test:payslip": "node scripts/test-calculator-state.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit-project.cjs",
     "audit:design": "node scripts/audit-design-system.cjs"
@@ -32,6 +33,7 @@
     "pg": "^8.17.1",
     "postcss": "^8.4.35",
     "qrcode": "^1.5.4",
+    "react-test-renderer": "^18.3.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.4.5",
     "vite": "^5.2.0"

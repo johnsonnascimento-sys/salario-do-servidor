@@ -12,6 +12,7 @@ import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
 import { FieldCalculator } from '../components/Calculator/FieldCalculator';
 import DonationModal from '../components/DonationModal';
 import { CalculatorState, INITIAL_STATE } from '../types';
+import type { PayslipResultRow } from '../types/user';
 import { getPayslipById } from '../services/user/payslipService';
 import {
     CALCULATOR_DRAFT_STORAGE_KEY,
@@ -58,16 +59,18 @@ export default function Calculator() {
     const lastRestoreSourceRef = useRef('');
     const [formKey, setFormKey] = useState(0);
     const [restoreReady, setRestoreReady] = useState(!(editPayslipId || restoreSnapshot?.calculatorState));
+    const [restoreError, setRestoreError] = useState('');
 
     useEffect(() => {
         let active = true;
 
-        const applyHydratedState = (snapshot: unknown) => {
+        const applyHydratedState = (snapshot: unknown, savedRows: PayslipResultRow[] = []) => {
             if (!active || !snapshot) return;
-            const hydrated = hydrateCalculatorState(snapshot);
+            const hydrated = hydrateCalculatorState(snapshot, savedRows);
             setState(hydrated);
             setFormKey((prev) => prev + 1);
             setRestoreReady(true);
+            lastRestoreSourceRef.current = restoreSource;
         };
 
         const restoreKind: CalculatorRestoreSource = startBlank
@@ -89,7 +92,7 @@ export default function Calculator() {
             };
         }
 
-        lastRestoreSourceRef.current = restoreSource;
+        setRestoreError('');
 
         if (startBlank) {
             try {
@@ -101,15 +104,19 @@ export default function Calculator() {
             setState(hydrateCalculatorState(INITIAL_STATE));
             setFormKey((prev) => prev + 1);
             setRestoreReady(true);
+            lastRestoreSourceRef.current = restoreSource;
         } else if (editPayslipId) {
             setRestoreReady(false);
             getPayslipById(editPayslipId)
                 .then((payslip) => {
-                    applyHydratedState(payslip?.calculator_state);
+                    if (!payslip?.calculator_state) {
+                        throw new Error('Holerite não encontrado ou indisponível para edição.');
+                    }
+                    applyHydratedState(payslip.calculator_state, payslip.result_rows || []);
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (active) {
-                        setRestoreReady(true);
+                        setRestoreError((error as Error).message || 'Falha ao carregar o holerite salvo.');
                     }
                 });
         } else {
@@ -187,11 +194,11 @@ export default function Calculator() {
         );
     }
 
-    if (!restoreReady) {
+    if (restoreError || !restoreReady) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
                 <p className="text-neutral-500 dark:text-neutral-300">
-                    Carregando holerite salvo...
+                    {restoreError || 'Carregando holerite salvo...'}
                 </p>
             </div>
         );
@@ -226,6 +233,7 @@ export default function Calculator() {
 
                 <div className="space-y-8 max-w-5xl mx-auto">
                     <GlobalSettings
+                        key={`global-settings-${formKey}`}
                         state={effectiveState}
                         update={update}
                         courtConfig={courtConfig}
@@ -234,6 +242,8 @@ export default function Calculator() {
                     />
                     <DynamicPayrollForm
                         key={`dynamic-payroll-form-${formKey}`}
+                        inputState={state}
+                        preserveRestoredGlobals={preserveRestoredGlobals}
                         state={effectiveState}
                         update={update}
                         updateSubstDays={updateSubstDays}
