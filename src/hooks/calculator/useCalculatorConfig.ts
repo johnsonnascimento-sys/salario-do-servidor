@@ -1,13 +1,3 @@
-/**
- * Hook de Configuração e Carregamento - Calculadora
- * 
- * Responsável por:
- * - Carregamento de agência (agency) do Supabase
- * - Instanciação do motor de cálculo apropriado por agência
- * - Carregamento de configuração do tribunal (courtConfig)
- * - Estados de loading
- */
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourtConfig } from '../../types';
@@ -17,100 +7,70 @@ import { mapEffectiveConfigToCourtConfig } from '../../services/config/mapEffect
 import { supabase } from '../../lib/supabase';
 import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
 
+type LoadedConfig = {
+    slug: string | undefined;
+    agency: { name: string; type: string; slug: string } | null;
+    agencyService: AgencyCalculationEngine | null;
+    courtConfig: CourtConfig | null;
+    loadingAgency: boolean;
+    loadingConfig: boolean;
+    agencyError: string | null;
+    configError: string | null;
+};
+const emptyConfig = (slug: string | undefined): LoadedConfig => ({
+    slug, agency: null, agencyService: null, courtConfig: null,
+    loadingAgency: Boolean(slug), loadingConfig: Boolean(slug), agencyError: null, configError: null
+});
+
 export const useCalculatorConfig = (slug: string | undefined) => {
     const navigate = useNavigate();
     const resolvedSlug = slug === 'stm' ? 'jmu' : slug;
-
-    // Agency State
-    const [agency, setAgency] = useState<{ name: string, type: string } | null>(null);
-    const [agencyService, setAgencyService] = useState<AgencyCalculationEngine | null>(null);
-    const [loadingAgency, setLoadingAgency] = useState(true);
-
-    // Court Config State
-    const [courtConfig, setCourtConfig] = useState<CourtConfig | null>(null);
-    const [loadingConfig, setLoadingConfig] = useState(true);
-    const [configError, setConfigError] = useState<string | null>(null);
-
-    // Load Agency
+    const [loaded, setLoaded] = useState<LoadedConfig>(() => emptyConfig(resolvedSlug));
     useEffect(() => {
-        const loadAgency = async () => {
-            setLoadingAgency(true);
-            try {
-                if (!resolvedSlug) {
-                    navigate('/');
-                    return;
-                }
-
-                const { data, error } = await supabase
-                    .from('agencies')
-                    .select('name, type, slug')
-                    .eq('slug', resolvedSlug)
-                    .single();
-
-                if (error || !data) {
-                    console.error("Agency not found:", resolvedSlug);
-                    return;
-                }
-
-                const normalizedAgency = data.slug === 'jmu'
-                    ? { ...data, name: 'Justiça Militar da União' }
-                    : data;
-
-                setAgency(normalizedAgency);
-
-                // Instantiate Service
-                if (data.slug === 'jmu' || data.slug === 'pju') {
-                    setAgencyService(new AgencyCalculationEngine());
-                } else {
-                    console.warn("Service not implemented for slug:", resolvedSlug);
-                }
-
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoadingAgency(false);
-            }
+        let cancelled = false;
+        setLoaded(emptyConfig(resolvedSlug));
+        const update = (patch: Partial<LoadedConfig>) => {
+            if (!cancelled) setLoaded(previous => ({ ...previous, ...patch }));
         };
-
-        loadAgency();
-    }, [resolvedSlug, navigate]);
-
-    // Load Court Config
-    useEffect(() => {
-        async function fetchConfig() {
-            try {
-                if (resolvedSlug) {
-                    const effectiveConfig = await configService.getEffectiveConfig(resolvedSlug);
-                    setCourtConfig(mapEffectiveConfigToCourtConfig(effectiveConfig));
-                    setConfigError(null);
-                }
-            } catch (err) {
-                console.error("Failed to load config from ConfigService", err);
-                try {
-                    console.warn("Falling back to legacy courts config for org:", resolvedSlug);
-                    const court = resolvedSlug ? await getCourtBySlug(resolvedSlug) : null;
-                    if (court) {
-                        setCourtConfig(court.config);
-                        setConfigError(null);
-                        return;
-                    }
-                } catch (fallbackErr) {
-                    console.error("Failed to load config from courts table", fallbackErr);
-                }
-                setConfigError('Configuração não encontrada.');
-            } finally {
-                setLoadingConfig(false);
-            }
+        if (!resolvedSlug) {
+            navigate('/');
+            return () => { cancelled = true; };
         }
-        fetchConfig();
-    }, [resolvedSlug]);
-
+        void (async () => {
+            try {
+                const { data, error } = await supabase.from('agencies')
+                    .select('name, type, slug').eq('slug', resolvedSlug).single();
+                if (error || !data || data.slug !== resolvedSlug) throw new Error('Agência não encontrada.');
+                if (data.slug !== 'jmu' && data.slug !== 'pju') throw new Error('Simulador indisponível para este órgão.');
+                update({ agency: data.slug === 'jmu' ? { ...data, name: 'Justiça Militar da União' } : data,
+                    agencyService: new AgencyCalculationEngine() });
+            } catch (error) {
+                update({ agencyError: error instanceof Error ? error.message : 'Não foi possível carregar a agência.' });
+            } finally { update({ loadingAgency: false }); }
+        })();
+        void (async () => {
+            try {
+                const effective = await configService.getEffectiveConfig(resolvedSlug);
+                if (cancelled) return;
+                update({ courtConfig: mapEffectiveConfigToCourtConfig(effective) });
+            } catch (_error) {
+                if (cancelled) return;
+                try {
+                    // Legacy courts config remains a technical fallback only.
+                    const court = await getCourtBySlug(resolvedSlug);
+                    if (!court?.config) throw new Error('Configuração não encontrada.');
+                    update({ courtConfig: court.config as CourtConfig });
+                } catch (_fallbackError) { update({ configError: 'Configuração não encontrada.' }); }
+            } finally { update({ loadingConfig: false }); }
+        })();
+        return () => { cancelled = true; };
+    }, [resolvedSlug, navigate]);
+    // Route changes hide the previous org before effects run.
+    const current = loaded.slug === resolvedSlug ? loaded : emptyConfig(resolvedSlug);
     return {
-        agency,
-        agencyService,
-        loadingAgency,
-        courtConfig,
-        loadingConfig,
-        configError
+        agency: current.agency, agencyService: current.agencyService,
+        loadingAgency: current.loadingAgency, courtConfig: current.courtConfig,
+        loadingConfig: current.loadingConfig, agencyError: current.agencyError,
+        configError: current.configError
     };
 };

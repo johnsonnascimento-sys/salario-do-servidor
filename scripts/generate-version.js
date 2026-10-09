@@ -38,11 +38,12 @@ function generateVersion() {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 
     // Extrair informações do Git
-    const commit = exec('git rev-parse --short=7 HEAD') || 'unknown';
-    const commitFull = exec('git rev-parse HEAD') || 'unknown';
-    const branch = exec('git rev-parse --abbrev-ref HEAD') || 'unknown';
+    const commit = process.env.DEPLOY_COMMIT?.slice(0, 7) || exec('git rev-parse --short=7 HEAD') || 'unknown';
+    const commitFull = process.env.DEPLOY_COMMIT || exec('git rev-parse HEAD') || 'unknown';
+    const branch = process.env.DEPLOY_BRANCH || exec('git rev-parse --abbrev-ref HEAD') || 'unknown';
     const isVercelBuild = process.env.VERCEL === '1' || !!process.env.VERCEL_ENV;
-    const isDirty = isVercelBuild ? false : !!exec('git status --porcelain');
+    const isDirty = process.env.DEPLOY_DIRTY !== undefined
+        ? process.env.DEPLOY_DIRTY === '1' : isVercelBuild ? false : !!exec('git status --porcelain');
 
     // Data/hora do build
     const buildDate = new Date().toISOString();
@@ -56,6 +57,7 @@ function generateVersion() {
         isDirty,
         buildDate,
         buildTimestamp,
+        ...(process.env.DEPLOY_SOURCE_SHA ? { sourceHash: process.env.DEPLOY_SOURCE_SHA } : {}),
     };
 
     // Escrever arquivo version.json na pasta public

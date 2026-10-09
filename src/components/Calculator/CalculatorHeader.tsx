@@ -15,6 +15,7 @@ interface CalculatorHeaderProps {
     onOpenPayslips?: () => void;
     savingPayslip?: boolean;
     onClearCalculator?: () => void;
+    calculationReady?: boolean;
 }
 
 export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
@@ -30,6 +31,7 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
     onOpenPayslips,
     savingPayslip,
     onClearCalculator,
+    calculationReady = true,
 }) => {
     const referenceSalaryLabel = useMemo(() => {
         const schedule = courtConfig?.adjustment_schedule || [];
@@ -91,7 +93,7 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
                     <button
                         type="button"
                         onClick={onSavePayslip}
-                        disabled={savingPayslip}
+                        disabled={savingPayslip || !calculationReady}
                         className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary-600 text-white text-body-xs font-semibold disabled:opacity-60"
                     >
                         <Save className="w-4 h-4" />

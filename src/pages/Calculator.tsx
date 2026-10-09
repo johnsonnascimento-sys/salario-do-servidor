@@ -26,6 +26,11 @@ export default function Calculator() {
     const {
         state,
         effectiveState,
+        calculationStatus,
+        calculationError,
+        calculationReady,
+        loadingAgency,
+        agencyError,
         update,
         updateSubstDays,
         courtConfig,
@@ -151,6 +156,8 @@ export default function Calculator() {
                     : 'Holerite salvo com sucesso na sua área.');
             } else if (result.reason === 'auth') {
                 alert('Faça login para salvar holerites na sua área.');
+            } else {
+                alert('Aguarde a conclusão do cálculo antes de salvar.');
             }
         } catch (error) {
             alert((error as Error).message || 'Falha ao salvar holerite.');
@@ -176,7 +183,7 @@ export default function Calculator() {
         lastRestoreSourceRef.current = 'blank';
     };
 
-    if (loadingConfig) {
+    if (loadingConfig || loadingAgency) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <p className="text-gray-500 animate-pulse">Carregando...</p>
@@ -184,11 +191,11 @@ export default function Calculator() {
         );
     }
 
-    if (configError || !courtConfig) {
+    if (agencyError || configError || !courtConfig) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
                 <p className="text-neutral-500 dark:text-neutral-300">
-                    {configError || 'Configuracao indisponivel.'}
+                    {agencyError || configError || 'Configuracao indisponivel.'}
                 </p>
             </div>
         );
@@ -207,6 +214,9 @@ export default function Calculator() {
         return (
         <>
             <MobileResultsBar
+                calculationReady={calculationReady}
+                resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
+                savingPayslip={savingPayslip}
                 liquido={effectiveState.liquido}
                 onExportPDF={initiateExportPDF}
                 onExportExcel={initiateExportExcel}
@@ -217,6 +227,7 @@ export default function Calculator() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-32">
                 <CalculatorHeader
+                    calculationReady={calculationReady}
                     courtConfig={courtConfig}
                     state={effectiveState}
                     update={update}
@@ -258,13 +269,18 @@ export default function Calculator() {
                         update={update}
                         styles={styles}
                     />
-                    <ResultsSummary
+                    {calculationReady ? <ResultsSummary
                         state={effectiveState}
                         resultRows={resultRows}
-                    />
+                    /> : <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
+                        className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
+                        {calculationError || 'Calculando os valores do holerite...'}
+                    </p>}
                 </div>
 
                 <ActionFooter
+                    calculationReady={calculationReady}
+                    resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
                     state={effectiveState}
                     onExportPDF={initiateExportPDF}
                     onExportExcel={initiateExportExcel}
@@ -275,7 +291,7 @@ export default function Calculator() {
                 />
 
                 <DonationModal
-                    isOpen={donationModalOpen}
+                    isOpen={donationModalOpen && calculationReady}
                     onClose={() => setDonationModalOpen(false)}
                     onDownloadReady={handleDonationComplete}
                     exportType={pendingExportType}

@@ -71,6 +71,8 @@ npm run preview
 
 ## Scripts uteis
 
+Deploy na VPS com configuração externa, validação funcional e reversão: [procedimento](./scripts/DEPLOY.md).
+
 - `npm run dev`: ambiente local.
 - `npm run build`: build de producao.
 - `npm run preview`: sobe build local para validacao.

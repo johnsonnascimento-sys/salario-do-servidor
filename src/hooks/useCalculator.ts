@@ -23,7 +23,7 @@ import {
     USER_AREA_LAST_RESULT_ROWS_KEY,
 } from '../constants/storage';
 import { CalculatorNavigationState } from '../types/calculatorRestore';
-import { stripCalculatedFieldsFromCalculatorState } from '../utils/calculatorState';
+import { PERSISTED_CALCULATED_INPUT_KEYS, stripCalculatedFieldsFromCalculatorState } from '../utils/calculatorState';
 
 export const useCalculator = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -53,6 +53,7 @@ export const useCalculator = () => {
         agency,
         agencyService,
         loadingAgency,
+        agencyError,
         courtConfig,
         loadingConfig,
         configError
@@ -62,20 +63,28 @@ export const useCalculator = () => {
         donationModalOpen,
         setDonationModalOpen,
         pendingExportType,
-        initiateExportPDF,
-        initiateExportExcel,
+        initiateExportPDF: initiateExportPDFBase,
+        initiateExportExcel: initiateExportExcelBase,
         handleDonationComplete: handleDonationCompleteBase
     } = useCalculatorExport();
 
-    const { calculatedState, resultRows } = useCalculatorResults(
+    const { calculatedState, resultRows, calculationStatus, calculationError } = useCalculatorResults(
         state,
         agencyService,
         courtConfig,
         agency
     );
+    const calculationReady = calculationStatus === 'ready' && !loadingAgency && !loadingConfig && !configError && !agencyError;
     const effectiveState = { ...state, ...calculatedState };
+    // Pending results must not overwrite fields that also serve as form inputs.
+    if (!calculationReady) {
+        PERSISTED_CALCULATED_INPUT_KEYS.forEach((key) => { effectiveState[key] = state[key]; });
+    }
+    const initiateExportPDF = () => { if (calculationReady) initiateExportPDFBase(); };
+    const initiateExportExcel = () => { if (calculationReady) initiateExportExcelBase(); };
 
     const handleDonationComplete = () => {
+        if (!calculationReady) return;
         handleDonationCompleteBase(effectiveState, resultRows, courtConfig).catch((error) => {
             console.error('Falha ao exportar arquivo:', error);
         });
@@ -132,6 +141,9 @@ export const useCalculator = () => {
     }, [state, resultRows]);
 
     const saveCurrentPayslip = useCallback(async () => {
+        if (!calculationReady) {
+            return { success: false, reason: 'calculation' as const };
+        }
         if (!user) {
             navigate(`/acesso?redirect=${encodeURIComponent(window.location.pathname)}`);
             return { success: false, reason: 'auth' as const };
@@ -178,11 +190,14 @@ export const useCalculator = () => {
         } finally {
             setSavingPayslip(false);
         }
-    }, [user, navigate, state, slug, agency?.name, resultRows, editPayslipId, calculatedState]);
+    }, [user, navigate, state, slug, agency?.name, resultRows, editPayslipId, calculatedState, calculationReady]);
 
     return {
         state,
         calculatedState,
+        calculationStatus,
+        calculationError,
+        calculationReady,
         effectiveState,
         update,
         courtConfig,
@@ -203,6 +218,7 @@ export const useCalculator = () => {
         setState,
         agencyName: agency?.name || 'Carregando...',
         loadingAgency,
+        agencyError,
         configError,
         saveCurrentPayslip,
         savingPayslip,

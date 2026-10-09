@@ -1,6 +1,12 @@
 # Changelog
 
 ## Não publicado - 09/10/2026
+- Fix: motor aguarda agência e configuração; respostas antigas de configuração/cálculo são descartadas, inclusive na troca de órgão.
+- Fix: cálculo expõe estados de carregamento e erro; salvar/exportar ficam bloqueados até os resultados corresponderem às entradas atuais, preservando valores manuais e holerites históricos.
+- Deploy: configuração pública Supabase validada no build e por leitura/cálculo antes da publicação; arquivo de ambiente deixa de ser versionado (cópia local preservada).
+- Deploy: releases com fingerprint de código, candidato por túnel SSH, validação no navegador, backup e reversão automática se a validação final não for concluída.
+- Test: regressões de carregamento, concorrência, erros/recuperação e fixture anonimizada de novembro; integração revisada pelo especialista de cálculo, sem alteração de fórmulas ou banco.
+- Validation: 23 testes, TypeScript, build e preflight aprovados; reversão exercitada. Downloads conferidos pelo candidato; limitação de download pelo IP HTTP reproduzida também na versão anterior e documentada em `scripts/DEPLOY.md`.
 - Fix: persistência de holerites e rascunhos preserva entradas de férias e parcelas do 13º, inclusive valores manuais e seleções automáticas.
 - Fix: edição recupera campos ausentes em snapshots antigos a partir do detalhamento salvo, sem sobrescrever valores explícitos.
 - Fix: cards restaurados usam as entradas originais antes do cálculo assíncrono; instâncias vazias de hora extra/substituição são preservadas.

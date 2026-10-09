@@ -13,7 +13,7 @@ import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalc
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
-import { getEmptyCalculatedPayrollState } from '../../utils/calculatorState';
+import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
 
 const mergeEffectiveState = (state: CalculatorState, calculatedState: CalculatedPayrollState): CalculatorState => (
     { ...state, ...calculatedState } as CalculatorState
@@ -25,31 +25,65 @@ export const useCalculatorResults = (
     courtConfig: CourtConfig | null,
     agency: { name: string; type: string; slug: string } | null
 ) => {
-    const latestRequestRef = useRef(0);
-    const [calculatedState, setCalculatedState] = useState<CalculatedPayrollState>(() => getEmptyCalculatedPayrollState());
+    const inputToken = useMemo(() => ({ state, agencyService, courtConfig, agency }), [
+        agencyService,
+        state.mesRef, state.anoRef,
+        state.periodo, state.cargo, state.padrao, state.funcao,
+        state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
+        state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
+        state.vpni_lei, state.vpni_decisao, state.ats,
+        state.dependentes, state.regimePrev, state.funprespParticipacao, state.funprespAliq, state.funprespFacul,
+        state.tabelaPSS, state.tabelaIR,
+        state.pssSobreFC, state.incidirPSSGrat,
+        state.auxAlimentacao, state.auxPreEscolarQtd, state.cotaPreEscolar, state.auxTransporteGasto,
+        state.emprestimos, state.planoSaude, state.pensao,
+        state.rubricasExtras,
+        state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
+        state.feriasDesc, state.feriasDescManual,
+        state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
+        state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries,
+        state.diariasQtd, state.diariasEmbarque,
+        state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
+        state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
+        state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
+        state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
+        state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
+        courtConfig,
+        agency?.slug
+    ]);
+    const currentTokenRef = useRef(inputToken);
+    currentTokenRef.current = inputToken;
+    const [completed, setCompleted] = useState<{
+        token: typeof inputToken; state: CalculatedPayrollState; error: string | null;
+    } | null>(null);
+    const canCalculate = Boolean(agencyService && courtConfig && agency?.slug);
+    const isCurrent = completed?.token === inputToken;
+    const calculationStatus: 'idle' | 'calculating' | 'ready' | 'error' = !canCalculate
+        ? 'idle' : !isCurrent ? 'calculating' : completed.error ? 'error' : 'ready';
+    const calculationError = isCurrent ? completed.error : null;
+    const calculatedState = useMemo(() => {
+        if (calculationStatus === 'ready' && completed) return completed.state;
+        const empty = getEmptyCalculatedPayrollState();
+        // These outputs are also form inputs; retain manual amounts/enabled flags.
+        for (const key of PERSISTED_CALCULATED_INPUT_KEYS) empty[key] = state[key];
+        return empty;
+    }, [calculationStatus, completed, state]);
 
     useEffect(() => {
-        if (!agencyService) {
-            setCalculatedState(getEmptyCalculatedPayrollState());
-            return;
-        }
-
+        if (!agencyService || !courtConfig || !agency?.slug) return;
         let cancelled = false;
-        const requestId = latestRequestRef.current + 1;
-        latestRequestRef.current = requestId;
-
         (async () => {
             try {
-                const orgSlug = agency?.slug || 'jmu';
-                const params = mapStateToAgencyParams(state, orgSlug, courtConfig || undefined);
+                const orgSlug = agency.slug;
+                const params = mapStateToAgencyParams(state, orgSlug, courtConfig);
                 const result = await agencyService.calculateTotal(params);
 
-                if (cancelled || requestId !== latestRequestRef.current) {
+                if (cancelled || currentTokenRef.current !== inputToken) {
                     return;
                 }
 
                 const bd = result.breakdown;
-                setCalculatedState({
+                setCompleted({ token: inputToken, error: null, state: {
                     vencimento: bd.vencimento || 0,
                     gaj: bd.gaj || 0,
                     aqTituloValor: bd.aqTitulo || 0,
@@ -107,50 +141,27 @@ export const useCalculatorResults = (
                     totalBruto: result.netSalary + result.totalDeductions,
                     totalDescontos: result.totalDeductions,
                     liquido: result.netSalary,
-                });
+                } });
             } catch (error) {
-                if (cancelled || requestId !== latestRequestRef.current) {
+                if (cancelled || currentTokenRef.current !== inputToken) {
                     return;
                 }
-                console.error('Erro ao calcular resultados da folha:', error);
+                setCompleted({ token: inputToken, state: getEmptyCalculatedPayrollState(),
+                    error: 'Não foi possível calcular o holerite. Revise as entradas ou tente novamente.' });
             }
         })();
 
         return () => {
             cancelled = true;
         };
-    }, [
-        agencyService,
-        state.periodo, state.cargo, state.padrao, state.funcao,
-        state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
-        state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
-        state.vpni_lei, state.vpni_decisao, state.ats,
-        state.dependentes, state.regimePrev, state.funprespParticipacao, state.funprespAliq, state.funprespFacul,
-        state.tabelaPSS, state.tabelaIR,
-        state.pssSobreFC, state.incidirPSSGrat,
-        state.auxAlimentacao, state.auxPreEscolarQtd, state.cotaPreEscolar, state.auxTransporteGasto,
-        state.emprestimos, state.planoSaude, state.pensao,
-        state.rubricasExtras,
-        state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
-        state.feriasDesc, state.feriasDescManual,
-        state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
-        state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries,
-        state.diariasQtd, state.diariasEmbarque,
-        state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
-        state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
-        state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
-        state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
-        state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
-        courtConfig,
-        agency?.slug
-    ]);
+    }, [inputToken]);
 
     const currentTables = useMemo(() => {
-        if (!courtConfig) {
+        if (!courtConfig || calculationStatus !== 'ready') {
             return null;
         }
         return getTablesForPeriod(state.periodo, courtConfig);
-    }, [courtConfig, state.periodo]);
+    }, [courtConfig, state.periodo, calculationStatus]);
 
     const effectiveState = useMemo(
         () => mergeEffectiveState(state, calculatedState),
@@ -158,7 +169,7 @@ export const useCalculatorResults = (
     );
 
     const resultRows = useMemo(() => {
-        if (!courtConfig) {
+        if (!courtConfig || calculationStatus !== 'ready') {
             return [];
         }
 
@@ -392,7 +403,7 @@ export const useCalculatorResults = (
         const creditRows = rows.filter(row => row.type === 'C');
         const debitRows = rows.filter(row => row.type === 'D');
         return [...creditRows, ...debitRows];
-    }, [effectiveState, courtConfig, currentTables]);
+    }, [effectiveState, courtConfig, currentTables, calculationStatus]);
 
-    return { calculatedState, resultRows };
+    return { calculatedState, resultRows, calculationStatus, calculationError };
 };

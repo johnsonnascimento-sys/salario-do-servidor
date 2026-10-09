@@ -1,0 +1,574 @@
+{
+  "calculatorState": {
+    "ats": 0,
+    "nome": "Pessoa de teste",
+    "cargo": "tecnico",
+    "anoRef": 2026,
+    "funcao": "fc4",
+    "heBase": 0,
+    "heIsEA": false,
+    "mesRef": "NOVEMBRO",
+    "padrao": "C13",
+    "pensao": 0,
+    "ferias1": 0,
+    "heQtd50": 0,
+    "lotacao": "Xa AUD Xa CJM",
+    "periodo": 2,
+    "heQtd100": 0,
+    "tabelaIR": "2025_maio",
+    "vpni_lei": 0,
+    "hePssIsEA": false,
+    "substDias": {
+      "cj1": 0,
+      "cj2": 0,
+      "cj3": 0,
+      "cj4": 0,
+      "fc1": 0,
+      "fc2": 0,
+      "fc3": 0,
+      "fc4": 0,
+      "fc5": 0,
+      "fc6": 0
+    },
+    "substIsEA": false,
+    "tabelaPSS": "2026",
+    "aqTituloVR": 2,
+    "aqTreinoVR": 0.6,
+    "diariasQtd": 0,
+    "integral13": 0,
+    "planoSaude": 0,
+    "pssSobreFC": false,
+    "regimePrev": "antigo",
+    "baseLicenca": "auto",
+    "dependentes": 2,
+    "emprestimos": 0,
+    "heExcluirIR": false,
+    "licencaDias": 0,
+    "observacoes": "Fixture anonimizada de novembro",
+    "recebeAbono": false,
+    "tipoCalculo": "comum",
+    "aqTituloPerc": 0,
+    "aqTreinoPerc": 0,
+    "funprespAliq": 0,
+    "manualBaseHE": false,
+    "manualFerias": false,
+    "substPssIsEA": false,
+    "vpni_decisao": 0,
+    "diariasMotivo": "",
+    "funprespFacul": 0,
+    "auxAlimentacao": 1860.51,
+    "cotaPreEscolar": 1288.47,
+    "dadosBancarios": {
+      "banco": "",
+      "conta": "",
+      "agencia": ""
+    },
+    "diariasDataFim": "",
+    "diariasMeiaQtd": 0,
+    "incidirPSSGrat": true,
+    "manualAdiant13": false,
+    "rubricasExtras": [
+      {
+        "id": "test-rubrica-1",
+        "isEA": false,
+        "tipo": "D",
+        "valor": 624.99,
+        "incideIR": false,
+        "descricao": "Desconto manual 1",
+        "incidePSS": false,
+        "pssCompetenciaSeparada": false
+      },
+      {
+        "id": "test-rubrica-2",
+        "isEA": false,
+        "tipo": "D",
+        "valor": 111.08,
+        "incideIR": false,
+        "descricao": "Desconto manual 2",
+        "incidePSS": false,
+        "pssCompetenciaSeparada": false
+      },
+      {
+        "id": "test-rubrica-3",
+        "isEA": false,
+        "tipo": "D",
+        "valor": 331.71,
+        "incideIR": false,
+        "descricao": "Desconto manual 3",
+        "incidePSS": false,
+        "pssCompetenciaSeparada": false
+      },
+      {
+        "id": "test-rubrica-4",
+        "isEA": false,
+        "tipo": "D",
+        "valor": 3761.63,
+        "incideIR": false,
+        "descricao": "Desconto manual 4",
+        "incidePSS": false,
+        "pssCompetenciaSeparada": false
+      }
+    ],
+    "diariasEmbarque": "nenhum",
+    "overtimeEntries": [],
+    "auxPreEscolarQtd": 0,
+    "feriasDescManual": false,
+    "pssSobreAQTreino": false,
+    "diariasDataInicio": "",
+    "feriasAntecipadas": false,
+    "auxTransporteGasto": 0,
+    "gratEspecificaTipo": "0",
+    "decimoTerceiroNovFC": 0,
+    "diariasModoDesconto": "manual",
+    "incluirAbonoLicenca": true,
+    "substitutionEntries": [],
+    "diariasExtHospedagem": false,
+    "diariasExtTransporte": false,
+    "funprespParticipacao": "nao",
+    "auxAlimentacaoDetalhe": "",
+    "decimoTerceiroNovVenc": 0,
+    "diariasExtAlimentacao": false,
+    "manualDecimoTerceiroNov": false,
+    "auxAlimentacaoProporcional": false,
+    "diariasDescontarTransporte": true,
+    "diariasDescontarAlimentacao": true,
+    "diariasDiasDescontoTransporte": 0,
+    "diariasDiasDescontoAlimentacao": 0
+  },
+  "resultRows": [
+    {
+      "type": "C",
+      "label": "VENCIMENTO-ATIVO EC",
+      "value": 6116.547600000001
+    },
+    {
+      "type": "C",
+      "label": "GRAT. ATIV. JUD. (GAJ)",
+      "value": 8563.166640000001
+    },
+    {
+      "type": "C",
+      "label": "AQ TÍTULOS (LEI 15.292)",
+      "value": 1543.1
+    },
+    {
+      "type": "C",
+      "label": "AQ TREINAMENTO (LEI 15.292)",
+      "value": 462.92999999999995
+    },
+    {
+      "type": "C",
+      "label": "FUNÇÃO COMISSIONADA (OPÇÃO) - FC4",
+      "value": 2498.3316
+    },
+    {
+      "type": "C",
+      "label": "AUXILIO-ALIMENTACAO",
+      "value": 1860.51
+    },
+    {
+      "type": "C",
+      "label": "GRATIFICACAO NATALINA-ADIANT. 1a PARCELA ATIVO EC",
+      "value": 8342.87
+    },
+    {
+      "type": "C",
+      "label": "GRATIFICACAO NATALINA-ADIANT. 1a PARCELA FC/CJ ATIVO EC",
+      "value": 1249.17
+    },
+    {
+      "type": "C",
+      "label": "GRATIFICACAO NATALINA-2a PARCELA ATIVO EC",
+      "value": 8342.87
+    },
+    {
+      "type": "C",
+      "label": "GRATIFICACAO NATALINA-2a PARCELA FC/CJ ATIVO EC",
+      "value": 1249.17
+    },
+    {
+      "type": "D",
+      "label": "CONTRIBUIÇÃO RPPS (PSS)",
+      "value": 2145.6083996
+    },
+    {
+      "type": "D",
+      "label": "IMPOSTO DE RENDA-EC (DEMAIS RUBRICAS)",
+      "value": 3672.57404611
+    },
+    {
+      "type": "D",
+      "label": "CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC",
+      "value": 2145.61
+    },
+    {
+      "type": "D",
+      "label": "IMPOSTO DE RENDA-GN(13º) EC",
+      "value": 3672.57
+    },
+    {
+      "type": "D",
+      "label": "GRATIFICACAO NATALINA-ADIANT. 1a PARCELA (ABATIMENTO)",
+      "value": 9592.04
+    },
+    {
+      "type": "D",
+      "label": "DESCONTO MANUAL 1",
+      "value": 624.99
+    },
+    {
+      "type": "D",
+      "label": "DESCONTO MANUAL 2",
+      "value": 111.08
+    },
+    {
+      "type": "D",
+      "label": "DESCONTO MANUAL 3",
+      "value": 331.71
+    },
+    {
+      "type": "D",
+      "label": "DESCONTO MANUAL 4",
+      "value": 3761.63
+    }
+  ],
+  "effectiveConfig": {
+    "dependent_deduction": 189.59,
+    "ir_deduction": {
+      "2025_maio": {
+        "brackets": [
+          {
+            "max": 2259.2,
+            "min": 0,
+            "rate": 0,
+            "deduction": 0
+          },
+          {
+            "max": 2826.65,
+            "min": 2259.21,
+            "rate": 0.075,
+            "deduction": 169.44
+          },
+          {
+            "max": 3751.05,
+            "min": 2826.66,
+            "rate": 0.15,
+            "deduction": 381.44
+          },
+          {
+            "max": 4664.68,
+            "min": 3751.06,
+            "rate": 0.225,
+            "deduction": 662.77
+          },
+          {
+            "max": null,
+            "min": 4664.69,
+            "rate": 0.275,
+            "deduction": 908.73
+          }
+        ],
+        "deduction": 908.73
+      }
+    },
+    "pss_tables": {
+      "2025": {
+        "rates": [
+          {
+            "max": 1518.0,
+            "min": 0.0,
+            "rate": 0.075
+          },
+          {
+            "max": 2793.88,
+            "min": 1518.01,
+            "rate": 0.09
+          },
+          {
+            "max": 4190.83,
+            "min": 2793.89,
+            "rate": 0.12
+          },
+          {
+            "max": 8157.41,
+            "min": 4190.84,
+            "rate": 0.14
+          },
+          {
+            "max": 13969.49,
+            "min": 8157.42,
+            "rate": 0.145
+          },
+          {
+            "max": 27938.96,
+            "min": 13969.5,
+            "rate": 0.165
+          },
+          {
+            "max": 54480.97,
+            "min": 27938.97,
+            "rate": 0.19
+          },
+          {
+            "max": 999999999,
+            "min": 54480.98,
+            "rate": 0.22
+          }
+        ],
+        "ceiling": 8157.41
+      },
+      "2026": {
+        "rates": [
+          {
+            "max": 1621,
+            "min": 0,
+            "rate": 0.075
+          },
+          {
+            "max": 2902.84,
+            "min": 1621.01,
+            "rate": 0.09
+          },
+          {
+            "max": 4354.27,
+            "min": 2902.85,
+            "rate": 0.12
+          },
+          {
+            "max": 8475.55,
+            "min": 4354.28,
+            "rate": 0.14
+          },
+          {
+            "max": 14514.3,
+            "min": 8475.56,
+            "rate": 0.145
+          },
+          {
+            "max": 29028.57,
+            "min": 14514.31,
+            "rate": 0.165
+          },
+          {
+            "max": 56605.73,
+            "min": 29028.58,
+            "rate": 0.19
+          },
+          {
+            "max": 999999999,
+            "min": 56605.74,
+            "rate": 0.22
+          }
+        ],
+        "ceiling": 8475.55
+      }
+    },
+    "cj1_integral_base": 10990.74,
+    "salary_bases": {
+      "funcoes": {
+        "cj1": 7143.98,
+        "cj2": 8822.98,
+        "cj3": 10029.94,
+        "cj4": 11322.6,
+        "fc1": 1215.34,
+        "fc2": 1413.14,
+        "fc3": 1644.51,
+        "fc4": 2313.27,
+        "fc5": 2662.06,
+        "fc6": 3663.71
+      },
+      "tecnico": {
+        "A1": 3771.88,
+        "A2": 3885.06,
+        "A3": 4001.6,
+        "A4": 4229.69,
+        "A5": 4356.59,
+        "B6": 4487.29,
+        "B7": 4621.9,
+        "B8": 4760.56,
+        "B9": 5031.9,
+        "B10": 5182.88,
+        "C11": 5338.36,
+        "C12": 5498.51,
+        "C13": 5663.47
+      },
+      "analista": {
+        "A1": 6188.61,
+        "A2": 6374.26,
+        "A3": 6565.5,
+        "A4": 6939.75,
+        "A5": 7147.92,
+        "B6": 7362.37,
+        "B7": 7583.23,
+        "B8": 7810.73,
+        "B9": 8255.95,
+        "B10": 8503.62,
+        "C11": 8758.73,
+        "C12": 9021.5,
+        "C13": 9292.14
+      }
+    },
+    "gratification_percentages": {
+      "gae": 0.35,
+      "gaj": 1.4,
+      "gas": 0.35
+    },
+    "benefits": {
+      "auxilio_preescolar": {
+        "2024_jan26": 1178.82,
+        "2025_jan29": 1235.77,
+        "2026_fev03": 1288.47
+      },
+      "auxilio_alimentacao": {
+        "2024_jan26": 1393.1,
+        "2025_jan29": 1460.4,
+        "2025_mar17": 1784.42,
+        "2026_fev03": 1860.51
+      }
+    },
+    "previdencia_complementar": {
+      "scope": "patrocinado",
+      "enabled": true,
+      "base_rule": "excedente_teto_rgps",
+      "references": {
+        "plano_custeio_ref": "2025",
+        "regulamento_version": "2018"
+      },
+      "sponsored_rate": {
+        "max": 0.085,
+        "min": 0.065,
+        "step": 0.005,
+        "default_rpc": 0.085
+      },
+      "facultative_rate": {
+        "max": 0.22,
+        "step": 0.005,
+        "default": 0.0,
+        "min_if_positive": 0.025
+      },
+      "costing_disclosure": {
+        "effective_from": "2025-04-01",
+        "loading_normal": 0.035,
+        "loading_facultative": 0.0,
+        "fcbe_share_of_normal": 0.1324,
+        "admin_remido_assistido": 0.003
+      },
+      "include_thirteenth": true
+    },
+    "aq_rules": {
+      "graduacao": 0.0,
+      "treinamento_max": 0.03,
+      "treinamento_coef": 0.01
+    },
+    "dailies_rules": {
+      "rates": {
+        "cj": 880.17,
+        "tecnico": 660.13,
+        "analista": 806.82
+      },
+      "ldo_cap": {
+        "enabled": true,
+        "per_diem_limit": 1153.37
+      },
+      "discount_rules": {
+        "holidays": [
+          "2026-01-01",
+          "2026-02-16",
+          "2026-02-17",
+          "2026-04-01",
+          "2026-04-02",
+          "2026-04-03",
+          "2026-04-21",
+          "2026-05-01",
+          "2026-08-11",
+          "2026-09-07",
+          "2026-10-12",
+          "2026-11-01",
+          "2026-11-02",
+          "2026-11-15",
+          "2026-11-20",
+          "2026-12-08",
+          "2026-12-25"
+        ],
+        "food_divisor": 22,
+        "transport_divisor": 22,
+        "holiday_calendar_label": "Calendário oficial do STM de 2026",
+        "holiday_calendar_version": "versão de 06/11/2025",
+        "holiday_calendar_reference": "calendario_2026_STM.pdf",
+        "exclude_weekends_and_holidays": true,
+        "return_day_half_diem_business_day": true,
+        "return_day_half_discount_business_day": true
+      },
+      "external_gloss": {
+        "hospedagem": 0.55,
+        "transporte": 0.2,
+        "alimentacao": 0.25
+      },
+      "derived_from_minister": {
+        "enabled": true,
+        "minister_per_diem": 1466.95,
+        "rates_percentages": {
+          "cj": 0.6,
+          "juiz": 0.95,
+          "tecnico": 0.45,
+          "analista": 0.55
+        },
+        "embarkation_percentage_full": 0.4,
+        "embarkation_percentage_half": 0.2
+      },
+      "embarkation_additional": {
+        "metade": 293.39,
+        "completo": 586.78
+      }
+    },
+    "payroll_rules": {
+      "gaj_rate": 1.4,
+      "irrf_top_rate": 0.275,
+      "vr_rate_on_cj1": 0.065,
+      "month_day_divisor": 30,
+      "transport_workdays": 22,
+      "overtime_month_hours": 175,
+      "transport_discount_rate": 0.06,
+      "specific_gratification_rate": 0.35
+    },
+    "career_catalog": {
+      "cargo_labels": {
+        "tecnico": "Técnico",
+        "analista": "Analista"
+      },
+      "no_function_code": "0",
+      "no_function_label": "Sem função"
+    },
+    "adjustment_schedule": {
+      "0": {
+        "date": "2025-02-01",
+        "label": "Fev/2025 a Dez/2025",
+        "percentage": 0
+      },
+      "1": {
+        "date": "2026-01-01",
+        "label": "Jan/2026 a Jun/2026 (Novo AQ)",
+        "percentage": 0
+      },
+      "2": {
+        "date": "2026-07-01",
+        "label": "Jul/2026 a Jun/2027 (+8%)",
+        "percentage": 0.08
+      },
+      "3": {
+        "date": "2027-07-01",
+        "label": "Jul/2027 a Jun/2028 (+8% Acum.)",
+        "percentage": 0.08
+      },
+      "4": {
+        "date": "2028-07-01",
+        "label": "Jul/2028 em diante (+8% Acum.)",
+        "percentage": 0.08
+      }
+    },
+    "org_slug": "jmu",
+    "org_name": "Justiça Militar da União",
+    "power_name": "PJU"
+  },
+  "expectedNetSalary": 14170.85
+}

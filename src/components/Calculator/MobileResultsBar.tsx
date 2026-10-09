@@ -10,6 +10,9 @@ interface MobileResultsBarProps {
     onSavePayslip?: () => void;
     onOpenPayslips?: () => void;
     onClearCalculator?: () => void;
+    calculationReady?: boolean;
+    resultMessage?: string;
+    savingPayslip?: boolean;
 }
 
 export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
@@ -19,6 +22,9 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
     onSavePayslip,
     onOpenPayslips,
     onClearCalculator,
+    calculationReady = true,
+    resultMessage = 'Calculando...',
+    savingPayslip = false,
 }) => {
     const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
@@ -29,7 +35,7 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
                     <div>
                         <p className="text-label font-bold text-neutral-400 uppercase tracking-widest">Resultado Líquido</p>
                         <p className="text-h3 font-black text-neutral-800 dark:text-white tracking-tight brand-gradient-text">
-                            {formatCurrency(liquido)}
+                            {calculationReady ? formatCurrency(liquido) : resultMessage}
                         </p>
                     </div>
                     <button
@@ -48,35 +54,38 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 onClick={onClearCalculator}
-                                className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-100 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
+                                className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-100 px-4 py-3 rounded-lg transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 font-semibold text-body"
                             >
                                 <RotateCcw size={18} />
                                 <span>Limpar</span>
                             </button>
                             <button
                                 onClick={onOpenPayslips}
-                                className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-100 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
+                                className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-100 px-4 py-3 rounded-lg transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 font-semibold text-body"
                             >
                                 <User size={18} />
                                 <span>Holerites</span>
                             </button>
                             <button
                                 onClick={onSavePayslip}
-                                className="bg-secondary-500/10 hover:bg-secondary-500 hover:text-white text-secondary-600 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
+                                disabled={!calculationReady || savingPayslip}
+                                className="bg-secondary-500/10 hover:bg-secondary-500 hover:text-white text-secondary-600 px-4 py-3 rounded-lg transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 font-semibold text-body"
                             >
                                 <Save size={18} />
                                 <span>Salvar</span>
                             </button>
                             <button
                                 onClick={onExportPDF}
-                                className="bg-error-500/10 hover:bg-error-500 hover:text-white text-error-600 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
+                            disabled={!calculationReady}
+                                className="bg-error-500/10 hover:bg-error-500 hover:text-white text-error-600 px-4 py-3 rounded-lg transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 font-semibold text-body"
                             >
                                 <FileText size={18} />
                                 <span>PDF</span>
                             </button>
                             <button
                                 onClick={onExportExcel}
-                                className="bg-success-500/10 hover:bg-success-500 hover:text-white text-success-600 px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-body"
+                            disabled={!calculationReady}
+                                className="bg-success-500/10 hover:bg-success-500 hover:text-white text-success-600 px-4 py-3 rounded-lg transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 font-semibold text-body"
                             >
                                 <TableIcon size={18} />
                                 <span>Excel</span>
