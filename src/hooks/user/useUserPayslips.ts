@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createPayslip,
   deletePayslip,
@@ -16,6 +16,8 @@ import {
 
 export const useUserPayslips = (initialFilters: PayslipListFilters = {}) => {
   const [filters, setFilters] = useState<PayslipListFilters>(initialFilters);
+  const filtersRef = useRef(initialFilters);
+  const requestIdRef = useRef(0);
   const [result, setResult] = useState<PayslipListResult>({
     data: [],
     count: 0,
@@ -23,24 +25,34 @@ export const useUserPayslips = (initialFilters: PayslipListFilters = {}) => {
     pageSize: initialFilters.pageSize || 10,
   });
   const [loading, setLoading] = useState(false);
+  const [mutating, setMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async (nextFilters?: PayslipListFilters) => {
-    const merged = { ...filters, ...(nextFilters || {}) };
+    const merged = { ...filtersRef.current, ...(nextFilters || {}) };
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
     try {
-      const data = await listPayslips(merged);
-      setResult(data);
-      setFilters(merged);
+      let data = await listPayslips(merged);
+      const lastPage = Math.max(1, Math.ceil(data.count / data.pageSize));
+      if (data.page > lastPage) {
+        merged.page = lastPage;
+        data = await listPayslips(merged);
+      }
+      if (requestId === requestIdRef.current) {
+        filtersRef.current = merged;
+        setResult(data);
+        setFilters(merged);
+      }
       return data;
     } catch (err) {
-      setError((err as Error).message);
+      if (requestId === requestIdRef.current) setError((err as Error).message);
       throw err;
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [filters]);
+  }, []);
 
   useEffect(() => {
     reload(initialFilters).catch(() => undefined);
@@ -48,9 +60,18 @@ export const useUserPayslips = (initialFilters: PayslipListFilters = {}) => {
   }, []);
 
   const create = useCallback(async (payload: CreatePayslipDTO) => {
-    const created = await createPayslip(payload);
-    await reload();
-    return created;
+    setMutating(true);
+    setError(null);
+    try {
+      const created = await createPayslip(payload);
+      await reload();
+      return created;
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    } finally {
+      setMutating(false);
+    }
   }, [reload]);
 
   const update = useCallback(async (id: string, payload: UpdatePayslipDTO) => {
@@ -60,8 +81,17 @@ export const useUserPayslips = (initialFilters: PayslipListFilters = {}) => {
   }, [reload]);
 
   const remove = useCallback(async (id: string) => {
-    await deletePayslip(id);
-    await reload();
+    setMutating(true);
+    setError(null);
+    try {
+      await deletePayslip(id);
+      await reload();
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    } finally {
+      setMutating(false);
+    }
   }, [reload]);
 
   const getById = useCallback(async (id: string): Promise<UserPayslip | null> => {
@@ -70,9 +100,8 @@ export const useUserPayslips = (initialFilters: PayslipListFilters = {}) => {
 
   return {
     filters,
-    setFilters,
     result,
-    loading,
+    loading: loading || mutating,
     error,
     reload,
     create,

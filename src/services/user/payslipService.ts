@@ -56,9 +56,21 @@ export const listPayslips = async (filters: PayslipListFilters = {}): Promise<Pa
 
   let query = supabase
     .from('user_payslips')
-    .select('*', { count: 'exact' })
-    .order('updated_at', { ascending: false })
-    .range(from, to);
+    .select('*', { count: 'exact' });
+
+  const sortBy = filters.sortBy || 'updated_at';
+  const ascending = filters.sortDirection ? filters.sortDirection === 'asc' : sortBy !== 'updated_at';
+  if (sortBy === 'reference') {
+    query = query
+      .order('year_ref', { ascending })
+      .order('month_ref_order', { ascending, nullsFirst: false });
+  } else {
+    query = query.order(sortBy, { ascending });
+  }
+  if (sortBy !== 'updated_at') {
+    query = query.order('updated_at', { ascending: false });
+  }
+  query = query.order('id', { ascending: true });
 
   if (filters.year) {
     query = query.eq('year_ref', filters.year);
@@ -73,7 +85,7 @@ export const listPayslips = async (filters: PayslipListFilters = {}): Promise<Pa
     query = query.or(`title.ilike.%${term}%,agency_name.ilike.%${term}%,notes.ilike.%${term}%`);
   }
 
-  const { data, error, count } = await query;
+  const { data, error, count } = await query.range(from, to);
   if (error) throw new Error(error.message);
 
   return {

@@ -65,12 +65,17 @@ export interface UpdatePayslipDTO {
   total_descontos?: number;
 }
 
+export type PayslipSortField = 'title' | 'reference' | 'agency_name' | 'liquido' | 'updated_at';
+export type PayslipSortDirection = 'asc' | 'desc';
+
 export interface PayslipListFilters {
   page?: number;
   pageSize?: number;
   year?: number;
   month?: string;
   query?: string;
+  sortBy?: PayslipSortField;
+  sortDirection?: PayslipSortDirection;
 }
 
 export interface PayslipListResult {

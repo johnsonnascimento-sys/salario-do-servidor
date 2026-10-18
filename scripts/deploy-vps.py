@@ -26,7 +26,7 @@ CONTAINER = 'salario-do-servidor'
 
 
 def source_archive(root):
-    allowed = ['src', 'public', 'scripts', 'tests']
+    allowed = ['src', 'public', 'scripts', 'tests', 'supabase/migrations']
     files = [p for name in allowed for p in (root / name).rglob('*') if p.is_file()]
     files += [root / name for name in ['package.json', 'package-lock.json', 'index.html',
               'vite.config.ts', 'tsconfig.json', 'tailwind.config.js', 'postcss.config.js',
@@ -111,6 +111,7 @@ chmod 600 .env.production.local
 npm ci --no-audit --no-fund > install.log 2>&1
 npm run test:payslip
 npm run test:loading
+npm run test:sorting
 npm run typecheck
 npm run validate:deploy
 DEPLOY_COMMIT={shlex.quote(commit)} DEPLOY_BRANCH={shlex.quote(branch)} DEPLOY_DIRTY={int(dirty)} DEPLOY_SOURCE_SHA={digest} npm run build > build.log 2>&1

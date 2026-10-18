@@ -16,6 +16,11 @@ O domínio permanece na hospedagem atual. Este procedimento publica somente o se
 
 ## Publicação e reversão
 
+Antes de publicar a ordenação de Meus Holerites, aplique a migration
+`supabase/migrations/20261018_user_payslips_reference_order.sql` no banco de produção
+e confirme que `user_payslips.month_ref_order` está disponível pela API. Ela adiciona
+somente metadados gerados, mantendo snapshots e políticas RLS existentes.
+
 Execute `python scripts/deploy-vps.py --host 76.13.229.118`. A senha é solicitada por
 `getpass` ou recebida pela variável `DEPLOY_SSH_PASSWORD`, sem gravação em arquivos.
 O SSH verifica a chave conhecida do servidor; `--trust-new-host` autoriza explicitamente
@@ -47,7 +52,7 @@ novamente seu marcador `pending-<release>`; ele restaura o backup e reinicia o c
 
 ## Critérios de aceitação
 
-- `npm run test:payslip`, `npm run test:loading`, `npm run typecheck`, `npm run build` passam.
+- `npm run test:payslip`, `npm run test:loading`, `npm run test:sorting`, `npm run typecheck`, `npm run build` passam.
 - Sem `agencyConfig is required` durante carga lenta ou reabertura.
 - Salvar, PDF e Excel desativados enquanto o cálculo está pendente ou indisponível.
 - Novembro preserva os campos e líquido de R$ 14.170,85 com a configuração da fixture.

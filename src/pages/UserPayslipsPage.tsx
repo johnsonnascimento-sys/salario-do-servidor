@@ -1,20 +1,27 @@
 ﻿import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Copy, Edit3, Eye, FileDown, FileSpreadsheet, Search, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Copy, Edit3, Eye, FileDown, FileSpreadsheet, Search, Trash2 } from 'lucide-react';
 import { useUserPayslips } from '../hooks/user/useUserPayslips';
 import { formatCurrency } from '../utils/calculations';
 import { exportToExcel, exportToPDF } from '../services/exportService';
 import { CalculatorState } from '../types';
-import { UserPayslip } from '../types/user';
+import { PayslipListFilters, PayslipSortField, UserPayslip } from '../types/user';
 
 export default function UserPayslipsPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [year, setYear] = useState('');
   const [month, setMonth] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
 
-  const { result, loading, error, reload, create, remove } = useUserPayslips({ page: 1, pageSize: 10 });
+  const { filters, result, loading, error, reload, create, remove } = useUserPayslips({ page: 1, pageSize: 10 });
+
+  const reloadList = async (nextFilters: PayslipListFilters) => {
+    try {
+      await reload(nextFilters);
+    } catch {
+      // The hook exposes the error in the existing message area.
+    }
+  };
 
   const yearOptions = useMemo(() => {
     const years = new Set<number>(
@@ -26,8 +33,7 @@ export default function UserPayslipsPage() {
   }, [result.data]);
 
   const handleFilter = async () => {
-    setCurrentPage(1);
-    await reload({
+    await reloadList({
       page: 1,
       pageSize: result.pageSize,
       query,
@@ -37,15 +43,38 @@ export default function UserPayslipsPage() {
   };
 
   const handlePageChange = async (page: number) => {
-    const safePage = Math.max(1, page);
-    setCurrentPage(safePage);
-    await reload({
-      page: safePage,
-      pageSize: result.pageSize,
-      query,
-      year: year ? Number(year) : undefined,
-      month: month || undefined,
+    await reloadList({ page: Math.max(1, page) });
+  };
+
+  const handleSort = async (sortBy: PayslipSortField) => {
+    await reloadList({
+      page: 1,
+      sortBy,
+      sortDirection: filters.sortBy === sortBy && filters.sortDirection === 'asc' ? 'desc' : 'asc',
     });
+  };
+
+  const renderSortHeader = (label: string, field: PayslipSortField, right = false) => {
+    const active = filters.sortBy === field;
+    const ascending = filters.sortDirection === 'asc';
+    const Icon = active ? (ascending ? ArrowUp : ArrowDown) : ArrowUpDown;
+    return (
+      <th
+        scope="col"
+        aria-sort={active ? (ascending ? 'ascending' : 'descending') : 'none'}
+        className={`px-4 py-3 text-body-xs uppercase tracking-widest text-neutral-500 ${right ? 'text-right' : 'text-left'}`}
+      >
+        <button
+          type="button"
+          onClick={() => handleSort(field)}
+          disabled={loading}
+          aria-label={`Ordenar por ${label}, ${active && ascending ? 'decrescente' : 'crescente'}`}
+          className={`inline-flex items-center gap-2 rounded uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500 disabled:opacity-50 ${right ? 'justify-end' : ''} ${active ? 'text-secondary-600 dark:text-secondary-400' : ''}`}
+        >
+          {label}<Icon size={14} aria-hidden="true" className="shrink-0" />
+        </button>
+      </th>
+    );
   };
 
   const handleExport = (item: UserPayslip, type: 'pdf' | 'excel') => {
@@ -68,24 +97,32 @@ export default function UserPayslipsPage() {
   const handleDelete = async (id: string) => {
     const ok = window.confirm('Deseja excluir este holerite? Essa ação não pode ser desfeita.');
     if (!ok) return;
-    await remove(id);
+    try {
+      await remove(id);
+    } catch {
+      // The hook exposes mutation and reload errors.
+    }
   };
 
   const handleDuplicate = async (item: UserPayslip) => {
-    await create({
-      title: `${item.title} - Cópia`,
-      agency_slug: item.agency_slug,
-      agency_name: item.agency_name,
-      month_ref: item.month_ref,
-      year_ref: item.year_ref,
-      tags: item.tags,
-      notes: item.notes,
-      calculator_state: item.calculator_state,
-      result_rows: item.result_rows,
-      liquido: item.liquido,
-      total_bruto: item.total_bruto,
-      total_descontos: item.total_descontos,
-    });
+    try {
+      await create({
+        title: `${item.title} - Cópia`,
+        agency_slug: item.agency_slug,
+        agency_name: item.agency_name,
+        month_ref: item.month_ref,
+        year_ref: item.year_ref,
+        tags: item.tags,
+        notes: item.notes,
+        calculator_state: item.calculator_state,
+        result_rows: item.result_rows,
+        liquido: item.liquido,
+        total_bruto: item.total_bruto,
+        total_descontos: item.total_descontos,
+      });
+    } catch {
+      // The hook exposes mutation and reload errors.
+    }
   };
 
   return (
@@ -124,7 +161,7 @@ export default function UserPayslipsPage() {
           <input value={month} onChange={(e) => setMonth(e.target.value.toUpperCase())} placeholder="MARÇO" className="mt-1 w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-2" />
         </div>
         <div className="md:col-span-4">
-          <button onClick={handleFilter} className="rounded-xl border border-neutral-300 dark:border-neutral-700 px-4 py-2 text-body-xs font-semibold">Aplicar filtros</button>
+          <button onClick={handleFilter} disabled={loading} className="rounded-xl border border-neutral-300 dark:border-neutral-700 px-4 py-2 text-body-xs font-semibold disabled:opacity-50">Aplicar filtros</button>
         </div>
       </div>
 
@@ -134,10 +171,10 @@ export default function UserPayslipsPage() {
         <table className="min-w-full">
           <thead className="bg-neutral-50 dark:bg-neutral-800">
             <tr>
-              <th className="px-4 py-3 text-left text-body-xs uppercase tracking-widest text-neutral-500">Título</th>
-              <th className="px-4 py-3 text-left text-body-xs uppercase tracking-widest text-neutral-500">Referência</th>
-              <th className="px-4 py-3 text-left text-body-xs uppercase tracking-widest text-neutral-500">Órgão</th>
-              <th className="px-4 py-3 text-right text-body-xs uppercase tracking-widest text-neutral-500">Líquido</th>
+              {renderSortHeader('Título', 'title')}
+              {renderSortHeader('Referência', 'reference')}
+              {renderSortHeader('Órgão', 'agency_name')}
+              {renderSortHeader('Líquido', 'liquido', true)}
               <th className="px-4 py-3 text-right text-body-xs uppercase tracking-widest text-neutral-500">Ações</th>
             </tr>
           </thead>
@@ -186,16 +223,16 @@ export default function UserPayslipsPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
+            onClick={() => handlePageChange(result.page - 1)}
+            disabled={loading || result.page <= 1}
             className="rounded-lg border border-neutral-300 dark:border-neutral-700 px-3 py-1 text-body-xs disabled:opacity-50"
           >
             Anterior
           </button>
           <button
             type="button"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= Math.max(1, Math.ceil(result.count / result.pageSize))}
+            onClick={() => handlePageChange(result.page + 1)}
+            disabled={loading || result.page >= Math.max(1, Math.ceil(result.count / result.pageSize))}
             className="rounded-lg border border-neutral-300 dark:border-neutral-700 px-3 py-1 text-body-xs disabled:opacity-50"
           >
             Próxima

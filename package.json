@@ -8,6 +8,7 @@
     "prebuild": "node scripts/generate-version.js",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
+    "test:sorting": "node scripts/test-payslip-sorting.cjs",
     "test:payslip": "node scripts/test-calculator-state.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit-project.cjs",

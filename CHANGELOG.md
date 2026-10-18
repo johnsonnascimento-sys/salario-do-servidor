@@ -1,5 +1,10 @@
 # Changelog
 
+## 18/10/2026
+- Feat: Meus Holerites permite ordenar por Título, Referência, Órgão e Líquido, com indicadores acessíveis e preservação dos filtros e da ordenação na paginação e nas recargas.
+- Data: migration `20261018_user_payslips_reference_order.sql` adiciona mês numérico gerado para ordenação cronológica; aplicar antes de publicar o frontend.
+- Validation: 27 testes, TypeScript, build e preflight aprovados; migration aplicada em produção com os 15 snapshots e políticas RLS preservados.
+
 ## Não publicado - 09/10/2026
 - Fix: motor aguarda agência e configuração; respostas antigas de configuração/cálculo são descartadas, inclusive na troca de órgão.
 - Fix: cálculo expõe estados de carregamento e erro; salvar/exportar ficam bloqueados até os resultados corresponderem às entradas atuais, preservando valores manuais e holerites históricos.
