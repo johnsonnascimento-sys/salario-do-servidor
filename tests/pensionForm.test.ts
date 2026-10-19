@@ -5,6 +5,7 @@ import { create, act } from 'react-test-renderer';
 import { INITIAL_STATE, CalculatorState, PrevidenciaComplementarConfig } from '../src/types';
 import { useFunprespForm } from '../src/components/Calculator/hooks/useFunprespForm';
 import { DynamicPayrollTaxSection } from '../src/components/Calculator/DynamicPayrollTaxSection';
+import { ActionFooter } from '../src/components/Calculator/ActionFooter';
 import { PensionRetroForm } from '../src/components/Calculator/PensionRetroForm';
 
 // Deliberately synthetic parameters: tests must not define official rules.
@@ -80,4 +81,12 @@ test('modalidade incompatível é desabilitada e simulação antiga oferece recu
  assert.equal(tree.root.findAllByType('option').find(o=>o.props.value==='patrocinado')?.props.disabled,true);
  const recover=tree.root.findAllByType('button').find(b=>b.children.join('')==='Ingressei no RPPS com teto');
  act(()=>recover!.props.onClick());assert.deepEqual(calls,['rpc']);tree.unmount();
+});
+
+test('rodapé mostra a causa completa do erro e mantém salvar/exportar bloqueados', () => {
+ const detail='Previdência: informe a apuração do retroativo por competência, sem alíquota marginal atual.';
+ const tree=create(React.createElement(ActionFooter,{state:state(),calculationReady:false,errorDetail:detail,resultMessage:'Cálculo indisponível',onExportPDF:()=>{},onExportExcel:()=>{}}));
+ assert.equal(tree.root.findByProps({role:'alert'}).children.join(''),detail);
+ assert.equal(tree.root.findAllByType('button').filter(b=>['Exportar PDF/Holerite','Exportar Excel','Salvar na minha área'].includes(b.props.title)).every(b=>b.props.disabled),true);
+ tree.unmount();
 });

@@ -1,5 +1,10 @@
 # Changelog
 
+## Visibilidade de falhas - 19/10/2026
+- A causa retornada pelo cálculo passa a aparecer também no rodapé desktop e em um alerta antes do formulário, preservando as entradas e mantendo exportação/salvamento bloqueados até um cálculo válido.
+- Domínio principal conferido com RPC + patrocinada em simulação nova; falha específica do estado informado ainda depende do diagnóstico completo.
+
+
 ## Correção de interface - 19/10/2026
 - Funpresp: modalidade patrocinada indisponível no seletor enquanto RPPS sem teto; simulações incompatíveis restauradas oferecem ações explícitas para corrigir o enquadramento ou a participação.
 - Interface: controles não herdam negrito, caixa alta e espaçamento dos rótulos; títulos previdenciários seguem o padrão da calculadora e mensagem de cálculo indisponível usa tamanho de texto normal.

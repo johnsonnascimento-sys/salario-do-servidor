@@ -251,6 +251,10 @@ export default function Calculator() {
                         styles={styles}
                         preserveRestoredGlobals={preserveRestoredGlobals}
                     />
+                    {calculationStatus === 'error' && <div id="calculator-error" role="alert" aria-live="polite" className="rounded-xl border border-error-300 bg-error-50 dark:bg-error-900/20 p-4 text-body text-error-700 dark:text-error-300">
+                        <p className="font-semibold">Não foi possível calcular esta simulação</p>
+                        <p className="mt-1">{calculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
+                    </div>}
                     <DynamicPayrollForm
                         key={`dynamic-payroll-form-${formKey}`}
                         inputState={state}
@@ -279,6 +283,7 @@ export default function Calculator() {
                 </div>
 
                 <ActionFooter
+                    errorDetail={calculationError}
                     calculationReady={calculationReady}
                     resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
                     state={effectiveState}

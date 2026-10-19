@@ -14,6 +14,7 @@ interface ActionFooterProps {
     onClearCalculator?: () => void;
     calculationReady?: boolean;
     resultMessage?: string;
+    errorDetail?: string | null;
 }
 
 export const ActionFooter: React.FC<ActionFooterProps> = ({
@@ -26,6 +27,7 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
     onClearCalculator,
     calculationReady = true,
     resultMessage = 'Calculando...',
+    errorDetail,
 }) => {
     return (
         <div className="hidden lg:block fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-700 py-4 px-6 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
@@ -79,10 +81,11 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
                         </button>
                     </div>
 
-                    <div className="text-right">
+                    <div className="text-right max-w-sm min-w-0" aria-live="polite">
                         <span className={calculationReady ? "text-h1 font-black text-neutral-800 dark:text-white tracking-tight brand-gradient-text" : "text-body font-semibold text-neutral-600 dark:text-neutral-300"}>
                             {calculationReady ? formatCurrency(state.liquido) : resultMessage}
                         </span>
+                        {!calculationReady && errorDetail && <p role="alert" className="mt-1 text-body-xs font-normal text-error-600 dark:text-error-400 whitespace-normal break-words">{errorDetail}</p>}
                     </div>
                 </div>
             </div>
