@@ -72,10 +72,17 @@ export interface PrevidenciaComplementarPowerConfig {
     };
     facultative_rate: {
         min_if_positive: number;
-        max: number;
-        step: number;
+        max?: number;
+        step?: number;
         default: number;
     };
+    linked_rate?: { min: number; max: number; step: number };
+    minimum_urp_units?: number;
+    /** Competência YYYY-MM; valores apenas quando acompanhados de fonte verificável. */
+    urp_by_competence?: Record<string, number>;
+    urp_sources_by_competence?: Record<string, string>;
+    /** true autoriza inclusão por opção expressa; não determina incidência automática. */
+    incidence_rules?: { fc: boolean; gas: boolean; gae: boolean; aqTreino: boolean };
     base_rule: string;
     include_thirteenth: boolean;
     costing_disclosure?: {

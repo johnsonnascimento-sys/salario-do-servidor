@@ -1,5 +1,12 @@
 # Changelog
 
+## Não publicado - 19/10/2026
+- Previdência: enquadramento RPPS separado da adesão complementar; bases e opções de parcelas independentes, participação vinculada e facultativas com distinção entre folha e aporte externo.
+- Cálculo: correção do desconto complementar do 13º no demonstrativo/líquido, validação de parâmetros e apuração identificada de retroativos, com memória previdenciária.
+- Configuração: parâmetros de vinculada e URP com fonte por competência; migration candidata `20261019_pju_pension_config_v2.sql` preserva versões anteriores e retira teto/passo sem fundamento da facultativa. Banco de produção não alterado.
+- Evidências: relatório `src/docs/PREVIDENCIA_PJU.md` registra fontes legais, distinção do mínimo anual vinculado e conciliação anonimizada de agosto/setembro (R$ 1.563,15 / R$ 1.557,88). Julho permanece parcialmente conciliado.
+- Validação local: 55 testes aprovados, incluindo PDF/XLSX em memória, TypeScript e build Vite. Sem publicação ou homologação em produção. Retroativos legados sem teto preservados com aviso; opções de base de snapshots patrocinados antigos exigem revisão.
+
 ## 18/10/2026
 - Feat: Meus Holerites permite ordenar por Título, Referência, Órgão e Líquido, com indicadores acessíveis e preservação dos filtros e da ordenação na paginação e nas recargas.
 - Data: migration `20261018_user_payslips_reference_order.sql` adiciona mês numérico gerado para ordenação cronológica; aplicar antes de publicar o frontend.

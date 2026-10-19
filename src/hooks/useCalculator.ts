@@ -131,14 +131,18 @@ export const useCalculator = () => {
 
     useEffect(() => {
         try {
-            const persistedState = stripCalculatedFieldsFromCalculatorState(state);
+            const persistedState = {
+                ...stripCalculatedFieldsFromCalculatorState(state),
+                // Preserve the audit at save time; recalculation still uses the current engine.
+                pensionMemory: calculatedState.pensionMemory,
+            };
             localStorage.setItem(USER_AREA_LAST_CALCULATOR_STATE_KEY, JSON.stringify(persistedState));
             localStorage.setItem(USER_AREA_LAST_RESULT_ROWS_KEY, JSON.stringify(resultRows));
             localStorage.setItem(CALCULATOR_DRAFT_STORAGE_KEY, JSON.stringify(persistedState));
         } catch (_error) {
             // Ignora falhas de localStorage em modo privado/restrito.
         }
-    }, [state, resultRows]);
+    }, [state, resultRows, calculatedState.pensionMemory]);
 
     const saveCurrentPayslip = useCallback(async () => {
         if (!calculationReady) {
@@ -152,7 +156,11 @@ export const useCalculator = () => {
         setSavingPayslip(true);
         try {
             const title = `Holerite ${state.mesRef}/${state.anoRef} - Simulação`;
-            const persistedState = stripCalculatedFieldsFromCalculatorState(state);
+            const persistedState = {
+                ...stripCalculatedFieldsFromCalculatorState(state),
+                // Preserve the audit at save time; recalculation still uses the current engine.
+                pensionMemory: calculatedState.pensionMemory,
+            };
 
             if (editPayslipId) {
                 const updated = await updatePayslip(editPayslipId, {

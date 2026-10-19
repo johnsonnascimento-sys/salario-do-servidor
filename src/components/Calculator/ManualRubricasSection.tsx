@@ -178,6 +178,16 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             />
                             <span>Incluir na base do PSS (Exercicio Anterior - EA)</span>
                         </label>
+                        <label className={styles.checkboxLabel}>
+                            <input type="checkbox" className={styles.checkbox} checked={Boolean(rubrica.incideFunpresp)}
+                                onChange={e => updateRubrica(rubrica.id, 'incideFunpresp', e.target.checked)} />
+                            <span>Incluir na base da Funpresp (independente do PSS)</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input type="checkbox" className={styles.checkbox} checked={Boolean(rubrica.funprespCompetenciaSeparada)}
+                                onChange={e => updateRubrica(rubrica.id, 'funprespCompetenciaSeparada', e.target.checked)} />
+                            <span>Funpresp por competência original (informar na apuração de retroativos)</span>
+                        </label>
                     </div>
                 </div>
             ))}

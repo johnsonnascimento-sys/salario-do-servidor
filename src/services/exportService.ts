@@ -1,5 +1,6 @@
+import { buildPensionAuditRows } from '../utils/pensionExport';
 import { saveAs } from 'file-saver';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { CalculatorState, CourtConfig } from '../types';
@@ -93,6 +94,15 @@ export const exportToPDF = (
     const splitDisclaimer = doc.splitTextToSize(disclaimerText, 180);
     doc.text(splitDisclaimer, 105, pageHeight - 15, { align: 'center' });
 
+    const pensionRows = buildPensionAuditRows(state.pensionMemory);
+    if (pensionRows.length > 0) {
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text('Memória previdenciária (informativa)', 14, 18);
+        doc.autoTable({ head: [['Referência / Campo', 'Valor']], body: pensionRows,
+            startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
+    }
     const pdfBlob = doc.output('blob');
     const filename = options?.filename?.trim() || `Holerite_${state.mesRef}_${state.anoRef}`;
     saveAs(pdfBlob, `${filename}.pdf`);
@@ -138,6 +148,12 @@ export const exportToExcel = (
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols'] = [{ wch: 5 }, { wch: 40 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Holerite');
+    const pensionRows = buildPensionAuditRows(state.pensionMemory);
+    if (pensionRows.length > 0) {
+        const auditSheet = XLSX.utils.aoa_to_sheet([['Referência / Campo', 'Valor'], ...pensionRows]);
+        auditSheet['!cols'] = [{ wch: 58 }, { wch: 70 }];
+        XLSX.utils.book_append_sheet(wb, auditSheet, 'Memória previdenciária');
+    }
 
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

@@ -14,11 +14,16 @@ import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 import { calculateOvertime } from './overtimeCalculations';
 import { calculateSubstitution } from './substitutionCalculations';
+import { buildComplementaryBase, calculateComplementaryPension, calculatePensionRetroactives, hasPensionCeiling, roundPension } from './pensionCalculations';
+import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
 
 export interface DeductionsResult {
     pss: number;
     pssEA: number;
     funpresp: number;
+    funprespEA: number;
+    pensionMemory: PensionCalculationMemory;
+    pensionRetroMemory: PensionRetroMemory[];
     irrf: number;
     irEA: number;
     aqIr: number;
@@ -142,19 +147,17 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
 
     const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
-    const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
+    const usaTeto = hasPensionCeiling(params.regimePrev);
 
     let pssMensal = 0;
     let pssEA = 0;
-    let baseFunpresp = 0;
     let overtimePss = 0;
     let substitutionPss = 0;
 
     if (pssTable) {
         if (usaTeto) {
             const baseLimitada = Math.min(basePSS, teto);
-            pssMensal = calculatePss(baseLimitada, pssTable);
-            baseFunpresp = Math.max(0, basePSS - teto);
+            pssMensal = roundPension(calculatePss(baseLimitada, pssTable));
         } else {
             pssMensal = calculatePss(basePSS, pssTable);
         }
@@ -165,18 +168,15 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
             rubricasAdjustments.pssEA;
 
         if (basePssEA !== 0) {
+            if (usaTeto && !params.pensionRetroEntries?.length) throw new Error('Previdência: informe a apuração do retroativo por competência, sem alíquota marginal atual.');
+            if (!params.pensionRetroEntries?.length) {
             const baseReferenciaAliquota = usaTeto ? Math.min(basePSS, teto) : basePSS;
             const aliquotaMarginal = getMarginalPssRate(baseReferenciaAliquota, pssTable);
             pssEA = basePssEA * aliquotaMarginal;
             overtimePss = (params.hePssIsEA && !hasOvertimeEntries ? overtime.heTotal : 0) * aliquotaMarginal;
             substitutionPss = (hasSubstitutionEntries ? substitutionPssEABase : (params.substPssIsEA ? substitution.total : 0)) * aliquotaMarginal;
+            }
         }
-    }
-
-    // Funpresp
-    let valFunpresp = 0;
-    if (usaTeto && baseFunpresp > 0 && params.funprespParticipacao === 'patrocinado') {
-        valFunpresp = baseFunpresp * params.funprespAliq + (baseFunpresp * params.funprespFacul);
     }
 
     // IRRF Base
@@ -186,6 +186,26 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     let aqTreinoVal = 0;
     if (params.periodo >= 1) aqTreinoVal = valorVR * params.aqTreinoVR;
     else aqTreinoVal = baseVencimento * normalizeAQPercent(params.aqTreinoPerc);
+
+    const complementaryRubricas = (params.rubricasExtras || []).reduce((sum, rubrica) => {
+        if (rubrica.funprespCompetenciaSeparada && usaTeto && !params.pensionRetroEntries?.length) throw new Error('Previdência: use apuração por competência para previdência complementar retroativa.');
+        return sum + (rubrica.incideFunpresp && !rubrica.funprespCompetenciaSeparada
+            ? (rubrica.tipo === 'D' ? -1 : 1) * Math.max(0, Number(rubrica.valor) || 0) : 0);
+    }, 0);
+    const complementaryBase = buildComplementaryBase(params, {
+        vencimento: baseVencimento, gaj, aqTitulo: aqTituloVal, aqTreino: aqTreinoVal,
+        gratificacao: gratVal, fc: funcaoValor,
+        vantagens: (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0),
+        rubricas: complementaryRubricas,
+    });
+    const pensionMemory = calculateComplementaryPension(params, basePSS, complementaryBase.base, 'mensal', complementaryBase.componentes);
+    if (!usaTeto && pssEA !== 0 && !params.pensionRetroEntries?.length) {
+        pensionMemory.avisos = ['PSS de exercício anterior legado usa alíquota marginal atual; confira e informe apuração por competência antes de utilizá-lo como conferência oficial.'];
+    }
+    const valFunpresp = pensionMemory.descontoFolha;
+    const pensionRetroMemory = calculatePensionRetroactives(params);
+    pssEA += pensionRetroMemory.reduce((sum, entry) => sum + entry.rpps, 0);
+    const funprespEA = roundPension(pensionRetroMemory.reduce((sum, entry) => sum + entry.complementar, 0));
 
     // Total Tributavel Construction
     let totalTrib = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
@@ -199,7 +219,9 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     totalTrib = Math.max(0, totalTrib + rubricasAdjustments.irMensal);
 
     const deducaoDep = config.values?.deducao_dep || 0;
-    const baseIR = Math.max(0, totalTrib - pssMensal - valFunpresp - (params.dependents * deducaoDep));
+    const retroMensalDedutivel = pensionRetroMemory.filter(entry => entry.destinoIR === 'mensal')
+        .reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0);
+    const baseIR = Math.max(0, totalTrib - pssMensal - valFunpresp - retroMensalDedutivel - (params.dependents * deducaoDep));
 
     const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
     const irMensal = calculateIrrf(baseIR, payrollRules.irrfTopRate, deductionVal);
@@ -222,7 +244,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         overtimeEABase +
         substitutionEABase +
         rubricasAdjustments.irEA;
-    const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep));
+    const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep) -
+        pensionRetroMemory.filter(entry => entry.destinoIR === 'ea').reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0));
     const irEA = calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
 
     let overtimeIr = 0;
@@ -264,6 +287,9 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         pss: pssMensal,
         pssEA,
         funpresp: valFunpresp,
+        funprespEA,
+        pensionMemory,
+        pensionRetroMemory,
         irrf: irMensal,
         irEA,
         aqIr,
@@ -281,6 +307,6 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         substitutionIrMensal,
         substitutionIrEA,
         substitutionPss,
-        total: pssMensal + pssEA + valFunpresp + irMensal + irEA
+        total: pssMensal + pssEA + valFunpresp + funprespEA + irMensal + irEA
     };
 }

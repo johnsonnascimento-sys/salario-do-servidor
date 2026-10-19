@@ -102,7 +102,6 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
 
         // 3. Calcular Rendimentos VariÃ¡veis (alguns agora async)
         const vacation = await calculateVacation(params);
-        const thirteenth = await calculateThirteenth(params);
         const overtime = await calculateOvertime(params);
         const substitution = await calculateSubstitution(params);
         const dailies = await calculateDailies(params);
@@ -111,6 +110,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
 
         // 4. Calcular DeduÃ§Ãµes (agora async)
         const deductions = await calculateDeductions(base, params);
+        const thirteenth = await calculateThirteenth(params, deductions.pensionRetroMemory);
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
 
         // 5. Calcular Totais
@@ -120,7 +120,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
 
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
-            vacation.irFerias + vacation.descontoAntecipacao + thirteenth.pss13 +
+            vacation.irFerias + vacation.descontoAntecipacao + thirteenth.pss13 + thirteenth.funpresp13 +
             thirteenth.ir13 + thirteenth.primeiraParcelaDesconto + rubricasTotals.debitos;
 
         // 6. Retornar Resultado Completo
@@ -129,6 +129,8 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
             totalDeductions: totalDeductions,
             totalBenefits: benefits.auxAlimentacao + benefits.auxPreEscolar +
                 benefits.auxTransporte + dailies.valor + compensatoryLeave,
+            pensionMemory: { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,
+                retroativos: deductions.pensionRetroMemory },
             breakdown: {
                 // Componentes Base Individuais
                 vencimento: baseComponents.vencimento,
@@ -151,6 +153,14 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 irrf: deductions.irrf,
                 irEA: deductions.irEA,
                 funpresp: deductions.funpresp,
+                funpresp13: thirteenth.funpresp13,
+                funprespEA: deductions.funprespEA,
+                funprespNormal: deductions.pensionMemory.normal,
+                funprespFacultativa: deductions.pensionMemory.facultativa - deductions.pensionMemory.facultativaExterna + deductions.pensionMemory.aporteFolha,
+                funprespPatrocinador: deductions.pensionMemory.patrocinador,
+                funprespDedutivelIR: deductions.pensionMemory.dedutivelIRFolha,
+                baseRpps: deductions.pensionMemory.baseRpps,
+                baseFunpresp: deductions.pensionMemory.baseComplementar,
                 aqIr: deductions.aqIr,
                 aqPss: deductions.aqPss,
                 gratIr: deductions.gratIr,

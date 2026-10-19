@@ -15,10 +15,14 @@ import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUt
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
+import { buildComplementaryBase, calculateComplementaryPension } from './pensionCalculations';
+import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
 
 export interface ThirteenthResult {
     gratNatalinaTotal: number;
     pss13: number;
+    funpresp13: number;
+    pensionMemory?: PensionCalculationMemory;
     ir13: number;
     primeiraParcelaDesconto: number;
     adiant13Venc: number;
@@ -40,7 +44,7 @@ const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 /**
  * Calcula 13o Salario / Gratificacao Natalina
  */
-export async function calculateThirteenth(params: IAgencyCalculationParams): Promise<ThirteenthResult> {
+export async function calculateThirteenth(params: IAgencyCalculationParams, retroativos: PensionRetroMemory[] = []): Promise<ThirteenthResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
@@ -98,6 +102,8 @@ export async function calculateThirteenth(params: IAgencyCalculationParams): Pro
 
     let gratNatalinaTotal = primeiraParcelaRecebida + segundaParcelaRecebida;
     let pss13 = 0;
+    let funpresp13 = 0;
+    let pensionMemory: PensionCalculationMemory | undefined;
     let ir13 = 0;
     let abono13 = 0;
     let primeiraParcelaDesconto = 0;
@@ -131,6 +137,7 @@ export async function calculateThirteenth(params: IAgencyCalculationParams): Pro
         // AQ treinamento e FC/CJ nao integram base de PSS do 13o.
         let baseParaPSS13 = base13Tributavel - (aqTreinoVal * fatorVenc);
         baseParaPSS13 -= baseFCTributavel13;
+        if (usaTeto && !params.incidirPSSGrat) baseParaPSS13 -= gratVal * fatorVenc;
         baseParaPSS13 = Math.max(0, baseParaPSS13);
 
         if (params.recebeAbono && pssTable) {
@@ -151,16 +158,22 @@ export async function calculateThirteenth(params: IAgencyCalculationParams): Pro
             }
         }
 
-        const baseFunpresp = Math.max(0, baseParaPSS13 - teto);
-        const valFunpresp = usaTeto && baseFunpresp > 0 && params.funprespParticipacao === 'patrocinado'
-            ? baseFunpresp * params.funprespAliq + (baseFunpresp * params.funprespFacul)
-            : 0;
+        const complementaryBase = buildComplementaryBase(params, {
+            vencimento: baseVencimento * fatorVenc, gaj: gaj * fatorVenc,
+            aqTitulo: aqTituloVal * fatorVenc, aqTreino: aqTreinoVal * fatorVenc,
+            gratificacao: gratVal * fatorVenc,
+            vantagens: ((params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0)) * fatorVenc,
+            fc: baseFCTributavel13, rubricas: 0,
+        });
+        pensionMemory = calculateComplementaryPension(params, baseParaPSS13, complementaryBase.base, '13', complementaryBase.componentes);
+        funpresp13 = pensionMemory.descontoFolha;
 
         const deducaoDep = config.values?.deducao_dep || 0;
         const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
         const baseIR13 = Math.max(
             0,
-            gratNatalinaTotal - pss13 - valFunpresp - (params.dependents * deducaoDep)
+            gratNatalinaTotal - pss13 - funpresp13 - (params.dependents * deducaoDep) -
+            retroativos.filter(entry => entry.destinoIR === '13').reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0)
         );
         ir13 = calculateIrrf(baseIR13, payrollRules.irrfTopRate, deductionVal);
     }
@@ -173,6 +186,8 @@ export async function calculateThirteenth(params: IAgencyCalculationParams): Pro
     return {
         gratNatalinaTotal: roundCurrency(gratNatalinaTotal),
         pss13: roundCurrency(pss13),
+        funpresp13: roundCurrency(funpresp13),
+        pensionMemory,
         ir13: roundCurrency(ir13),
         primeiraParcelaDesconto: roundCurrency(primeiraParcelaDesconto),
         adiant13Venc,

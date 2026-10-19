@@ -1,3 +1,4 @@
+import { PensionMemory } from './PensionMemory';
 import React from 'react';
 import { Receipt } from 'lucide-react';
 import { CalculatorState } from '../../types';
@@ -203,6 +204,7 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
             </div>
 
             <div className="p-4 sm:p-6 space-y-6">
+                {state.pensionMemory && <PensionMemory memory={state.pensionMemory} />}
                 <div className="sm:hidden">
                     <MobileSummarySection
                         title="Holerite (sem diárias)"

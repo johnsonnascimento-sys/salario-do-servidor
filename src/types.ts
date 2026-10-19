@@ -1,3 +1,4 @@
+import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 export interface SalaryTable {
   [cargo: string]: {
     [padrao: string]: number;
@@ -77,10 +78,15 @@ export interface PrevidenciaComplementarConfig {
   };
   facultativeRate: {
     minIfPositive: number;
-    max: number;
-    step: number;
+    max?: number;
+    step?: number;
     default: number;
   };
+  linkedRate?: { min: number; max: number; step: number };
+  minimumUrpUnits?: number;
+  urpByCompetence?: Record<string, number>;
+  urpSourcesByCompetence?: Record<string, string>;
+  incidenceRules?: { fc: boolean; gas: boolean; gae: boolean; aqTreino: boolean };
   baseRule: string;
   includeThirteenth: boolean;
   costingDisclosure?: {
@@ -138,6 +144,8 @@ export interface Rubrica {
   incidePSS: boolean;
   isEA: boolean;
   pssCompetenciaSeparada: boolean;
+  incideFunpresp?: boolean;
+  funprespCompetenciaSeparada?: boolean;
 }
 
 export interface OvertimeEntry {
@@ -245,7 +253,17 @@ export interface CalculatorState {
   tabelaIR: string;
   dependentes: number;
   regimePrev: 'antigo' | 'migrado' | 'novo_antigo' | 'rpc';
-  funprespParticipacao: 'nao' | 'patrocinado';
+  funprespParticipacao: PensionParticipation;
+  funprespRevisarOpcoes?: boolean;
+  funprespBaseIntegral?: number;
+  funprespVinculadaInicio?: string;
+  funprespIncluirFC?: boolean;
+  funprespIncluirGAS?: boolean;
+  funprespIncluirGAE?: boolean;
+  funprespIncluirAQTreino?: boolean;
+  funprespFaculValor?: number;
+  funprespFaculForma?: 'folha' | 'externo';
+  pensionRetroEntries?: PensionRetroEntry[];
   funprespAliq: number;
   funprespFacul: number;
 
@@ -306,6 +324,11 @@ export interface CalculatorState {
   substPss: number;
   irFerias: number;
   valFunpresp: number;
+  valFunpresp13?: number;
+  valFunprespEA?: number;
+  valFunprespNormal?: number;
+  valFunprespFacultativa?: number;
+  pensionMemory?: PensionMemory;
   totalBruto: number;
   totalDescontos: number;
   liquido: number;
@@ -345,6 +368,11 @@ export type CalculatedPayrollState = Pick<
   | 'pssMensal'
   | 'pssEA'
   | 'valFunpresp'
+  | 'valFunpresp13'
+  | 'valFunprespEA'
+  | 'valFunprespNormal'
+  | 'valFunprespFacultativa'
+  | 'pensionMemory'
   | 'irMensal'
   | 'irEA'
   | 'aqIr'
@@ -467,6 +495,16 @@ export const INITIAL_STATE: CalculatorState = {
   dependentes: 0,
   regimePrev: 'antigo',
   funprespParticipacao: 'nao',
+  funprespRevisarOpcoes: false,
+  funprespBaseIntegral: 0,
+  funprespVinculadaInicio: '',
+  funprespIncluirFC: false,
+  funprespIncluirGAS: false,
+  funprespIncluirGAE: false,
+  funprespIncluirAQTreino: false,
+  funprespFaculValor: 0,
+  funprespFaculForma: 'folha',
+  pensionRetroEntries: [],
   funprespAliq: 0,
   funprespFacul: 0,
 
@@ -521,6 +559,10 @@ export const INITIAL_STATE: CalculatorState = {
   substPss: 0,
   irFerias: 0,
   valFunpresp: 0,
+  valFunpresp13: 0,
+  valFunprespEA: 0,
+  valFunprespNormal: 0,
+  valFunprespFacultativa: 0,
   totalBruto: 0,
   totalDescontos: 0,
   liquido: 0,

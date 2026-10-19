@@ -125,7 +125,8 @@ export const buildPresetGrossLines = ({
             const abono13Bruto = roundCurrency(state.abonoPerm13 || 0);
             const ir13 = roundCurrency(Math.max(0, state.ir13 || 0));
             const pss13 = roundCurrency(Math.max(0, state.pss13 || 0));
-            const totalDescontos13 = roundCurrency(ir13 + pss13);
+            const funpresp13 = roundCurrency(Math.max(0, state.valFunpresp13 || 0));
+            const totalDescontos13 = roundCurrency(ir13 + pss13 + funpresp13);
             const baseSegundaParcela = roundCurrency(segunda13VencBruto + segunda13FcBruto);
             const proporcaoSegundaVenc = baseSegundaParcela > 0 ? segunda13VencBruto / baseSegundaParcela : 0;
             const descontoSegundaVenc = roundCurrency(totalDescontos13 * proporcaoSegundaVenc);
@@ -154,6 +155,7 @@ export const buildPresetGrossLines = ({
                 { label: 'Abono 13º Bruto', value: abono13Bruto },
                 { label: 'Desconto IR (Total 13º salário)', value: ir13, isDiscount: true },
                 { label: 'Desconto PSS (Total 13º salário)', value: pss13, isDiscount: true },
+                { label: 'Desconto Funpresp (Total 13º salário)', value: funpresp13, isDiscount: true },
                 { label: '1ª parcela vencimento Líquido', value: primeira13VencLiquido },
                 { label: '1ª parcela FC/CJ Líquido', value: primeira13FcLiquido },
                 { label: '2ª parcela vencimento Líquido', value: segunda13VencLiquido },

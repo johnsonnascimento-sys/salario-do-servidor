@@ -6,6 +6,7 @@ import { ManualRubricasSection } from './ManualRubricasSection';
 import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
 import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
 import { DynamicPayrollTaxSection } from './DynamicPayrollTaxSection';
+import { PensionRetroForm } from './PensionRetroForm';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetControlsSection } from './PresetControlsSection';
 import { PresetInstanceCard } from './PresetInstanceCard';
@@ -216,6 +217,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     handleFunprespParticipacaoChange={handleFunprespParticipacaoChange}
                     funprespValidationError={funprespValidationError}
                 />
+                <PensionRetroForm state={state} update={update} styles={styles} pssTableOptions={pssOptions} />
             </div>
 
             <div className={styles.card}>

@@ -187,10 +187,15 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                 },
                 facultativeRate: {
                     minIfPositive: Number(effective.previdencia_complementar.facultative_rate?.min_if_positive ?? 0),
-                    max: Number(effective.previdencia_complementar.facultative_rate?.max ?? 0),
-                    step: Number(effective.previdencia_complementar.facultative_rate?.step ?? 0),
+                    max: effective.previdencia_complementar.facultative_rate?.max,
+                    step: effective.previdencia_complementar.facultative_rate?.step,
                     default: Number(effective.previdencia_complementar.facultative_rate?.default ?? 0),
                 },
+                linkedRate: effective.previdencia_complementar.linked_rate,
+                minimumUrpUnits: effective.previdencia_complementar.minimum_urp_units,
+                urpByCompetence: effective.previdencia_complementar.urp_by_competence,
+                urpSourcesByCompetence: effective.previdencia_complementar.urp_sources_by_competence,
+                incidenceRules: effective.previdencia_complementar.incidence_rules,
                 baseRule: effective.previdencia_complementar.base_rule ?? 'excedente_teto_rgps',
                 includeThirteenth: Boolean(effective.previdencia_complementar.include_thirteenth),
                 costingDisclosure: {

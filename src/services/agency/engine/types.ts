@@ -6,6 +6,7 @@
 
 import { ICalculationParams } from '../types';
 import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../../types';
+import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
@@ -29,9 +30,20 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     tabelaPSS: string;
     pssSobreFC: boolean;
     incidirPSSGrat: boolean;
-    funprespParticipacao: 'nao' | 'patrocinado';
+    funprespParticipacao: PensionParticipation;
     funprespAliq: number;
     funprespFacul: number;
+    competencia?: string;
+    funprespBaseIntegral?: number;
+    funprespVinculadaInicio?: string;
+    funprespRevisarOpcoes?: boolean;
+    funprespIncluirFC?: boolean;
+    funprespIncluirGAS?: boolean;
+    funprespIncluirGAE?: boolean;
+    funprespIncluirAQTreino?: boolean;
+    funprespFaculValor?: number;
+    funprespFaculForma?: 'folha' | 'externo';
+    pensionRetroEntries?: PensionRetroEntry[];
     auxAlimentacao: number;
     auxPreEscolarQtd: number;
     cotaPreEscolar?: number;

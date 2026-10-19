@@ -33,6 +33,9 @@ export const useCalculatorResults = (
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
         state.vpni_lei, state.vpni_decisao, state.ats,
         state.dependentes, state.regimePrev, state.funprespParticipacao, state.funprespAliq, state.funprespFacul,
+        state.funprespRevisarOpcoes, state.funprespVinculadaInicio, state.funprespBaseIntegral, state.funprespIncluirFC, state.funprespIncluirGAS,
+        state.funprespIncluirGAE, state.funprespIncluirAQTreino, state.funprespFaculValor,
+        state.funprespFaculForma, state.pensionRetroEntries,
         state.tabelaPSS, state.tabelaIR,
         state.pssSobreFC, state.incidirPSSGrat,
         state.auxAlimentacao, state.auxPreEscolarQtd, state.cotaPreEscolar, state.auxTransporteGasto,
@@ -92,6 +95,11 @@ export const useCalculatorResults = (
                     pssMensal: bd.pss || 0,
                     pssEA: bd.pssEA || 0,
                     valFunpresp: bd.funpresp || 0,
+                    valFunpresp13: bd.funpresp13 || 0,
+                    valFunprespEA: bd.funprespEA || 0,
+                    valFunprespNormal: bd.funprespNormal || 0,
+                    valFunprespFacultativa: bd.funprespFacultativa || 0,
+                    pensionMemory: result.pensionMemory,
                     irMensal: bd.irrf || 0,
                     irEA: bd.irEA || 0,
                     aqIr: bd.aqIr || 0,
@@ -147,7 +155,7 @@ export const useCalculatorResults = (
                     return;
                 }
                 setCompleted({ token: inputToken, state: getEmptyCalculatedPayrollState(),
-                    error: 'Não foi possível calcular o holerite. Revise as entradas ou tente novamente.' });
+                    error: error instanceof Error ? error.message : 'Não foi possível calcular o holerite. Revise as entradas ou tente novamente.' });
             }
         })();
 
@@ -308,7 +316,11 @@ export const useCalculatorResults = (
 
         if (effectiveState.pssMensal > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS (PSS)', value: effectiveState.pssMensal, type: 'D' });
         if (effectiveState.pssEA > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-EA', value: effectiveState.pssEA, type: 'D' });
-        if (effectiveState.valFunpresp > 0) rows.push({ label: 'FUNPRESP-JUD', value: effectiveState.valFunpresp, type: 'D' });
+        if (effectiveState.valFunprespNormal > 0) rows.push({ label: effectiveState.funprespParticipacao === 'vinculado' ? 'FUNPRESP-JUD CONTRIBUIÇÃO VINCULADA' : 'FUNPRESP-JUD CONTRIBUIÇÃO NORMAL', value: effectiveState.valFunprespNormal, type: 'D' });
+        if (effectiveState.valFunprespFacultativa > 0) rows.push({ label: 'FUNPRESP-JUD CONTRIBUIÇÃO FACULTATIVA / APORTE EM FOLHA', value: effectiveState.valFunprespFacultativa, type: 'D' });
+        if (effectiveState.valFunpresp > 0 && !effectiveState.valFunprespNormal && !effectiveState.valFunprespFacultativa) rows.push({ label: 'FUNPRESP-JUD', value: effectiveState.valFunpresp, type: 'D' });
+        if (effectiveState.valFunprespEA > 0) rows.push({ label: 'FUNPRESP-JUD RETROATIVOS', value: effectiveState.valFunprespEA, type: 'D' });
+        if (effectiveState.valFunpresp13 > 0) rows.push({ label: 'FUNPRESP-JUD GRATIFICAÇÃO NATALINA (13º)', value: effectiveState.valFunpresp13, type: 'D' });
         const heIrMensal = Math.max(0, effectiveState.heIrMensal || 0);
         const heIrEA = Math.max(0, effectiveState.heIrEA || 0);
         const substIrMensal = Math.max(0, effectiveState.substIrMensal || 0);
@@ -391,6 +403,8 @@ export const useCalculatorResults = (
             if (r.isEA) bases.push('BASE IR (EA)');
             if (r.incidePSS) bases.push('BASE PSS');
             if (r.pssCompetenciaSeparada) bases.push('BASE PSS (EA)');
+            if (r.incideFunpresp) bases.push('BASE FUNPRESP');
+            if (r.funprespCompetenciaSeparada) bases.push('FUNPRESP POR COMPETÊNCIA');
             const sufixoBase = bases.length > 0 ? ` (${bases.join(' | ')})` : '';
 
             rows.push({

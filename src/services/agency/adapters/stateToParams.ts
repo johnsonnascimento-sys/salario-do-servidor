@@ -54,6 +54,17 @@ export function mapStateToAgencyParams(
         funprespParticipacao: state.funprespParticipacao,
         funprespAliq: state.funprespAliq,
         funprespFacul: state.funprespFacul,
+        funprespRevisarOpcoes: state.funprespRevisarOpcoes,
+        funprespBaseIntegral: state.funprespBaseIntegral,
+        funprespVinculadaInicio: state.funprespVinculadaInicio,
+        funprespIncluirFC: state.funprespIncluirFC,
+        funprespIncluirGAS: state.funprespIncluirGAS,
+        funprespIncluirGAE: state.funprespIncluirGAE,
+        funprespIncluirAQTreino: state.funprespIncluirAQTreino,
+        funprespFaculValor: state.funprespFaculValor,
+        funprespFaculForma: state.funprespFaculForma,
+        pensionRetroEntries: state.pensionRetroEntries,
+        competencia: `${state.anoRef}-${String(['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'].indexOf(state.mesRef.toUpperCase()) + 1).padStart(2, '0')}`,
 
         // Benefícios
         auxAlimentacao: state.auxAlimentacao,

@@ -19,6 +19,11 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'pssMensal',
     'pssEA',
     'valFunpresp',
+    'valFunpresp13',
+    'valFunprespEA',
+    'valFunprespNormal',
+    'valFunprespFacultativa',
+    'pensionMemory',
     'irMensal',
     'irEA',
     'aqIr',
@@ -156,6 +161,11 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
     return {
         ...merged,
         funcao: resolvedFuncao,
+        funprespRevisarOpcoes: safeSnapshot.funprespRevisarOpcoes ?? (
+            safeSnapshot.funprespParticipacao === 'patrocinado' &&
+            safeSnapshot.funprespIncluirFC === undefined
+        ),
+        pensionRetroEntries: Array.isArray(merged.pensionRetroEntries) ? merged.pensionRetroEntries : [],
         rubricasExtras: Array.isArray(merged.rubricasExtras) ? merged.rubricasExtras : [],
         overtimeEntries: Array.isArray(merged.overtimeEntries)
             ? merged.overtimeEntries.map((entry) => ({

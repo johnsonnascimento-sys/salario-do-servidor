@@ -1,3 +1,4 @@
+import type { PensionMemory } from '../../types/pension';
 
 /**
  * Identifiers for supported agencies.
@@ -25,6 +26,7 @@ export interface ICalculationResult {
     totalDeductions: number;
     totalBenefits: number;
     breakdown: Record<string, number>;
+    pensionMemory?: PensionMemory;
 }
 
 /**
