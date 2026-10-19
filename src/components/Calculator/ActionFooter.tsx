@@ -80,7 +80,7 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
                     </div>
 
                     <div className="text-right">
-                        <span className="text-h1 font-black text-neutral-800 dark:text-white tracking-tight brand-gradient-text">
+                        <span className={calculationReady ? "text-h1 font-black text-neutral-800 dark:text-white tracking-tight brand-gradient-text" : "text-body font-semibold text-neutral-600 dark:text-neutral-300"}>
                             {calculationReady ? formatCurrency(state.liquido) : resultMessage}
                         </span>
                     </div>

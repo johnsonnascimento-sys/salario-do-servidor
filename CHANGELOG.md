@@ -1,5 +1,10 @@
 # Changelog
 
+## Correção de interface - 19/10/2026
+- Funpresp: modalidade patrocinada indisponível no seletor enquanto RPPS sem teto; simulações incompatíveis restauradas oferecem ações explícitas para corrigir o enquadramento ou a participação.
+- Interface: controles não herdam negrito, caixa alta e espaçamento dos rótulos; títulos previdenciários seguem o padrão da calculadora e mensagem de cálculo indisponível usa tamanho de texto normal.
+- Orientação: aporte adicional distinguido do desconto normal calculado. Badge consulta versão sem cache antigo.
+
 ## Não publicado - 19/10/2026
 - Previdência: enquadramento RPPS separado da adesão complementar; bases e opções de parcelas independentes, participação vinculada e facultativas com distinção entre folha e aporte externo.
 - Cálculo: correção do desconto complementar do 13º no demonstrativo/líquido, validação de parâmetros e apuração identificada de retroativos, com memória previdenciária.

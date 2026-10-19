@@ -19,6 +19,8 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange, funprespValidationError
 }) => {
+    const capped = state.regimePrev === 'rpc' || state.regimePrev === 'migrado';
+    const incompatible = state.funprespParticipacao === 'patrocinado' && !capped;
     const participates = state.funprespParticipacao !== 'nao';
     const optionalItems = [
         ['fc', 'funprespIncluirFC', 'FC/CJ'], ['gas', 'funprespIncluirGAS', 'GAS'],
@@ -45,12 +47,12 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         </div>
         <p className="mt-2 text-body-xs text-neutral-600 dark:text-neutral-300">O teto do RPPS depende do seu enquadramento. A adesão à Funpresp é informada separadamente; mudar este campo não altera sua adesão.</p>
         {showFunprespSection && config && <fieldset className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
-            <legend className="text-label font-bold">Previdência complementar (Funpresp)</legend>
+            <legend className={styles.innerBoxTitle}>Previdência complementar (Funpresp)</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <label className={styles.label}>Participação no plano
                     <select className={styles.input} value={state.funprespParticipacao} onChange={e => handleFunprespParticipacaoChange(e.target.value as PensionParticipation)}>
                         <option value="nao">Não participa</option>
-                        <option value="patrocinado">Patrocinada</option>
+                        <option value="patrocinado" disabled={!capped}>Patrocinada{!capped ? " — exige RPPS com teto" : ""}</option>
                         <option value="vinculado">Vinculada (sem patrocínio)</option>
                     </select>
                 </label>
@@ -67,6 +69,16 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <input type="month" className={styles.input} value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
                 </label>}
             </div>
+            {!capped && <p className="text-body-xs text-neutral-600 dark:text-neutral-300">No RPPS sem teto, a adesão ao plano é vinculada, sem patrocínio. Para simular contribuição patrocinada, primeiro informe seu enquadramento no RPPS com teto.</p>}
+            {incompatible && <div role="alert" className="rounded-lg border border-amber-400 p-3 text-body-xs space-y-2">
+                <p>A simulação combina RPPS sem teto com Funpresp patrocinada. Confira no seu cadastro qual situação se aplica e escolha abaixo:</p>
+                <div className="flex flex-wrap gap-3">
+                    <button type="button" className="font-semibold underline" onClick={() => handleRegimePrevChange('migrado')}>Migrei para o RPPS com teto</button>
+                    <button type="button" className="font-semibold underline" onClick={() => handleRegimePrevChange('rpc')}>Ingressei no RPPS com teto</button>
+                    <button type="button" className="font-semibold underline" onClick={() => handleFunprespParticipacaoChange('vinculado')}>Permaneço sem teto e participo como vinculado</button>
+                    <button type="button" className="font-semibold underline" onClick={() => handleFunprespParticipacaoChange('nao')}>Não participo da Funpresp</button>
+                </div>
+            </div>}
             {participates && <>
                 {state.funprespRevisarOpcoes && <div role="alert" className="rounded-lg border border-amber-400 p-3 text-body-xs">
                     <p>Esta simulação foi salva com a base antiga da Funpresp. Confira as opções de inclusão antes de recalcular.</p>
@@ -97,6 +109,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                         </select>
                     </label>
                 </div>
+                <p className="text-body-xs text-neutral-600 dark:text-neutral-300">O desconto normal da Funpresp é calculado pela alíquota e pela base escolhidas. O aporte esporádico é um valor adicional: não informe nele o desconto normal do holerite.</p>
                 <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Contribuições facultativas não recebem contrapartida patronal. Pagamentos externos aparecem na memória e não reduzem o líquido da folha; a dedução anual será informada separadamente.</p>
             </>}
             {funprespValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>}

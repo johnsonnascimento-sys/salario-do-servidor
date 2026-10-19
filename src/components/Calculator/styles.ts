@@ -3,7 +3,7 @@ export const styles = {
     card: "bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow-sm",
     sectionTitle: "text-body-xs font-bold text-neutral-400 uppercase tracking-widest mb-6 flex items-center gap-2",
     label: "block text-label font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1.5",
-    input: "w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl px-4 py-2.5 text-body text-neutral-700 dark:text-neutral-200 focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all",
+    input: "w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl px-4 py-2.5 text-body font-normal normal-case tracking-normal text-neutral-700 dark:text-neutral-200 focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all",
     checkboxLabel: "flex items-center gap-2 text-body-xs text-neutral-600 dark:text-neutral-400 cursor-pointer select-none",
     checkbox: "rounded border-neutral-300 text-secondary focus:ring-secondary",
     accordionHeader: "px-5 py-4 font-bold text-body text-neutral-700 dark:text-neutral-200",

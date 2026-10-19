@@ -17,7 +17,7 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
         <input type="number" min={0} step="0.01" className={styles.input} value={entry[key] === undefined ? '' : String(entry[key])} onChange={e => replace(entry.id, { [key]: e.target.value === '' ? undefined : toPositiveNumber(e.target.value) })} />
     </label>;
     return <details className={styles.innerBox} open={entries.length > 0}>
-        <summary className="cursor-pointer font-semibold">Previdência de retroativos por competência</summary>
+        <summary className="cursor-pointer text-body-xs font-bold uppercase text-neutral-700 dark:text-neutral-300">Previdência de retroativos por competência</summary>
         <p className="mt-2 text-body-xs">Cadastre cada competência original separadamente. O modo completo recalcula as diferenças com a tabela original; ajuste informado exige a memória ou justificativa do desconto. As bases são integrais, antes do teto. Sem dados completos, o motor identifica a pendência.</p>
         <p className="mt-2 text-body-xs">Os ajustes previdenciários não adicionam rendimentos. Informe os créditos retroativos nas rubricas correspondentes, evitando duplicar descontos manuais.</p>
         {entries.map((entry, index) => <fieldset key={entry.id} className="mt-4 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 space-y-3">

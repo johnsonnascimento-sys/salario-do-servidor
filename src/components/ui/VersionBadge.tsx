@@ -27,7 +27,7 @@ export const VersionBadge: React.FC = () => {
 
     useEffect(() => {
         // Buscar version.json
-        fetch('/version.json')
+        fetch('/version.json', { cache: 'no-store' })
             .then(res => res.json())
             .then(data => setVersion(data))
             .catch(err => {

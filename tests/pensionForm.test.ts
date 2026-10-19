@@ -73,3 +73,11 @@ test('retroativo inicia sem inventar bases, tabela ou recolhimentos', () => {
     assert.equal(entry.tabelaPSS, undefined);
     tree.unmount();
 });
+
+test('modalidade incompatível é desabilitada e simulação antiga oferece recuperação explícita', () => {
+ const calls: any[] = [];
+ const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: state({funprespParticipacao:'patrocinado'}), update:()=>{}, handleRegimePrevChange:value=>calls.push(value), showFunprespSection:true, previdenciaComplementar:config, funprespNormalOptions:[.03], handleFunprespParticipacaoChange:()=>{} }));
+ assert.equal(tree.root.findAllByType('option').find(o=>o.props.value==='patrocinado')?.props.disabled,true);
+ const recover=tree.root.findAllByType('button').find(b=>b.children.join('')==='Ingressei no RPPS com teto');
+ act(()=>recover!.props.onClick());assert.deepEqual(calls,['rpc']);tree.unmount();
+});
