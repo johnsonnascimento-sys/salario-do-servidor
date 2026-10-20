@@ -1,7 +1,8 @@
 import React from 'react';
 import { CalculatorState } from '../../types';
+import { PensionParticipationSelect } from './PensionParticipationSelect';
 import { PensionRegimeSelect } from './PensionRegimeSelect';
-import { PensionRetroEntry, PensionParticipation } from '../../types/pension';
+import { PensionRetroEntry } from '../../types/pension';
 import { createUniqueId, toPositiveNumber, toDecimalRateFromPercentInput } from './dynamicPayrollForm.helpers';
 
 interface Props {
@@ -55,15 +56,12 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
                             <option value="">Selecione a tabela vigente</option>{pssTableOptions.map(key => <option key={key} value={key}>{key}</option>)}
                         </select>
                     </label>
-                    <label className={styles.label}>Regime na competência
-                        <PensionRegimeSelect className={styles.input} value={entry.regimePrev ?? state.regimePrev}
-                            onChange={regimePrev => replace(entry.id, { regimePrev })} />
-                    </label>
-                    <label className={styles.label}>Participação na competência
-                        <select className={styles.input} value={entry.participacao ?? state.funprespParticipacao} onChange={e => replace(entry.id, { participacao: e.target.value as PensionParticipation })}>
-                            <option value="nao">Não participa</option><option value="patrocinado">Patrocinada</option><option value="vinculado">Vinculada</option>
-                        </select>
-                    </label>
+                    <PensionRegimeSelect className={styles.input} labelClassName={styles.label} label="Regime na competência"
+                        value={entry.regimePrev ?? state.regimePrev}
+                        onChange={regimePrev => replace(entry.id, { regimePrev })} />
+                    <PensionParticipationSelect className={styles.input} labelClassName={styles.label} label="Participação na competência"
+                        value={entry.participacao ?? state.funprespParticipacao}
+                        onChange={participacao => replace(entry.id, { participacao })} />
                     {currency(entry, 'baseRppsOriginal', 'Base RPPS já paga')}
                     {currency(entry, 'baseRppsDevida', 'Base RPPS corrigida total')}
                     {currency(entry, 'contribuicaoRppsRecolhida', 'RPPS já recolhido')}

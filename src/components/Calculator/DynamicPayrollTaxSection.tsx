@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PensionRegimeSelect, pensionRegimeGroup } from './PensionRegimeSelect';
+import { PensionParticipationSelect } from './PensionParticipationSelect';
+import { PENSION_GUIDANCE, PENSION_HELP_CLASS } from './pensionHelp';
 import { CalculatorState, CourtConfig } from '../../types';
 import { PensionParticipation } from '../../types/pension';
 import { toDecimalRateFromPercentInput, toPercentLabel, toPositiveNumber } from './dynamicPayrollForm.helpers';
@@ -42,25 +44,20 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     return <div className={styles.innerBox}>
         <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className={styles.label}>Regime previdenciário
-                <PensionRegimeSelect className={styles.input} value={state.regimePrev} onChange={handleRegimePrevChange} />
-            </label>
+            <PensionRegimeSelect className={styles.input} labelClassName={styles.label}
+                value={state.regimePrev} onChange={handleRegimePrevChange} />
             <label className={styles.label}>Dependentes (IR)
                 <input type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
             </label>
 
         </div>
-        <p className="mt-2 text-body-xs text-neutral-600 dark:text-neutral-300">O teto do RPPS depende do seu enquadramento. A adesão à Funpresp é informada separadamente; mudar este campo não altera sua adesão.</p>
+        <p className={PENSION_HELP_CLASS}>{PENSION_GUIDANCE}</p>
         {showFunprespSection && config && <fieldset className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
             <legend className={styles.innerBoxTitle}>Funpresp-Jud</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className={styles.label}>Participação no plano
-                    <select className={styles.input} value={state.funprespParticipacao} onChange={e => handleFunprespParticipacaoChange(e.target.value as PensionParticipation)}>
-                        <option value="nao">Não participa</option>
-                        <option value="patrocinado" disabled={!capped}>Patrocinada — com contrapartida{!capped ? " (exige RPPS com teto)" : ""}</option>
-                        <option value="vinculado">Vinculada — sem contrapartida</option>
-                    </select>
-                </label>
+                <PensionParticipationSelect className={styles.input} labelClassName={styles.label}
+                    value={state.funprespParticipacao} onChange={handleFunprespParticipacaoChange}
+                    sponsoredDisabled={!capped} />
                 {participates && <label className={styles.label}>Alíquota {state.funprespParticipacao === 'vinculado' ? 'vinculada' : 'normal patrocinada'}
                     <select className={styles.input} value={state.funprespAliq} onChange={e => update('funprespAliq', Number(e.target.value))}>
                         {!funprespNormalOptions.includes(state.funprespAliq) && <option value={state.funprespAliq}>Selecione a alíquota</option>}
@@ -74,7 +71,6 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <input type="month" className={styles.input} value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
                 </label>}
             </div>
-            {!capped && <p className="text-body-xs text-neutral-600 dark:text-neutral-300">No RPPS sem teto, a adesão ao plano é vinculada, sem patrocínio. Para simular contribuição patrocinada, primeiro informe seu enquadramento no RPPS com teto.</p>}
             {incompatible && <div role="alert" className="rounded-lg border border-amber-400 p-3 text-body-xs space-y-2">
                 <p>A simulação combina RPPS sem teto com Funpresp patrocinada. Confira no seu cadastro qual situação se aplica e escolha abaixo:</p>
                 <div className="flex flex-wrap gap-3">
@@ -99,7 +95,6 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <p>Esta simulação foi salva com a base antiga da Funpresp. Confira as opções de inclusão antes de recalcular.</p>
                     <button type="button" className="mt-2 font-semibold underline" onClick={() => update('funprespRevisarOpcoes', false)}>Confirmar opções da Funpresp</button>
                 </div>}
-                <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Informe a modalidade e as opções do seu cadastro no plano. A patrocinada usa o excedente da base própria sobre o teto. A vinculada usa a remuneração de participação escolhida, sujeita aos limites e à URP da competência, sem alterar seu regime no RPPS.</p>
                 <fieldset className="space-y-2">
                     <legend className={styles.label}>Opções de inclusão na base da Funpresp</legend>
                     <p className="text-body-xs">Marque somente parcelas cuja inclusão você optou no plano. Estas escolhas são independentes da incidência no RPPS.</p>

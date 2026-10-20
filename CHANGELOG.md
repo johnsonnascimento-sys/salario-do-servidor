@@ -1,5 +1,10 @@
 # Changelog
 
+## Legendas de previdência — 20/10/2026
+- Regime RPPS e participação na Funpresp exibem explicação breve da opção selecionada, compartilhada entre folha mensal e cada competência retroativa.
+- Legendas com associação acessível por identificadores únicos, texto normal e substituição de orientações repetidas; alertas e cálculos preservados.
+- Validação: 19 testes de formulário, TypeScript e build aprovados; conferência visual desktop/mobile dos cinco textos no componente isolado com dados sintéticos.
+
 ## Não publicado — 20/10/2026
 - Previdência: seletor mensal e por competência reduzido a RPPS sem teto do RGPS e RPPS limitado ao teto do RGPS; os quatro códigos salvos continuam compatíveis, sem alteração de fórmulas ou tabelas.
 - Interface: Funpresp-Jud independente, alíquota apenas para participantes e dados obrigatórios da vinculada visíveis; incidências, facultativas e aportes reunidos em opções adicionais com contador e abertura em pendências locais ou do motor.

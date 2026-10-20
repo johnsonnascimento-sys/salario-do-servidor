@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useId } from 'react';
 import type { CalculatorState } from '../../types';
+import { PENSION_HELP_CLASS, PENSION_REGIME_HELP } from './pensionHelp';
 
 type PensionRegime = CalculatorState['regimePrev'];
 
@@ -16,10 +17,18 @@ export const PensionRegimeSelect: React.FC<{
     value: PensionRegime;
     onChange: (value: PensionRegime) => void;
     className?: string;
-}> = ({ value, onChange, className }) => (
-    <select className={className} value={pensionRegimeGroup(value)}
-        onChange={event => onChange(selectPensionRegime(value, event.target.value))}>
-        <option value="antigo">RPPS sem teto do RGPS</option>
-        <option value="rpc">RPPS limitado ao teto do RGPS</option>
-    </select>
-);
+    label?: string;
+    labelClassName?: string;
+}> = ({ value, onChange, className, label = 'Regime previdenciário', labelClassName }) => {
+    const id = useId();
+    const helpId = `${id}-help`;
+    return <div>
+        <label htmlFor={id} className={labelClassName}>{label}</label>
+        <select id={id} aria-describedby={helpId} className={className} value={pensionRegimeGroup(value)}
+            onChange={event => onChange(selectPensionRegime(value, event.target.value))}>
+            <option value="antigo">RPPS sem teto do RGPS</option>
+            <option value="rpc">RPPS limitado ao teto do RGPS</option>
+        </select>
+        <p id={helpId} className={PENSION_HELP_CLASS}>{PENSION_REGIME_HELP[pensionRegimeGroup(value)]}</p>
+    </div>;
+};
