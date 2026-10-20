@@ -48,7 +48,6 @@ const render = (props: ReturnType<typeof input>, extra = {}) => {
     act(() => { tree = create(React.createElement(PensionRetroForm, { ...props, update, ...extra })); });
     return tree!;
 };
-const button = (tree: ReturnType<typeof create>, title: string) => tree.root.findAllByType('button').find(item => item.children.join('') === title)!;
 
 test('retroativo manual não oferece seletores nem diálogo previdenciário', () => {
     const tree = render(input([entry({ modo: 'manual', regimePrev: 'antigo' })]));
@@ -70,18 +69,14 @@ test('contexto histórico ausente bloqueia seleção inclusive eventos disparado
     tree.unmount();
 });
 
-test('apenas o primeiro retroativo incompatível abre automaticamente e suspensão mensal impede abertura', () => {
-    const props = input([entry({ regimePrev: 'antigo' }), entry({ id: 'retro-2', regimePrev: 'antigo' })]);
+test('retroativos incompatíveis são limpos juntos sem diálogo nem perda de dados', () => {
+    const original = [entry({ regimePrev: 'antigo' }), entry({ id: 'retro-2', regimePrev: 'antigo' })];
+    const props = input(original);
     const tree = render(props);
-    assert.equal(tree.root.findAllByType('dialog').length, 1);
-    assert.equal(tree.root.findAllByType('input').filter(item => item.props.type === 'radio').every(item => !item.props.checked), true);
-    act(() => button(tree, 'Voltar ao preenchimento').props.onClick());
     assert.equal(tree.root.findAllByType('dialog').length, 0);
-    assert.equal(calls.length, 0);
+    assert.deepEqual(calls, [['pensionRetroEntries', original.map(item => ({ ...item, participacao: 'nao' }))]]);
+    assert.equal(original[0].participacao, 'patrocinado');
     tree.unmount();
-    const suspended = render(props, { allowAutoResolve: false });
-    assert.equal(suspended.root.findAllByType('dialog').length, 0);
-    suspended.unmount();
 });
 
 test('troca mensal preserva o enquadramento e as legendas próprios de cada retroativo', () => {
@@ -96,29 +91,13 @@ test('troca mensal preserva o enquadramento e as legendas próprios de cada retr
     tree.unmount();
 });
 
-test('troca histórica incompatível cancela sem gravar e confirma vinculada em um único patch', () => {
+test('troca histórica aplica regime e não participação juntos preservando demais competências', () => {
     const original = entry({ contribuicaoComplementarRecolhida: 17, aliquotaFacultativa: .02 });
     const other = entry({ id: 'retro-2', regimePrev: 'migrado' });
     const tree = render(input([original, other]));
-    const change = () => act(() => tree.root.findAllByType(PensionRegimeSelect)[0].props.onChange('antigo'));
-    change();
-    assert.equal(calls.length, 0);
-    assert.equal(tree.root.findAllByType(PensionRegimeSelect)[0].props.value, 'rpc');
-    act(() => button(tree, 'Cancelar a troca').props.onClick());
+    act(() => tree.root.findAllByType(PensionRegimeSelect)[0].props.onChange('antigo'));
+    assert.deepEqual(calls, [['pensionRetroEntries', [{ ...original, regimePrev: 'antigo', participacao: 'nao' }, other]]]);
     assert.equal(tree.root.findAllByType('dialog').length, 0);
-    assert.equal(calls.length, 0);
-    change();
-    const dialog = tree.root.findByType('dialog');
-    act(() => dialog.findAllByType('input').find(item => item.props.type === 'radio' && item.props.value === 'vinculado')!.props.onChange());
-    assert.equal(button(tree, 'Confirmar escolha').props.disabled, true);
-    act(() => dialog.findByType('select').props.onChange({ target: { value: '.06' } }));
-    act(() => dialog.findAllByType('input').find(item => item.props.type === 'number')!.props.onChange({ target: { value: '500' } }));
-    act(() => dialog.findAllByType('input').find(item => item.props.type === 'month')!.props.onChange({ target: { value: '2025-11' } }));
-    assert.equal(button(tree, 'Confirmar escolha').props.disabled, false);
-    act(() => dialog.findByType('form').props.onSubmit({ preventDefault() {} }));
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0][0], 'pensionRetroEntries');
-    assert.deepEqual(calls[0][1], [{ ...original, regimePrev: 'antigo', participacao: 'vinculado', aliquotaNormal: .06, salarioParticipacaoVinculado: 500, inicioVinculado: '2025-11' }, other]);
     tree.unmount();
 });
 

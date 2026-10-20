@@ -1,5 +1,12 @@
 # Changelog
 
+## Previdência sem diálogos — 20/10/2026
+- Removidos o diálogo de escolha guiada, sua abertura no carregamento e os botões de resolução. Modalidades incompatíveis continuam desabilitadas e rejeitadas pelos eventos.
+- Trocas de regime mantêm participação compatível; caso contrário, aplicam o regime e “Não participa” juntos. Mudanças salariais e rascunhos incompatíveis também limpam somente a participação da simulação, sem inscrição automática em outra modalidade.
+- Dados obrigatórios da vinculada são preenchidos diretamente no formulário. Retroativos são normalizados em lote, por sua própria competência, sem modificar resultados históricos salvos ou opções adicionais.
+- Contexto e validações defensivas do motor preservados; nenhuma alteração de fórmulas, tabelas ou banco.
+- Validação: 86 testes (28 previdenciários, 35 de formulário, 19 de snapshots e 4 de carregamento), TypeScript e build aprovados. Revisão do especialista de cálculo sem bloqueadores.
+
 ## Escolha previdenciária guiada — 20/10/2026
 - Modalidades incompatíveis ficam indisponíveis no seletor mensal e nos retroativos completos, com motivos fornecidos pelo mesmo contexto do motor.
 - Troca de RPPS incompatível aguarda escolha explícita antes de aplicar regime e participação juntos; vinculada exige dados válidos e alíquota da grade, sem adesão ou cancelamento automático.

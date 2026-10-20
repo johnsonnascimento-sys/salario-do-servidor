@@ -217,7 +217,7 @@ export default function Calculator() {
         <>
             <MobileResultsBar
                 calculationReady={calculationReady}
-                resultMessage={calculationStatus === 'selection_required' ? 'Escolha sua participação na Funpresp' : calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
+                resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
                 savingPayslip={savingPayslip}
                 liquido={effectiveState.liquido}
                 onExportPDF={initiateExportPDF}
@@ -283,14 +283,14 @@ export default function Calculator() {
                         resultRows={resultRows}
                     /> : <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
-                        {calculationStatus === 'selection_required' ? 'Escolha uma participação compatível na seção de previdência para continuar.' : calculationError || 'Calculando os valores do holerite...'}
+                        {calculationError || 'Calculando os valores do holerite...'}
                     </p>}
                 </div>
 
                 <ActionFooter
                     errorDetail={calculationError}
                     calculationReady={calculationReady}
-                    resultMessage={calculationStatus === 'selection_required' ? 'Escolha sua participação na Funpresp' : calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
+                    resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
                     state={effectiveState}
                     onExportPDF={initiateExportPDF}
                     onExportExcel={initiateExportExcel}

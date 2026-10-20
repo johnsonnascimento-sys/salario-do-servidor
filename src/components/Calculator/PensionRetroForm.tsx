@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CalculatorState } from '../../types';
 import { PensionRetroSelection } from './PensionRetroSelection';
 import type { IAgencyCalculationParams } from '../../services/agency/engine/types';
@@ -13,15 +13,25 @@ interface Props {
     pssTableOptions: string[];
     pensionParams?: IAgencyCalculationParams;
     pensionContexts?: PensionSelectionContexts | null;
-    allowAutoResolve?: boolean;
+    allowNormalization?: boolean;
 }
 
-export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTableOptions, pensionParams, pensionContexts, allowAutoResolve = true }) => {
+export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTableOptions, pensionParams, pensionContexts, allowNormalization = true }) => {
     const entries = state.pensionRetroEntries ?? [];
-    const firstIncompatible = entries.findIndex(entry => {
-        const context = pensionContexts?.retro[entry.id]?.context;
-        return entry.modo !== 'manual' && context && !context.allowed.includes(entry.participacao ?? state.funprespParticipacao);
-    });
+    useEffect(() => {
+        if (!allowNormalization) return;
+        let changed = false;
+        const normalized = entries.map(entry => {
+            const context = pensionContexts?.retro[entry.id]?.context;
+            if (entry.modo !== 'manual' && context && !context.allowed.includes(entry.participacao ?? state.funprespParticipacao)) {
+                changed = true;
+                return { ...entry, participacao: 'nao' as const };
+            }
+            return entry;
+        });
+        // Batch corrections so independent historical entries cannot overwrite each other.
+        if (changed) update('pensionRetroEntries', normalized);
+    }, [entries, pensionContexts, state.funprespParticipacao, allowNormalization, update]);
     const replace = (id: string, changes: Partial<PensionRetroEntry>) => update('pensionRetroEntries', entries.map(entry => entry.id === id ? { ...entry, ...changes } : entry));
     const currency = (entry: PensionRetroEntry, key: keyof PensionRetroEntry, label: string) => <label className={styles.label} key={key}>{label} (R$)
         <input type="number" min={0} step="0.01" className={styles.input} value={entry[key] === undefined ? '' : String(entry[key])} onChange={e => replace(entry.id, { [key]: e.target.value === '' ? undefined : toPositiveNumber(e.target.value) })} />
@@ -68,7 +78,6 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
                         fallbackRegime={state.regimePrev} fallbackParticipation={state.funprespParticipacao}
                         context={pensionContexts?.retro[entry.id]?.context ?? null}
                         error={pensionContexts?.retro[entry.id]?.error}
-                        allowAutoResolve={allowAutoResolve && (firstIncompatible < 0 || firstIncompatible === index)}
                         onApply={patch => replace(entry.id, patch)} />
                     {currency(entry, 'baseRppsOriginal', 'Base RPPS já paga')}
                     {currency(entry, 'baseRppsDevida', 'Base RPPS corrigida total')}

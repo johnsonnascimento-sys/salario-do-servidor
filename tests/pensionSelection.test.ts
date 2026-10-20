@@ -9,7 +9,6 @@ import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCal
 import { useCalculatorResults } from '../src/hooks/calculator/useCalculatorResults';
 import { applyCalculatorPatch } from '../src/utils/calculatorState';
 import { usePensionSelection } from '../src/components/Calculator/hooks/usePensionSelection';
-import { PensionChoiceDialog } from '../src/components/Calculator/PensionChoiceDialog';
 import { PensionParticipationSelect } from '../src/components/Calculator/PensionParticipationSelect';
 
 const config: CourtConfig = {
@@ -31,7 +30,7 @@ const state = (patch: Partial<CalculatorState> = {}): CalculatorState => ({ ...I
     funprespRevisarOpcoes: false, ...patch });
 const paramsFor = (input = state()) => mapStateToAgencyParams(input, 'teste', config);
 
-test('troca incompatível aguarda decisão; cancelar mantém estado e confirmar aplica patch único', () => {
+test('troca de regime aplica enquadramento e limpa modalidade incompatível em um patch, sem diálogo', () => {
     const params = paramsFor();
     const context = buildPensionContext(params, 9000);
     const patches: any[] = [];
@@ -39,29 +38,22 @@ test('troca incompatível aguarda decisão; cancelar mantém estado e confirmar 
     const Probe = () => { selection = usePensionSelection({ params, context, onApply: p => patches.push(p) }); return null; };
     const hook = create(React.createElement(Probe));
     act(() => selection.handleRegimeChange('antigo'));
-    assert.equal(patches.length, 0);
-    assert.equal(selection.dialog?.params.regimePrev, 'antigo');
-    act(() => selection.dialog!.onCancel());
-    assert.equal(selection.dialog, null);
-    assert.equal(params.regimePrev, 'rpc');
-    act(() => selection.handleRegimeChange('antigo'));
-    const tree = create(React.createElement(PensionChoiceDialog, selection.dialog!));
-    assert.equal(tree.root.findAllByType('input').filter(i => i.props.type === 'radio').every(i => !i.props.checked), true);
-    assert.equal(tree.root.findAllByType('button').find(b => b.props.type === 'submit')?.props.disabled, true);
-    const linked = tree.root.findAllByType('input').find(i => i.props.value === 'vinculado')!;
-    act(() => linked.props.onChange());
-    assert.equal(tree.root.findByType('select').props.value, ''); // .03 is not in the linked grade.
-    assert.equal(tree.root.findAllByType('button').find(b => b.props.type === 'submit')?.props.disabled, true);
-    act(() => {
-        tree.root.findByType('select').props.onChange({ target: { value: '.06' } });
-        tree.root.findAllByType('input').find(i => i.props.type === 'number')!.props.onChange({ target: { value: '50' } });
-        tree.root.findAllByType('input').find(i => i.props.type === 'month')!.props.onChange({ target: { value: '2026-06' } });
-    });
-    assert.equal(tree.root.findAllByType('button').find(b => b.props.type === 'submit')?.props.disabled, false);
-    act(() => tree.root.findByType('form').props.onSubmit({ preventDefault() {} }));
-    assert.deepEqual(patches, [{ regimePrev: 'antigo', funprespParticipacao: 'vinculado', funprespAliq: .06,
-        funprespBaseIntegral: 50, funprespVinculadaInicio: '2026-06' }]);
-    tree.unmount(); hook.unmount();
+    assert.deepEqual(patches, [{ regimePrev: 'antigo', funprespParticipacao: 'nao' }]);
+    assert.equal(hook.root.findAllByType('dialog').length, 0);
+    hook.unmount();
+});
+
+test('vinculada permitida pode ser selecionada antes de preencher os dados no formulário', () => {
+    const params = paramsFor(state({ regimePrev: 'antigo', funprespParticipacao: 'nao' }));
+    const context = buildPensionContext(params, 9000);
+    const patches: any[] = [];
+    let selection!: ReturnType<typeof usePensionSelection>;
+    const Probe = () => { selection = usePensionSelection({ params, context, onApply: p => patches.push(p) }); return null; };
+    const hook = create(React.createElement(Probe));
+    act(() => selection.handleParticipationChange('vinculado'));
+    assert.deepEqual(patches, [{ funprespParticipacao: 'vinculado' }]);
+    assert.equal(hook.root.findAllByType('dialog').length, 0);
+    hook.unmount();
 });
 
 test('opções e eventos incompatíveis ou sem contexto não alteram a simulação', () => {
@@ -83,21 +75,16 @@ test('opções e eventos incompatíveis ou sem contexto não alteram a simulaç�
     tree.unmount(); hook.unmount();
 });
 
-test('restauração incompatível abre guia sem corrigir dados; cancelamento permite reabertura', () => {
+test('restauração incompatível limpa somente participação sem abrir diálogo', () => {
     const params = paramsFor(state({ regimePrev: 'antigo' }));
     const context = buildPensionContext(params, 9000);
     const changes: any[] = [];
-    let selection!: ReturnType<typeof usePensionSelection>;
-    const Probe = () => { selection = usePensionSelection({ params, context, onApply: p => changes.push(p) }); return null; };
-    const tree = create(React.createElement(Probe));
-    assert.ok(selection.dialog);
-    assert.deepEqual(changes, []);
-    act(() => selection.dialog!.onCancel());
-    assert.equal(selection.dialog, null);
-    assert.equal(selection.incompatible, true);
-    act(() => selection.reopen());
-    act(() => selection.dialog!.onConfirm({ funprespParticipacao: 'nao' }));
-    assert.deepEqual(changes, [{ funprespParticipacao: 'nao', regimePrev: 'antigo' }]);
+    const Probe = () => { usePensionSelection({ params, context, onApply: p => changes.push(p) }); return null; };
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(React.createElement(Probe)); });
+    assert.deepEqual(changes, [{ funprespParticipacao: 'nao' }]);
+    assert.equal(tree.root.findAllByType('dialog').length, 0);
+    assert.equal(params.funprespParticipacao, 'patrocinado'); // original snapshot untouched
     tree.unmount();
 });
 
@@ -149,4 +136,50 @@ test('patch mensal congela heranças históricas antigas sem alterar registros e
     assert.equal(changed.pensionRetroEntries[0].participacao, 'patrocinado');
     assert.deepEqual(changed.pensionRetroEntries[1], original.pensionRetroEntries[1]);
     assert.equal(original.pensionRetroEntries[0].regimePrev, undefined);
+});
+
+
+test('mudança salarial normaliza seleção e retoma cálculo sem intervenção', async () => {
+    const engine = new AgencyCalculationEngine();
+    let setInput!: React.Dispatch<React.SetStateAction<CalculatorState>>;
+    let latest!: ReturnType<typeof useCalculatorResults>;
+    let current!: CalculatorState;
+    const Probe = () => {
+        const [input, setState] = React.useState(state());
+        current = input; setInput = setState;
+        latest = useCalculatorResults(input, engine, config, { slug: 'teste', name: 'Teste', type: 'judiciary' });
+        usePensionSelection({ params: paramsFor(input), context: latest.pensionContexts?.monthly ?? null,
+            onApply: patch => setState(previous => applyCalculatorPatch(previous, patch)) });
+        return null;
+    };
+    let tree!: ReturnType<typeof create>;
+    await act(async () => { tree = create(React.createElement(Probe)); });
+    assert.equal(latest.calculationStatus, 'ready');
+    await act(async () => { setInput(previous => ({ ...previous, padrao: 'A2' })); });
+    assert.equal(current.funprespParticipacao, 'nao');
+    assert.equal(current.regimePrev, 'rpc');
+    assert.equal(current.padrao, 'A2');
+    assert.equal(latest.calculationStatus, 'ready', latest.calculationError ?? '');
+    await act(async () => { setInput(previous => ({ ...previous, funprespParticipacao: 'vinculado',
+        funprespAliq: .06, funprespBaseIntegral: 50, funprespVinculadaInicio: '2026-06' })); });
+    assert.equal(latest.calculationStatus, 'ready', latest.calculationError ?? '');
+    await act(async () => { setInput(previous => ({ ...previous, padrao: 'A1' })); });
+    assert.equal(current.funprespParticipacao, 'nao');
+    assert.equal(current.funprespBaseIntegral, 50);
+    assert.equal(current.funprespVinculadaInicio, '2026-06');
+    assert.equal(latest.calculationStatus, 'ready', latest.calculationError ?? '');
+    assert.equal(tree.root.findAllByType('dialog').length, 0);
+    tree.unmount();
+});
+
+test('enquadramentos legados e modalidades válidas não sofrem correção no carregamento', () => {
+    for (const regimePrev of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
+        const params = paramsFor(state({ regimePrev, funprespParticipacao: 'nao' }));
+        const patches: any[] = [];
+        const Probe = () => { usePensionSelection({ params, context: buildPensionContext(params, 9000), onApply: p => patches.push(p) }); return null; };
+        let tree!: ReturnType<typeof create>;
+        act(() => { tree = create(React.createElement(Probe)); });
+        assert.deepEqual(patches, []);
+        tree.unmount();
+    }
 });

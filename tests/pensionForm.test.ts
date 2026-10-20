@@ -78,14 +78,16 @@ test('retroativo inicia sem inventar bases, tabela ou recolhimentos', () => {
     tree.unmount();
 });
 
-test('modalidade incompatível bloqueada oferece escolha guiada sem recuperação automática', () => {
+test('modalidade incompatível fica bloqueada sem alerta ou botão de resolução', () => {
  const calls: any[] = [];
  const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: state({funprespParticipacao:'patrocinado'}), update:()=>{},
  handleRegimePrevChange:value=>calls.push(value), showFunprespSection:true, previdenciaComplementar:config, funprespNormalOptions:[.03],
- handleFunprespParticipacaoChange:()=>{}, selectionRequired:true, onResolveParticipation:()=>calls.push('resolve') }));
+ handleFunprespParticipacaoChange:()=>{}, selectionRequired:true }));
  assert.equal(tree.root.findAllByType('option').find(o=>o.props.value==='patrocinado')?.props.disabled,true);
- const recover=tree.root.findAllByType('button').find(b=>b.children.join('')==='Escolher participação');
- act(()=>recover!.props.onClick());assert.deepEqual(calls,['resolve']);tree.unmount();
+ assert.equal(tree.root.findAllByType('button').length,0);
+ assert.equal(tree.root.findAllByType('dialog').length,0);
+ assert.equal(tree.root.findAllByProps({role:'alert'}).length,0);
+ assert.deepEqual(calls,[]);tree.unmount();
 });
 
 test('rodapé mostra a causa completa do erro e mantém salvar/exportar bloqueados', () => {
@@ -181,16 +183,16 @@ test('pendência exclusiva do motor abre opções adicionais', () => {
     tree.unmount();
 });
 
-test('configuração desabilitada permite revisão explícita de flags legadas e reabrir escolha', () => {
+test('configuração desabilitada permite revisão de flags sem botão de escolha', () => {
     const calls: any[] = [];
     const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: state({ funprespIncluirFC: true }),
         update: (key, value) => calls.push([key, value]), handleRegimePrevChange: () => {}, showFunprespSection: false,
         previdenciaComplementar: undefined, funprespNormalOptions: [], handleFunprespParticipacaoChange: () => {},
-        selectionRequired: true, onResolveParticipation: () => calls.push('resolve') }));
+        selectionRequired: true }));
     const reset = tree.root.findAllByType('input').find(input => input.props.type === 'checkbox' && input.props.checked)!;
     act(() => reset.props.onChange({ target: { checked: false } }));
-    act(() => tree.root.findAllByType('button').find(button => button.children.join('') === 'Revisar participação salva')!.props.onClick());
-    assert.deepEqual(calls, [['funprespIncluirFC', false], 'resolve']);
+    assert.equal(tree.root.findAllByType('button').length, 0);
+    assert.deepEqual(calls, [['funprespIncluirFC', false]]);
     tree.unmount();
 });
 

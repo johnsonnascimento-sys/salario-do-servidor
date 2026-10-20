@@ -2,7 +2,6 @@ import React from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { PensionChoiceDialog } from './PensionChoiceDialog';
 import { Settings } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
@@ -233,14 +232,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     calculationError={calculationError}
                     pensionContext={pensionContexts?.monthly ?? null}
                     selectionRequired={pensionSelection.incompatible}
-                    onResolveParticipation={pensionSelection.reopen}
                 />
-                {pensionSelection.dialog && <PensionChoiceDialog
-                    key={JSON.stringify([pensionSelection.dialog.params.regimePrev, pensionSelection.dialog.context.base, pensionSelection.dialog.context.teto, pensionSelection.dialog.context.allowed])}
-                    {...pensionSelection.dialog} />}
                 <PensionRetroForm state={inputState ?? state} update={update} styles={styles} pssTableOptions={pssOptions}
                     pensionParams={pensionParams} pensionContexts={pensionContexts}
-                    allowAutoResolve={!pensionSelection.incompatible && !pensionSelection.dialog} />
+                    allowNormalization={!pensionSelection.incompatible} />
             </div>
 
             <div className={styles.card}>

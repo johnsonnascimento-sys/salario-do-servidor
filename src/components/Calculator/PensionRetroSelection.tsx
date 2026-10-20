@@ -4,7 +4,6 @@ import type { IAgencyCalculationParams } from '../../services/agency/engine/type
 import type { PensionContext } from '../../services/agency/engine/modules/pensionContext';
 import { historicalPensionParams, resolveHistoricalPensionContext } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection, type PensionSelectionPatch } from './hooks/usePensionSelection';
-import { PensionChoiceDialog } from './PensionChoiceDialog';
 import { PensionParticipationSelect } from './PensionParticipationSelect';
 import { PensionRegimeSelect } from './PensionRegimeSelect';
 
@@ -13,14 +12,13 @@ interface Props {
     params?: IAgencyCalculationParams;
     context: PensionContext | null;
     error?: string | null;
-    allowAutoResolve: boolean;
     fallbackRegime: IAgencyCalculationParams['regimePrev'];
     fallbackParticipation: IAgencyCalculationParams['funprespParticipacao'];
     styles: Record<string, string>;
     onApply: (patch: Partial<PensionRetroEntry>) => void;
 }
 
-const ReadySelection: React.FC<Props & { params: IAgencyCalculationParams }> = ({ entry, params, context, error, allowAutoResolve, styles, onApply }) => {
+const ReadySelection: React.FC<Props & { params: IAgencyCalculationParams }> = ({ entry, params, context, error, styles, onApply }) => {
     const historical = historicalPensionParams(params, entry);
     const apply = (patch: PensionSelectionPatch) => {
         const changes: Partial<PensionRetroEntry> = {};
@@ -31,11 +29,7 @@ const ReadySelection: React.FC<Props & { params: IAgencyCalculationParams }> = (
         if ('funprespVinculadaInicio' in patch) changes.inicioVinculado = patch.funprespVinculadaInicio;
         onApply(changes);
     };
-    const selection = usePensionSelection({ params: historical, context, onApply: apply, tipo: entry.tipo ?? 'mensal', autoResolve: allowAutoResolve });
-    const dialogKey = JSON.stringify([entry.id, historical.regimePrev, historical.funprespParticipacao,
-        historical.competencia, historical.tabelaPSS, historical.funprespAliq, historical.funprespBaseIntegral,
-        historical.funprespVinculadaInicio, context?.base, context?.teto, context?.allowed,
-        selection.dialog?.params.regimePrev, historical.agencyConfig?.previdenciaComplementar]);
+    const selection = usePensionSelection({ params: historical, context, onApply: apply, tipo: entry.tipo ?? 'mensal', normalize: false });
     return <>
         <PensionRegimeSelect className={styles.input} labelClassName={styles.label} label="Regime na competência"
             value={historical.regimePrev} disabled={!context} onChange={selection.handleRegimeChange} />
@@ -43,14 +37,10 @@ const ReadySelection: React.FC<Props & { params: IAgencyCalculationParams }> = (
             value={historical.funprespParticipacao} disabled={!context} allowed={context?.allowed}
             unavailableReasons={context?.unavailableReasons} onChange={selection.handleParticipationChange} />
         {!context && <p className="md:col-span-3 text-body-xs" role="status">{error || resolveHistoricalPensionContext(params, entry).error || 'Aguarde a atualização do contexto previdenciário desta competência.'}</p>}
-        {selection.incompatible && <p className="md:col-span-3 text-body-xs" role="status">A participação desta competência precisa ser escolhida para continuar.{' '}
-            <button type="button" className="font-semibold underline" disabled={!allowAutoResolve} onClick={selection.reopen}>Escolher participação do retroativo</button>
-        </p>}
-        {selection.dialog && <PensionChoiceDialog key={dialogKey} {...selection.dialog} />}
     </>;
 };
 
-/** A separate child keeps each historical competence's dialog and draft isolated. */
+/** Each historical competence uses its own eligibility context. */
 export const PensionRetroSelection: React.FC<Props> = props => {
     if (!props.params) return <>
         <PensionRegimeSelect className={props.styles.input} labelClassName={props.styles.label} label="Regime na competência"

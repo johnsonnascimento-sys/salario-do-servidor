@@ -21,13 +21,12 @@ interface DynamicPayrollTaxSectionProps {
     calculationError?: string | null;
     pensionContext?: PensionContext | null;
     selectionRequired?: boolean;
-    onResolveParticipation?: () => void;
 }
 
 export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> = ({
     styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
-    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, onResolveParticipation
+    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired
 }) => {
     const participates = state.funprespParticipacao !== 'nao';
     const optionalItems = [
@@ -54,10 +53,6 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
 
         </div>
         <p className={PENSION_HELP_CLASS}>{PENSION_GUIDANCE}</p>
-        {selectionRequired && !showFunprespSection && <p role="status" className={PENSION_HELP_CLASS}>
-            A configuração atual não habilita a participação complementar.{' '}
-            <button type="button" onClick={onResolveParticipation} className="font-semibold underline">Revisar participação salva</button>
-        </p>}
         {optionalItems.some(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]) && <fieldset className="mt-3 space-y-2">
             <legend className={styles.label}>Opções salvas que precisam de revisão</legend>
             <p className={PENSION_HELP_CLASS}>A configuração atual não permite estas inclusões. Desmarque-as para continuar, ou confira a configuração e a competência desta simulação.</p>
@@ -87,10 +82,6 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 </label>}
             </div>
             {!pensionContext && <p role="status" className={PENSION_HELP_CLASS}>Aguarde a base previdenciária ou confira os dados salariais para escolher sua participação.</p>}
-            {selectionRequired && <div role="status" className={PENSION_HELP_CLASS}>
-                <p>Escolha uma participação compatível para continuar esta simulação.</p>
-                <button type="button" onClick={onResolveParticipation} className="mt-2 font-semibold underline">Escolher participação</button>
-            </div>}
             {!selectionRequired && funprespValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>}
         </fieldset>}
         <details className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
