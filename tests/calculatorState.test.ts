@@ -16,6 +16,7 @@ import { hasPresetValue } from '../src/components/Calculator/dynamicPayrollForm.
 import { useDynamicPresetInstances } from '../src/components/Calculator/hooks/useDynamicPresetInstances';
 import { usePayrollFormNormalization } from '../src/components/Calculator/hooks/usePayrollFormNormalization';
 import { GlobalSettings } from '../src/components/Calculator/GlobalSettings';
+import { pickPeriodFromScheduleByReference } from '../src/components/Calculator/referenceDateUtils';
 
 // Synthetic configuration: these numbers are test data, not official rates.
 const config: CourtConfig = {
@@ -194,5 +195,89 @@ test('configuraÃ§Ãµes globais mantÃªm competÃªncia antiga e auxÃ­lios salvos na 
     assert.equal(current!.mesRef, 'NOVEMBRO');
     assert.equal(current!.periodo, 0);
     assert.equal(current!.auxAlimentacao, 800);
+    act(() => renderer.unmount());
+});
+
+test('pickPeriodFromScheduleByReference respeita o Veto nº 45/2025 para competências a partir de 2027', () => {
+    const schedules = [
+        { period: 0, date: '2025-02-01', percentage: 0, label: 'Fev/2025' },
+        { period: 1, date: '2026-01-01', percentage: 0, label: 'Jan/2026' },
+        { period: 2, date: '2026-07-01', percentage: 0.08, label: 'Jul/2026' },
+        { period: 3, date: '2027-07-01', percentage: 0.08, label: 'Jul/2027 (Vetado)', vetoed: true },
+        { period: 4, date: '2028-07-01', percentage: 0.08, label: 'Jul/2028 (Vetado)', vetoed: true },
+    ];
+
+    // Competência 2026-08 oficial: período 2
+    assert.equal(pickPeriodFromScheduleByReference(schedules, 2026, 8, false), 2);
+
+    // Competência 2027-08 oficial (com veto mantido): período 2 (mantém parcela promulgada)
+    assert.equal(pickPeriodFromScheduleByReference(schedules, 2027, 8, false), 2);
+
+    // Competência 2027-08 em modo de projeção (veto derrubado): período 3
+    assert.equal(pickPeriodFromScheduleByReference(schedules, 2027, 8, true), 3);
+
+    // Competência 2028-08 oficial: período 2
+    assert.equal(pickPeriodFromScheduleByReference(schedules, 2028, 8, false), 2);
+
+    // Competência 2028-08 em modo de projeção: período 4
+    assert.equal(pickPeriodFromScheduleByReference(schedules, 2028, 8, true), 4);
+});
+
+test('GlobalSettings aplica parcela sancionada em 2027 e alterna com simularDerrubadaVeto', () => {
+    let current: CalculatorState;
+    let updateFn: (field: any, val: any) => void;
+    const scheduleWithVeto = [
+        { period: 1, date: '2026-01-01', percentage: 0 },
+        { period: 2, date: '2026-07-01', percentage: 0.08 },
+        { period: 3, date: '2027-07-01', percentage: 0.08, vetoed: true },
+    ];
+    const testConfig: CourtConfig = {
+        ...config,
+        adjustment_schedule: scheduleWithVeto,
+        menus: { food_allowance: [{ label: '2026', value: 1100 }], preschool_allowance: [] },
+        historico_pss: { '2026': config.historico_pss.teste, '2027': config.historico_pss.teste },
+        historico_ir: { '2026': 100, '2027': 100 },
+    };
+
+    function Harness() {
+        const [state, setState] = useState({
+            ...baseState(),
+            anoRef: 2027,
+            mesRef: 'AGOSTO',
+            periodo: 0,
+            simularDerrubadaVeto: false,
+        });
+        current = state;
+        const update = useCallback((field: any, value: any) => {
+            setState((prev) => ({ ...prev, [field]: value }));
+        }, []);
+        updateFn = update;
+        return React.createElement(GlobalSettings, {
+            state,
+            update,
+            courtConfig: testConfig,
+            styles: {},
+            preserveRestoredGlobals: false,
+        });
+    }
+
+    let renderer: any;
+    act(() => { renderer = create(React.createElement(Harness)); });
+
+    // Oficialmente em 2027, deve aplicar o período 2 (último sancionado), NÃO o período 3 vetado
+    assert.equal(current!.periodo, 2);
+
+    // Ativando simulação de derrubada do veto
+    act(() => {
+        updateFn('simularDerrubadaVeto', true);
+    });
+    assert.equal(current!.periodo, 3);
+
+    // Desativando simulação volta para período 2
+    act(() => {
+        updateFn('simularDerrubadaVeto', false);
+    });
+    assert.equal(current!.periodo, 2);
+
     act(() => renderer.unmount());
 });

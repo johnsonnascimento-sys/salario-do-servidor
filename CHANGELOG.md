@@ -1,5 +1,12 @@
 # Changelog
 
+## Competência única ("Mês e ano da folha") e tratamento do Veto nº 45/2025 — 20/10/2026
+- Interface unificada: "Mês e ano da folha" passa a ser o seletor mestre único de competência, eliminando a seleção manual de "Ref. Salarial" e garantindo sincronização automática de tabelas salariais, PSS, IR e benefícios da época.
+- Vigência legal: incorporado o status da Lei nº 15.293/2025 sancionada (parcela de julho/2026, +8%). Competências para 2027 em diante mantêm oficialmente o teto legal sancionado, refletindo com rigor o Veto Presidencial nº 45/2025.
+- Modo de projeção: para competências a partir de 2027, adicionado toggle explícito e aviso informativo sobre o Veto 45/2025 para permitir simular o cenário de eventual derrubada do veto sem comprometer a exatidão do cálculo oficial.
+- Badge informativo: exibição contextual da norma legal aplicável (Lei nº 15.293/2025, Lei nº 11.416/2006 ou Cenário Projetado).
+- Validação: 21 testes de estado/holerite, 28 previdenciários, 4 de ordenação, typecheck e build aprovados.
+
 ## Simplificação dos retroativos — 20/10/2026
 - Retirada a ferramenta de previdência de retroativos do fluxo de novas simulações; lançamentos com valor conhecido continuam nas rubricas manuais.
 - Removida a inclusão de novas competências. Apenas simulações que já possuem ajustes exibem um editor de compatibilidade recolhido, chamado “Ajustes previdenciários salvos”, evitando descontos ocultos e permitindo sua revisão ou remoção.

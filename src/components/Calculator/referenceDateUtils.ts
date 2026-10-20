@@ -41,9 +41,14 @@ interface LabeledValueOption {
     value: number;
 }
 
-interface ScheduleEntry {
+export interface ScheduleEntry {
     period: number;
     date?: string;
+    percentage?: number;
+    label?: string;
+    status?: 'promulgated' | 'vetoed' | 'projected';
+    vetoed?: boolean;
+    veto_reference?: string;
 }
 
 export const normalizeReferenceToken = (value: string) =>
@@ -137,15 +142,17 @@ export const pickBestMenuOptionByReference = (
 export const pickPeriodFromScheduleByReference = (
     schedules: ScheduleEntry[],
     referenceYear: number,
-    referenceMonth: number
+    referenceMonth: number,
+    includeVetoed: boolean = false
 ) => {
     if (!Array.isArray(schedules) || schedules.length === 0) {
         return null;
     }
 
-    const referenceTimestamp = new Date(referenceYear, Math.max(0, referenceMonth - 1), 1).getTime();
+    const referenceTimestamp = new Date(referenceYear, Math.max(0, referenceMonth - 1), 1, 23, 59, 59).getTime();
     const withDate = schedules
         .filter((entry) => !!entry.date)
+        .filter((entry) => includeVetoed || !entry.vetoed)
         .map((entry) => ({
             period: entry.period,
             timestamp: new Date(`${entry.date}T12:00:00`).getTime(),

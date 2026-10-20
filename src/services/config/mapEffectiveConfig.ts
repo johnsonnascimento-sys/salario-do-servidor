@@ -1,5 +1,5 @@
 import { AdjustmentScheduleConfig, EffectiveConfig } from './types';
-import { CourtConfig, TaxTable } from '../../types';
+import { CourtConfig, TaxTable, AdjustmentScheduleEntry } from '../../types';
 
 const toNumberKey = (key: string) => {
     const parsed = Number(key.replace(/[^\d.]/g, ''));
@@ -45,10 +45,21 @@ const pickCaseInsensitive = (obj: Record<string, any> | undefined, key: string) 
 const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
     if (!schedule) return undefined;
     return Object.entries(schedule)
-        .reduce<Array<{ period: number; percentage: number; label?: string; date: string }>>((acc, [key, entry]) => {
+        .reduce<AdjustmentScheduleEntry[]>((acc, [key, entry]) => {
             const numeric = toNumberKey(key);
             if (numeric === null) return acc;
-            acc.push({ period: numeric, percentage: entry.percentage, label: entry.label, date: entry.date });
+            const isVetoed = entry.vetoed !== undefined
+                ? entry.vetoed
+                : (entry.status === 'vetoed' || (entry.date ? entry.date >= '2027-01-01' && entry.percentage > 0 : false));
+            acc.push({
+                period: numeric,
+                percentage: entry.percentage,
+                label: entry.label,
+                date: entry.date,
+                status: entry.status ?? (isVetoed ? 'vetoed' : 'promulgated'),
+                vetoed: isVetoed,
+                veto_reference: entry.veto_reference ?? (isVetoed ? 'Veto nº 45/2025' : undefined)
+            });
             return acc;
         }, [])
         .sort((a, b) => a.period - b.period);

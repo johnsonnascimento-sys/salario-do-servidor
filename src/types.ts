@@ -108,8 +108,18 @@ export interface CareerCatalogConfig {
   cargoLabels: Record<string, string>;
 }
 
+export interface AdjustmentScheduleEntry {
+  period: number;
+  percentage: number;
+  label?: string;
+  date?: string;
+  status?: 'promulgated' | 'vetoed' | 'projected';
+  vetoed?: boolean;
+  veto_reference?: string;
+}
+
 export interface CourtConfig {
-  adjustment_schedule?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
+  adjustment_schedule?: AdjustmentScheduleEntry[];
   bases: {
     salario: SalaryTable;
     funcoes: FuncoesTable;
@@ -122,7 +132,7 @@ export interface CourtConfig {
     pre_school?: number;
     deducao_dep?: number;
     cj1_integral_base?: number;
-    adjustment_schedule?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
+    adjustment_schedule?: AdjustmentScheduleEntry[];
     reajustes?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
   };
   menus?: {
@@ -189,6 +199,7 @@ export interface CalculatorState {
   mesRef: string;
   anoRef: number;
   tipoCalculo: 'comum' | 'jan' | 'jun' | 'nov';
+  simularDerrubadaVeto?: boolean;
 
   // Fixed Income
   cargo: string;
@@ -437,6 +448,7 @@ export const INITIAL_STATE: CalculatorState = {
   mesRef: ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"][new Date().getMonth()],
   anoRef: new Date().getFullYear(),
   tipoCalculo: 'comum',
+  simularDerrubadaVeto: false,
   cargo: '',
   padrao: '',
   funcao: '',

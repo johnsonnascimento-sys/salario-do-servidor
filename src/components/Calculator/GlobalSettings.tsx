@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useMemo, useRef } from 'react';
-import { Settings } from 'lucide-react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { Calendar, Settings, Scale, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import {
     MONTH_TOKEN_TO_INDEX,
@@ -77,10 +77,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         [courtConfig.adjustment_schedule]
     );
 
-    const periodOptions = schedules.length > 0
-        ? schedules
-        : [{ period: state.periodo, percentage: 0, label: `Período ${state.periodo}` }];
-
     const foodAllowanceOptions = useMemo(
         () => courtConfig.menus?.food_allowance || [],
         [courtConfig.menus?.food_allowance]
@@ -140,7 +136,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
             };
         }
 
-        // Floor of reference selector follows salary reference availability.
         const minPoint = salaryReferenceMin || strictMin;
         const maxPoint = strictMax;
 
@@ -151,14 +146,12 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     }, [pssKeys, irKeys, foodAllowanceOptions, preschoolAllowanceOptions, schedules]);
 
     const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, idx) => getMonthLabel(idx)), []);
-    const manualPeriodSelectionRef = useRef(false);
     const lastReferenceKeyRef = useRef('');
     const preserveRestoredGlobalsRef = useRef(preserveRestoredGlobals);
 
     useEffect(() => {
         preserveRestoredGlobalsRef.current = preserveRestoredGlobals;
         if (preserveRestoredGlobals) {
-            manualPeriodSelectionRef.current = false;
             lastReferenceKeyRef.current = '';
         }
     }, [preserveRestoredGlobals]);
@@ -218,7 +211,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     }, [clampedReference.year, clampedReference.month, state.anoRef, state.mesRef, update]);
 
     useEffect(() => {
-        const referenceKey = `${clampedReference.year}-${clampedReference.month}-${schedules.length}-${foodAllowanceOptions.length}-${preschoolAllowanceOptions.length}`;
+        const referenceKey = `${clampedReference.year}-${clampedReference.month}-${state.simularDerrubadaVeto ? '1' : '0'}-${schedules.length}-${foodAllowanceOptions.length}-${preschoolAllowanceOptions.length}`;
         if (lastReferenceKeyRef.current === referenceKey) {
             return;
         }
@@ -229,8 +222,13 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
             return;
         }
 
-        const nextPeriod = pickPeriodFromScheduleByReference(schedules, clampedReference.year, clampedReference.month);
-        if (!manualPeriodSelectionRef.current && nextPeriod !== null && nextPeriod !== state.periodo) {
+        const nextPeriod = pickPeriodFromScheduleByReference(
+            schedules,
+            clampedReference.year,
+            clampedReference.month,
+            !!state.simularDerrubadaVeto
+        );
+        if (nextPeriod !== null && nextPeriod !== state.periodo) {
             update('periodo', nextPeriod);
         }
 
@@ -292,6 +290,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     }, [
         clampedReference.year,
         clampedReference.month,
+        state.simularDerrubadaVeto,
         schedules,
         foodAllowanceOptions,
         preschoolAllowanceOptions,
@@ -303,35 +302,75 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         update
     ]);
 
+    const isAnoComVeto = clampedReference.year >= 2027;
+
+    const currentScheduleEntry = useMemo(() => {
+        return schedules.find(s => s.period === state.periodo);
+    }, [schedules, state.periodo]);
+
+    const legalStatusBadge = useMemo(() => {
+        if (state.simularDerrubadaVeto && isAnoComVeto) {
+            return {
+                title: 'Cenário Projetado (Veto Derrubado)',
+                detail: currentScheduleEntry?.label || `Período ${state.periodo}`,
+                isVetoProjection: true,
+            };
+        }
+
+        if (state.periodo >= 2) {
+            return {
+                title: 'Lei nº 15.293/2025 em vigor',
+                detail: currentScheduleEntry?.label || 'Parcela Julho/2026 (+8%)',
+                isVetoProjection: false,
+            };
+        }
+
+        if (state.periodo === 1) {
+            return {
+                title: 'Lei nº 11.416/2006 (Novo AQ)',
+                detail: 'Janeiro a Junho/2026',
+                isVetoProjection: false,
+            };
+        }
+
+        return {
+            title: 'Lei nº 11.416/2006',
+            detail: currentScheduleEntry?.label || 'Tabela Vigente',
+            isVetoProjection: false,
+        };
+    }, [state.periodo, state.simularDerrubadaVeto, isAnoComVeto, currentScheduleEntry]);
+
     return (
-        <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full -mr-8 -mt-8 blur-xl"></div>
-            <h3 className={styles.sectionTitle}>
-                <Settings className="w-4 h-4" />
-                Configurações Globais
-            </h3>
+        <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm space-y-5">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-primary-500/5 dark:bg-primary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
+
+            <div className="flex items-center justify-between gap-4 flex-wrap relative z-10 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
+                <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    <h3 className="text-body font-bold text-neutral-800 dark:text-neutral-100">
+                        Mês e ano da folha
+                    </h3>
+                </div>
+
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-body-xs font-semibold ${
+                    legalStatusBadge.isVetoProjection
+                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30'
+                        : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+                }`}>
+                    {legalStatusBadge.isVetoProjection ? (
+                        <AlertCircle className="w-3.5 h-3.5" />
+                    ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>{legalStatusBadge.title}</span>
+                    <span className="opacity-60">•</span>
+                    <span className="font-normal">{legalStatusBadge.detail}</span>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 <div>
-                    <label className={compactLabel}>Ref. Salarial</label>
-                    <select
-                        className={compactInput}
-                        value={state.periodo}
-                        onChange={(e) => {
-                            manualPeriodSelectionRef.current = true;
-                            update('periodo', Number(e.target.value));
-                        }}
-                    >
-                        {periodOptions.map((entry) => (
-                            <option key={entry.period} value={entry.period}>
-                                {entry.label || `Período ${entry.period} (${(entry.percentage * 100).toFixed(2)}%)`}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div>
-                    <label className={compactLabel}>Mês de Referência (traz valores históricos de IR, PSS, Alimentação...)</label>
+                    <label className={compactLabel}>Competência do Holerite</label>
                     <div className="flex gap-2">
                         <select
                             className={compactInput}
@@ -339,12 +378,12 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                             onChange={e => update('mesRef', e.target.value)}
                         >
                             {allowedMonths.map(item => (
-                                <option key={item.label}>{item.label}</option>
+                                <option key={item.label} value={item.label}>{item.label}</option>
                             ))}
                         </select>
 
                         <select
-                            className={`${compactInput} w-28`}
+                            className={`${compactInput} w-32 font-mono font-semibold`}
                             value={clampedReference.year}
                             onChange={e => update('anoRef', Number(e.target.value))}
                         >
@@ -353,8 +392,72 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                             ))}
                         </select>
                     </div>
+                    <p className="mt-1.5 text-body-xs text-neutral-500 dark:text-neutral-400">
+                        Seleciona automaticamente as tabelas salariais, faixas de IR, PSS e auxílios da época.
+                    </p>
+                </div>
+
+                <div className="flex flex-col justify-center rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-700/60 p-3.5">
+                    <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
+                        <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                Enquadramento Normativo:
+                            </span>{' '}
+                            {legalStatusBadge.isVetoProjection ? (
+                                <span>
+                                    Cálculo condicional com simulação de derrubada do Veto nº 45/2025.
+                                </span>
+                            ) : clampedReference.year >= 2026 ? (
+                                <span>
+                                    Aplicação integral da <strong>Lei nº 15.293/2025</strong> com vigência da parcela de reajuste promulgada.
+                                </span>
+                            ) : (
+                                <span>
+                                    Aplicação das tabelas históricas da <strong>Lei nº 11.416/2006</strong> vigentes no período.
+                                </span>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {isAnoComVeto && (
+                <div className="relative z-10 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                        <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                            <h4 className="text-body-sm font-bold text-amber-800 dark:text-amber-300">
+                                Veto Presidencial nº 45/2025 (Lei nº 15.293/2025)
+                            </h4>
+                            <p className="text-body-xs text-amber-700/90 dark:text-amber-300/80 leading-relaxed">
+                                Os reajustes que constavam da proposta original para 2027 e 2028 foram objeto de <strong>Veto Presidencial</strong>.
+                                O cálculo oficial do simulador reflete estritamente a parcela promulgada vigente em 2026.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between flex-wrap gap-3">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={!!state.simularDerrubadaVeto}
+                                onChange={(e) => update('simularDerrubadaVeto', e.target.checked)}
+                                className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500/30"
+                            />
+                            <span className="text-body-xs font-semibold text-amber-800 dark:text-amber-200">
+                                Simular projeção com eventual derrubada do Veto nº 45/2025
+                            </span>
+                        </label>
+
+                        {state.simularDerrubadaVeto && (
+                            <span className="text-body-xs font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
+                                Projeção Ativa (+8% vetado)
+                            </span>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
