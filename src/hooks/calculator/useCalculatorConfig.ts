@@ -41,7 +41,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                 const { data, error } = await supabase.from('agencies')
                     .select('name, type, slug').eq('slug', resolvedSlug).single();
                 if (error || !data || data.slug !== resolvedSlug) throw new Error('Agência não encontrada.');
-                if (data.slug !== 'jmu' && data.slug !== 'pju') throw new Error('Simulador indisponível para este órgão.');
+                if (data.slug !== 'jmu' && data.slug !== 'pju' && data.slug !== 'trt2') throw new Error('Simulador indisponível para este órgão.');
                 update({ agency: data.slug === 'jmu' ? { ...data, name: 'Justiça Militar da União' } : data,
                     agencyService: new AgencyCalculationEngine() });
             } catch (error) {

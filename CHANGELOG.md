@@ -1,5 +1,11 @@
 # Changelog
 
+## Inclusão do TRT-2 (SP) — 20/10/2026
+- Cadastro e ativação do TRT da 2ª Região (`trt2`) no banco Supabase (tabelas `agencies` e `org_config`), herdando 100% das regras e tabelas do Poder Judiciário da União (`PJU`).
+- Liberação da rota `/simulador/trt2` no hook `useCalculatorConfig`.
+- Ativação do card do TRT-2 na página inicial (`Home.tsx`) sob a categoria Justiça do Trabalho.
+- Validação: 21 testes de estado/holerite e typecheck aprovados.
+
 ## Competência única ("Mês e ano da folha") e tratamento do Veto nº 45/2025 — 20/10/2026
 - Interface unificada: "Mês e ano da folha" passa a ser o seletor mestre único de competência, eliminando a seleção manual de "Ref. Salarial" e garantindo sincronização automática de tabelas salariais, PSS, IR e benefícios da época.
 - Vigência legal: incorporado o status da Lei nº 15.293/2025 sancionada (parcela de julho/2026, +8%). Competências para 2027 em diante mantêm oficialmente o teto legal sancionado, refletindo com rigor o Veto Presidencial nº 45/2025.

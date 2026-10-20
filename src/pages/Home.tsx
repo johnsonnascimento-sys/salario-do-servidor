@@ -82,7 +82,8 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             type: 'category',
             icon: <Building2 className="w-6 h-6 text-secondary-500" />,
             children: [
-              { id: 'tst', name: 'TST', type: 'simulator', slug: '#' },
+              { id: 'trt2', name: 'TRT-2 (SP)', type: 'simulator', slug: 'trt2', description: 'Simulador completo para servidores do TRT da 2ª Região' },
+              { id: 'tst', name: 'TST (Em Breve)', type: 'simulator', slug: '#' },
               { id: 'trt_outros', name: 'TRTs (Em Breve)', type: 'simulator', slug: '#' }
             ]
           },
