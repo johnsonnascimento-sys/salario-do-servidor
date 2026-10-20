@@ -2,6 +2,18 @@ import { CALCULATOR_DRAFT_STORAGE_KEY } from '../constants/storage';
 import { CalculatorState, CalculatedPayrollState, INITIAL_STATE } from '../types';
 import type { PayslipResultRow } from '../types/user';
 
+/** Freeze legacy historical fallbacks before a deliberate change to the monthly selection. */
+export const applyCalculatorPatch = (previous: CalculatorState, patch: Partial<CalculatorState>): CalculatorState => {
+    const pensionChanged = (patch.regimePrev !== undefined && patch.regimePrev !== previous.regimePrev) ||
+        (patch.funprespParticipacao !== undefined && patch.funprespParticipacao !== previous.funprespParticipacao);
+    const pensionRetroEntries = pensionChanged && patch.pensionRetroEntries === undefined
+        ? (previous.pensionRetroEntries ?? []).map(entry => entry.modo === 'manual' ? entry : {
+            ...entry, regimePrev: entry.regimePrev ?? previous.regimePrev,
+            participacao: entry.participacao ?? previous.funprespParticipacao,
+        }) : patch.pensionRetroEntries ?? previous.pensionRetroEntries;
+    return { ...previous, ...patch, pensionRetroEntries };
+};
+
 // These fields are both engine outputs and form inputs (amounts or enabled flags).
 // Removing them loses vacation/13th selections when a payslip is reopened.
 export const PERSISTED_CALCULATED_INPUT_KEYS = [

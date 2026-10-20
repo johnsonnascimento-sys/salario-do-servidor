@@ -25,6 +25,18 @@ Funpresp-Jud permanece independente, com não participação, patrocinada ou vin
 
 Retroativos conservam formulário próprio e enquadramento histórico explícito; mudar a folha mensal não substitui esses registros. Snapshots, memória, exportações, fórmulas e configuração data-driven permanecem compatíveis, sem migração ou regravação de holerites. Esta simplificação não certifica as limitações de cálculo já registradas neste relatório.
 
+## Escolha guiada e prevenção de incompatibilidades — 20/10/2026
+
+A elegibilidade mensal é obtida antes do cálculo da folha por calculateMonthlyPensionContext, usando a mesma composição consumida em deductionsCalculations. O contexto contém base integral elegível, teto da tabela da competência, participações disponíveis e motivos de indisponibilidade. Não usa o salário de participação escolhido da vinculada para classificar elegibilidade. Regra mensal: sem teto permite não participação/vinculada; com teto e base superior permite não participação/patrocinada; com teto e base igual ou inferior permite não participação/vinculada. Configuração complementar desabilitada oferece somente não participação.
+
+Os seletores e handlers rejeitam opções incompatíveis. Ao trocar enquadramento incompatível com a participação vigente, a mudança fica pendente até escolha explícita no diálogo, que não pré-seleciona uma resposta. A escolha vinculada exige remuneração, competência e alíquota válidas, verificadas pelo motor, inclusive limites e fonte da URP. A confirmação aplica regime/participação/dados necessários em um único patch; cancelar a troca mantém a configuração anterior. Dados adicionais e opções não relacionados permanecem preservados.
+
+Alterações salariais ou de incidência que invalidem a modalidade mantêm as entradas e solicitam uma escolha. Enquanto houver incompatibilidade, o estado selection_required remove o novo resultado e impede salvar/exportar; não produz o antigo erro de combinação como resultado da folha. Após cancelar a resolução automática, o usuário pode reabrir a escolha. Falhas de configuração permanecem explícitas; incidências legadas não autorizadas dispõem de desmarcação voluntária, inclusive com seção complementar desabilitada.
+
+Retroativos completos usam base corrigida, tabela, regime, participação e espécie da própria competência. Dados insuficientes impedem habilitar seletores dependentes de contexto. Só a primeira pendência abre automaticamente, após resolver a mensal. Ajustes manuais permanecem separados. Ao alterar seleção mensal, campos históricos ausentes são materializados com seus valores herdados anteriores; explícitos não mudam. Resultados históricos salvos não são regravados automaticamente. A exceção já existente de enquadramento da contribuição do 13º abaixo do teto foi preservada: a base parcial do 13º não reclassifica por si só a modalidade histórica patrocinada.
+
+O diálogo temporário não integra snapshots. Publicação de contextos e resultados exige correspondência com as entradas atuais, descartando respostas antigas. Nenhuma fórmula, percentual oficial, tabela ou estrutura de banco foi alterada nesta evolução de interface.
+
 ## Incidências e opções independentes
 
 Os códigos `antigo` e `novo_antigo` mantêm RPPS sem teto; `migrado` e `rpc`, RPPS limitado. A participação complementar deve ser informada separadamente. Vinculada não muda o enquadramento previdenciário; patrocinada exige enquadramento limitado e base superior ao teto.

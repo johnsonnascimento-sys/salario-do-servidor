@@ -1,4 +1,8 @@
 import React from 'react';
+import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
+import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
+import { usePensionSelection } from './hooks/usePensionSelection';
+import { PensionChoiceDialog } from './PensionChoiceDialog';
 import { Settings } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
@@ -26,6 +30,8 @@ import {
 interface DynamicPayrollFormProps {
     state: CalculatorState;
     inputState?: CalculatorState;
+    updateMany: (patch: Partial<CalculatorState>) => void;
+    pensionContexts?: PensionSelectionContexts | null;
     preserveRestoredGlobals?: boolean;
     calculationError?: string | null;
     update: (field: keyof CalculatorState, value: any) => void;
@@ -40,6 +46,8 @@ interface DynamicPayrollFormProps {
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     state,
     inputState,
+    updateMany,
+    pensionContexts,
     preserveRestoredGlobals = false,
     calculationError,
     update,
@@ -70,8 +78,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const {
         showFunprespSection,
         funprespNormalOptions,
-        handleRegimePrevChange,
-        handleFunprespParticipacaoChange,
         funprespValidationError,
         funprespAdditionalValidationError
     } = useFunprespForm({
@@ -79,6 +85,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         update,
         previdenciaComplementar
     });
+
+    const pensionParams = mapStateToAgencyParams(inputState ?? state, '', courtConfig);
+    const pensionSelection = usePensionSelection({ params: pensionParams, context: pensionContexts?.monthly ?? null,
+        onApply: patch => updateMany(patch as Partial<CalculatorState>) });
 
     const {
         enabledPresets,
@@ -213,16 +223,24 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     styles={styles}
                     state={state}
                     update={update}
-                    handleRegimePrevChange={handleRegimePrevChange}
+                    handleRegimePrevChange={pensionSelection.handleRegimeChange}
                     showFunprespSection={showFunprespSection}
                     previdenciaComplementar={previdenciaComplementar}
                     funprespNormalOptions={funprespNormalOptions}
-                    handleFunprespParticipacaoChange={handleFunprespParticipacaoChange}
+                    handleFunprespParticipacaoChange={pensionSelection.handleParticipationChange}
                     funprespValidationError={funprespValidationError}
                     funprespAdditionalValidationError={funprespAdditionalValidationError}
                     calculationError={calculationError}
+                    pensionContext={pensionContexts?.monthly ?? null}
+                    selectionRequired={pensionSelection.incompatible}
+                    onResolveParticipation={pensionSelection.reopen}
                 />
-                <PensionRetroForm state={state} update={update} styles={styles} pssTableOptions={pssOptions} />
+                {pensionSelection.dialog && <PensionChoiceDialog
+                    key={JSON.stringify([pensionSelection.dialog.params.regimePrev, pensionSelection.dialog.context.base, pensionSelection.dialog.context.teto, pensionSelection.dialog.context.allowed])}
+                    {...pensionSelection.dialog} />}
+                <PensionRetroForm state={inputState ?? state} update={update} styles={styles} pssTableOptions={pssOptions}
+                    pensionParams={pensionParams} pensionContexts={pensionContexts}
+                    allowAutoResolve={!pensionSelection.incompatible && !pensionSelection.dialog} />
             </div>
 
             <div className={styles.card}>

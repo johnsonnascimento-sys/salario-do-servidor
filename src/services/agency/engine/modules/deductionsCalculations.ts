@@ -10,11 +10,11 @@
 import { CourtConfig, Rubrica } from '../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
-import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
-import { getPayrollRules, isNoFunction } from './configRules';
+import { getPayrollRules } from './configRules';
+import { calculateMonthlyPensionContext } from './pensionContext';
 import { calculateOvertime } from './overtimeCalculations';
 import { calculateSubstitution } from './substitutionCalculations';
-import { buildComplementaryBase, calculateComplementaryPension, calculatePensionRetroactives, hasPensionCeiling, roundPension } from './pensionCalculations';
+import { calculateComplementaryPension, calculatePensionRetroactives, hasPensionCeiling, roundPension } from './pensionCalculations';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
 
 export interface DeductionsResult {
@@ -103,21 +103,9 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const payrollRules = getPayrollRules(config);
     const rubricasAdjustments = calculateRubricasBaseAdjustments(params.rubricasExtras);
 
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
-    const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
-    const gaj = baseVencimento * payrollRules.gajRate;
-
-    // Recalculate components needed for PSS Base
-    let aqTituloVal = 0;
-    if (params.periodo >= 1) aqTituloVal = valorVR * params.aqTituloVR;
-    else aqTituloVal = baseVencimento * normalizeAQPercent(params.aqTituloPerc);
-
-    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
-
-    let gratVal = 0;
-    if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * payrollRules.specificGratificationRate;
-    }
+    const pensionContext = await calculateMonthlyPensionContext(params);
+    const { vencimento: baseVencimento, gaj, aqTitulo: aqTituloVal, aqTreino: aqTreinoVal,
+        fc: funcaoValor, gratificacao: gratVal } = pensionContext.salaryComponents;
 
     const overtime = await calculateOvertime(params);
     const substitution = await calculateSubstitution(params);
@@ -139,11 +127,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         .filter((entry) => entry.pssIsEA)
         .reduce((acc, entry) => acc + entry.total, 0);
 
-    // PSS Base Calculation
-    let basePSS = baseVencimento + gaj + aqTituloVal + (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
-    if (params.incidirPSSGrat) basePSS += gratVal;
-    if (params.pssSobreFC) basePSS += funcaoValor;
-    basePSS = Math.max(0, basePSS + rubricasAdjustments.pssMensal);
+    const basePSS = pensionContext.baseRppsIntegral;
 
     const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
@@ -182,23 +166,12 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     // IRRF Base
     const abonoPerm = params.recebeAbono ? pssMensal : 0;
 
-    // Recalculate full taxable partials
-    let aqTreinoVal = 0;
-    if (params.periodo >= 1) aqTreinoVal = valorVR * params.aqTreinoVR;
-    else aqTreinoVal = baseVencimento * normalizeAQPercent(params.aqTreinoPerc);
-
-    const complementaryRubricas = (params.rubricasExtras || []).reduce((sum, rubrica) => {
-        if (rubrica.funprespCompetenciaSeparada && usaTeto && !params.pensionRetroEntries?.length) throw new Error('Previdência: use apuração por competência para previdência complementar retroativa.');
-        return sum + (rubrica.incideFunpresp && !rubrica.funprespCompetenciaSeparada
-            ? (rubrica.tipo === 'D' ? -1 : 1) * Math.max(0, Number(rubrica.valor) || 0) : 0);
-    }, 0);
-    const complementaryBase = buildComplementaryBase(params, {
-        vencimento: baseVencimento, gaj, aqTitulo: aqTituloVal, aqTreino: aqTreinoVal,
-        gratificacao: gratVal, fc: funcaoValor,
-        vantagens: (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0),
-        rubricas: complementaryRubricas,
-    });
-    const pensionMemory = calculateComplementaryPension(params, basePSS, complementaryBase.base, 'mensal', complementaryBase.componentes);
+    // Retroactive contributions must still be supplied by original competence.
+    if (usaTeto && !params.pensionRetroEntries?.length &&
+        params.rubricasExtras?.some(rubrica => rubrica.funprespCompetenciaSeparada)) {
+        throw new Error('Previdência: use apuração por competência para previdência complementar retroativa.');
+    }
+    const pensionMemory = calculateComplementaryPension(params, basePSS, pensionContext.base, 'mensal', pensionContext.componentes);
     if (!usaTeto && pssEA !== 0 && !params.pensionRetroEntries?.length) {
         pensionMemory.avisos = ['PSS de exercício anterior legado usa alíquota marginal atual; confira e informe apuração por competência antes de utilizá-lo como conferência oficial.'];
     }

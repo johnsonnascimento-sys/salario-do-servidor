@@ -5,6 +5,7 @@ import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToP
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
 import { buildComplementaryBase, calculateComplementaryPension, calculatePensionRetroactives } from '../src/services/agency/engine/modules/pensionCalculations';
 import type { IAgencyCalculationParams } from '../src/services/agency/engine/types';
+import { buildPensionContext, calculateMonthlyPensionContext, getPensionEligibility } from '../src/services/agency/engine/modules/pensionContext';
 
 // Deliberately synthetic rates and amounts; no production configuration is read or changed.
 const configuration = (): CourtConfig => ({
@@ -33,6 +34,62 @@ const parameters = (patch: Partial<IAgencyCalculationParams> = {}): IAgencyCalcu
         tabelaPSS: 'atual', tabelaIR: 'teste', regimePrev: 'rpc', funprespParticipacao: 'patrocinado',
         funprespAliq: 0.085 }, 'jmu', configuration()),
     competencia: '2026-07', ...patch,
+});
+
+test('eligibility matrix is shared for all legacy regimes and includes exact ceiling', () => {
+    for (const regime of ['antigo', 'novo_antigo']) {
+        for (const base of [0, 4000, 5000, 9000]) {
+            assert.deepEqual(getPensionEligibility(regime, base, 5000).allowed, ['nao', 'vinculado']);
+        }
+    }
+    for (const regime of ['migrado', 'rpc']) {
+        for (const base of [0, 4000, 5000]) {
+            assert.deepEqual(getPensionEligibility(regime, base, 5000).allowed, ['nao', 'vinculado']);
+        }
+        assert.deepEqual(getPensionEligibility(regime, 9000, 5000).allowed, ['nao', 'patrocinado']);
+        assert.deepEqual(getPensionEligibility(regime, 4000, 5000, '13').allowed, ['nao', 'patrocinado', 'vinculado']);
+    }
+    assert.deepEqual(getPensionEligibility('rpc', 9000, 5000, 'mensal', false).allowed, ['nao']);
+    assert.throws(() => getPensionEligibility('desconhecido', 9000, 5000), /regime inválido/);
+    for (const invalid of [-1, NaN, Infinity]) {
+        assert.throws(() => getPensionEligibility('rpc', invalid, 5000), /base complementar/);
+        assert.throws(() => getPensionEligibility('rpc', 9000, invalid), /teto/);
+    }
+});
+
+test('monthly context precedes current participation validation and uses the exact deduction components', async () => {
+    const p = parameters({ regimePrev: 'antigo', funprespParticipacao: 'patrocinado', funprespAliq: NaN,
+        funprespBaseIntegral: -1, funprespVinculadaInicio: '', funprespIncluirFC: true,
+        funprespIncluirGAS: true, gratEspecificaTipo: 'gas', aqTreinoPerc: 0.01,
+        funprespIncluirAQTreino: true, incidirPSSGrat: true,
+        rubricasExtras: [{ id: 'r', descricao: 'Teste', valor: 100, tipo: 'D', incideIR: true,
+            incidePSS: true, isEA: false, incideFunpresp: true }] });
+    const context = await calculateMonthlyPensionContext(p);
+    assert.equal(context.base, 10560);
+    assert.equal(context.baseRppsIntegral, 9500);
+    assert.equal(context.componentes.fc, 1000);
+    assert.equal(context.componentes.rubricas, -100);
+    assert.deepEqual(context.allowed, ['nao', 'vinculado']);
+    const valid = { ...p, funprespParticipacao: 'vinculado' as const, funprespAliq: 0.065,
+        funprespBaseIntegral: 1200, funprespVinculadaInicio: '2026-07' };
+    const result = await new AgencyCalculationEngine().calculateTotal(valid);
+    const memory = result.pensionMemory!.mensal!;
+    assert.equal(memory.baseRppsIntegral, context.baseRppsIntegral);
+    assert.deepEqual(memory.componentes, context.componentes);
+    assert.equal(memory.normal, 78);
+});
+
+test('context uses selected historical table, does not substitute missing tables or salary data', async () => {
+    const context = buildPensionContext(parameters({ tabelaPSS: 'anterior' }), 4500);
+    assert.equal(context.teto, 4000);
+    assert.deepEqual(context.allowed, ['nao', 'patrocinado']);
+    assert.deepEqual(buildPensionContext(parameters({ tabelaPSS: 'atual' }), 4500).allowed, ['nao', 'vinculado']);
+    assert.throws(() => buildPensionContext(parameters({ tabelaPSS: 'ausente' }), 4500), /tabela de RPPS/);
+    await assert.rejects(calculateMonthlyPensionContext(parameters({ cargo: 'ausente' })), /base salarial/);
+    await assert.rejects(calculateMonthlyPensionContext(parameters({ funcao: 'ausente' })), /componente fc/);
+    const disabled = parameters();
+    disabled.agencyConfig!.previdenciaComplementar!.enabled = false;
+    assert.deepEqual((await calculateMonthlyPensionContext(disabled)).allowed, ['nao']);
 });
 
 test('RPPS capped is independent of complementary participation and excluded benefits', async () => {

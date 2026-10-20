@@ -10,6 +10,38 @@ const nonnegative = (value: unknown, label: string): number => {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) fail(`${label} deve ser um número não negativo.`);
     return value as number;
 };
+
+/** Classification shared by calculation and form guidance. The chosen linked salary is not eligibility income. */
+export const getPensionEligibility = (
+    regime: string, base: number, teto: number, tipo: 'mensal' | '13' = 'mensal', enabled = true,
+) => {
+    if (!['antigo', 'novo_antigo', 'migrado', 'rpc'].includes(regime)) fail('regime inválido.');
+    nonnegative(base, 'base complementar');
+    if (!Number.isFinite(teto) || teto <= 0) fail('teto de RPPS válido é obrigatório.');
+    const unavailableReasons: Partial<Record<PensionParticipation, string>> = {};
+    if (!enabled) {
+        unavailableReasons.patrocinado = unavailableReasons.vinculado = 'previdência complementar não habilitada na configuração.';
+    } else if (!hasPensionCeiling(regime)) {
+        unavailableReasons.patrocinado = 'participação patrocinada exige RPPS limitado ao teto.';
+    } else if (tipo === 'mensal' && base <= teto) {
+        unavailableReasons.patrocinado = 'participação patrocinada exige remuneração de participação acima do teto; confira modalidade vinculada.';
+    } else if (tipo === 'mensal') {
+        unavailableReasons.vinculado = 'remuneração acima do teto exige participação patrocinada para o regime limitado ao teto.';
+    }
+    const allowed = (['nao', 'patrocinado', 'vinculado'] as PensionParticipation[])
+        .filter(participation => !unavailableReasons[participation]);
+    return { allowed, unavailableReasons };
+};
+
+export const requirePensionTable = (params: IAgencyCalculationParams) => {
+    const table = params.agencyConfig?.historico_pss?.[params.tabelaPSS];
+    if (!table || !Number.isFinite(table.teto_rgps) || !(table.teto_rgps > 0) || !Array.isArray(table.faixas) || !table.faixas.length ||
+        table.faixas.some(faixa => !Number.isFinite(faixa.min) || !(faixa.max > faixa.min) ||
+            !Number.isFinite(faixa.max) || !Number.isFinite(faixa.rate) || faixa.rate < 0 || faixa.rate > 1)) {
+        fail('tabela de RPPS, faixas e teto válidos são obrigatórios.');
+    }
+    return table!;
+};
 const checkRate = (value: number, rule: { min?: number; max?: number; step?: number } | undefined, label: string) => {
     nonnegative(value, label);
     if (!rule || !Number.isFinite(rule.min) || (rule.max !== undefined && !Number.isFinite(rule.max))) fail(`configuração de ${label} ausente ou inválida.`);
@@ -69,13 +101,8 @@ export const calculateComplementaryPension = (
         if (!Number.isFinite(value)) fail(`componente ${name} inválido.`);
     });
     if (!['antigo', 'novo_antigo', 'migrado', 'rpc'].includes(params.regimePrev)) fail('regime inválido.');
-    const table = params.agencyConfig?.historico_pss?.[params.tabelaPSS];
+    const table = requirePensionTable(params);
     const capped = hasPensionCeiling(params.regimePrev);
-    if (!table || !Number.isFinite(table.teto_rgps) || !(table.teto_rgps > 0) || !Array.isArray(table.faixas) || !table.faixas.length ||
-        table.faixas.some(faixa => !Number.isFinite(faixa.min) || !(faixa.max > faixa.min) ||
-            !Number.isFinite(faixa.max) || !Number.isFinite(faixa.rate) || faixa.rate < 0 || faixa.rate > 1)) {
-        fail('tabela de RPPS, faixas e teto válidos são obrigatórios.');
-    }
     const teto = table?.teto_rgps || 0;
     const participation = params.funprespParticipacao;
     if (!['nao', 'patrocinado', 'vinculado'].includes(participation)) fail('participação complementar inválida.');
@@ -94,9 +121,8 @@ export const calculateComplementaryPension = (
     const config = params.agencyConfig?.previdenciaComplementar;
     if (!config?.enabled) fail('previdência complementar não habilitada na configuração.');
     if (config.baseRule !== 'excedente_teto_rgps') fail('regra de base complementar não suportada.');
-    if (participation === 'patrocinado' && !capped) fail('participação patrocinada exige RPPS limitado ao teto.');
-    if (tipo === 'mensal' && participation === 'patrocinado' && baseComplementarIntegral <= teto) fail('participação patrocinada exige remuneração de participação acima do teto; confira modalidade vinculada.');
-    if (tipo === 'mensal' && participation === 'vinculado' && capped && baseComplementarIntegral > teto) fail('remuneração acima do teto exige participação patrocinada para o regime limitado ao teto.');
+    const eligibility = getPensionEligibility(params.regimePrev, baseComplementarIntegral, teto, tipo, config.enabled);
+    if (eligibility.unavailableReasons[participation]) fail(eligibility.unavailableReasons[participation]!);
     checkRate(params.funprespAliq, participation === 'patrocinado' ? config.sponsoredRate : config.linkedRate, 'alíquota normal');
     if (params.funprespFacul > 0) {
         checkRate(params.funprespFacul, {

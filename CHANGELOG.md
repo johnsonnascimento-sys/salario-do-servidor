@@ -1,5 +1,14 @@
 # Changelog
 
+## Escolha previdenciária guiada — 20/10/2026
+- Modalidades incompatíveis ficam indisponíveis no seletor mensal e nos retroativos completos, com motivos fornecidos pelo mesmo contexto do motor.
+- Troca de RPPS incompatível aguarda escolha explícita antes de aplicar regime e participação juntos; vinculada exige dados válidos e alíquota da grade, sem adesão ou cancelamento automático.
+- Mudanças de base e restaurações incompatíveis pausam cálculo, salvamento e exportação até resolução. Contextos assíncronos antigos são descartados; dados históricos salvos permanecem preservados.
+- Atualização mensal materializa enquadramento/participação herdados dos retroativos legados antes da troca. Configurações de incidência salvas não autorizadas podem ser revisadas explicitamente.
+- Base mensal extraída para serviço compartilhado, sem alteração dos resultados dos cenários válidos; revisão do especialista de cálculo sem bloqueadores. Sem migração de banco.
+- Validação: 83 testes aprovados (28 previdenciários, 32 de formulário/escolha guiada, 19 de snapshots e 4 de carregamento), TypeScript e build Vite. Conferência desktop/mobile com dados sintéticos, Escape/cancelamento, foco e confirmação conjunta; configuração integrada do órgão não alterada.
+
+
 ## Legendas de previdência — 20/10/2026
 - Regime RPPS e participação na Funpresp exibem explicação breve da opção selecionada, compartilhada entre folha mensal e cada competência retroativa.
 - Legendas com associação acessível por identificadores únicos, texto normal e substituição de orientações repetidas; alertas e cálculos preservados.

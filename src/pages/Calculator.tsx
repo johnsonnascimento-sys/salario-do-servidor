@@ -28,10 +28,12 @@ export default function Calculator() {
         effectiveState,
         calculationStatus,
         calculationError,
+        pensionContexts,
         calculationReady,
         loadingAgency,
         agencyError,
         update,
+        updateMany,
         updateSubstDays,
         courtConfig,
         loadingConfig,
@@ -215,7 +217,7 @@ export default function Calculator() {
         <>
             <MobileResultsBar
                 calculationReady={calculationReady}
-                resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
+                resultMessage={calculationStatus === 'selection_required' ? 'Escolha sua participação na Funpresp' : calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
                 savingPayslip={savingPayslip}
                 liquido={effectiveState.liquido}
                 onExportPDF={initiateExportPDF}
@@ -256,6 +258,8 @@ export default function Calculator() {
                         <p className="mt-1">{calculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
                     </div>}
                     <DynamicPayrollForm
+                        updateMany={updateMany}
+                        pensionContexts={pensionContexts}
                         calculationError={calculationError}
                         key={`dynamic-payroll-form-${formKey}`}
                         inputState={state}
@@ -279,14 +283,14 @@ export default function Calculator() {
                         resultRows={resultRows}
                     /> : <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
-                        {calculationError || 'Calculando os valores do holerite...'}
+                        {calculationStatus === 'selection_required' ? 'Escolha uma participação compatível na seção de previdência para continuar.' : calculationError || 'Calculando os valores do holerite...'}
                     </p>}
                 </div>
 
                 <ActionFooter
                     errorDetail={calculationError}
                     calculationReady={calculationReady}
-                    resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
+                    resultMessage={calculationStatus === 'selection_required' ? 'Escolha sua participação na Funpresp' : calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
                     state={effectiveState}
                     onExportPDF={initiateExportPDF}
                     onExportExcel={initiateExportExcel}

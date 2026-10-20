@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalculatorState, CalculatedPayrollState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
 import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
+import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
@@ -58,11 +59,12 @@ export const useCalculatorResults = (
     currentTokenRef.current = inputToken;
     const [completed, setCompleted] = useState<{
         token: typeof inputToken; state: CalculatedPayrollState; error: string | null;
+        pensionContexts?: PensionSelectionContexts | null; selectionRequired?: boolean;
     } | null>(null);
     const canCalculate = Boolean(agencyService && courtConfig && agency?.slug);
     const isCurrent = completed?.token === inputToken;
-    const calculationStatus: 'idle' | 'calculating' | 'ready' | 'error' = !canCalculate
-        ? 'idle' : !isCurrent ? 'calculating' : completed.error ? 'error' : 'ready';
+    const calculationStatus: 'idle' | 'calculating' | 'ready' | 'error' | 'selection_required' = !canCalculate
+        ? 'idle' : !isCurrent ? 'calculating' : completed.selectionRequired ? 'selection_required' : completed.error ? 'error' : 'ready';
     const calculationError = isCurrent ? completed.error : null;
     const calculatedState = useMemo(() => {
         if (calculationStatus === 'ready' && completed) return completed.state;
@@ -76,9 +78,16 @@ export const useCalculatorResults = (
         if (!agencyService || !courtConfig || !agency?.slug) return;
         let cancelled = false;
         (async () => {
+            let pensionContexts: PensionSelectionContexts | null = null;
             try {
                 const orgSlug = agency.slug;
                 const params = mapStateToAgencyParams(state, orgSlug, courtConfig);
+                pensionContexts = await resolvePensionSelectionContexts(params);
+                if (cancelled || currentTokenRef.current !== inputToken) return;
+                if (pensionContexts.requiresChoice) {
+                    setCompleted({ token: inputToken, state: getEmptyCalculatedPayrollState(), error: null, pensionContexts, selectionRequired: true });
+                    return;
+                }
                 const result = await agencyService.calculateTotal(params);
 
                 if (cancelled || currentTokenRef.current !== inputToken) {
@@ -86,7 +95,7 @@ export const useCalculatorResults = (
                 }
 
                 const bd = result.breakdown;
-                setCompleted({ token: inputToken, error: null, state: {
+                setCompleted({ token: inputToken, pensionContexts, error: null, state: {
                     vencimento: bd.vencimento || 0,
                     gaj: bd.gaj || 0,
                     aqTituloValor: bd.aqTitulo || 0,
@@ -154,7 +163,7 @@ export const useCalculatorResults = (
                 if (cancelled || currentTokenRef.current !== inputToken) {
                     return;
                 }
-                setCompleted({ token: inputToken, state: getEmptyCalculatedPayrollState(),
+                setCompleted({ token: inputToken, pensionContexts, state: getEmptyCalculatedPayrollState(),
                     error: error instanceof Error ? error.message : 'Não foi possível calcular o holerite. Revise as entradas ou tente novamente.' });
             }
         })();
@@ -419,5 +428,5 @@ export const useCalculatorResults = (
         return [...creditRows, ...debitRows];
     }, [effectiveState, courtConfig, currentTables, calculationStatus]);
 
-    return { calculatedState, resultRows, calculationStatus, calculationError };
+    return { calculatedState, resultRows, calculationStatus, calculationError, pensionContexts: isCurrent ? completed.pensionContexts ?? null : null };
 };

@@ -42,6 +42,7 @@ export const useCalculator = () => {
         state,
         setState,
         update,
+        updateMany,
         updateSubstDays,
         addRubrica,
         removeRubrica,
@@ -68,7 +69,7 @@ export const useCalculator = () => {
         handleDonationComplete: handleDonationCompleteBase
     } = useCalculatorExport();
 
-    const { calculatedState, resultRows, calculationStatus, calculationError } = useCalculatorResults(
+    const { calculatedState, resultRows, calculationStatus, calculationError, pensionContexts } = useCalculatorResults(
         state,
         agencyService,
         courtConfig,
@@ -205,9 +206,11 @@ export const useCalculator = () => {
         calculatedState,
         calculationStatus,
         calculationError,
+        pensionContexts,
         calculationReady,
         effectiveState,
         update,
+        updateMany,
         courtConfig,
         loadingConfig,
         resultRows,

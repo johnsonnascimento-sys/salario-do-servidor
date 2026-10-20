@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { PensionRegimeSelect, pensionRegimeGroup } from './PensionRegimeSelect';
+import { PensionRegimeSelect } from './PensionRegimeSelect';
+import type { PensionContext } from '../../services/agency/engine/modules/pensionContext';
 import { PensionParticipationSelect } from './PensionParticipationSelect';
 import { PENSION_GUIDANCE, PENSION_HELP_CLASS } from './pensionHelp';
 import { CalculatorState, CourtConfig } from '../../types';
@@ -18,15 +19,16 @@ interface DynamicPayrollTaxSectionProps {
     funprespValidationError?: string;
     funprespAdditionalValidationError?: string;
     calculationError?: string | null;
+    pensionContext?: PensionContext | null;
+    selectionRequired?: boolean;
+    onResolveParticipation?: () => void;
 }
 
 export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> = ({
     styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
-    funprespValidationError, funprespAdditionalValidationError, calculationError
+    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, onResolveParticipation
 }) => {
-    const capped = pensionRegimeGroup(state.regimePrev) === 'rpc';
-    const incompatible = state.funprespParticipacao === 'patrocinado' && !capped;
     const participates = state.funprespParticipacao !== 'nao';
     const optionalItems = [
         ['fc', 'funprespIncluirFC', 'FC/CJ'], ['gas', 'funprespIncluirGAS', 'GAS'],
@@ -45,19 +47,32 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label}
-                value={state.regimePrev} onChange={handleRegimePrevChange} />
+                value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
             <label className={styles.label}>Dependentes (IR)
                 <input type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
             </label>
 
         </div>
         <p className={PENSION_HELP_CLASS}>{PENSION_GUIDANCE}</p>
+        {selectionRequired && !showFunprespSection && <p role="status" className={PENSION_HELP_CLASS}>
+            A configuração atual não habilita a participação complementar.{' '}
+            <button type="button" onClick={onResolveParticipation} className="font-semibold underline">Revisar participação salva</button>
+        </p>}
+        {optionalItems.some(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]) && <fieldset className="mt-3 space-y-2">
+            <legend className={styles.label}>Opções salvas que precisam de revisão</legend>
+            <p className={PENSION_HELP_CLASS}>A configuração atual não permite estas inclusões. Desmarque-as para continuar, ou confira a configuração e a competência desta simulação.</p>
+            {optionalItems.filter(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]).map(([, field, label]) => <label key={field} className={styles.checkboxLabel}>
+                <input type="checkbox" className={styles.checkbox} checked onChange={event => { if (!event.target.checked) update(field, false); }} />
+                <span>{label} — inclusão salva</span>
+            </label>)}
+        </fieldset>}
         {showFunprespSection && config && <fieldset className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
             <legend className={styles.innerBoxTitle}>Funpresp-Jud</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PensionParticipationSelect className={styles.input} labelClassName={styles.label}
                     value={state.funprespParticipacao} onChange={handleFunprespParticipacaoChange}
-                    sponsoredDisabled={!capped} />
+                    disabled={!pensionContext}
+                    allowed={pensionContext?.allowed ?? []} unavailableReasons={pensionContext?.unavailableReasons} />
                 {participates && <label className={styles.label}>Alíquota {state.funprespParticipacao === 'vinculado' ? 'vinculada' : 'normal patrocinada'}
                     <select className={styles.input} value={state.funprespAliq} onChange={e => update('funprespAliq', Number(e.target.value))}>
                         {!funprespNormalOptions.includes(state.funprespAliq) && <option value={state.funprespAliq}>Selecione a alíquota</option>}
@@ -71,15 +86,12 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <input type="month" className={styles.input} value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
                 </label>}
             </div>
-            {incompatible && <div role="alert" className="rounded-lg border border-amber-400 p-3 text-body-xs space-y-2">
-                <p>A simulação combina RPPS sem teto com Funpresp patrocinada. Confira no seu cadastro qual situação se aplica e escolha abaixo:</p>
-                <div className="flex flex-wrap gap-3">
-                    <button type="button" className="font-semibold underline" onClick={() => handleRegimePrevChange('rpc')}>Meu RPPS é limitado ao teto do RGPS</button>
-                    <button type="button" className="font-semibold underline" onClick={() => handleFunprespParticipacaoChange('vinculado')}>Permaneço sem teto e participo como vinculado</button>
-                    <button type="button" className="font-semibold underline" onClick={() => handleFunprespParticipacaoChange('nao')}>Não participo da Funpresp</button>
-                </div>
+            {!pensionContext && <p role="status" className={PENSION_HELP_CLASS}>Aguarde a base previdenciária ou confira os dados salariais para escolher sua participação.</p>}
+            {selectionRequired && <div role="status" className={PENSION_HELP_CLASS}>
+                <p>Escolha uma participação compatível para continuar esta simulação.</p>
+                <button type="button" onClick={onResolveParticipation} className="mt-2 font-semibold underline">Escolher participação</button>
             </div>}
-            {funprespValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>}
+            {!selectionRequired && funprespValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>}
         </fieldset>}
         <details className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
             open={optionsOpen} onToggle={event => setOptionsOpen(event.currentTarget.open)}>

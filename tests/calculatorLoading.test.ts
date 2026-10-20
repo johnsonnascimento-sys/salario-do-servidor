@@ -7,7 +7,12 @@ import { useCalculatorResults } from '../src/hooks/calculator/useCalculatorResul
 import { CalculatorState, CourtConfig, INITIAL_STATE } from '../src/types';
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
 
-const config = { bases: { salario: {}, funcoes: {} }, values: {}, payrollRules: { vrRateOnCj1: 0 } } as CourtConfig;
+// Synthetic but complete input for the real eligibility preflight, before the deferred engine stub.
+const config = { bases: { salario: { teste: { A1: 6000 } }, funcoes: {} }, values: {},
+    historico_pss: { teste: { teto_rgps: 5000, faixas: [{ min: 0, max: 100000, rate: .1 }] } },
+    payrollRules: { vrRateOnCj1: 0, gajRate: .5, specificGratificationRate: .1 },
+    careerCatalog: { noFunctionCode: '0', noFunctionLabel: 'Sem função', cargoLabels: {} },
+} as CourtConfig;
 const agency = { slug: 'jmu', name: 'JMU', type: 'judiciary' };
 const deferred = () => {
     let resolve!: (value: any) => void, reject!: (reason?: any) => void;
@@ -21,7 +26,7 @@ const output = (netSalary: number) => ({ netSalary, totalDeductions: 0, breakdow
     const engine = { calculateTotal: () => { const d = deferred(); calls.push(d); return d.promise; } } as unknown as AgencyCalculationEngine;
     let latest!: ReturnType<typeof useCalculatorResults>;
     const renders: typeof latest[] = [];
-    let state: CalculatorState = { ...INITIAL_STATE, manualFerias: true, ferias1_3: 123,
+    let state: CalculatorState = { ...INITIAL_STATE, cargo: 'teste', padrao: 'A1', funcao: '0', tabelaPSS: 'teste', manualFerias: true, ferias1_3: 123,
         manualAdiant13: true, adiant13Venc: 456, segunda13FC: 789 };
     function Probe({ court }: { court: CourtConfig | null }) {
         latest = useCalculatorResults(state, engine, court, agency);

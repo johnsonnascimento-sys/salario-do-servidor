@@ -12,7 +12,7 @@ import { useState, useCallback } from 'react';
 import type { ChangeEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { INITIAL_STATE, CalculatorState, Rubrica } from '../../types';
-import { loadCalculatorDraftState } from '../../utils/calculatorState';
+import { applyCalculatorPatch, loadCalculatorDraftState } from '../../utils/calculatorState';
 import { CalculatorNavigationState } from '../../types/calculatorRestore';
 
 const createRubricaId = () => {
@@ -38,6 +38,10 @@ export const useCalculatorState = () => {
 
     const update = useCallback((field: keyof CalculatorState, value: any) => {
         setState(prev => ({ ...prev, [field]: value }));
+    }, []);
+
+    const updateMany = useCallback((patch: Partial<CalculatorState>) => {
+        setState(prev => applyCalculatorPatch(prev, patch));
     }, []);
 
     const updateSubstDays = useCallback((key: string, days: number) => {
@@ -93,6 +97,7 @@ export const useCalculatorState = () => {
         state,
         setState,
         update,
+        updateMany,
         updateSubstDays,
         addRubrica,
         removeRubrica,

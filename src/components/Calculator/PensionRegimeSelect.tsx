@@ -19,13 +19,18 @@ export const PensionRegimeSelect: React.FC<{
     className?: string;
     label?: string;
     labelClassName?: string;
-}> = ({ value, onChange, className, label = 'Regime previdenciário', labelClassName }) => {
+    disabled?: boolean;
+}> = ({ value, onChange, className, label = 'Regime previdenciário', labelClassName, disabled = false }) => {
     const id = useId();
     const helpId = `${id}-help`;
-    return <div>
-        <label htmlFor={id} className={labelClassName}>{label}</label>
-        <select id={id} aria-describedby={helpId} className={className} value={pensionRegimeGroup(value)}
-            onChange={event => onChange(selectPensionRegime(value, event.target.value))}>
+    return <div data-pension-selection-field tabIndex={-1} role="group" aria-labelledby={`${id}-label`}>
+        <label id={`${id}-label`} htmlFor={id} className={labelClassName}>{label}</label>
+        <select id={id} aria-describedby={helpId} className={className} value={pensionRegimeGroup(value)} disabled={disabled}
+            onChange={event => {
+                if (disabled) return;
+                event.currentTarget?.focus?.();
+                onChange(selectPensionRegime(value, event.target.value));
+            }}>
             <option value="antigo">RPPS sem teto do RGPS</option>
             <option value="rpc">RPPS limitado ao teto do RGPS</option>
         </select>
