@@ -4,7 +4,7 @@ import { PensionRetroSelection } from './PensionRetroSelection';
 import type { IAgencyCalculationParams } from '../../services/agency/engine/types';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { PensionRetroEntry } from '../../types/pension';
-import { createUniqueId, toPositiveNumber, toDecimalRateFromPercentInput } from './dynamicPayrollForm.helpers';
+import { toPositiveNumber, toDecimalRateFromPercentInput } from './dynamicPayrollForm.helpers';
 
 interface Props {
     state: CalculatorState;
@@ -32,14 +32,15 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
         // Batch corrections so independent historical entries cannot overwrite each other.
         if (changed) update('pensionRetroEntries', normalized);
     }, [entries, pensionContexts, state.funprespParticipacao, allowNormalization, update]);
+    // Compatibility editor only: new simulations use manual rubrics.
+    if (entries.length === 0) return null;
     const replace = (id: string, changes: Partial<PensionRetroEntry>) => update('pensionRetroEntries', entries.map(entry => entry.id === id ? { ...entry, ...changes } : entry));
     const currency = (entry: PensionRetroEntry, key: keyof PensionRetroEntry, label: string) => <label className={styles.label} key={key}>{label} (R$)
         <input type="number" min={0} step="0.01" className={styles.input} value={entry[key] === undefined ? '' : String(entry[key])} onChange={e => replace(entry.id, { [key]: e.target.value === '' ? undefined : toPositiveNumber(e.target.value) })} />
     </label>;
-    return <details className={styles.innerBox} open={entries.length > 0}>
-        <summary className="cursor-pointer text-body-xs font-bold uppercase text-neutral-700 dark:text-neutral-300">Previdência de retroativos por competência</summary>
-        <p className="mt-2 text-body-xs">Cadastre cada competência original separadamente. O modo completo recalcula as diferenças com a tabela original; ajuste informado exige a memória ou justificativa do desconto. As bases são integrais, antes do teto. Sem dados completos, o motor identifica a pendência.</p>
-        <p className="mt-2 text-body-xs">Os ajustes previdenciários não adicionam rendimentos. Informe os créditos retroativos nas rubricas correspondentes, evitando duplicar descontos manuais.</p>
+    return <details className={styles.innerBox}>
+        <summary className="cursor-pointer text-body-xs font-bold uppercase text-neutral-700 dark:text-neutral-300">Ajustes previdenciários salvos</summary>
+        <p className="mt-2 text-body-xs">Esta simulação contém ajustes da ferramenta anterior. Eles foram preservados e podem ser revisados ou removidos aqui. Para novos lançamentos com valor conhecido, use as rubricas manuais, sem duplicar estes descontos.</p>
         {entries.map((entry, index) => <fieldset key={entry.id} className="mt-4 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 space-y-3">
             <legend className="font-semibold">Retroativo {index + 1}</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -102,6 +103,6 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
             </>}
             <button type="button" className="text-error-600 underline" onClick={() => update('pensionRetroEntries', entries.filter(item => item.id !== entry.id))}>Remover retroativo {index + 1}</button>
         </fieldset>)}
-        <button type="button" className="mt-3 font-semibold underline" onClick={() => update('pensionRetroEntries', [...entries, { id: createUniqueId('pension-retro'), competencia: '', modo: 'completo', tipo: 'mensal', destinoIR: 'ea', regimePrev: state.regimePrev, participacao: state.funprespParticipacao }])}>Adicionar competência de retroativo</button>
+
     </details>;
 };

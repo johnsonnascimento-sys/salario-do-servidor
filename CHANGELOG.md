@@ -1,5 +1,11 @@
 # Changelog
 
+## Simplificação dos retroativos — 20/10/2026
+- Retirada a ferramenta de previdência de retroativos do fluxo de novas simulações; lançamentos com valor conhecido continuam nas rubricas manuais.
+- Removida a inclusão de novas competências. Apenas simulações que já possuem ajustes exibem um editor de compatibilidade recolhido, chamado “Ajustes previdenciários salvos”, evitando descontos ocultos e permitindo sua revisão ou remoção.
+- Dados, resultados históricos, memória e motor de cálculo preservados; sem migração ou conversão automática em rubricas.
+- Validação: 35 testes de formulário, 19 de snapshots e TypeScript aprovados.
+
 ## Previdência sem diálogos — 20/10/2026
 - Removidos o diálogo de escolha guiada, sua abertura no carregamento e os botões de resolução. Modalidades incompatíveis continuam desabilitadas e rejeitadas pelos eventos.
 - Trocas de regime mantêm participação compatível; caso contrário, aplicam o regime e “Não participa” juntos. Mudanças salariais e rascunhos incompatíveis também limpam somente a participação da simulação, sem inscrição automática em outra modalidade.
