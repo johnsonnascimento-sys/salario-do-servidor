@@ -263,3 +263,25 @@ test('capped 13th honors the RPPS gratification option without changing compleme
     const excluded = await engine.calculateTotal({ ...p, incidirPSSGrat: false });
     assert.equal(included.breakdown.pss13 - excluded.breakdown.pss13, 20);
 });
+
+for (const [left, right] of [['antigo', 'novo_antigo'], ['migrado', 'rpc']] as const) {
+    test('aliases produzem os mesmos resultados completos: ' + left + '/' + right, async () => {
+        const engine = new AgencyCalculationEngine();
+        for (const salary of [2000, 10000 / 3, 6000]) {
+            const cfg = configuration();
+            cfg.bases.salario.teste.A1 = salary;
+            const above = salary * 1.5 > cfg.historico_pss.atual.teto_rgps;
+            for (const participation of ['nao', ...(left === 'antigo' || !above ? ['vinculado'] : ['patrocinado'])] as const) {
+                const p = parameters({ agencyConfig: cfg, funprespParticipacao: participation as IAgencyCalculationParams['funprespParticipacao'],
+                    funprespAliq: .085, funprespBaseIntegral: 1200, funprespVinculadaInicio: '2026-07',
+                    adiant13Venc: 1, segunda13Venc: 1, adiant13FC: 1, segunda13FC: 1,
+                    heQtd50: 2, heQtd100: 1, recebeAbono: true });
+                assert.deepEqual(await engine.calculateTotal({ ...p, regimePrev: left }), await engine.calculateTotal({ ...p, regimePrev: right }));
+            }
+        }
+        const retro = parameters({ funprespParticipacao: 'nao', pensionRetroEntries: [{ id: 'r', competencia: '2025-07', tabelaPSS: 'anterior',
+            baseRppsOriginal: 3000, baseRppsDevida: 6000, baseComplementarOriginal: 3000, baseComplementarDevida: 6000,
+            contribuicaoRppsRecolhida: 240, contribuicaoComplementarRecolhida: 0 }] });
+        assert.deepEqual(calculatePensionRetroactives({ ...retro, regimePrev: left }), calculatePensionRetroactives({ ...retro, regimePrev: right }));
+    });
+}

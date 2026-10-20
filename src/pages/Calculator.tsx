@@ -256,6 +256,7 @@ export default function Calculator() {
                         <p className="mt-1">{calculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
                     </div>}
                     <DynamicPayrollForm
+                        calculationError={calculationError}
                         key={`dynamic-payroll-form-${formKey}`}
                         inputState={state}
                         preserveRestoredGlobals={preserveRestoredGlobals}

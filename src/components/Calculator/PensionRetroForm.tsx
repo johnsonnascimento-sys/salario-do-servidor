@@ -1,5 +1,6 @@
 import React from 'react';
 import { CalculatorState } from '../../types';
+import { PensionRegimeSelect } from './PensionRegimeSelect';
 import { PensionRetroEntry, PensionParticipation } from '../../types/pension';
 import { createUniqueId, toPositiveNumber, toDecimalRateFromPercentInput } from './dynamicPayrollForm.helpers';
 
@@ -55,9 +56,8 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
                         </select>
                     </label>
                     <label className={styles.label}>Regime na competência
-                        <select className={styles.input} value={entry.regimePrev ?? state.regimePrev} onChange={e => replace(entry.id, { regimePrev: e.target.value as PensionRetroEntry['regimePrev'] })}>
-                            <option value="antigo">RPPS sem teto</option><option value="novo_antigo">Novo sem migração (sem teto)</option><option value="migrado">Migrado (com teto)</option><option value="rpc">RPC (com teto)</option>
-                        </select>
+                        <PensionRegimeSelect className={styles.input} value={entry.regimePrev ?? state.regimePrev}
+                            onChange={regimePrev => replace(entry.id, { regimePrev })} />
                     </label>
                     <label className={styles.label}>Participação na competência
                         <select className={styles.input} value={entry.participacao ?? state.funprespParticipacao} onChange={e => replace(entry.id, { participacao: e.target.value as PensionParticipation })}>

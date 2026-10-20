@@ -17,6 +17,14 @@ Conferência normativa e conciliação: 19/10/2026. Complexidade operacional: al
 
 Os percentuais normais não são percentuais de custo administrativo nem de saldo acumulado. Carregamento e FCBE compõem a destinação interna do recolhimento; não geram segundo desconto sobre o valor normal calculado. A informação de custeio preserva sua própria data de referência e não representa validação do plano de custeio de outro exercício.
 
+## Apresentação simplificada — 20/10/2026
+
+O formulário mensal e os retroativos apresentam apenas **RPPS sem teto do RGPS** e **RPPS limitado ao teto do RGPS**. São grupos visuais sobre os códigos existentes: antigo/novo_antigo e migrado/rpc, respectivamente. A interface preserva o código original quando não há mudança de grupo; mudanças efetivas usam antigo ou rpc como representantes técnicos, sem inferir ingresso novo ou migração. A distinção da origem pode importar para aposentadoria/benefício especial, que não são calculados nesta alteração.
+
+Funpresp-Jud permanece independente, com não participação, patrocinada ou vinculada. Alíquota aparece para participantes; remuneração escolhida e competência da vinculada permanecem no bloco essencial. Dependentes do IR ficam no bloco tributário. Opções de incidência RPPS/FC, inclusões na Funpresp, facultativas e aportes ficam em expansor próprio com contador de opções aplicáveis ativas. A forma de pagamento qualifica a facultativa/aporte e não conta como opção adicional independente. Fechar o expansor não limpa campos. Confirmação legada, erros locais das opções e erros previdenciários retornados pelo motor abrem o bloco.
+
+Retroativos conservam formulário próprio e enquadramento histórico explícito; mudar a folha mensal não substitui esses registros. Snapshots, memória, exportações, fórmulas e configuração data-driven permanecem compatíveis, sem migração ou regravação de holerites. Esta simplificação não certifica as limitações de cálculo já registradas neste relatório.
+
 ## Incidências e opções independentes
 
 Os códigos `antigo` e `novo_antigo` mantêm RPPS sem teto; `migrado` e `rpc`, RPPS limitado. A participação complementar deve ser informada separadamente. Vinculada não muda o enquadramento previdenciário; patrocinada exige enquadramento limitado e base superior ao teto.

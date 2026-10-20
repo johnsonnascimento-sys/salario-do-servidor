@@ -1,5 +1,12 @@
 # Changelog
 
+## Não publicado — 20/10/2026
+- Previdência: seletor mensal e por competência reduzido a RPPS sem teto do RGPS e RPPS limitado ao teto do RGPS; os quatro códigos salvos continuam compatíveis, sem alteração de fórmulas ou tabelas.
+- Interface: Funpresp-Jud independente, alíquota apenas para participantes e dados obrigatórios da vinculada visíveis; incidências, facultativas e aportes reunidos em opções adicionais com contador e abertura em pendências locais ou do motor.
+- Histórico: preservar alias ao reabrir/salvar sem mudança de grupo e manter enquadramento próprio dos retroativos. Sem migração de banco.
+- Validação: 60 testes aprovados, TypeScript e build Vite; equivalência dos aliases no motor, snapshots, seletor, retroativos e expansão. Revisão final de cálculo sem bloqueadores. QA desktop/mobile e teclado no componente isolado com estilos reais e dados sintéticos; conferência integrada pendente porque org_config/JMU não carregou no ambiente local.
+
+
 ## Visibilidade de falhas - 19/10/2026
 - A causa retornada pelo cálculo passa a aparecer também no rodapé desktop e em um alerta antes do formulário, preservando as entradas e mantendo exportação/salvamento bloqueados até um cálculo válido.
 - Domínio principal conferido com RPC + patrocinada em simulação nova; falha específica do estado informado ainda depende do diagnóstico completo.

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { PensionParticipation } from '../../../types/pension';
 import { buildRateOptions, isStepAligned, toPercentLabel } from '../dynamicPayrollForm.helpers';
+import { selectPensionRegime } from '../PensionRegimeSelect';
 import { toReferenceMonthIndex } from '../referenceDateUtils';
 
 interface UseFunprespFormParams {
@@ -20,7 +21,8 @@ export const useFunprespForm = ({ state, update, previdenciaComplementar: config
 
     // Changing the statutory regime never enrolls, migrates or cancels a plan.
     const handleRegimePrevChange = (value: string) => {
-        if (['antigo', 'novo_antigo', 'migrado', 'rpc'].includes(value)) update('regimePrev', value);
+        const selected = selectPensionRegime(state.regimePrev, value);
+        if (selected !== state.regimePrev) update('regimePrev', selected);
     };
     const handleFunprespParticipacaoChange = (value: PensionParticipation) => {
         update('funprespParticipacao', value);
@@ -32,6 +34,18 @@ export const useFunprespForm = ({ state, update, previdenciaComplementar: config
             update('funprespAliq', suggested ?? 0);
         }
     };
+
+    const funprespAdditionalValidationError = useMemo(() => {
+        if (state.funprespParticipacao === 'nao' || !config?.enabled) return null;
+        const facultativa = state.funprespFacul;
+        if (!Number.isFinite(facultativa) || facultativa < 0) return 'Contribuição facultativa deve ser um percentual não negativo.';
+        const rule = config.facultativeRate;
+        if (facultativa > 0 && facultativa < rule.minIfPositive) return `Contribuição facultativa mínima: ${toPercentLabel(rule.minIfPositive)}.`;
+        if (facultativa > 0 && rule.step && !isStepAligned(facultativa, rule.step)) return `Contribuição facultativa deve seguir passo de ${toPercentLabel(rule.step)}.`;
+        if (rule.max !== undefined && facultativa > rule.max) return `Contribuição facultativa máxima: ${toPercentLabel(rule.max)}.`;
+        if (!Number.isFinite(state.funprespFaculValor ?? 0) || (state.funprespFaculValor ?? 0) < 0) return 'Aporte esporádico deve ser um valor não negativo.';
+        return null;
+    }, [config, state.funprespParticipacao, state.funprespFacul, state.funprespFaculValor]);
 
     const funprespValidationError = useMemo(() => {
         if (state.funprespParticipacao === 'nao') return null;
@@ -56,15 +70,8 @@ export const useFunprespForm = ({ state, update, previdenciaComplementar: config
                 return 'Informe a remuneração de participação escolhida no plano. Os limites serão conferidos pelo motor.';
             }
         }
-        const facultativa = state.funprespFacul;
-        if (!Number.isFinite(facultativa) || facultativa < 0) return 'Contribuição facultativa deve ser um percentual não negativo.';
-        const rule = config.facultativeRate;
-        if (facultativa > 0 && facultativa < rule.minIfPositive) return `Contribuição facultativa mínima: ${toPercentLabel(rule.minIfPositive)}.`;
-        if (facultativa > 0 && rule.step && !isStepAligned(facultativa, rule.step)) return `Contribuição facultativa deve seguir passo de ${toPercentLabel(rule.step)}.`;
-        if (rule.max !== undefined && facultativa > rule.max) return `Contribuição facultativa máxima: ${toPercentLabel(rule.max)}.`;
-        if (!Number.isFinite(state.funprespFaculValor ?? 0) || (state.funprespFaculValor ?? 0) < 0) return 'Aporte esporádico deve ser um valor não negativo.';
-        return null;
-    }, [config, funprespNormalOptions, state]);
+        return funprespAdditionalValidationError;
+    }, [config, funprespNormalOptions, state, funprespAdditionalValidationError]);
 
-    return { showFunprespSection, funprespNormalOptions, handleRegimePrevChange, handleFunprespParticipacaoChange, funprespValidationError };
+    return { showFunprespSection, funprespNormalOptions, handleRegimePrevChange, handleFunprespParticipacaoChange, funprespValidationError, funprespAdditionalValidationError };
 };

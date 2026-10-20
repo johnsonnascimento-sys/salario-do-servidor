@@ -6,6 +6,8 @@ import { INITIAL_STATE, CalculatorState, PrevidenciaComplementarConfig } from '.
 import { useFunprespForm } from '../src/components/Calculator/hooks/useFunprespForm';
 import { DynamicPayrollTaxSection } from '../src/components/Calculator/DynamicPayrollTaxSection';
 import { ActionFooter } from '../src/components/Calculator/ActionFooter';
+import { PensionRegimeSelect, pensionRegimeGroup } from '../src/components/Calculator/PensionRegimeSelect';
+import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
 import { PensionRetroForm } from '../src/components/Calculator/PensionRetroForm';
 
 // Deliberately synthetic parameters: tests must not define official rules.
@@ -79,7 +81,7 @@ test('modalidade incompatível é desabilitada e simulação antiga oferece recu
  const calls: any[] = [];
  const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: state({funprespParticipacao:'patrocinado'}), update:()=>{}, handleRegimePrevChange:value=>calls.push(value), showFunprespSection:true, previdenciaComplementar:config, funprespNormalOptions:[.03], handleFunprespParticipacaoChange:()=>{} }));
  assert.equal(tree.root.findAllByType('option').find(o=>o.props.value==='patrocinado')?.props.disabled,true);
- const recover=tree.root.findAllByType('button').find(b=>b.children.join('')==='Ingressei no RPPS com teto');
+ const recover=tree.root.findAllByType('button').find(b=>b.children.join('')==='Meu RPPS é limitado ao teto do RGPS');
  act(()=>recover!.props.onClick());assert.deepEqual(calls,['rpc']);tree.unmount();
 });
 
@@ -89,4 +91,91 @@ test('rodapé mostra a causa completa do erro e mantém salvar/exportar bloquead
  assert.equal(tree.root.findByProps({role:'alert'}).children.join(''),detail);
  assert.equal(tree.root.findAllByType('button').filter(b=>['Exportar PDF/Holerite','Exportar Excel','Salvar na minha área'].includes(b.props.title)).every(b=>b.props.disabled),true);
  tree.unmount();
+});
+
+for (const regime of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
+    test('seletor de dois grupos preserva snapshot e alias: ' + regime, () => {
+        const input = state({ regimePrev: regime, funprespParticipacao: 'nao',
+            pensionRetroEntries: [{ id: 'historico', competencia: '2025-07', regimePrev: 'migrado' }] });
+        const restored = hydrateCalculatorState(JSON.parse(JSON.stringify(stripCalculatedFieldsFromCalculatorState(input))));
+        const calls: any[] = [];
+        const tree = create(React.createElement(PensionRegimeSelect, { value: restored.regimePrev, onChange: value => calls.push(value) }));
+        assert.equal(tree.root.findAllByType('option').length, 2);
+        const select = tree.root.findByType('select');
+        assert.equal(select.props.value, pensionRegimeGroup(regime));
+        act(() => select.props.onChange({ target: { value: select.props.value } }));
+        assert.deepEqual(calls, [regime]);
+        const hook = renderHook(restored);
+        hook.value.handleRegimePrevChange(pensionRegimeGroup(regime));
+        assert.deepEqual(hook.calls, []);
+        const other = pensionRegimeGroup(regime) === 'antigo' ? 'rpc' : 'antigo';
+        hook.value.handleRegimePrevChange(other);
+        assert.deepEqual(hook.calls, [['regimePrev', other]]);
+        assert.deepEqual(restored.pensionRetroEntries, input.pensionRetroEntries);
+        assert.equal(restored.regimePrev, regime);
+        hook.tree.unmount(); tree.unmount();
+    });
+}
+
+test('opções adicionais contam apenas opções ativas e recolher não muda entradas', () => {
+    const input = state({ regimePrev: 'rpc', funprespParticipacao: 'patrocinado', funprespAliq: .03,
+        pssSobreFC: true, funprespIncluirFC: true, funprespFacul: .01, funprespFaculValor: 25 });
+    const calls: any[] = [];
+    const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: input,
+        update: (k,v) => calls.push([k,v]), handleRegimePrevChange: () => {}, showFunprespSection: true,
+        previdenciaComplementar: config, funprespNormalOptions: [.03], handleFunprespParticipacaoChange: () => {} }));
+    assert.match(tree.root.findByType('summary').children.join(''), /4.*ativas/);
+    const details = tree.root.findByType('details');
+    assert.equal(details.props.open, false);
+    act(() => details.props.onToggle({ currentTarget: { open: true } }));
+    act(() => details.props.onToggle({ currentTarget: { open: false } }));
+    assert.deepEqual(calls, []);
+    tree.unmount();
+});
+
+test('pendência interna abre expansor mesmo com outro erro na seção essencial', () => {
+    const input = state({ funprespParticipacao: 'patrocinado', funprespAliq: .03, funprespFacul: -.1 });
+    const hook = renderHook(input);
+    assert.match(hook.value.funprespValidationError!, /RPPS com teto/);
+    assert.match(hook.value.funprespAdditionalValidationError!, /não negativo/);
+    const props = { styles: {}, state: input, update: () => {}, handleRegimePrevChange: () => {},
+        showFunprespSection: true, previdenciaComplementar: config, funprespNormalOptions: [.03], handleFunprespParticipacaoChange: () => {} };
+    const tree = create(React.createElement(DynamicPayrollTaxSection, props));
+    act(() => tree.update(React.createElement(DynamicPayrollTaxSection, { ...props,
+        funprespValidationError: hook.value.funprespValidationError!,
+        funprespAdditionalValidationError: hook.value.funprespAdditionalValidationError! })));
+    assert.equal(tree.root.findByType('details').props.open, true);
+    hook.tree.unmount(); tree.unmount();
+});
+
+test('não participante oculta alíquota; vinculada mantém dados obrigatórios fora do expansor', () => {
+    for (const participation of ['nao', 'vinculado'] as const) {
+        const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: state({ funprespParticipacao: participation }),
+            update: () => {}, handleRegimePrevChange: () => {}, showFunprespSection: true, previdenciaComplementar: config,
+            funprespNormalOptions: [.05], handleFunprespParticipacaoChange: () => {} }));
+        assert.equal(tree.root.findAllByType('select').some(s => s.props.value === INITIAL_STATE.funprespAliq), participation === 'vinculado');
+        assert.equal(tree.root.findAllByType('input').filter(i => i.props.type === 'month').length, participation === 'vinculado' ? 1 : 0);
+        assert.equal(tree.root.findByType('details').findAllByType('input').some(i => i.props.type === 'month'), false);
+        tree.unmount();
+    }
+});
+
+test('retroativo mantém seu alias e independe de alteração no enquadramento mensal', () => {
+    const calls: any[] = [];
+    const input = state({ regimePrev: 'rpc', pensionRetroEntries: [{ id: 'r', competencia: '2025-07', regimePrev: 'novo_antigo' }] });
+    const tree = create(React.createElement(PensionRetroForm, { state: input, styles: {}, pssTableOptions: [], update: (k,v) => calls.push([k,v]) }));
+    const select = tree.root.findAllByType('select').find(s => s.props.value === 'antigo')!;
+    act(() => select.props.onChange({ target: { value: 'antigo' } }));
+    assert.equal(calls[0][1][0].regimePrev, 'novo_antigo');
+    tree.update(React.createElement(PensionRetroForm, { state: { ...input, regimePrev: 'antigo' }, styles: {}, pssTableOptions: [], update: () => {} }));
+    assert.equal(tree.root.findByType(PensionRegimeSelect).props.value, 'novo_antigo');
+    tree.unmount();
+});
+
+test('pendência exclusiva do motor abre opções adicionais', () => {
+    const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: state(), update: () => {},
+        handleRegimePrevChange: () => {}, showFunprespSection: true, previdenciaComplementar: config, funprespNormalOptions: [],
+        handleFunprespParticipacaoChange: () => {}, calculationError: 'Previdência: aporte facultativo inferior ao mínimo configurado.' }));
+    assert.equal(tree.root.findByType('details').props.open, true);
+    tree.unmount();
 });

@@ -27,6 +27,7 @@ interface DynamicPayrollFormProps {
     state: CalculatorState;
     inputState?: CalculatorState;
     preserveRestoredGlobals?: boolean;
+    calculationError?: string | null;
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     courtConfig: CourtConfig;
@@ -40,6 +41,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     state,
     inputState,
     preserveRestoredGlobals = false,
+    calculationError,
     update,
     updateSubstDays,
     courtConfig,
@@ -70,7 +72,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         funprespNormalOptions,
         handleRegimePrevChange,
         handleFunprespParticipacaoChange,
-        funprespValidationError
+        funprespValidationError,
+        funprespAdditionalValidationError
     } = useFunprespForm({
         state,
         update,
@@ -216,6 +219,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     funprespNormalOptions={funprespNormalOptions}
                     handleFunprespParticipacaoChange={handleFunprespParticipacaoChange}
                     funprespValidationError={funprespValidationError}
+                    funprespAdditionalValidationError={funprespAdditionalValidationError}
+                    calculationError={calculationError}
                 />
                 <PensionRetroForm state={state} update={update} styles={styles} pssTableOptions={pssOptions} />
             </div>
