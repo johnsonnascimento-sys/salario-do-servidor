@@ -29,7 +29,7 @@ export const useCalculatorResults = (
     const inputToken = useMemo(() => ({ state, agencyService, courtConfig, agency }), [
         agencyService,
         state.mesRef, state.anoRef,
-        state.periodo, state.cargo, state.padrao, state.funcao,
+        state.periodo, state.simularDerrubadaVeto, state.cargo, state.padrao, state.funcao,
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
         state.vpni_lei, state.vpni_decisao, state.ats,
@@ -177,8 +177,8 @@ export const useCalculatorResults = (
         if (!courtConfig || calculationStatus !== 'ready') {
             return null;
         }
-        return getTablesForPeriod(state.periodo, courtConfig);
-    }, [courtConfig, state.periodo, calculationStatus]);
+        return getTablesForPeriod(state.periodo, courtConfig, state.simularDerrubadaVeto);
+    }, [courtConfig, state.periodo, state.simularDerrubadaVeto, calculationStatus]);
 
     const effectiveState = useMemo(
         () => mergeEffectiveState(state, calculatedState),

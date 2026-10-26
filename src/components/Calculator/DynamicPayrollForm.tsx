@@ -57,7 +57,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     updateRubrica,
     styles
 }) => {
-    const currentTables = getTablesForPeriod(state.periodo, courtConfig);
+    const currentTables = getTablesForPeriod(state.periodo, courtConfig, state.simularDerrubadaVeto);
     const payrollRules = courtConfig.payrollRules;
     const careerCatalog = courtConfig.careerCatalog;
     const noFunctionCode = careerCatalog?.noFunctionCode ?? '';

@@ -12,6 +12,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
     agencyConfig?: CourtConfig;
     periodo: number;
+    simularDerrubadaVeto?: boolean;
     cargo: string;
     padrao: string;
     funcao: string;

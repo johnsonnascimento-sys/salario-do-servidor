@@ -1,6 +1,7 @@
-﻿import React, { useEffect, useMemo, useRef } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useId } from 'react';
 import { Settings } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
+import { getSalarySchedule, isSalaryProjection, resolveSalaryPeriod } from '../../utils/salaryScenario';
 import {
     MONTH_TOKEN_TO_INDEX,
     compareReferencePoints,
@@ -8,7 +9,6 @@ import {
     parseReferencePointFromDate,
     parseReferencePointFromKey,
     pickBestMenuOptionByReference,
-    pickPeriodFromScheduleByReference,
     pickMaxReferencePoint,
     pickMinReferencePoint,
     toReferenceMonthIndex
@@ -17,6 +17,7 @@ import {
 interface GlobalSettingsProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
+    updateMany?: (patch: Partial<CalculatorState>) => void;
     courtConfig: CourtConfig;
     styles: any;
     preserveRestoredGlobals?: boolean;
@@ -65,6 +66,7 @@ const clampReference = (
 export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     state,
     update,
+    updateMany,
     courtConfig,
     styles,
     preserveRestoredGlobals = false,
@@ -77,9 +79,13 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         [courtConfig.adjustment_schedule]
     );
 
-    const periodOptions = schedules.length > 0
-        ? schedules
-        : [{ period: state.periodo, percentage: 0, label: `Período ${state.periodo}` }];
+    const projection = isSalaryProjection(state, courtConfig);
+    const projectionOptions = getSalarySchedule(courtConfig, true).filter(entry => entry.status === 'hypothetical');
+    const projectionId = useId();
+    const apply = (patch: Partial<CalculatorState>) => {
+        if (updateMany) updateMany(patch);
+        else Object.entries(patch).forEach(([key, value]) => update(key as keyof CalculatorState, value));
+    };
 
     const foodAllowanceOptions = useMemo(
         () => courtConfig.menus?.food_allowance || [],
@@ -151,14 +157,12 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     }, [pssKeys, irKeys, foodAllowanceOptions, preschoolAllowanceOptions, schedules]);
 
     const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, idx) => getMonthLabel(idx)), []);
-    const manualPeriodSelectionRef = useRef(false);
     const lastReferenceKeyRef = useRef('');
     const preserveRestoredGlobalsRef = useRef(preserveRestoredGlobals);
 
     useEffect(() => {
         preserveRestoredGlobalsRef.current = preserveRestoredGlobals;
         if (preserveRestoredGlobals) {
-            manualPeriodSelectionRef.current = false;
             lastReferenceKeyRef.current = '';
         }
     }, [preserveRestoredGlobals]);
@@ -227,11 +231,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         if (preserveRestoredGlobalsRef.current) {
             preserveRestoredGlobalsRef.current = false;
             return;
-        }
-
-        const nextPeriod = pickPeriodFromScheduleByReference(schedules, clampedReference.year, clampedReference.month);
-        if (!manualPeriodSelectionRef.current && nextPeriod !== null && nextPeriod !== state.periodo) {
-            update('periodo', nextPeriod);
         }
 
         const nextFoodAllowance = pickBestMenuOptionByReference(foodAllowanceOptions, clampedReference.year, clampedReference.month);
@@ -303,35 +302,31 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         update
     ]);
 
+    useEffect(() => {
+        const patch: Partial<CalculatorState> = {};
+        if (state.simularDerrubadaVeto === undefined) patch.simularDerrubadaVeto = projection;
+        if (projection) {
+            const selected = projectionOptions.find(entry => entry.period === state.periodo);
+            if (selected && state.salaryProjectionLabel !== selected.label) patch.salaryProjectionLabel = selected.label;
+        } else if (!preserveSavedReference) {
+            const next = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: false }, courtConfig, clampedReference.year, clampedReference.month);
+            if (next !== state.periodo) patch.periodo = next;
+        }
+        if (Object.keys(patch).length) apply(patch);
+    }, [projection, state.simularDerrubadaVeto, state.periodo, state.salaryProjectionLabel, courtConfig,
+        clampedReference.year, clampedReference.month, preserveSavedReference, update, updateMany]);
+
     return (
         <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm">
             <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full -mr-8 -mt-8 blur-xl"></div>
             <h3 className={styles.sectionTitle}>
                 <Settings className="w-4 h-4" />
-                Configurações Globais
+                Competência e cenário
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 <div>
-                    <label className={compactLabel}>Ref. Salarial</label>
-                    <select
-                        className={compactInput}
-                        value={state.periodo}
-                        onChange={(e) => {
-                            manualPeriodSelectionRef.current = true;
-                            update('periodo', Number(e.target.value));
-                        }}
-                    >
-                        {periodOptions.map((entry) => (
-                            <option key={entry.period} value={entry.period}>
-                                {entry.label || `Período ${entry.period} (${(entry.percentage * 100).toFixed(2)}%)`}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div>
-                    <label className={compactLabel}>Mês de Referência (traz valores históricos de IR, PSS, Alimentação...)</label>
+                    <label className={compactLabel}>Mês e ano da folha</label>
                     <div className="flex gap-2">
                         <select
                             className={compactInput}
@@ -354,7 +349,39 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                         </select>
                     </div>
                 </div>
+                <div className="self-end pb-2 text-body-xs text-neutral-600 dark:text-neutral-300">
+                    <span className="font-semibold">Tabela salarial aplicada: </span>
+                    {schedules.find(entry => entry.period === state.periodo)?.label || `Período ${state.periodo}`}
+                </div>
             </div>
+            {projectionOptions.length > 0 && <div className="mt-4 relative z-10 space-y-3">
+                <label htmlFor={projectionId} className="flex items-center gap-2 text-body-xs text-neutral-700 dark:text-neutral-200">
+                    <input id={projectionId} type="checkbox" checked={projection} onChange={event => {
+                        const enabled = event.target.checked;
+                        if (enabled) {
+                            const selected = projectionOptions.find(entry => entry.period === state.periodo) ?? projectionOptions[0];
+                            apply({ simularDerrubadaVeto: true, periodo: selected.period, salaryProjectionLabel: selected.label });
+                        } else {
+                            apply({ simularDerrubadaVeto: false, salaryProjectionLabel: undefined,
+                                periodo: resolveSalaryPeriod({ ...state, simularDerrubadaVeto: false }, courtConfig, clampedReference.year, clampedReference.month) });
+                        }
+                    }} />
+                    Simular derrubada do veto de 2027 e 2028
+                </label>
+                {projection && <label htmlFor={`${projectionId}-period`} className={compactLabel}>Projeção salarial
+                    <select id={`${projectionId}-period`} className={compactInput} value={state.periodo}
+                        onChange={event => {
+                            const selected = projectionOptions.find(entry => entry.period === Number(event.target.value));
+                            if (selected) apply({ periodo: selected.period, simularDerrubadaVeto: true, salaryProjectionLabel: selected.label });
+                        }}>
+                        {!projectionOptions.some(entry => entry.period === state.periodo) && <option value={state.periodo}>Selecione a projeção</option>}
+                        {projectionOptions.map(entry => <option key={entry.period} value={entry.period}>{entry.label}</option>)}
+                    </select>
+                </label>}
+                {projection && <p className="text-body-xs font-normal normal-case tracking-normal text-neutral-600 dark:text-neutral-300">
+                    Projeção com derrubada do veto — reajustes ainda não vigentes. Descontos e benefícios calculados com as tabelas da competência de referência.
+                </p>}
+            </div>}
         </div>
     );
 };

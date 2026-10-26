@@ -13,7 +13,7 @@ interface IncomeSectionProps {
 }
 
 export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, courtConfig, styles, isNovoAQ }) => {
-    const currentTables = getTablesForPeriod(state.periodo, courtConfig);
+    const currentTables = getTablesForPeriod(state.periodo, courtConfig, state.simularDerrubadaVeto);
     const careerCatalog = courtConfig?.careerCatalog;
     const cargoOptions = Object.keys(currentTables.salario || {});
     const noFunctionCode = careerCatalog?.noFunctionCode ?? '';

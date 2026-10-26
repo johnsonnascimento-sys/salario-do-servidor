@@ -108,8 +108,19 @@ export interface CareerCatalogConfig {
   cargoLabels: Record<string, string>;
 }
 
+export interface SalaryAdjustment {
+  period: number;
+  percentage: number;
+  label?: string;
+  date?: string;
+  status?: 'enacted' | 'hypothetical';
+  scenarioLabel?: string;
+  legalReference?: string;
+  sourceUrl?: string;
+}
+
 export interface CourtConfig {
-  adjustment_schedule?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
+  adjustment_schedule?: SalaryAdjustment[];
   bases: {
     salario: SalaryTable;
     funcoes: FuncoesTable;
@@ -122,8 +133,8 @@ export interface CourtConfig {
     pre_school?: number;
     deducao_dep?: number;
     cj1_integral_base?: number;
-    adjustment_schedule?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
-    reajustes?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
+    adjustment_schedule?: SalaryAdjustment[];
+    reajustes?: SalaryAdjustment[];
   };
   menus?: {
     food_allowance?: Array<{ label: string; value: number }>;
@@ -186,6 +197,8 @@ export interface CalculatorState {
   // Global
   nome: string;
   periodo: number; // 0 to 4
+  simularDerrubadaVeto?: boolean;
+  salaryProjectionLabel?: string;
   mesRef: string;
   anoRef: number;
   tipoCalculo: 'comum' | 'jan' | 'jun' | 'nov';
@@ -434,6 +447,7 @@ export const INITIAL_STATE: CalculatorState = {
 
   nome: "",
   periodo: 0,
+  simularDerrubadaVeto: false,
   mesRef: ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"][new Date().getMonth()],
   anoRef: new Date().getFullYear(),
   tipoCalculo: 'comum',

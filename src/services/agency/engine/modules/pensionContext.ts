@@ -37,7 +37,7 @@ export const calculateMonthlyPensionContext = async (params: IAgencyCalculationP
     const config = params.agencyConfig;
     if (!config) throw new Error('agencyConfig is required for JMU calculations.');
     const rules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
     const vencimento = salario[params.cargo]?.[params.padrao];
     if (!Number.isFinite(vencimento) || vencimento < 0) throw new Error('Previdência: base salarial indisponível ou inválida.');
     const gaj = vencimento * rules.gajRate;

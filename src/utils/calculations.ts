@@ -1,4 +1,5 @@
 import { CalculatorState, SalaryTable, FuncoesTable, CourtConfig, TaxTable } from '../types';
+import { applySalaryCorrections } from './salaryScenario';
 
 export const formatCurrency = (val: number) => {
     return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -23,41 +24,7 @@ const requireConfig = (config?: CourtConfig): CourtConfig => {
     return config;
 };
 
-interface AdjustmentEntry {
-    period: number;
-    percentage: number;
-}
-
-const normalizePercentage = (value: number) => (value > 1 ? value / 100 : value);
-
-const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEntry[] | null => {
-    const schedule =
-        (config as any).adjustment_schedule ||
-        (config.values as any)?.adjustment_schedule ||
-        (config.values as any)?.reajustes;
-
-    if (!Array.isArray(schedule)) {
-        return null;
-    }
-
-    return schedule
-        .filter((entry: AdjustmentEntry) => Number.isFinite(entry?.period) && Number.isFinite(entry?.percentage))
-        .filter((entry: AdjustmentEntry) => entry.period <= periodo)
-        .sort((a: AdjustmentEntry, b: AdjustmentEntry) => a.period - b.period);
-};
-
-const applyCorrections = (base: number, periodo: number, config: CourtConfig): number => {
-    const schedule = findCorrectionTable(periodo, config);
-    if (!schedule || schedule.length === 0) {
-        return base;
-    }
-
-    return schedule.reduce((value, entry) => {
-        return value * (1 + normalizePercentage(entry.percentage));
-    }, base);
-};
-
-export const getTablesForPeriod = (periodo: number, config?: CourtConfig) => {
+export const getTablesForPeriod = (periodo: number, config?: CourtConfig, projection?: boolean) => {
     const resolved = requireConfig(config);
     const payrollRules = resolved.payrollRules;
     if (!payrollRules) {
@@ -72,17 +39,17 @@ export const getTablesForPeriod = (periodo: number, config?: CourtConfig) => {
             newSal[cargo] = {};
         }
         for (let padrao in BASES.salario[cargo]) {
-            newSal[cargo][padrao] = applyCorrections(BASES.salario[cargo][padrao], periodo, resolved);
+            newSal[cargo][padrao] = applySalaryCorrections(BASES.salario[cargo][padrao], periodo, resolved, projection);
         }
     }
 
     const newFunc: FuncoesTable = {};
     for (let key in BASES.funcoes) {
-        newFunc[key] = applyCorrections(BASES.funcoes[key], periodo, resolved);
+        newFunc[key] = applySalaryCorrections(BASES.funcoes[key], periodo, resolved, projection);
     }
 
     // Dynamic VR Calculation
-    const cj1Adjusted = applyCorrections(CJ1_BASE, periodo, resolved);
+    const cj1Adjusted = applySalaryCorrections(CJ1_BASE, periodo, resolved, projection);
     const valorVR = Math.round(cj1Adjusted * payrollRules.vrRateOnCj1 * 100) / 100;
 
     return { salario: newSal, funcoes: newFunc, valorVR };
@@ -175,7 +142,7 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
         throw new Error('CourtConfig.payrollRules is required for calculations.');
     }
     const noFunctionCode = resolvedConfig.careerCatalog?.noFunctionCode ?? '';
-    const { salario, funcoes, valorVR } = getTablesForPeriod(state.periodo, config);
+    const { salario, funcoes, valorVR } = getTablesForPeriod(state.periodo, config, state.simularDerrubadaVeto);
     const { baseSemFC, totalComFC, funcaoValor: funcaoValorCalc } = calculateBaseFixa(
         state,
         funcoes,

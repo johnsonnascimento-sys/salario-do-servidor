@@ -1,5 +1,5 @@
 import { AdjustmentScheduleConfig, EffectiveConfig } from './types';
-import { CourtConfig, TaxTable } from '../../types';
+import { CourtConfig, TaxTable, type SalaryAdjustment } from '../../types';
 
 const toNumberKey = (key: string) => {
     const parsed = Number(key.replace(/[^\d.]/g, ''));
@@ -45,10 +45,12 @@ const pickCaseInsensitive = (obj: Record<string, any> | undefined, key: string) 
 const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
     if (!schedule) return undefined;
     return Object.entries(schedule)
-        .reduce<Array<{ period: number; percentage: number; label?: string; date: string }>>((acc, [key, entry]) => {
+        .reduce<SalaryAdjustment[]>((acc, [key, entry]) => {
             const numeric = toNumberKey(key);
             if (numeric === null) return acc;
-            acc.push({ period: numeric, percentage: entry.percentage, label: entry.label, date: entry.date });
+            acc.push({ period: numeric, percentage: entry.percentage, label: entry.label, date: entry.date,
+                status: entry.status, scenarioLabel: entry.scenarioLabel,
+                legalReference: entry.legalReference, sourceUrl: entry.sourceUrl });
             return acc;
         }, [])
         .sort((a, b) => a.period - b.period);

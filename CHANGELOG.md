@@ -1,5 +1,10 @@
 # Changelog
 
+## Rubricas manuais sem apuração de retroativos — 20/10/2026
+- Retirada a opção de Funpresp por competência original das rubricas novas e das rubricas sem essa marcação. O formulário não encaminha mais para a ferramenta removida.
+- Marcações antigas permanecem identificadas como opções salvas, com desmarcação voluntária e orientação para conferir os ajustes existentes. Valores, incidências, motor e snapshots não são convertidos ou alterados automaticamente.
+- Validação: 35 testes de formulário e TypeScript aprovados.
+
 ## Simplificação dos retroativos — 20/10/2026
 - Retirada a ferramenta de previdência de retroativos do fluxo de novas simulações; lançamentos com valor conhecido continuam nas rubricas manuais.
 - Removida a inclusão de novas competências. Apenas simulações que já possuem ajustes exibem um editor de compatibilidade recolhido, chamado “Ajustes previdenciários salvos”, evitando descontos ocultos e permitindo sua revisão ou remoção.

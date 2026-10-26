@@ -121,6 +121,10 @@ export interface AdjustmentScheduleConfig {
         date: string;
         percentage: number;
         label?: string;
+        status?: 'enacted' | 'hypothetical';
+        scenarioLabel?: string;
+        legalReference?: string;
+        sourceUrl?: string;
     };
 }
 

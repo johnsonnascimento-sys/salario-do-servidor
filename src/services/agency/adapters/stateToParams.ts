@@ -27,6 +27,7 @@ export function mapStateToAgencyParams(
 
         // Core Params
         periodo: state.periodo,
+        simularDerrubadaVeto: state.simularDerrubadaVeto,
         cargo: state.cargo,
         padrao: state.padrao,
         funcao: state.funcao,
