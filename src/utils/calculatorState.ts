@@ -36,6 +36,7 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'valFunprespNormal',
     'valFunprespFacultativa',
     'pensionMemory',
+    'dailiesMemory',
     'irMensal',
     'irEA',
     'aqIr',

@@ -24,6 +24,7 @@ export function mapStateToAgencyParams(
         // Agency Slug
         orgSlug: orgSlug,
         agencyConfig,
+        dailiesInput: state.dailiesInput,
 
         // Core Params
         periodo: state.periodo,

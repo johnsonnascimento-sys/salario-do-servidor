@@ -9,6 +9,7 @@ import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../..
 import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
+    dailiesInput?: import('../dailies').DailiesInput;
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
     agencyConfig?: CourtConfig;
     periodo: number;

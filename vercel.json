@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "codex/evolucao-diarias": false
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",

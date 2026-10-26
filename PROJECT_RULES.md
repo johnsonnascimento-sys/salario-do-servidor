@@ -1,6 +1,6 @@
 ﻿# PROJECT_RULES
 
-Atualizado em: 02/04/2026 17:16
+Atualizado em: 26/10/2026 18:42
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -25,6 +25,8 @@ Prioridade de merge (menor para maior):
 
 Regra de precedencia: `org > power > global`.
 
+Para diarias, o historico dedicado `dailies_scopes`/`dailies_versions` evolui esta hierarquia com ramo/conselho opcional: `org > branch > power > global`. A origem de cada parametro deve ser preservada. Override especifico nao pode relaxar limite ou alterar regra nacional obrigatoria.
+
 ### 2.2 Fluxo oficial em runtime
 
 1. `ConfigService.getEffectiveConfig(orgSlug)` busca:
@@ -34,17 +36,19 @@ Regra de precedencia: `org > power > global`.
 2. O merge e feito por `deepMergeMultiple(global, power, org.configuration)`.
 3. O resultado vira `EffectiveConfig` com metadados (`org_slug`, `org_name`, `power_name`).
 4. A UI consome o formato adaptado por `mapEffectiveConfigToCourtConfig`.
+5. Diarias usam `DailiesService.getForInput` e o motor compartilhado em `src/services/agency/dailies`, independentemente da configuracao corrente da folha. Nao importar regras locais JMU do legado PJU para outros ramos.
 
 ### 2.3 Vigencia temporal
 
 1. Regras com historico devem usar `valid_from` e `valid_to`.
-2. Regra ativa e aquela com `valid_to = NULL`.
+2. Em consultas temporais, selecionar `valid_from <= referencia` e (`valid_to IS NULL` ou `valid_to >= referencia`), com limites inclusivos. `valid_to = NULL` representa continuidade, nao prova vigencia em qualquer data. No historico dedicado de diarias, usar somente versoes publicadas nao substituidas; publicacao administrativa e inicio juridico sao datas distintas.
 3. Mudanca historica deve entrar como novo registro/versionamento, sem destruir historico.
 
 ### 2.4 Fallback legado
 
 1. `courts.config` e legado e deve ser usado apenas como fallback tecnico.
 2. Nova regra deve ser cadastrada nas tabelas hierarquicas (`*_config`), nao em `courts`.
+3. Diarias temporais nao admitem fallback para `courts`, valores atuais, outro orgao ou zero para representar dados ausentes. Legado sem vigencia comprovada e preservado como rascunho auditavel, sem inicio historico presumido.
 
 ## 3. Governanca por camada de configuracao
 
@@ -86,6 +90,8 @@ Cada rubrica manual deve suportar:
 2. Diarias devem aparecer separadas do bloco de holerite.
 3. Adicional de embarque deve aparecer em linha propria.
 4. Exibir total de diarias liquidas.
+5. Memoria de diarias deve preservar entradas, parametros, fontes, vigencias, versoes e totais por moeda; nao converter moedas implicitamente nem recalcular a consulta de snapshot salvo. Recalculo e uma acao explicita, salva como nova simulacao quando houver diarias.
+6. A capacidade de diarias pode ser habilitada separadamente da folha. Hipoteses ou periodos sem dados suficientes permanecem indisponiveis, com pendencia explicita.
 
 ### 4.5 Detalhamento final
 

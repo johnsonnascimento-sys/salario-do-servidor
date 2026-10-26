@@ -104,7 +104,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const vacation = await calculateVacation(params);
         const overtime = await calculateOvertime(params);
         const substitution = await calculateSubstitution(params);
-        const dailies = await calculateDailies(params);
+        const dailies = await calculateDailies(params, benefits);
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
@@ -116,9 +116,9 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         // 5. Calcular Totais
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
             benefits.auxTransporte + vacation.value + thirteenth.gratNatalinaTotal + overtime.heTotal +
-            substitution.total + dailies.valor + compensatoryLeave + rubricasTotals.creditos;
+            substitution.total + dailies.bruto + compensatoryLeave + rubricasTotals.creditos;
 
-        const totalDeductions = deductions.total + benefits.auxTransporteDebito +
+        const totalDeductions = deductions.total + benefits.auxTransporteDebito + dailies.glosa + dailies.corteLdo + dailies.deducoes +
             (params.discounts || 0) + (params.otherDeductions || 0) +
             vacation.irFerias + vacation.descontoAntecipacao + thirteenth.pss13 + thirteenth.funpresp13 +
             thirteenth.ir13 + thirteenth.primeiraParcelaDesconto + rubricasTotals.debitos;
@@ -127,6 +127,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         return {
             netSalary: totalGross - totalDeductions,
             totalDeductions: totalDeductions,
+            dailiesMemory: dailies.memory,
             totalBenefits: benefits.auxAlimentacao + benefits.auxPreEscolar +
                 benefits.auxTransporte + dailies.valor + compensatoryLeave,
             pensionMemory: { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,

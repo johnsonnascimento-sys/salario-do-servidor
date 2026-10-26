@@ -180,6 +180,10 @@ export interface SubstitutionEntry {
 }
 
 export interface CalculatorState {
+  dailiesInput?: import('./services/agency/dailies').DailiesInput;
+  dailiesOnly?: boolean;
+  dailiesCurrency?: string;
+  dailiesMemory?: import('./services/agency/dailies').DailiesCalculationResult['memory'];
   // Rubricas Dinâmicas
   rubricasExtras: Rubrica[];
   overtimeEntries: OvertimeEntry[];
@@ -386,6 +390,7 @@ export type CalculatedPayrollState = Pick<
   | 'valFunprespNormal'
   | 'valFunprespFacultativa'
   | 'pensionMemory'
+  | 'dailiesMemory'
   | 'irMensal'
   | 'irEA'
   | 'aqIr'

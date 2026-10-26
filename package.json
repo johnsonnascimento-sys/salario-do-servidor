@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test:diarias": "node scripts/test-dailies-temporal.mjs && node scripts/test-dailies-ui.mjs && node scripts/test-dailies-integration.mjs",
     "dev": "vite",
     "prebuild": "node scripts/generate-version.js",
     "build": "vite build",
