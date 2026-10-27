@@ -29,40 +29,26 @@ const SIMULATOR_DATA: SimulatorNode[] = [
     children: [
       {
         id: 'jud_federal_sphere',
-        name: 'Justiça Federal',
+        name: 'Justiça da União',
         type: 'category',
         icon: <Building2 className="w-6 h-6 text-secondary-600" />,
         description: 'Tribunais da União',
         children: [
           {
-            id: 'jud_militar',
-            name: 'Justiça Militar da União',
-            type: 'category',
+            id: 'jmu',
+            name: 'Justiça Militar da União (STM e Auditorias)',
+            type: 'simulator',
+            slug: 'jmu',
             icon: <ShieldCheck className="w-6 h-6 text-secondary-500" />,
-            children: [
-              {
-                id: 'jmu',
-                name: 'STM e Auditorias (JMU)',
-                type: 'simulator',
-                slug: 'jmu',
-                description: 'Simulador completo para servidores da JMU (Lei 13.317/16 + Lei 15.292/26)'
-              }
-            ]
+            description: 'Simulador completo para servidores da JMU (Lei 13.317/16 + Lei 15.292/26)'
           },
           {
-            id: 'jud_federal_comum',
+            id: 'cjf',
             name: 'Justiça Federal (CJF e TRFs)',
-            type: 'category',
+            type: 'simulator',
+            slug: 'cjf',
             icon: <Building2 className="w-6 h-6 text-secondary-500" />,
-            children: [
-              { id: 'cjf', name: 'CJF', type: 'simulator', slug: 'cjf', description: 'Conselho da Justiça Federal (Res. CJF 340/2015)' },
-              { id: 'trf1', name: 'TRF-1', type: 'simulator', slug: 'trf1' },
-              { id: 'trf2', name: 'TRF-2', type: 'simulator', slug: 'trf2' },
-              { id: 'trf3', name: 'TRF-3', type: 'simulator', slug: 'trf3' },
-              { id: 'trf4', name: 'TRF-4', type: 'simulator', slug: 'trf4' },
-              { id: 'trf5', name: 'TRF-5', type: 'simulator', slug: 'trf5' },
-              { id: 'trf6', name: 'TRF-6', type: 'simulator', slug: 'trf6' }
-            ]
+            description: 'Simulador completo para servidores do CJF e TRFs (Res. CJF 340/2015 + PJU)'
           },
           {
             id: 'jud_eleitoral',

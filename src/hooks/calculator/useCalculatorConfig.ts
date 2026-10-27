@@ -42,7 +42,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                     .select('name, type, slug').eq('slug', resolvedSlug).single();
                 const ALLOWED_ORGS = new Set(['jmu', 'pju', 'trt2', 'cjf', 'trf1', 'trf2', 'trf3', 'trf4', 'trf5', 'trf6']);
                 if (!ALLOWED_ORGS.has(data.slug)) throw new Error('Simulador indisponível para este órgão.');
-                update({ agency: data.slug === 'jmu' ? { ...data, name: 'Justiça Militar da União' } : data,
+                update({ agency: data.slug === 'jmu' ? { ...data, name: 'Justiça Militar da União' } : data.slug === 'cjf' ? { ...data, name: 'Justiça Federal (CJF e TRFs)' } : data,
                     agencyService: new AgencyCalculationEngine() });
             } catch (error) {
                 update({ agencyError: error instanceof Error ? error.message : 'Não foi possível carregar a agência.' });
