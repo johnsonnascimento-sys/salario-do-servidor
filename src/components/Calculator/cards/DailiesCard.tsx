@@ -34,6 +34,9 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
     const isPeriodMode = state.diariasModoDesconto === 'periodo';
 
+    const normativeInfo = dailiesConfig?.normativeInfo;
+    const embarkationLabel = dailiesConfig?.embarkationLabel?.trim() || 'Adicional de embarque';
+
     const discountRules = useMemo(
         () => resolveDailiesDiscountRules(dailiesConfig, transportWorkdays),
         [dailiesConfig, transportWorkdays]
@@ -46,6 +49,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         () => resolveDailiesDailyRate({
             dailiesConfig,
             cargo: state.cargo,
+            funcao: state.funcao,
             hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj'))
         }),
         [dailiesConfig, state.cargo, state.funcao]
@@ -113,9 +117,22 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
     return (
         <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-                <Plane className="w-4 h-4" /> Diárias
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+                <h3 className={styles.sectionTitle}>
+                    <Plane className="w-4 h-4" /> Diárias
+                </h3>
+                {normativeInfo && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-[11px] font-medium leading-tight">
+                        <span>🏛️</span>
+                        <span>
+                            {normativeInfo.branchRuleLabel || normativeInfo.generalRuleLabel || 'Regulamentação PJU'}
+                            {normativeInfo.branchRuleLabel && normativeInfo.generalRuleLabel && (
+                                <span className="text-amber-700/80 dark:text-amber-300/80 font-normal"> (c/c {normativeInfo.generalRuleLabel})</span>
+                            )}
+                        </span>
+                    </div>
+                )}
+            </div>
 
             <div className="space-y-6">
                 <div className={styles.innerBox}>
@@ -205,7 +222,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         )}
 
                         <div>
-                            <label className={styles.label}>Adicional de embarque</label>
+                            <label className={styles.label}>{embarkationLabel}</label>
                             <select
                                 className={styles.input}
                                 value={state.diariasEmbarque}
@@ -219,6 +236,9 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
                             <p>Os valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
+                            <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                Valor unitário da diária: {dailyRate > 0 ? formatCurrencyBr(dailyRate) : 'R$ 0,00'}
+                            </p>
                             <p>{holidayCalendarLabel} usado no desconto automático por datas.</p>
                             <p>Datas de feriados oficiais cadastradas: {formatDateList(configuredHolidayDates)}.</p>
                             <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
@@ -233,7 +253,14 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     Teto LDO por diária: {formatCurrencyBr(ldoCapValue)}
                                 </p>
                             )}
-                            <p>Diária do ministro: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
+                            <p>Diária de referência do Ministro do STF: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
+                            {normativeInfo?.notes && normativeInfo.notes.length > 0 && (
+                                <div className="pt-1 text-[11px] text-neutral-500 border-t border-neutral-200/50 dark:border-neutral-700/50">
+                                    {normativeInfo.notes.map((note, idx) => (
+                                        <p key={idx}>• {note}</p>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

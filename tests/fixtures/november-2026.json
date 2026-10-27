@@ -461,6 +461,15 @@
       "treinamento_coef": 0.01
     },
     "dailies_rules": {
+      "embarkation_label": "Adicional de embarque e desembarque",
+      "normative_info": {
+        "general_rule_label": "Resolução CNJ Nº 73/2009",
+        "branch_rule_label": "Ato Normativo STM Nº 799/2024",
+        "notes": [
+          "Valores de referência baseados na diária do Ministro do STF",
+          "Regra especial de retorno: 50% da diária e 50% de dedução de auxílios em dias úteis"
+        ]
+      },
       "rates": {
         "cj": 880.17,
         "tecnico": 660.13,

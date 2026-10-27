@@ -54,10 +54,11 @@ interface LdoCapInput {
     perDiemLimit: number;
 }
 
-interface ResolveDailyRateInput {
+export interface ResolveDailyRateInput {
     dailiesConfig: DailiesConfig | undefined;
     cargo: string;
-    hasCommissionRole: boolean;
+    funcao?: string;
+    hasCommissionRole?: boolean;
 }
 
 interface ResolveEmbarkationInput {
@@ -91,7 +92,12 @@ const toIsoDate = (date: Date) => {
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
-const normalizeKey = (value: string) => String(value || '').trim().toLowerCase();
+const normalizeKey = (value: string) =>
+    String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 
 const pickCaseInsensitive = (values: Record<string, number> | undefined, keyCandidates: string[]): number | null => {
     if (!values) return null;
@@ -110,17 +116,43 @@ const pickCaseInsensitive = (values: Record<string, number> | undefined, keyCand
     return null;
 };
 
-const resolveRateKeyCandidates = (cargo: string, hasCommissionRole: boolean) => {
-    if (hasCommissionRole) {
-        return ['cj', 'cargo_comissao', 'comissao'];
+export const resolveRateKeyCandidates = (
+    cargo: string,
+    funcao?: string,
+    hasCommissionRole?: boolean
+): string[] => {
+    const candidates: string[] = [];
+    const rawFuncao = normalizeKey(funcao || '');
+    const cleanFuncao = rawFuncao.replace(/[\s\-_]/g, '');
+    const isCommission = Boolean(hasCommissionRole || cleanFuncao.startsWith('cj'));
+
+    if (isCommission) {
+        if (cleanFuncao) {
+            candidates.push(cleanFuncao);
+        }
+        candidates.push('cj', 'cargo_comissao', 'comissao');
+    } else if (cleanFuncao) {
+        candidates.push(cleanFuncao);
     }
 
     const normalizedCargo = normalizeKey(cargo);
-    if (!normalizedCargo) return [];
-    if (normalizedCargo.includes('analista')) return ['analista'];
-    if (normalizedCargo.includes('tecnico')) return ['tecnico'];
-    if (normalizedCargo.includes('juiz')) return ['juiz'];
-    return [normalizedCargo];
+    if (normalizedCargo.includes('desembargador')) {
+        candidates.push('desembargador', 'juiz', 'magistrado');
+    } else if (normalizedCargo.includes('substituto')) {
+        candidates.push('juiz_substituto', 'juiz', 'magistrado');
+    } else if (normalizedCargo.includes('juiz') || normalizedCargo.includes('magistrado')) {
+        candidates.push('juiz_titular', 'juiz', 'magistrado');
+    } else if (normalizedCargo.includes('analista')) {
+        candidates.push('analista', 'analista_judiciario');
+    } else if (normalizedCargo.includes('tecnico')) {
+        candidates.push('tecnico', 'tecnico_judiciario');
+    } else if (normalizedCargo.includes('auxiliar')) {
+        candidates.push('auxiliar', 'auxiliar_judiciario');
+    } else if (normalizedCargo) {
+        candidates.push(normalizedCargo);
+    }
+
+    return Array.from(new Set(candidates));
 };
 
 const buildHolidaySet = (rules: DailiesDiscountRules) => {
@@ -134,9 +166,11 @@ const buildHolidaySet = (rules: DailiesDiscountRules) => {
 export const resolveDailiesDailyRate = ({
     dailiesConfig,
     cargo,
+    funcao,
     hasCommissionRole
 }: ResolveDailyRateInput): number => {
-    const fallbackCandidates = resolveRateKeyCandidates(cargo, hasCommissionRole);
+    const isCommission = hasCommissionRole ?? Boolean(funcao && normalizeKey(funcao).replace(/[\s\-_]/g, '').startsWith('cj'));
+    const fallbackCandidates = resolveRateKeyCandidates(cargo, funcao, isCommission);
     const fallbackRate = pickCaseInsensitive(dailiesConfig?.rates, fallbackCandidates) ?? 0;
 
     const derived = dailiesConfig?.derivedFromMinister;

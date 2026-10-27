@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Calculos de Diarias de Viagem - JMU
  *
  * Responsavel por calcular:
@@ -69,6 +69,7 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
     const valorDiaria = resolveDailiesDailyRate({
         dailiesConfig,
         cargo: params.cargo,
+        funcao: params.funcao,
         hasCommissionRole: Boolean(params.funcao && params.funcao.toLowerCase().startsWith('cj'))
     });
 

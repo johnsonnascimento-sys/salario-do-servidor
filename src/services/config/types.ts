@@ -163,12 +163,20 @@ export interface BenefitsConfig {
 /**
  * Regras de Diarias de Viagem
  */
+export interface DailiesNormativeInfoConfig {
+    general_rule_label?: string;
+    branch_rule_label?: string;
+    local_rule_label?: string;
+    notes?: string[];
+}
+
 export interface DailiesRulesConfig {
     rates: Record<string, number>;
     embarkation_additional: {
         completo: number;
         metade: number;
     };
+    embarkation_label?: string;
     derived_from_minister?: {
         enabled: boolean;
         minister_per_diem: number;
@@ -196,6 +204,7 @@ export interface DailiesRulesConfig {
         holiday_calendar_reference?: string;
         holiday_calendar_version?: string;
     };
+    normative_info?: DailiesNormativeInfoConfig;
 }
 
 /**

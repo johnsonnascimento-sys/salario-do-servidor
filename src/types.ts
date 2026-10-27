@@ -21,12 +21,20 @@ export interface IRBracket {
   deduction: number;
 }
 
+export interface DailiesNormativeInfo {
+  generalRuleLabel?: string;
+  branchRuleLabel?: string;
+  localRuleLabel?: string;
+  notes?: string[];
+}
+
 export interface DailiesConfig {
   rates: Record<string, number>;
   embarkationAdditional: {
     completo: number;
     metade: number;
   };
+  embarkationLabel?: string;
   derivedFromMinister?: {
     enabled: boolean;
     ministerPerDiem: number;
@@ -54,6 +62,7 @@ export interface DailiesConfig {
     holidayCalendarReference?: string;
     holidayCalendarVersion?: string;
   };
+  normativeInfo?: DailiesNormativeInfo;
 }
 
 export interface PayrollRulesConfig {

@@ -379,6 +379,7 @@ export const buildPresetGrossLines = ({
             const dailyRate = roundCurrency(resolveDailiesDailyRate({
                 dailiesConfig: courtConfig?.dailies,
                 cargo: state.cargo,
+                funcao: state.funcao,
                 hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj'))
             }));
             const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({

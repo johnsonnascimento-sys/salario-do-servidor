@@ -159,6 +159,7 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     enabled: Boolean(effective.dailies_rules.ldo_cap?.enabled),
                     perDiemLimit: Number(effective.dailies_rules.ldo_cap?.per_diem_limit ?? 0),
                 },
+                embarkationLabel: effective.dailies_rules.embarkation_label,
                 discountRules: {
                     foodDivisor: Number(effective.dailies_rules.discount_rules?.food_divisor ?? 0),
                     transportDivisor: Number(effective.dailies_rules.discount_rules?.transport_divisor ?? 0),
@@ -172,6 +173,14 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     holidayCalendarReference: effective.dailies_rules.discount_rules?.holiday_calendar_reference,
                     holidayCalendarVersion: effective.dailies_rules.discount_rules?.holiday_calendar_version,
                 },
+                normativeInfo: effective.dailies_rules.normative_info
+                    ? {
+                        generalRuleLabel: effective.dailies_rules.normative_info.general_rule_label,
+                        branchRuleLabel: effective.dailies_rules.normative_info.branch_rule_label,
+                        localRuleLabel: effective.dailies_rules.normative_info.local_rule_label,
+                        notes: effective.dailies_rules.normative_info.notes,
+                    }
+                    : undefined,
             }
             : undefined,
         payrollRules: effective.payroll_rules

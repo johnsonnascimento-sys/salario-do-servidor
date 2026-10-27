@@ -1,6 +1,6 @@
-﻿# PROJECT_RULES
+# PROJECT_RULES
 
-Atualizado em: 02/04/2026 17:16
+Atualizado em: 27/10/2026 16:43
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -86,6 +86,7 @@ Cada rubrica manual deve suportar:
 2. Diarias devem aparecer separadas do bloco de holerite.
 3. Adicional de embarque deve aparecer em linha propria.
 4. Exibir total de diarias liquidas.
+5. No PJU, os valores de diarias e adicionais sao data-driven e podem ser derivados percentualmente da diaria de Ministro do STF (Res. CNJ 73/2009) com regras e percentuais setoriais por ramo/orgao (Ato STM 799/2024, Res. CJF 340/2015, etc.).
 
 ### 4.5 Detalhamento final
 
