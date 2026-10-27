@@ -51,3 +51,9 @@ O fixture cria dependências de autenticação e configuração sintéticas: nã
 A validação técnica não certifica tabelas jurídicas. Nenhum período oficial é ativado pelos dados iniciais: faltam fechar fontes e vigências indicadas em `DIARIAS_NORMAS.md`. Os fluxos integrados de publicação/salvamento contra a instância real do Supabase não foram exercitados, pois isso escreveria no ambiente do usuário. RLS/RPC foram executados no PostgreSQL local, e a interface foi testada com I/O isolado.
 
 A branch desabilita seu próprio deploy automático da Vercel via `git.deploymentEnabled`; a configuração das demais branches é preservada. Não foi solicitado deploy, merge nem aplicação de migrations em produção.
+
+## Integração com a branch principal
+
+Na conferência remota, a `main` contém `59a1ce3` (competência/veto salarial) e `de8fd08` (TRT-2), posteriores à base local `f114013`. O PR permanece em rascunho: `git merge-tree` identificou conflitos em `CHANGELOG.md`, `GlobalSettings.tsx`, `mapEffectiveConfig.ts`, `services/config/types.ts` e `types.ts`, sem alterar a árvore de trabalho.
+
+O conflito é também semântico: o trabalho local preservado usa `salaryScenario` e classificação `enacted/hypothetical`; a principal usa `promulgated/vetoed/projected`. Uma resolução automática poderia alterar regras salariais fora do escopo de diárias. Não foi feito merge/rebase nem descartado o trabalho local. Antes de integrar o PR à principal, será necessário conciliar essas alterações de folha, preservar o cadastro TRT-2 e repetir suas regressões. A implementação de diárias pode ser revisada separadamente no commit `7e1324a`, acima do snapshot local `37a85d7`.

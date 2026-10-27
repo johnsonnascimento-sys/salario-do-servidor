@@ -204,5 +204,3 @@ test('ceilings cannot round a constrained credit above the remaining budget', ()
   assert.equal(result(input({ end_date: '2026-01-02' }), [b]).totals.BRL.net, 300);
 });
 console.log(`${count} temporal dailies tests passed.`);
-
-

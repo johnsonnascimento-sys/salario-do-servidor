@@ -81,4 +81,3 @@ export default function DailiesForm({ input, onChange, config, configs = [] }: {
     </div></fieldset>}
   </section>;
 }
-
