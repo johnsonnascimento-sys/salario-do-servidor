@@ -48,9 +48,14 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
         dailiesConfig,
         Number(payrollRules.transportWorkdays || 22)
     );
+    const manualHolidays = Array.isArray(params.diariasFeriados) ? params.diariasFeriados : null;
+    const effectiveHolidays = manualHolidays !== null
+        ? manualHolidays
+        : (discountRules.holidays || []);
+
     const effectiveDiscountRules = params.diariasModoDesconto === 'periodo'
-        ? { ...discountRules, excludeWeekendsAndHolidays: true }
-        : discountRules;
+        ? { ...discountRules, excludeWeekendsAndHolidays: true, holidays: effectiveHolidays }
+        : { ...discountRules, holidays: effectiveHolidays };
     const periodSummary = params.diariasModoDesconto === 'periodo'
         ? summarizeDailiesPeriodMode(
             params.diariasDataInicio,

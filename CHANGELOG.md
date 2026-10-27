@@ -1,5 +1,13 @@
 # Changelog
 
+## Feriados manuais e interativos no lançamento por datas de diárias — 27/10/2026
+- Desacoplamento de calendários fixos: eliminada a dependência de tabelas estáticas de feriados no banco de dados e removida a mensagem fixa do STM da interface de outros órgãos (como a Justiça Federal - CJF e TRFs).
+- Seleção interativa por chips: ao informar as datas de início e término no modo "Lançar por datas", o sistema enumera os dias úteis da viagem e permite marcar/desmarcar feriados e pontos facultativos com 1 clique.
+- Exclusão automática de fins de semana: sábados e domingos continuam sendo deduzidos automaticamente por calendário universal.
+- Regra de retorno inteligente: o dia de retorno da viagem, se marcado como feriado, isenta automaticamente o desconto proporcional de auxílios (alimentação/transporte) no retorno.
+- Persistência e hidratação: adicionado campo `diariasFeriados` ao `CalculatorState`, com suporte a snapshots e parâmetros do motor de cálculo.
+- Validação: suíte de testes de diárias expandida para 9 testes automatizados com 100% de aprovação, juntamente com typecheck e testes de holerite.
+
 ## Ativação da Justiça Federal (CJF e TRFs 1 a 6) e Módulo de Diárias PJU — 27/10/2026
 - Estruturação direta na página inicial (`Home.tsx`): o grupo "Justiça da União" agora abre diretamente os simuladores de primeiro nível sem subdivisões redundantes: "Justiça Militar da União (STM e Auditorias)" (`/simulador/jmu`) e "Justiça Federal (CJF e TRFs)" (`/simulador/cjf`).
 - Liberação das rotas `/simulador/cjf` e `/simulador/jmu` com identificação e nomes oficiais completos no hook `useCalculatorConfig`.

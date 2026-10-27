@@ -290,6 +290,42 @@ const resolveNormalizedRange = (startDate: string, endDate: string): { start: Da
     return { start, end };
 };
 
+export interface RangeDayInfo {
+    isoDate: string;
+    dayNumber: number;
+    dayOfWeek: number; // 0 = Dom, 6 = Sáb
+    weekdayLabel: string;
+    formattedDate: string;
+    isWeekend: boolean;
+}
+
+export const enumerateDaysInRange = (startDate: string, endDate: string): RangeDayInfo[] => {
+    const range = resolveNormalizedRange(startDate, endDate);
+    if (!range) return [];
+
+    const weekdayShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const result: RangeDayInfo[] = [];
+    const cursor = new Date(range.start.getTime());
+
+    while (cursor.getTime() <= range.end.getTime()) {
+        const isoDate = toIsoDate(cursor);
+        const dayOfWeek = cursor.getUTCDay();
+        const dayOfMonth = String(cursor.getUTCDate()).padStart(2, '0');
+        const month = String(cursor.getUTCMonth() + 1).padStart(2, '0');
+        result.push({
+            isoDate,
+            dayNumber: cursor.getUTCDate(),
+            dayOfWeek,
+            weekdayLabel: weekdayShort[dayOfWeek],
+            formattedDate: `${dayOfMonth}/${month}`,
+            isWeekend: dayOfWeek === 0 || dayOfWeek === 6
+        });
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    return result;
+};
+
 export const summarizeDailiesRange = (
     startDate: string,
     endDate: string,

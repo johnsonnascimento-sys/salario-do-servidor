@@ -103,6 +103,7 @@ export function mapStateToAgencyParams(
         diariasModoDesconto: state.diariasModoDesconto,
         diariasDataInicio: state.diariasDataInicio,
         diariasDataFim: state.diariasDataFim,
+        diariasFeriados: state.diariasFeriados || [],
         diariasDiasDescontoAlimentacao: state.diariasDiasDescontoAlimentacao,
         diariasDiasDescontoTransporte: state.diariasDiasDescontoTransporte,
         diariasExtHospedagem: state.diariasExtHospedagem,

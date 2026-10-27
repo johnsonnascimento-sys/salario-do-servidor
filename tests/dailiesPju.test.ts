@@ -7,6 +7,7 @@ import {
     applyLdoCapToDailiesGross,
     resolveDailiesDiscountRules,
     summarizeDailiesPeriodMode,
+    enumerateDaysInRange,
 } from '../src/utils/dailiesRules';
 import { calculateDailies } from '../src/services/agency/engine/modules/dailiesCalculations';
 import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
@@ -269,4 +270,83 @@ test('calculateDailies calcula com precisão para servidor da Justiça Federal (
     assert.equal(result.descAlim, 169.14);
     // Líquido esperado: 2933.90 - 40.38 - 169.14 = 2724.38
     assert.equal(result.valor, 2724.38);
+});
+
+test('enumerateDaysInRange identifica dias úteis, finais de semana e formatações', () => {
+    // 09/11/2026 (Segunda) até 15/11/2026 (Domingo) = 7 dias
+    const days = enumerateDaysInRange('2026-11-09', '2026-11-15');
+    assert.equal(days.length, 7);
+
+    const weekdays = days.filter(d => !d.isWeekend);
+    const weekends = days.filter(d => d.isWeekend);
+    assert.equal(weekdays.length, 5);
+    assert.equal(weekends.length, 2);
+
+    assert.equal(days[0].isoDate, '2026-11-09');
+    assert.equal(days[0].weekdayLabel, 'Seg');
+    assert.equal(days[0].formattedDate, '09/11');
+    assert.equal(days[0].isWeekend, false);
+
+    assert.equal(days[5].isoDate, '2026-11-14');
+    assert.equal(days[5].weekdayLabel, 'Sáb');
+    assert.equal(days[5].isWeekend, true);
+});
+
+test('calculateDailies no modo período aplica feriados manuais informados pelo usuário', async () => {
+    const dailiesConfig: DailiesConfig = {
+        rates: { tecnico: 660.13 },
+        embarkationAdditional: { completo: 0, metade: 0 },
+        discountRules: {
+            foodDivisor: 22,
+            transportDivisor: 22,
+            excludeWeekendsAndHolidays: true,
+            holidays: [], // Sem feriado prévio na base
+            halfDailyOnBusinessReturnDay: true,
+            halfDiscountOnBusinessReturnDay: true,
+        },
+    };
+
+    const mockAgencyConfig = {
+        dailies: dailiesConfig,
+        payrollRules: { transportWorkdays: 22 },
+    } as any;
+
+    // Viagem de 10/11/2026 (Terça) a 13/11/2026 (Sexta) = 4 dias
+    // Sem marcar feriados: 4 dias úteis, retorno em dia útil -> 3.5 diárias pagas e 3.5 dias de desconto
+    const resSemFeriado = await calculateDailies({
+        cargo: 'Técnico Judiciário',
+        diariasModoDesconto: 'periodo',
+        diariasDataInicio: '2026-11-10',
+        diariasDataFim: '2026-11-13',
+        diariasFeriados: [],
+        diariasEmbarque: 'nenhum',
+        diariasDescontarAlimentacao: true,
+        diariasDescontarTransporte: false,
+        auxAlimentacao: 1860.51,
+        auxTransporteValor: 0,
+        agencyConfig: mockAgencyConfig,
+    } as any);
+
+    assert.equal(resSemFeriado.diasDescontoAlim, 3.5);
+
+    // Agora marcando 11/11/2026 (Quarta) como feriado/ponto facultativo manual
+    const resComFeriado = await calculateDailies({
+        cargo: 'Técnico Judiciário',
+        diariasModoDesconto: 'periodo',
+        diariasDataInicio: '2026-11-10',
+        diariasDataFim: '2026-11-13',
+        diariasFeriados: ['2026-11-11'],
+        diariasEmbarque: 'nenhum',
+        diariasDescontarAlimentacao: true,
+        diariasDescontarTransporte: false,
+        auxAlimentacao: 1860.51,
+        auxTransporteValor: 0,
+        agencyConfig: mockAgencyConfig,
+    } as any);
+
+    // Diárias pagas permanecem 3.5 (recebe a diária completa do dia de feriado no meio da viagem)
+    // Mas o desconto de auxílio-alimentação cai de 3.5 para 2.5 dias (não desconta auxílio em dia de feriado)!
+    assert.equal(resComFeriado.diasDescontoAlim, 2.5);
+    const expectedDesc = Math.round((1860.51 / 22) * 2.5 * 100) / 100;
+    assert.equal(resComFeriado.descAlim, expectedDesc);
 });

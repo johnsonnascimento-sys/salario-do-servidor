@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Interface de Parametros de Calculo da Agencia
  *
  * Superset de ICalculationParams com campos da implementacao atual da agencia.
@@ -81,6 +81,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     diariasModoDesconto: 'periodo' | 'manual';
     diariasDataInicio: string;
     diariasDataFim: string;
+    diariasFeriados?: string[];
     diariasDiasDescontoAlimentacao: number;
     diariasDiasDescontoTransporte: number;
     diariasExtHospedagem: boolean;

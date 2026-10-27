@@ -189,7 +189,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
                 excluirIR: Boolean(entry?.excluirIR),
             }))
             : [],
-        substitutionEntries: Array.isArray(merged.substitutionEntries)
+            substitutionEntries: Array.isArray(merged.substitutionEntries)
             ? merged.substitutionEntries.map((entry) => ({
                 ...entry,
                 id: entry?.id || createEntryId('subst-entry'),
@@ -197,6 +197,9 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
                 isEA: Boolean(entry?.isEA),
                 pssIsEA: Boolean(entry?.pssIsEA),
             }))
+            : [],
+        diariasFeriados: Array.isArray(merged.diariasFeriados)
+            ? merged.diariasFeriados.filter((d): d is string => typeof d === 'string')
             : [],
     };
 };

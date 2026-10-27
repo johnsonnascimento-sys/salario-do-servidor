@@ -360,6 +360,7 @@ export interface CalculatorState {
   diariasModoDesconto: 'periodo' | 'manual';
   diariasDataInicio: string;
   diariasDataFim: string;
+  diariasFeriados: string[];
   diariasDiasDescontoAlimentacao: number;
   diariasDiasDescontoTransporte: number;
   diariasDiasDescontoAlimentacaoCalc: number;
@@ -594,6 +595,7 @@ export const INITIAL_STATE: CalculatorState = {
   diariasModoDesconto: 'manual',
   diariasDataInicio: '',
   diariasDataFim: '',
+  diariasFeriados: [],
   diariasDiasDescontoAlimentacao: 0,
   diariasDiasDescontoTransporte: 0,
   diariasDiasDescontoAlimentacaoCalc: 0,
