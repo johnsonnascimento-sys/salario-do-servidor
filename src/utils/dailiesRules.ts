@@ -59,6 +59,7 @@ export interface ResolveDailyRateInput {
     cargo: string;
     funcao?: string;
     hasCommissionRole?: boolean;
+    assessoramentoMagistrado?: boolean;
 }
 
 interface ResolveEmbarkationInput {
@@ -167,7 +168,8 @@ export const resolveDailiesDailyRate = ({
     dailiesConfig,
     cargo,
     funcao,
-    hasCommissionRole
+    hasCommissionRole,
+    assessoramentoMagistrado
 }: ResolveDailyRateInput): number => {
     const isCommission = hasCommissionRole ?? Boolean(funcao && normalizeKey(funcao).replace(/[\s\-_]/g, '').startsWith('cj'));
     const fallbackCandidates = resolveRateKeyCandidates(cargo, funcao, isCommission);
@@ -183,7 +185,17 @@ export const resolveDailiesDailyRate = ({
         return Math.max(0, fallbackRate);
     }
 
-    const percentage = pickCaseInsensitive(derived.ratesPercentages, fallbackCandidates) ?? 0;
+    // Regra especial: assessoramento direto a magistrado (Res. CNJ 73/2009 art. 6º, § 1º)
+    // Aplica-se a servidores (não-magistrados)
+    const isMagistrate = fallbackCandidates.some((c) =>
+        ['desembargador', 'juiz_titular', 'juiz_substituto', 'juiz', 'magistrado'].includes(c)
+    );
+
+    let percentage = pickCaseInsensitive(derived.ratesPercentages, fallbackCandidates) ?? 0;
+    if (!isMagistrate && assessoramentoMagistrado) {
+        percentage = Number(derived.assistancePercentage ?? 0.80);
+    }
+
     if (percentage <= 0) {
         return Math.max(0, fallbackRate);
     }

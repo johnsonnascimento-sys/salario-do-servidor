@@ -48,14 +48,20 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         () => ({ ...discountRules, excludeWeekendsAndHolidays: true, holidays: userHolidays }),
         [discountRules, userHolidays]
     );
+    const isMagistrate = useMemo(() => {
+        const norm = (state.cargo || '').toLowerCase();
+        return norm.includes('juiz') || norm.includes('desembargador') || norm.includes('magistrado');
+    }, [state.cargo]);
+
     const dailyRate = useMemo(
         () => resolveDailiesDailyRate({
             dailiesConfig,
             cargo: state.cargo,
             funcao: state.funcao,
-            hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj'))
+            hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
+            assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado)
         }),
-        [dailiesConfig, state.cargo, state.funcao]
+        [dailiesConfig, state.cargo, state.funcao, state.diariasAssessoramentoMagistrado]
     );
 
     const periodSummary = useMemo(() => (
@@ -315,11 +321,33 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             </select>
                         </div>
 
+                        {!isMagistrate && (
+                            <div className="pt-0.5">
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={state.diariasAssessoramentoMagistrado}
+                                        onChange={e => update('diariasAssessoramentoMagistrado', e.target.checked)}
+                                    />
+                                    <span>Viagem em assessoramento direto a magistrado (diária a 80% do STF)</span>
+                                </label>
+                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 pl-6 pt-0.5 leading-relaxed">
+                                    Aplica o percentual especial de 80% da diária de Ministro do STF quando o servidor viaja para prestar assistência direta a magistrado (art. 6º, § 1º, da Resolução CNJ nº 73/2009).
+                                </p>
+                            </div>
+                        )}
+
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
                             <p>Os valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
                             <p className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 Valor unitário da diária: {dailyRate > 0 ? formatCurrencyBr(dailyRate) : 'R$ 0,00'}
                             </p>
+                            {state.diariasAssessoramentoMagistrado && !isMagistrate && (
+                                <p className="text-amber-800 dark:text-amber-300 font-medium">
+                                    ⭐ Diária calculada com percentual especial de 80% por assessoramento direto a magistrado (Res. CNJ 73/2009).
+                                </p>
+                            )}
                             <p>Desconto automático de auxílios: fins de semana são desconsiderados automaticamente.</p>
                             {(state.diariasFeriados || []).length > 0 ? (
                                 <p>Feriados e pontos facultativos indicados: {formatDateList(state.diariasFeriados)}.</p>

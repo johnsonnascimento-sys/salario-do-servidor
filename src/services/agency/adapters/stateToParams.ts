@@ -111,6 +111,7 @@ export function mapStateToAgencyParams(
         diariasExtTransporte: state.diariasExtTransporte,
         diariasDescontarAlimentacao: state.diariasDescontarAlimentacao,
         diariasDescontarTransporte: state.diariasDescontarTransporte,
+        diariasAssessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
         licencaDias: state.licencaDias || 0,
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,

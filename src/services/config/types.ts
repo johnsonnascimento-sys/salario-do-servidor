@@ -183,6 +183,7 @@ export interface DailiesRulesConfig {
         rates_percentages: Record<string, number>;
         embarkation_percentage_full: number;
         embarkation_percentage_half?: number;
+        assistance_percentage?: number;
     };
     external_gloss: {
         hospedagem: number;

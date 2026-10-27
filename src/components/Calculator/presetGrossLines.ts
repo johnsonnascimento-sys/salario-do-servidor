@@ -380,7 +380,8 @@ export const buildPresetGrossLines = ({
                 dailiesConfig: courtConfig?.dailies,
                 cargo: state.cargo,
                 funcao: state.funcao,
-                hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj'))
+                hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
+                assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado)
             }));
             const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({
                 dailiesConfig: courtConfig?.dailies,

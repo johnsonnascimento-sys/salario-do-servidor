@@ -57,7 +57,7 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
                 juiz: 0.95,
                 juiz_titular: 0.95,
                 juiz_substituto: 0.90,
-                cj4: 0.80,
+                cj4: 0.60,
                 cj3: 0.60,
                 cj2: 0.60,
                 cj1: 0.60,
@@ -68,6 +68,7 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
             },
             embarkationPercentageFull: 0.40,
             embarkationPercentageHalf: 0.20,
+            assistancePercentage: 0.80,
         },
         externalGloss: { hospedagem: 0.50, alimentacao: 0.25, transporte: 0.25 },
     };
@@ -85,13 +86,38 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
     });
     assert.equal(rateSubstituto, 1320.26); // 1466.95 * 0.90
 
-    // CJ-4 (80% no CJF)
+    // CJ-4 em viagem regular (60% no PJU/CNJ)
     const rateCj4 = resolveDailiesDailyRate({
         dailiesConfig: configPju,
         cargo: 'Analista Judiciário',
         funcao: 'CJ-4',
     });
-    assert.equal(rateCj4, 1173.56); // 1466.95 * 0.80
+    assert.equal(rateCj4, 880.17); // 1466.95 * 0.60
+
+    // CJ-4 em assessoramento direto a magistrado (80% - art. 6º, § 1º, Res. CNJ 73/2009)
+    const rateCj4Assessoramento = resolveDailiesDailyRate({
+        dailiesConfig: configPju,
+        cargo: 'Analista Judiciário',
+        funcao: 'CJ-4',
+        assessoramentoMagistrado: true,
+    });
+    assert.equal(rateCj4Assessoramento, 1173.56); // 1466.95 * 0.80
+
+    // Técnico em assessoramento direto a magistrado (salta de 45% para 80%)
+    const rateTecnicoAssessoramento = resolveDailiesDailyRate({
+        dailiesConfig: configPju,
+        cargo: 'Técnico Judiciário',
+        assessoramentoMagistrado: true,
+    });
+    assert.equal(rateTecnicoAssessoramento, 1173.56); // 1466.95 * 0.80
+
+    // Magistrado com flag de assessoramento (não altera seu valor, permanece autoridade 95%)
+    const rateJuizAssessoramento = resolveDailiesDailyRate({
+        dailiesConfig: configPju,
+        cargo: 'Juiz Federal',
+        assessoramentoMagistrado: true,
+    });
+    assert.equal(rateJuizAssessoramento, 1393.60);
 
     // CJ-1 (60%)
     const rateCj1 = resolveDailiesDailyRate({
@@ -219,12 +245,13 @@ test('calculateDailies calcula com precisão para servidor da Justiça Federal (
             enabled: true,
             ministerPerDiem: 1466.95,
             ratesPercentages: {
-                cj4: 0.80,
+                cj4: 0.60,
                 analista: 0.55,
                 tecnico: 0.45,
             },
             embarkationPercentageFull: 0.40,
             embarkationPercentageHalf: 0.20,
+            assistancePercentage: 0.80,
         },
         externalGloss: { hospedagem: 0.50, alimentacao: 0.25, transporte: 0.25 },
         ldoCap: {
@@ -249,6 +276,7 @@ test('calculateDailies calcula com precisão para servidor da Justiça Federal (
     const result = await calculateDailies({
         cargo: 'Analista Judiciário',
         funcao: 'CJ-4',
+        diariasAssessoramentoMagistrado: true,
         diariasQtd: 2,
         diariasEmbarque: 'completo',
         diariasModoDesconto: 'manual',
@@ -349,4 +377,65 @@ test('calculateDailies no modo período aplica feriados manuais informados pelo 
     assert.equal(resComFeriado.diasDescontoAlim, 2.5);
     const expectedDesc = Math.round((1860.51 / 22) * 2.5 * 100) / 100;
     assert.equal(resComFeriado.descAlim, expectedDesc);
+});
+
+test('calculateDailies diferencia viagem regular de CJ-4 (60%) e viagem em assessoramento direto (80%)', async () => {
+    const dailiesConfig: DailiesConfig = {
+        rates: {},
+        embarkationAdditional: { completo: 0, metade: 0 },
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: {
+                cj4: 0.60,
+                analista: 0.55,
+                tecnico: 0.45,
+            },
+            assistancePercentage: 0.80,
+            embarkationPercentageFull: 0.40,
+        },
+        externalGloss: { hospedagem: 0, alimentacao: 0, transporte: 0 },
+        ldoCap: { enabled: true, perDiemLimit: 1153.37 },
+        discountRules: { foodDivisor: 22, transportDivisor: 22, excludeWeekendsAndHolidays: true, holidays: [] },
+    };
+
+    const mockAgencyConfig = { dailies: dailiesConfig, payrollRules: { transportWorkdays: 22 } } as any;
+
+    // Viagem regular: CJ-4 recebe 60% = R$ 880,17 por diária (sem corte LDO)
+    const resComum = await calculateDailies({
+        cargo: 'Analista Judiciário',
+        funcao: 'CJ-4',
+        diariasAssessoramentoMagistrado: false,
+        diariasQtd: 1,
+        diariasEmbarque: 'nenhum',
+        diariasModoDesconto: 'manual',
+        diariasDescontarAlimentacao: false,
+        diariasDescontarTransporte: false,
+        auxAlimentacao: 0,
+        auxTransporteValor: 0,
+        agencyConfig: mockAgencyConfig,
+    } as any);
+
+    assert.equal(resComum.bruto, 880.17);
+    assert.equal(resComum.corteLdo, 0);
+    assert.equal(resComum.valor, 880.17);
+
+    // Viagem em assessoramento direto: CJ-4 recebe 80% = R$ 1.173,56 por diária (com corte LDO de R$ 20,19 para o teto de 1.153,37)
+    const resAssessoramento = await calculateDailies({
+        cargo: 'Analista Judiciário',
+        funcao: 'CJ-4',
+        diariasAssessoramentoMagistrado: true,
+        diariasQtd: 1,
+        diariasEmbarque: 'nenhum',
+        diariasModoDesconto: 'manual',
+        diariasDescontarAlimentacao: false,
+        diariasDescontarTransporte: false,
+        auxAlimentacao: 0,
+        auxTransporteValor: 0,
+        agencyConfig: mockAgencyConfig,
+    } as any);
+
+    assert.equal(resAssessoramento.bruto, 1173.56);
+    assert.equal(resAssessoramento.corteLdo, 20.19); // 1173.56 - 1153.37
+    assert.equal(resAssessoramento.valor, 1153.37);
 });

@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 27/10/2026 18:05
+Atualizado em: 27/10/2026 18:56
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -88,6 +88,7 @@ Cada rubrica manual deve suportar:
 4. Exibir total de diarias liquidas.
 5. No PJU, os valores de diarias e adicionais sao data-driven e podem ser derivados percentualmente da diaria de Ministro do STF (Res. CNJ 73/2009) com regras e percentuais setoriais por ramo/orgao (Ato STM 799/2024, Res. CJF 340/2015, etc.).
 6. No modo por datas, fins de semana sao deduzidos automaticamente por calendario, e feriados/pontos facultativos locais podem ser marcados interativamente pelo usuario para a viagem, evitando acoplamento a calendarios fixos de orgaos especificos.
+7. Para servidores do PJU, disponibilizar opcao de viagem em assessoramento direto a magistrado com diaria a 80% do Ministro do STF (art. 6º, § 1º, da Res. CNJ 73/2009 c/c Res. CNJ 564/2024), mantendo a diaria comum no percentual regular do cargo/funcao (como CJ-4 a 60%).
 
 ### 4.5 Detalhamento final
 

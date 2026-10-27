@@ -160,7 +160,7 @@ export class ConfigService {
                                     juiz: 0.95,
                                     juiz_titular: 0.95,
                                     juiz_substituto: 0.90,
-                                    cj4: 0.80,
+                                    cj4: 0.60,
                                     cj3: 0.60,
                                     cj2: 0.60,
                                     cj1: 0.60,
@@ -170,7 +170,8 @@ export class ConfigService {
                                     auxiliar: 0.35
                                 },
                                 embarkation_percentage_full: 0.40,
-                                embarkation_percentage_half: 0.20
+                                embarkation_percentage_half: 0.20,
+                                assistance_percentage: 0.80
                             },
                             external_gloss: {
                                 hospedagem: 0.50,

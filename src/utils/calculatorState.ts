@@ -201,6 +201,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         diariasFeriados: Array.isArray(merged.diariasFeriados)
             ? merged.diariasFeriados.filter((d): d is string => typeof d === 'string')
             : [],
+        diariasAssessoramentoMagistrado: Boolean(merged.diariasAssessoramentoMagistrado),
     };
 };
 

@@ -41,6 +41,7 @@ export interface DailiesConfig {
     ratesPercentages: Record<string, number>;
     embarkationPercentageFull: number;
     embarkationPercentageHalf?: number;
+    assistancePercentage?: number;
   };
   externalGloss: {
     hospedagem: number;
@@ -377,6 +378,7 @@ export interface CalculatorState {
   diariasExtHospedagem: boolean;
   diariasExtAlimentacao: boolean;
   diariasExtTransporte: boolean;
+  diariasAssessoramentoMagistrado: boolean;
 }
 
 export type CalculatedPayrollState = Pick<
@@ -611,6 +613,7 @@ export const INITIAL_STATE: CalculatorState = {
   diariasDescTransp: 0,
   diariasExtHospedagem: false,
   diariasExtAlimentacao: false,
-  diariasExtTransporte: false
+  diariasExtTransporte: false,
+  diariasAssessoramentoMagistrado: false
 };
 

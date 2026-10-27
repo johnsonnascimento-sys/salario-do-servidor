@@ -1,5 +1,12 @@
 # Changelog
 
+## Opção de assessoramento direto a magistrado (diárias a 80%) no PJU — 27/10/2026
+- Adequação legal ao art. 6º, § 1º, da Resolução CNJ Nº 73/2009 (c/c Resolução CNJ Nº 564/2024): implementada a opção explícita "Viagem em assessoramento direto a magistrado" para servidores do Poder Judiciário da União.
+- Calibração de percentuais: servidores em viagem regular com CJ-4 passam a ter o teto geral do CNJ de 60% da diária de Ministro do STF (R$ 880,17). Ao marcar a opção de assessoramento direto, a diária sobe automaticamente para 80% (R$ 1.173,56).
+- Não-aplicabilidade a magistrados: juízes e desembargadores mantêm seus percentuais normativos de autoridade (95% e 90%), ocultando a opção irrelevante para a magistratura.
+- Transparência no card: exibição de aviso informativo contextual destacando a majoração legal a 80% por assessoramento direto.
+- Validação: suíte de testes de diárias expandida para 10 testes automatizados com 100% de aprovação, typecheck e testes de holerite mantidos.
+
 ## Feriados manuais e interativos no lançamento por datas de diárias — 27/10/2026
 - Desacoplamento de calendários fixos: eliminada a dependência de tabelas estáticas de feriados no banco de dados e removida a mensagem fixa do STM da interface de outros órgãos (como a Justiça Federal - CJF e TRFs).
 - Seleção interativa por chips: ao informar as datas de início e término no modo "Lançar por datas", o sistema enumera os dias úteis da viagem e permite marcar/desmarcar feriados e pontos facultativos com 1 clique.

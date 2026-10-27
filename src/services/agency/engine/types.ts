@@ -89,6 +89,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     diariasExtTransporte: boolean;
     diariasDescontarAlimentacao: boolean;
     diariasDescontarTransporte: boolean;
+    diariasAssessoramentoMagistrado?: boolean;
     licencaDias: number;
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
