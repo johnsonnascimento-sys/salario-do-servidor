@@ -10,8 +10,6 @@ import AdminHub from './pages/AdminHub';
 import AdminGlobal from './pages/AdminGlobal';
 import AdminPower from './pages/AdminPower';
 import AdminOrg from './pages/AdminOrg';
-import AdminDailies from './pages/AdminDailies';
-import DailiesPage from './pages/DailiesPage';
 import AdminUsers from './pages/AdminUsers';
 import AdminManual from './pages/AdminManual';
 import AdminRoute from './components/AdminRoute';
@@ -69,7 +67,6 @@ function App() {
               <AdminOrg />
             </AdminRoute>
           } />
-          <Route path="/admin/diarias" element={<AdminRoute><AdminDailies /></AdminRoute>} />
           <Route path="/admin/manual" element={
             <AdminRoute>
               <AdminManual />
@@ -85,7 +82,6 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/beta-access" element={<Home />} />
             <Route path="/simulador/:slug" element={<Calculator />} />
-            <Route path="/diarias/:slug" element={<DailiesPage />} />
             <Route path="/apoiar" element={<Donate />} />
             <Route path="/quem-somos" element={<About />} />
             <Route path="/privacidade" element={<Privacy />} />

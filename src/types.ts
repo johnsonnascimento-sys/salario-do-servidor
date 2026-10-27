@@ -116,13 +116,7 @@ export interface AdjustmentScheduleEntry {
   status?: 'promulgated' | 'vetoed' | 'projected';
   vetoed?: boolean;
   veto_reference?: string;
-  scenarioLabel?: string;
-  legalReference?: string;
-  sourceUrl?: string;
 }
-
-/** Compatibility name for existing snapshot and calculator consumers. */
-export type SalaryAdjustment = AdjustmentScheduleEntry;
 
 export interface CourtConfig {
   adjustment_schedule?: AdjustmentScheduleEntry[];
@@ -139,7 +133,7 @@ export interface CourtConfig {
     deducao_dep?: number;
     cj1_integral_base?: number;
     adjustment_schedule?: AdjustmentScheduleEntry[];
-    reajustes?: AdjustmentScheduleEntry[];
+    reajustes?: Array<{ period: number; percentage: number; label?: string; date?: string }>;
   };
   menus?: {
     food_allowance?: Array<{ label: string; value: number }>;
@@ -185,10 +179,6 @@ export interface SubstitutionEntry {
 }
 
 export interface CalculatorState {
-  dailiesInput?: import('./services/agency/dailies').DailiesInput;
-  dailiesOnly?: boolean;
-  dailiesCurrency?: string;
-  dailiesMemory?: import('./services/agency/dailies').DailiesCalculationResult['memory'];
   // Rubricas Dinâmicas
   rubricasExtras: Rubrica[];
   overtimeEntries: OvertimeEntry[];
@@ -206,11 +196,10 @@ export interface CalculatorState {
   // Global
   nome: string;
   periodo: number; // 0 to 4
-  simularDerrubadaVeto?: boolean;
-  salaryProjectionLabel?: string;
   mesRef: string;
   anoRef: number;
   tipoCalculo: 'comum' | 'jan' | 'jun' | 'nov';
+  simularDerrubadaVeto?: boolean;
 
   // Fixed Income
   cargo: string;
@@ -395,7 +384,6 @@ export type CalculatedPayrollState = Pick<
   | 'valFunprespNormal'
   | 'valFunprespFacultativa'
   | 'pensionMemory'
-  | 'dailiesMemory'
   | 'irMensal'
   | 'irEA'
   | 'aqIr'
@@ -457,10 +445,10 @@ export const INITIAL_STATE: CalculatorState = {
 
   nome: "",
   periodo: 0,
-  simularDerrubadaVeto: false,
   mesRef: ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"][new Date().getMonth()],
   anoRef: new Date().getFullYear(),
   tipoCalculo: 'comum',
+  simularDerrubadaVeto: false,
   cargo: '',
   padrao: '',
   funcao: '',

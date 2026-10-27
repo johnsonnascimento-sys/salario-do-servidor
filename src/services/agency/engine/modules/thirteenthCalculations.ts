@@ -47,7 +47,7 @@ const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 export async function calculateThirteenth(params: IAgencyCalculationParams, retroativos: PensionRetroMemory[] = []): Promise<ThirteenthResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
     const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);

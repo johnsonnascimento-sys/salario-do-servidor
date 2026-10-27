@@ -1,5 +1,4 @@
 import { buildPensionAuditRows } from '../utils/pensionExport';
-import { buildDailiesAuditRows, isDailiesRow } from '../utils/dailiesExport';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -27,12 +26,6 @@ export const exportToPDF = (
     options?: ExportOptions
 ) => {
     const doc = new jsPDF() as jsPDFWithAutoTable;
-    const money = (value: number) => state.dailiesOnly
-        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: state.dailiesCurrency || 'BRL' }).format(value)
-        : formatCurrency(value);
-    const mainRows = state.dailiesOnly ? resultRows : resultRows.filter(row => !isDailiesRow(row.label));
-    const credit = mainRows.filter(row => row.type === 'C').reduce((sum, row) => sum + row.value, 0);
-    const debit = mainRows.filter(row => row.type === 'D').reduce((sum, row) => sum + row.value, 0);
 
     const orgName = EXPORT_BRAND_NAME;
 
@@ -52,16 +45,16 @@ export const exportToPDF = (
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${state.dailiesOnly ? 'Diárias' : 'Holerite (sem diárias)'} - Ref: ${state.mesRef}/${state.anoRef}`, 105, 35, { align: 'center' });
+    doc.text(`Demonstrativo de Pagamento Simulado - Ref: ${state.mesRef}/${state.anoRef}`, 105, 35, { align: 'center' });
     doc.text(`Servidor: ${state.nome || 'SERVIDOR SIMULADO'}`, 14, 45);
 
-    const tableBody = mainRows.map((row) => [
+    const tableBody = resultRows.map((row) => [
         row.type === 'C' ? 'C' : 'D',
         row.label,
-        row.type === 'C' ? money(row.value) : '',
-        row.type === 'D' ? money(row.value) : ''
+        row.type === 'C' ? formatCurrency(row.value) : '',
+        row.type === 'D' ? formatCurrency(row.value) : ''
     ]);
-    tableBody.push(['', 'TOTAL', money(credit), money(debit)]);
+    tableBody.push(['', 'TOTAL', formatCurrency(state.totalBruto), formatCurrency(state.totalDescontos)]);
 
     doc.autoTable({
         head: [['TIPO', 'RUBRICA', 'PROVENTOS', 'DESCONTOS']],
@@ -85,7 +78,7 @@ export const exportToPDF = (
     const finalY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(`LÍQUIDO A RECEBER: ${money(credit - debit)}`, 195, finalY, { align: 'right' });
+    doc.text(`LÍQUIDO A RECEBER: ${formatCurrency(state.liquido)}`, 195, finalY, { align: 'right' });
 
     if (state.observacoes) {
         doc.setFontSize(8);
@@ -101,23 +94,6 @@ export const exportToPDF = (
     const splitDisclaimer = doc.splitTextToSize(disclaimerText, 180);
     doc.text(splitDisclaimer, 105, pageHeight - 15, { align: 'center' });
 
-    if (!state.dailiesOnly && resultRows.some(row => isDailiesRow(row.label))) {
-        doc.addPage();
-        doc.setFontSize(12);
-        doc.setTextColor(0);
-        doc.text('Diárias (pagamento separado)', 14, 18);
-        const dailyRows = resultRows.filter(row => isDailiesRow(row.label));
-        const total = dailyRows.reduce((sum, row) => sum + (row.type === 'C' ? row.value : -row.value), 0);
-        doc.autoTable({ head: [['Tipo', 'Rubrica', 'Valor']], body: [...dailyRows.map(row => [row.type, row.label, formatCurrency(row.value)]), ['', 'Diárias líquidas', formatCurrency(total)]], startY: 24 });
-    }
-    const dailiesAudit = buildDailiesAuditRows(state.dailiesMemory);
-    if (dailiesAudit.length) {
-        doc.addPage();
-        doc.setFontSize(12);
-        doc.setTextColor(0);
-        doc.text('Memória de diárias e fundamentos', 14, 18);
-        doc.autoTable({ head: [['Referência / Campo', 'Valor']], body: dailiesAudit, startY: 24, theme: 'grid', styles: { fontSize: 7 }, margin: { bottom: 20 } });
-    }
     const pensionRows = buildPensionAuditRows(state.pensionMemory);
     if (pensionRows.length > 0) {
         doc.addPage();
@@ -139,20 +115,17 @@ export const exportToExcel = (
     options?: ExportOptions
 ) => {
     const orgName = EXPORT_BRAND_NAME;
-    const mainRows = state.dailiesOnly ? resultRows : resultRows.filter(row => !isDailiesRow(row.label));
-    const credit = mainRows.filter(row => row.type === 'C').reduce((sum, row) => sum + row.value, 0);
-    const debit = mainRows.filter(row => row.type === 'D').reduce((sum, row) => sum + row.value, 0);
 
     const wb = XLSX.utils.book_new();
     const wsData: (string | number)[][] = [
         [orgName],
-        [`${state.dailiesOnly ? `DIÁRIAS (${state.dailiesCurrency || 'BRL'})` : 'HOLERITE (BRL)'} - REF: ${state.mesRef}/${state.anoRef}`],
+        [`SIMULAÇÃO DE SALÁRIO - REF: ${state.mesRef}/${state.anoRef}`],
         [`NOME: ${state.nome}`],
         [''],
         ['TIPO', 'RUBRICA', 'PROVENTOS', 'DESCONTOS']
     ];
 
-    mainRows.forEach((row) => {
+    resultRows.forEach((row) => {
         wsData.push([
             row.type,
             row.label,
@@ -161,8 +134,8 @@ export const exportToExcel = (
         ]);
     });
 
-    wsData.push(['', 'TOTAL', credit, debit]);
-    wsData.push(['', 'LÍQUIDO', '', credit - debit]);
+    wsData.push(['', 'TOTAL', state.totalBruto, state.totalDescontos]);
+    wsData.push(['', 'LÍQUIDO', '', state.liquido]);
 
     if (state.observacoes) {
         wsData.push(['']);
@@ -174,20 +147,7 @@ export const exportToExcel = (
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols'] = [{ wch: 5 }, { wch: 40 }, { wch: 15 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, ws, state.dailiesOnly ? 'Diárias' : 'Holerite');
-    if (!state.dailiesOnly && resultRows.some(row => isDailiesRow(row.label))) {
-        const dailyRows = resultRows.filter(row => isDailiesRow(row.label));
-        const total = dailyRows.reduce((sum, row) => sum + (row.type === 'C' ? row.value : -row.value), 0);
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-            ['DIÁRIAS (BRL)'], ['TIPO', 'RUBRICA', 'VALOR'], ...dailyRows.map(row => [row.type, row.label, row.value]), ['', 'LÍQUIDO', total],
-        ]), 'Diárias');
-    }
-    const dailyAudit = buildDailiesAuditRows(state.dailiesMemory);
-    if (dailyAudit.length) {
-        const sheet = XLSX.utils.aoa_to_sheet([['Referência / Campo', 'Valor'], ...dailyAudit]);
-        sheet['!cols'] = [{ wch: 65 }, { wch: 85 }];
-        XLSX.utils.book_append_sheet(wb, sheet, 'Memória diárias');
-    }
+    XLSX.utils.book_append_sheet(wb, ws, 'Holerite');
     const pensionRows = buildPensionAuditRows(state.pensionMemory);
     if (pensionRows.length > 0) {
         const auditSheet = XLSX.utils.aoa_to_sheet([['Referência / Campo', 'Valor'], ...pensionRows]);

@@ -1,5 +1,3 @@
-import { resolveSalaryPeriod } from '../../utils/salaryScenario';
-import { dailiesResultRows } from '../../utils/dailiesExport';
 /**
  * Hook de Resultados - Calculadora
  *
@@ -15,6 +13,7 @@ import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalc
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { getTablesForPeriod } from '../../utils/calculations';
+import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
 
 const mergeEffectiveState = (state: CalculatorState, calculatedState: CalculatedPayrollState): CalculatorState => (
@@ -27,19 +26,10 @@ export const useCalculatorResults = (
     courtConfig: CourtConfig | null,
     agency: { name: string; type: string; slug: string } | null
 ) => {
-    const [dailiesRefresh, setDailiesRefresh] = useState(0);
-    const hasDailies = Boolean(state.dailiesInput || state.diariasQtd || state.diariasDataInicio || ['metade', 'completo'].includes(state.diariasEmbarque));
-    useEffect(() => {
-        if (!hasDailies || typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
-        const refresh = () => setDailiesRefresh(value => value + 1);
-        window.addEventListener('focus', refresh);
-        return () => window.removeEventListener('focus', refresh);
-    }, [hasDailies]);
     const inputToken = useMemo(() => ({ state, agencyService, courtConfig, agency }), [
-        dailiesRefresh,
         agencyService,
         state.mesRef, state.anoRef,
-        state.periodo, state.simularDerrubadaVeto, state.cargo, state.padrao, state.funcao,
+        state.periodo, state.cargo, state.padrao, state.funcao,
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
         state.vpni_lei, state.vpni_decisao, state.ats,
@@ -57,7 +47,6 @@ export const useCalculatorResults = (
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
         state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries,
         state.diariasQtd, state.diariasEmbarque,
-        state.dailiesInput,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
         state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
@@ -120,7 +109,6 @@ export const useCalculatorResults = (
                     valFunprespNormal: bd.funprespNormal || 0,
                     valFunprespFacultativa: bd.funprespFacultativa || 0,
                     pensionMemory: result.pensionMemory,
-                    dailiesMemory: result.dailiesMemory,
                     irMensal: bd.irrf || 0,
                     irEA: bd.irEA || 0,
                     aqIr: bd.aqIr || 0,
@@ -189,8 +177,8 @@ export const useCalculatorResults = (
         if (!courtConfig || calculationStatus !== 'ready') {
             return null;
         }
-        return getTablesForPeriod(courtConfig ? resolveSalaryPeriod(state, courtConfig) : state.periodo, courtConfig, state.simularDerrubadaVeto);
-    }, [courtConfig, state.periodo, state.mesRef, state.anoRef, state.simularDerrubadaVeto, calculationStatus]);
+        return getTablesForPeriod(state.periodo, courtConfig);
+    }, [courtConfig, state.periodo, calculationStatus]);
 
     const effectiveState = useMemo(
         () => mergeEffectiveState(state, calculatedState),
@@ -393,9 +381,25 @@ export const useCalculatorResults = (
         if (effectiveState.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: effectiveState.planoSaude, type: 'D' });
         if (effectiveState.pensao > 0) rows.push({ label: 'PENSÃO ALIMENTÍCIA', value: effectiveState.pensao, type: 'D' });
 
-        if (effectiveState.dailiesMemory) {
-            rows.push(...dailiesResultRows(effectiveState.dailiesMemory, 'BRL'));
+        const diariasAdicionalEmbarque = resolveDailiesEmbarkationAdditional({
+            dailiesConfig: courtConfig?.dailies,
+            embarkationType: effectiveState.diariasEmbarque
+        });
+        const diariasSemAdicionalEmbarque = Math.max(0, effectiveState.diariasBruto - diariasAdicionalEmbarque);
+
+        if (diariasSemAdicionalEmbarque > 0) {
+            rows.push({ label: 'DIÁRIAS (SEM ADICIONAL DE EMBARQUE)', value: diariasSemAdicionalEmbarque, type: 'C' });
         }
+        if (diariasAdicionalEmbarque > 0) {
+            rows.push({ label: 'ADICIONAL DE EMBARQUE (DIÁRIAS)', value: diariasAdicionalEmbarque, type: 'C' });
+        }
+        if (effectiveState.diariasBruto > 0 && diariasSemAdicionalEmbarque <= 0 && diariasAdicionalEmbarque <= 0) {
+            rows.push({ label: 'DIÁRIAS', value: effectiveState.diariasBruto, type: 'C' });
+        }
+        if (effectiveState.diariasCorteLdo > 0) rows.push({ label: 'CORTE TETO LDO (DIÁRIAS)', value: effectiveState.diariasCorteLdo, type: 'D' });
+        if (effectiveState.diariasGlosa > 0) rows.push({ label: 'ABATIMENTO BENEF. EXTERNO (ART. 4º)', value: effectiveState.diariasGlosa, type: 'D' });
+        if (effectiveState.diariasDescAlim > 0) rows.push({ label: 'RESTITUIÇÃO AUX. ALIM. (DIÁRIAS)', value: effectiveState.diariasDescAlim, type: 'D' });
+        if (effectiveState.diariasDescTransp > 0) rows.push({ label: 'RESTITUIÇÃO AUX. TRANSP. (DIÁRIAS)', value: effectiveState.diariasDescTransp, type: 'D' });
 
         effectiveState.rubricasExtras.forEach((r, index) => {
             if (r.valor <= 0) {

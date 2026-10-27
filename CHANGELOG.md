@@ -1,27 +1,5 @@
 # Changelog
 
-## Integração da evolução de diárias — 27/10/2026
-
-- Integração da competência única e do acesso TRT-2 da principal, preservando os trabalhos locais anteriores e os campos de diárias. Status salariais normalizados por metadados, sem inferência por data; projeções exigem seleção explícita.
-- Recálculo resolve período pela competência no formulário, adaptador e motor, sem alterar a consulta do snapshot original nem aplicar parcela futura de um período salvo.
-- Hospedagem fornecida pode ser configurada como hipótese alternativa de fração, evitando acumular indevidamente duas meias diárias em um quarto; redução cumulativa continua disponível para regimes que a fundamentem.
-- Fontes originais recuperadas: CJF596/2023 e CJF315/2026, STM799/821/832/926/947 e resolução375. Quatro rascunhos documentais datados transcrevem tabelas e tetos comprovados, sem publicar regime incompleto; teto CJF de R$1.165,27 permanece isolado do teto JMU de R$1.153,37.
-- Validação final: 156 cenários de aplicação/compatibilidade, 30 asserts de transcrições oficiais, TypeScript, build e três migrations em PostgreSQL17 descartável com RLS e publicação concorrente aprovados. Produção não alterada.
-
-## Diárias temporais JMU / Justiça Federal — 26/10/2026
-
-- Motor compartilhado independente da folha, com seleção por datas, referências encadeadas, regras obrigatórias, fontes por parâmetro, limites e memória reproduzível por moeda. Cadastro faltante bloqueia cálculo, sem fallback monetário legado.
-- Histórico dedicado global/poder/ramo/órgão; rascunhos, publicação transacional, auditoria, RLS administrativa, proteção de conteúdo publicado e validação de sobreposição/concorrência.
-- Rotas `/diarias/jmu`, `/diarias/jf` e `/admin/diarias`; formulário compartilhado com o card JMU, comparação e confirmação de impacto. A Justiça Federal não habilita folha salarial.
-- PDF/Excel separam holerite e diárias, incluem memória normativa; snapshots preservam parâmetros e versões. Consulta não recalcula; recálculo de diárias salva uma nova simulação.
-- Dados iniciais são rascunhos sem vigência presumida. Nenhum período oficial é ativado automaticamente. Matriz de fontes e pendências em `src/docs/DIARIAS_NORMAS.md`; ativação em `src/docs/DIARIAS_MIGRACAO.md`.
-- Trabalho local anterior preservado em commit separado. Migrations e testes de banco executados somente em PostgreSQL descartável local, sem produção.
-- Validação: 50 cenários novos de aplicação, 90 testes existentes, TypeScript e build aprovados; banco com 24 rejeições esperadas, 16 asserts diretos e 3 asserts concorrentes. Relatório em `src/docs/DIARIAS_VALIDACAO.md`.
-
-## Rubricas manuais sem apuração de retroativos — 20/10/2026
-- Retirada a opção de Funpresp por competência original das rubricas novas e das rubricas sem essa marcação. O formulário não encaminha mais para a ferramenta removida.
-- Marcações antigas permanecem identificadas como opções salvas, com desmarcação voluntária e orientação para conferir os ajustes existentes. Valores, incidências, motor e snapshots não são convertidos ou alterados automaticamente.
-- Validação: 35 testes de formulário e TypeScript aprovados.
 ## Inclusão do TRT-2 (SP) — 20/10/2026
 - Cadastro e ativação do TRT da 2ª Região (`trt2`) no banco Supabase (tabelas `agencies` e `org_config`), herdando 100% das regras e tabelas do Poder Judiciário da União (`PJU`).
 - Liberação da rota `/simulador/trt2` no hook `useCalculatorConfig`.

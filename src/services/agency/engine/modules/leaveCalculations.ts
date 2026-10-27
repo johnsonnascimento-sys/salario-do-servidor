@@ -25,7 +25,7 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
 export async function calculateCompensatoryLeave(params: IAgencyCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
 

@@ -5,8 +5,7 @@ import { getPayslipById, deletePayslip, updatePayslip } from '../services/user/p
 import { UpdatePayslipDTO, UserPayslip } from '../types/user';
 import { exportToExcel, exportToPDF } from '../services/exportService';
 import { CalculatorState } from '../types';
-import { formatCurrency as formatBRL } from '../utils/calculations';
-import DailiesResult from '../components/Dailies/DailiesResult';
+import { formatCurrency } from '../utils/calculations';
 import { groupPayslipRowsForDisplay, PayslipDisplayRow } from '../utils/payslipRows';
 
 const parseTags = (value: string) =>
@@ -19,9 +18,6 @@ export default function UserPayslipDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState<UserPayslip | null>(null);
-  const formatCurrency = (value: number) => item?.calculator_state.dailiesOnly
-    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: item.calculator_state.dailiesCurrency || 'BRL' }).format(value)
-    : formatBRL(value);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -158,10 +154,6 @@ export default function UserPayslipDetailPage() {
 
   const onReopen = () => {
     if (!item) return;
-    if (item.calculator_state.dailiesOnly && item.calculator_state.dailiesMemory) {
-      navigate(`/diarias/${item.agency_slug}`, { state: { dailiesInput: item.calculator_state.dailiesMemory.input } });
-      return;
-    }
     navigate(`/simulador/${item.agency_slug}?editPayslipId=${item.id}`, {
       state: { editPayslipId: item.id },
     });
@@ -182,7 +174,7 @@ export default function UserPayslipDetailPage() {
           <ArrowLeft size={16} /> Voltar
         </Link>
         <button onClick={onReopen} className="rounded-xl border border-neutral-300 dark:border-neutral-700 px-4 py-2 text-body-xs font-semibold">
-          Recalcular com as configurações publicadas
+          Reabrir na calculadora
         </button>
       </div>
 
@@ -206,11 +198,10 @@ export default function UserPayslipDetailPage() {
 
         <div className="rounded-xl border border-warning-300/40 bg-warning-50/60 dark:border-warning-700/40 dark:bg-warning-900/10 px-4 py-3">
           <p className="text-body-xs text-warning-900 dark:text-warning-200">
-            Esta consulta preserva o resultado original. Recalcular diárias usa as configurações publicadas e salva uma nova simulação, preservando esta.
+            O snapshot deste holerite só pode ser atualizado reabrindo-o na calculadora e salvando novamente.
           </p>
         </div>
 
-        {item.calculator_state.dailiesMemory ? <DailiesResult result={{ available: true, issues: [], memory: item.calculator_state.dailiesMemory, parcels: item.calculator_state.dailiesMemory.parcels, totals: item.calculator_state.dailiesMemory.totals }} /> : item.result_rows.some(row => /DIÁRIA|DIARIA/.test(row.label)) && <p className="text-sm text-amber-800">Simulação legada: a memória normativa de diárias não foi preservada. Os valores originais continuam disponíveis.</p>}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-3">
             <p className="text-label uppercase tracking-widest text-neutral-500">Total Bruto</p>

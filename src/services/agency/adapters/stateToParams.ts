@@ -1,6 +1,5 @@
 import { CalculatorState, CourtConfig } from '../../../types';
 import { IAgencyCalculationParams } from '../engine/types';
-import { resolveSalaryPeriod } from '../../../utils/salaryScenario';
 
 /**
  * Adaptador: Converte estado React para parâmetros do motor de cálculo da agência.
@@ -25,11 +24,9 @@ export function mapStateToAgencyParams(
         // Agency Slug
         orgSlug: orgSlug,
         agencyConfig,
-        dailiesInput: state.dailiesInput,
 
         // Core Params
-        periodo: agencyConfig ? resolveSalaryPeriod(state, agencyConfig) : state.periodo,
-        simularDerrubadaVeto: state.simularDerrubadaVeto,
+        periodo: state.periodo,
         cargo: state.cargo,
         padrao: state.padrao,
         funcao: state.funcao,

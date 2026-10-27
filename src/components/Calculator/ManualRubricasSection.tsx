@@ -183,18 +183,11 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 onChange={e => updateRubrica(rubrica.id, 'incideFunpresp', e.target.checked)} />
                             <span>Incluir na base da Funpresp (independente do PSS)</span>
                         </label>
-                        {rubrica.funprespCompetenciaSeparada && <div className="space-y-1">
-                            <label className={styles.checkboxLabel}>
-                                <input type="checkbox" className={styles.checkbox} checked
-                                    onChange={e => {
-                                        if (!e.target.checked) updateRubrica(rubrica.id, 'funprespCompetenciaSeparada', false);
-                                    }} />
-                                <span>Funpresp por competência original — opção salva</span>
-                            </label>
-                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                                Opção preservada desta simulação antiga. Revise os ajustes previdenciários salvos antes de desmarcar para evitar duplicidade ou alteração do desconto.
-                            </p>
-                        </div>}
+                        <label className={styles.checkboxLabel}>
+                            <input type="checkbox" className={styles.checkbox} checked={Boolean(rubrica.funprespCompetenciaSeparada)}
+                                onChange={e => updateRubrica(rubrica.id, 'funprespCompetenciaSeparada', e.target.checked)} />
+                            <span>Funpresp por competência original (informar na apuração de retroativos)</span>
+                        </label>
                     </div>
                 </div>
             ))}

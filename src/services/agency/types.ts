@@ -27,7 +27,6 @@ export interface ICalculationResult {
     totalBenefits: number;
     breakdown: Record<string, number>;
     pensionMemory?: PensionMemory;
-    dailiesMemory?: import('./dailies').DailiesCalculationResult['memory'];
 }
 
 /**

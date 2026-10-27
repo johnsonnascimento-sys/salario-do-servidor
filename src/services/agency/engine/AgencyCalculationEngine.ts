@@ -20,7 +20,6 @@
 
 import { IAgencyCalculator, ICalculationResult, ICalculationParams } from '../types';
 import { IAgencyCalculationParams } from './types';
-import { resolveSalaryPeriod } from '../../../utils/salaryScenario';
 
 // Importar mÃ³dulos de cÃ¡lculo
 import { calculateBase, calculateBaseComponents } from './modules/baseCalculations';
@@ -32,15 +31,6 @@ import { calculateSubstitution } from './modules/substitutionCalculations';
 import { calculateDailies } from './modules/dailiesCalculations';
 import { calculateCompensatoryLeave } from './modules/leaveCalculations';
 import { calculateDeductions } from './modules/deductionsCalculations';
-
-/** Recalculation uses the selected competence, without rewriting a stored snapshot. */
-const resolveCalculationPeriod = (params: IAgencyCalculationParams): IAgencyCalculationParams => {
-    if (!params.agencyConfig || !/^\d{4}-(0[1-9]|1[0-2])$/.test(params.competencia || '')) return params;
-    const [year, month] = params.competencia!.split('-').map(Number);
-    const periodo = resolveSalaryPeriod({ periodo: params.periodo, simularDerrubadaVeto: params.simularDerrubadaVeto,
-        anoRef: year, mesRef: String(month) }, params.agencyConfig);
-    return periodo === params.periodo ? params : { ...params, periodo };
-};
 
 const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number }> = []) => {
     return rubricas.reduce(
@@ -73,21 +63,21 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
      * Calcula a base salarial (vencimento + GAJ + FC + AQ + gratificaÃ§Ãµes)
      */
     async calculateBase(params: ICalculationParams): Promise<number> {
-        return await calculateBase(resolveCalculationPeriod(params as IAgencyCalculationParams));
+        return await calculateBase(params as IAgencyCalculationParams);
     }
 
     /**
      * Calcula as deduÃ§Ãµes (PSS, IRRF, Funpresp)
      */
     async calculateDeductions(grossValue: number, params: ICalculationParams): Promise<any> {
-        return await calculateDeductions(grossValue, resolveCalculationPeriod(params as IAgencyCalculationParams));
+        return await calculateDeductions(grossValue, params as IAgencyCalculationParams);
     }
 
     /**
      * Calcula os benefÃ­cios (auxÃ­lios)
      */
     async calculateBenefits(params: ICalculationParams): Promise<any> {
-        return await calculateBenefits(resolveCalculationPeriod(params as IAgencyCalculationParams));
+        return await calculateBenefits(params as IAgencyCalculationParams);
     }
 
     /**
@@ -103,7 +93,6 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
      * REFATORADO: Agora Ã© async para suportar ConfigService
      */
     async calculateTotal(params: IAgencyCalculationParams): Promise<ICalculationResult> {
-        params = resolveCalculationPeriod(params);
         // 1. Calcular Base Salarial (agora async)
         const base = await calculateBase(params);
         const baseComponents = await calculateBaseComponents(params);
@@ -115,7 +104,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const vacation = await calculateVacation(params);
         const overtime = await calculateOvertime(params);
         const substitution = await calculateSubstitution(params);
-        const dailies = await calculateDailies(params, benefits);
+        const dailies = await calculateDailies(params);
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
@@ -127,9 +116,9 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         // 5. Calcular Totais
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
             benefits.auxTransporte + vacation.value + thirteenth.gratNatalinaTotal + overtime.heTotal +
-            substitution.total + dailies.bruto + compensatoryLeave + rubricasTotals.creditos;
+            substitution.total + dailies.valor + compensatoryLeave + rubricasTotals.creditos;
 
-        const totalDeductions = deductions.total + benefits.auxTransporteDebito + dailies.glosa + dailies.corteLdo + dailies.deducoes +
+        const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
             vacation.irFerias + vacation.descontoAntecipacao + thirteenth.pss13 + thirteenth.funpresp13 +
             thirteenth.ir13 + thirteenth.primeiraParcelaDesconto + rubricasTotals.debitos;
@@ -138,7 +127,6 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         return {
             netSalary: totalGross - totalDeductions,
             totalDeductions: totalDeductions,
-            dailiesMemory: dailies.memory,
             totalBenefits: benefits.auxAlimentacao + benefits.auxPreEscolar +
                 benefits.auxTransporte + dailies.valor + compensatoryLeave,
             pensionMemory: { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,

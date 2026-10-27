@@ -31,8 +31,6 @@ npm run preview
   - Holerite (sem diarias)
   - Diarias (pagamento separado)
 - Exportacao para PDF e Excel.
-- Diarias independentes em `/diarias/jmu` e `/diarias/jf`, com motor compartilhado, vigencia por data e snapshots. A ativacao juridica depende de configuracoes publicadas e fundamentadas; os dados iniciais sao rascunhos.
-- Manutencao de diarias em `/admin/diarias`, com campos tipados, heranca, comparacao, rascunhos e publicacao transacional.
 
 ## Arquitetura (alto nivel)
 
@@ -61,7 +59,7 @@ npm run preview
 - Motor de calculo oficial centralizado no service da agencia.
 - Para diarias por data:
   - `data fim >= data inicio` obrigatorio.
-- Nao usar gatilhos por nome para modificar calculos, conforme `PROJECT_RULES.md`.
+- Gatilho `Johnson*` e intencional.
 
 ## Documentacao
 
@@ -70,9 +68,6 @@ npm run preview
 - [Catalogo de especialistas Codex](./src/docs/CODEX_SPECIALISTS.md)
 - [Historico de mudancas](./CHANGELOG.md)
 - [Formulas legadas (referencia)](./src/docs/LEGACY_FORMULAS.md)
-- [Diarias: fontes, comparativo e pendencias](./src/docs/DIARIAS_NORMAS.md)
-- [Diarias: migracao e manutencao](./src/docs/DIARIAS_MIGRACAO.md)
-- [Diarias: testes e limites de validacao](./src/docs/DIARIAS_VALIDACAO.md)
 
 ## Scripts uteis
 

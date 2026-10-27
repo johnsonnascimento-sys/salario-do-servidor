@@ -247,7 +247,6 @@ export default function Calculator() {
                 <div className="space-y-8 max-w-5xl mx-auto">
                     <GlobalSettings
                         key={`global-settings-${formKey}`}
-                        updateMany={updateMany}
                         state={effectiveState}
                         update={update}
                         courtConfig={courtConfig}

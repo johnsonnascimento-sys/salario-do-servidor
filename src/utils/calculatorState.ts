@@ -36,7 +36,6 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'valFunprespNormal',
     'valFunprespFacultativa',
     'pensionMemory',
-    'dailiesMemory',
     'irMensal',
     'irEA',
     'aqIr',
@@ -162,8 +161,6 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
     const merged = {
         ...INITIAL_STATE,
         ...safeSnapshot,
-        // Missing flag identifies legacy snapshots; infer only after configuration loads.
-        simularDerrubadaVeto: safeSnapshot.simularDerrubadaVeto,
     };
     const inferredFunctionFromSubstDias = Object.entries(merged.substDias || {}).find(([, days]) => Number(days || 0) > 0)?.[0] || '';
     const inferredFunctionFromEntries = Array.isArray(merged.substitutionEntries)

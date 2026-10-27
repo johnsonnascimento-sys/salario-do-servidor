@@ -1,5 +1,4 @@
 import { PensionMemory } from './PensionMemory';
-import DailiesResult from '../Dailies/DailiesResult';
 import React from 'react';
 import { Receipt } from 'lucide-react';
 import { CalculatorState } from '../../types';
@@ -206,7 +205,6 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
 
             <div className="p-4 sm:p-6 space-y-6">
                 {state.pensionMemory && <PensionMemory memory={state.pensionMemory} />}
-                {state.dailiesMemory && <DailiesResult result={{ available: true, issues: [], memory: state.dailiesMemory, parcels: state.dailiesMemory.parcels, totals: state.dailiesMemory.totals }} />}
                 <div className="sm:hidden">
                     <MobileSummarySection
                         title="Holerite (sem diárias)"

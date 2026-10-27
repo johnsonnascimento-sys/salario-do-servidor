@@ -191,9 +191,7 @@ export default function UserPayslipsPage() {
                 </td>
                 <td className="px-4 py-3 text-body text-neutral-700 dark:text-neutral-300">{item.month_ref}/{item.year_ref}</td>
                 <td className="px-4 py-3 text-body text-neutral-700 dark:text-neutral-300">{item.agency_name}</td>
-                <td className="px-4 py-3 text-right font-bold">{item.calculator_state.dailiesOnly
-                  ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: item.calculator_state.dailiesCurrency || 'BRL' }).format(item.liquido)
-                  : formatCurrency(item.liquido)}</td>
+                <td className="px-4 py-3 text-right font-bold">{formatCurrency(item.liquido)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
                     <button onClick={() => navigate(`/minha-area/holerites/${item.id}`)} className="p-2 rounded-lg border border-neutral-300 dark:border-neutral-700" title="Detalhes"><Eye size={14} /></button>

@@ -121,13 +121,9 @@ export interface AdjustmentScheduleConfig {
         date: string;
         percentage: number;
         label?: string;
-        /** Legacy aliases are accepted only at the configuration ingestion boundary. */
-        status?: 'promulgated' | 'vetoed' | 'projected' | 'enacted' | 'hypothetical';
+        status?: 'promulgated' | 'vetoed' | 'projected';
         vetoed?: boolean;
         veto_reference?: string;
-        scenarioLabel?: string;
-        legalReference?: string;
-        sourceUrl?: string;
     };
 }
 

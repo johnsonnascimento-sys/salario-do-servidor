@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { resolveSalaryPeriod } from '../../utils/salaryScenario';
 import { DollarSign } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
@@ -14,7 +13,7 @@ interface IncomeSectionProps {
 }
 
 export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, courtConfig, styles, isNovoAQ }) => {
-    const currentTables = getTablesForPeriod(courtConfig ? resolveSalaryPeriod(state, courtConfig) : state.periodo, courtConfig, state.simularDerrubadaVeto);
+    const currentTables = getTablesForPeriod(state.periodo, courtConfig);
     const careerCatalog = courtConfig?.careerCatalog;
     const cargoOptions = Object.keys(currentTables.salario || {});
     const noFunctionCode = careerCatalog?.noFunctionCode ?? '';

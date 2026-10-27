@@ -1,34 +1,149 @@
-import type { IAgencyCalculationParams } from '../types';
-import { calculateDailies as calculateVersionedDailies, type DailiesCalculationResult } from '../../dailies';
-import { legacyDailiesInput } from '../../adapters/dailiesInput';
-import { dailiesService } from '../../../dailies/DailiesService';
+﻿/**
+ * Calculos de Diarias de Viagem - JMU
+ *
+ * Responsavel por calcular:
+ * - Diarias de viagem
+ * - Adicional de embarque
+ * - Corte por teto LDO (configuravel)
+ * - Glosas externas (art. 4)
+ * - Deducoes internas (auxilio-alimentacao/transporte)
+ */
+
+import { IAgencyCalculationParams } from '../types';
+import {
+    applyLdoCapToDailiesGross,
+    countDeductibleDaysInRange,
+    countCalendarDaysInRange,
+    resolveDailiesDailyRate,
+    resolveDailiesDiscountDays,
+    resolveDailiesDiscountRules,
+    resolveDailiesEmbarkationAdditional,
+    summarizeDailiesPeriodMode
+} from '../../../../utils/dailiesRules';
+import { calculateBenefits } from './benefitsCalculations';
+import { getPayrollRules } from './configRules';
 
 export interface DailiesResult {
-    valor: number; bruto: number; glosa: number; corteLdo: number; deducoes: number;
-    descAlim: number; descTransp: number; diasDescontoAlim: number; diasDescontoTransp: number;
-    memory?: DailiesCalculationResult['memory'];
+    valor: number;
+    bruto: number;
+    glosa: number;
+    corteLdo: number;
+    deducoes: number;
+    descAlim: number;
+    descTransp: number;
+    diasDescontoAlim: number;
+    diasDescontoTransp: number;
 }
 
-/** Payroll adapter for the same engine used by /diarias. No legacy configuration fallback. */
-export async function calculateDailies(params: IAgencyCalculationParams,
-    benefits: { auxAlimentacao: number; auxTransporte: number }): Promise<DailiesResult> {
-    const empty: DailiesResult = { valor: 0, bruto: 0, glosa: 0, corteLdo: 0, deducoes: 0,
-        descAlim: 0, descTransp: 0, diasDescontoAlim: 0, diasDescontoTransp: 0 };
-    const requested = params.dailiesInput || params.diariasQtd > 0 || ['completo', 'metade'].includes(params.diariasEmbarque) ||
-        (params.diariasModoDesconto === 'periodo' && (params.diariasDataInicio || params.diariasDataFim));
-    if (!requested) return empty;
-    const input = legacyDailiesInput(params, benefits);
-    const loaded = await dailiesService.getForInput(input);
-    const result = calculateVersionedDailies(input, loaded.versions, loaded.context);
-    if (!result.available) throw new Error(`Diárias indisponíveis: ${result.issues.map(issue => issue.message).join('; ')}`);
-    if (Object.keys(result.totals).some(currency => currency !== 'BRL')) {
-        throw new Error('Diárias em moeda estrangeira devem ser simuladas e salvas separadamente em /diarias; não podem ser somadas ao holerite em reais.');
-    }
-    const total = result.totals.BRL;
-    if (!total) throw new Error('Diárias sem parcelas em reais.');
-    return { ...empty, valor: total.net, bruto: total.gross + total.boarding + total.additions,
-        glosa: total.reductions, corteLdo: total.limit_cut, deducoes: total.deductions,
-        descAlim: total.food_deduction, descTransp: total.transport_deduction,
-        diasDescontoAlim: result.parcels.reduce((sum, parcel) => sum + parcel.food_deduction_days, 0),
-        diasDescontoTransp: result.parcels.reduce((sum, parcel) => sum + parcel.transport_deduction_days, 0), memory: result.memory };
+const round2 = (value: number) => Math.round(value * 100) / 100;
+
+/**
+ * Calcula Diarias de Viagem
+ */
+export async function calculateDailies(params: IAgencyCalculationParams): Promise<DailiesResult> {
+    const dailiesConfig = params.agencyConfig?.dailies;
+    const payrollRules = getPayrollRules(params.agencyConfig);
+    const manualDailiesQty = Math.max(0, Number(params.diariasQtd) || 0);
+    const discountRules = resolveDailiesDiscountRules(
+        dailiesConfig,
+        Number(payrollRules.transportWorkdays || 22)
+    );
+    const effectiveDiscountRules = params.diariasModoDesconto === 'periodo'
+        ? { ...discountRules, excludeWeekendsAndHolidays: true }
+        : discountRules;
+    const periodSummary = params.diariasModoDesconto === 'periodo'
+        ? summarizeDailiesPeriodMode(
+            params.diariasDataInicio,
+            params.diariasDataFim,
+            effectiveDiscountRules
+        )
+        : null;
+    const periodCalendarDays = params.diariasModoDesconto === 'periodo'
+        ? countCalendarDaysInRange(params.diariasDataInicio, params.diariasDataFim)
+        : null;
+    const dailiesQty = params.diariasModoDesconto === 'periodo'
+        ? (periodSummary?.payableDays ?? periodCalendarDays ?? manualDailiesQty)
+        : manualDailiesQty;
+
+    // 1. Determinar valor da diaria por cargo/funcao
+    const valorDiaria = resolveDailiesDailyRate({
+        dailiesConfig,
+        cargo: params.cargo,
+        hasCommissionRole: Boolean(params.funcao && params.funcao.toLowerCase().startsWith('cj'))
+    });
+
+    // 2. Adicional de embarque
+    const adicionalEmbarque = resolveDailiesEmbarkationAdditional({
+        dailiesConfig,
+        embarkationType: params.diariasEmbarque
+    });
+
+    // 3. Bruto + corte por teto LDO
+    const cappedGross = applyLdoCapToDailiesGross({
+        dailiesQty,
+        dailiesRate: valorDiaria,
+        embarkationAdditional: adicionalEmbarque,
+        enabled: Boolean(dailiesConfig?.ldoCap?.enabled),
+        perDiemLimit: Number(dailiesConfig?.ldoCap?.perDiemLimit ?? 0),
+    });
+    const diariasBruto = cappedGross.gross;
+    const corteLdo = cappedGross.cut;
+    const diariasAposCorte = Math.max(0, diariasBruto - corteLdo);
+
+    // 4. Glosa Externa (reducoes percentuais)
+    let percentGlosa = 0;
+    if (params.diariasExtHospedagem) percentGlosa += dailiesConfig?.externalGloss?.hospedagem ?? 0;
+    if (params.diariasExtAlimentacao) percentGlosa += dailiesConfig?.externalGloss?.alimentacao ?? 0;
+    if (params.diariasExtTransporte) percentGlosa += dailiesConfig?.externalGloss?.transporte ?? 0;
+    const glosaExterno = (dailiesQty * valorDiaria) * percentGlosa;
+
+    // 5. Deducoes Internas
+    const benefits = await calculateBenefits(params);
+    const periodDiscountDays = params.diariasModoDesconto === 'periodo'
+        ? (
+            periodSummary?.discountDays ??
+            countDeductibleDaysInRange(params.diariasDataInicio, params.diariasDataFim, effectiveDiscountRules) ??
+            dailiesQty
+        )
+        : null;
+
+    const discountDays = params.diariasModoDesconto === 'periodo'
+        ? {
+            foodDays: params.diariasDescontarAlimentacao ? periodDiscountDays || 0 : 0,
+            transportDays: params.diariasDescontarTransporte ? periodDiscountDays || 0 : 0
+        }
+        : resolveDailiesDiscountDays({
+            mode: params.diariasModoDesconto,
+            startDate: params.diariasDataInicio,
+            endDate: params.diariasDataFim,
+            manualFoodDays: params.diariasDiasDescontoAlimentacao,
+            manualTransportDays: params.diariasDiasDescontoTransporte,
+            applyFoodDiscount: params.diariasDescontarAlimentacao,
+            applyTransportDiscount: params.diariasDescontarTransporte,
+            fallbackDays: dailiesQty,
+            rules: effectiveDiscountRules,
+        });
+
+    const deducaoAlimentacao = params.diariasDescontarAlimentacao
+        ? (benefits.auxAlimentacao / discountRules.foodDivisor) * discountDays.foodDays
+        : 0;
+    const deducaoTransporte = params.diariasDescontarTransporte
+        ? (benefits.auxTransporte / discountRules.transportDivisor) * discountDays.transportDays
+        : 0;
+    const totalDeducoes = deducaoAlimentacao + deducaoTransporte;
+
+    // 6. Liquido (minimo zero)
+    const valor = Math.max(0, diariasAposCorte - glosaExterno - totalDeducoes);
+
+    return {
+        valor: round2(valor),
+        bruto: round2(diariasBruto),
+        glosa: round2(glosaExterno),
+        corteLdo: round2(corteLdo),
+        deducoes: round2(totalDeducoes),
+        descAlim: round2(deducaoAlimentacao),
+        descTransp: round2(deducaoTransporte),
+        diasDescontoAlim: round2(discountDays.foodDays),
+        diasDescontoTransp: round2(discountDays.transportDays),
+    };
 }

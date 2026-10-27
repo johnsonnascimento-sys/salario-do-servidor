@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Database, Layers, Building2, Users, BookOpen } from 'lucide-react';
 
 const cards = [
-  { title: 'Diárias', description: 'Vigências, fundamentos e publicação de regras de diárias.', to: '/admin/diarias', icon: Layers },
   {
     title: 'Regras Globais',
     description: 'IR, PSS, deducoes e tabelas universais.',

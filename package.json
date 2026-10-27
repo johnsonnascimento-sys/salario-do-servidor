@@ -4,8 +4,6 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test:diarias": "node scripts/test-dailies-temporal.mjs && node scripts/test-dailies-ui.mjs && node scripts/test-dailies-integration.mjs && node supabase/tests/dailies_verified_sources.mjs",
-    "test:salary-scenario": "node scripts/test-salary-scenario.mjs",
     "dev": "vite",
     "prebuild": "node scripts/generate-version.js",
     "build": "vite build",

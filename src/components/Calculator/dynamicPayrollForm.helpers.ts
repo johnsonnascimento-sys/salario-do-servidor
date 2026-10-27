@@ -212,7 +212,7 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
         case 'aux_transporte':
             return state.auxTransporteGasto > 0;
         case 'diarias':
-            return Boolean(state.dailiesInput) || state.diariasQtd > 0 || state.diariasEmbarque !== 'nenhum' || Boolean(state.diariasDataInicio);
+            return state.diariasQtd > 0 || state.diariasEmbarque !== 'nenhum';
         default:
             return false;
     }
