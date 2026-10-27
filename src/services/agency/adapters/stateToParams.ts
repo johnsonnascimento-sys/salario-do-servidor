@@ -112,6 +112,7 @@ export function mapStateToAgencyParams(
         diariasDescontarAlimentacao: state.diariasDescontarAlimentacao,
         diariasDescontarTransporte: state.diariasDescontarTransporte,
         diariasAssessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
+        diariasAutoridadeAssistida: state.diariasAutoridadeAssistida || 'desembargador_trf',
         licencaDias: state.licencaDias || 0,
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,

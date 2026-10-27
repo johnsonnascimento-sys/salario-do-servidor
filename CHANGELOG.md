@@ -1,5 +1,16 @@
 # Changelog
 
+## Escalonamento de diárias em assessoramento direto (80% da autoridade assistida) — 27/10/2026
+- Adequação legal ao art. 6º, § 4º da Resolução CNJ Nº 73/2009 (incluído pela Res. CNJ 564/2024), art. 10 da Resolução CJF Nº 340/2015 e art. 9º do Ato Normativo STM Nº 799/2024.
+- Escalonamento da base de cálculo: o servidor recebe até 80% do valor da autoridade para a qual presta assistência direta ou segurança pessoal:
+  - Ministro / Membro do CJF (100% STF = R$ 1.466,95) → diária do servidor a 80%: R$ 1.173,56.
+  - Desembargador Federal / Membro de TRF (95% STF = R$ 1.393,60) → diária do servidor a 80%: R$ 1.114,88.
+  - Juiz Federal ou Substituto no CJF (95% do TRF = 90,25% STF = R$ 1.323,92) → diária do servidor a 80%: R$ 1.059,14 (na JMU: 80% de 95% = R$ 1.114,88).
+- Calibração das diárias ordinárias do CJF (art. 10 da Res. CJF 340/2015): Cargos em Comissão (CJ-1 a CJ-4) e Analistas fixados em 55% da diária do Ministro do STF (R$ 806,82); Técnicos, FCs e Auxiliares em 45% (R$ 660,13).
+- Interface contextual: ao selecionar "Viagem em assessoramento direto / segurança a magistrado", dropdown exibe a escolha da autoridade assistida com valores e bases explicitados em tempo real no card de diárias.
+- Persistência e motor: campo `diariasAutoridadeAssistida` integrado ao `CalculatorState`, adaptador `stateToParams`, motor de cálculo e rotinas de salvamento/carregamento.
+- Validação: 11 testes automatizados em `test:dailies`, 21 testes de estado/holerite em `test:payslip` e checagem de tipos TypeScript 100% aprovados.
+
 ## Opção de assessoramento direto a magistrado (diárias a 80%) no PJU — 27/10/2026
 - Adequação legal ao art. 6º, § 1º, da Resolução CNJ Nº 73/2009 (c/c Resolução CNJ Nº 564/2024): implementada a opção explícita "Viagem em assessoramento direto a magistrado" para servidores do Poder Judiciário da União.
 - Calibração de percentuais: servidores em viagem regular com CJ-4 passam a ter o teto geral do CNJ de 60% da diária de Ministro do STF (R$ 880,17). Ao marcar a opção de assessoramento direto, a diária sobe automaticamente para 80% (R$ 1.173,56).

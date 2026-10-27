@@ -5,7 +5,9 @@ import {
     enumerateDaysInRange,
     resolveDailiesDailyRate,
     resolveDailiesDiscountRules,
-    summarizeDailiesPeriodMode
+    summarizeDailiesPeriodMode,
+    resolveAssistedAuthorityDailyRate,
+    DiariasAutoridadeAssistida
 } from '../../../utils/dailiesRules';
 
 interface DailiesCardProps {
@@ -59,10 +61,16 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
             cargo: state.cargo,
             funcao: state.funcao,
             hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
-            assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado)
+            assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
+            autoridadeAssistida: state.diariasAutoridadeAssistida
         }),
-        [dailiesConfig, state.cargo, state.funcao, state.diariasAssessoramentoMagistrado]
+        [dailiesConfig, state.cargo, state.funcao, state.diariasAssessoramentoMagistrado, state.diariasAutoridadeAssistida]
     );
+
+    const assistedAuthorityInfo = useMemo(() => {
+        if (!state.diariasAssessoramentoMagistrado || isMagistrate) return null;
+        return resolveAssistedAuthorityDailyRate(dailiesConfig, state.diariasAutoridadeAssistida);
+    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, state.diariasAutoridadeAssistida, isMagistrate]);
 
     const periodSummary = useMemo(() => (
         summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
@@ -322,7 +330,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         </div>
 
                         {!isMagistrate && (
-                            <div className="pt-0.5">
+                            <div className="pt-0.5 space-y-2">
                                 <label className={styles.checkboxLabel}>
                                     <input
                                         type="checkbox"
@@ -330,11 +338,29 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         checked={state.diariasAssessoramentoMagistrado}
                                         onChange={e => update('diariasAssessoramentoMagistrado', e.target.checked)}
                                     />
-                                    <span>Viagem em assessoramento direto a magistrado (diária a 80% do STF)</span>
+                                    <span>Viagem em assessoramento direto / segurança a magistrado (art. 6º, § 4º da Res. CNJ 73/2009)</span>
                                 </label>
-                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 pl-6 pt-0.5 leading-relaxed">
-                                    Aplica o percentual especial de 80% da diária de Ministro do STF quando o servidor viaja para prestar assistência direta a magistrado (art. 6º, § 1º, da Resolução CNJ nº 73/2009).
-                                </p>
+
+                                {state.diariasAssessoramentoMagistrado && (
+                                    <div className="pl-6 space-y-1.5">
+                                        <label htmlFor="diariasAutoridadeAssistida" className="block text-caption font-medium text-neutral-700 dark:text-neutral-300">
+                                            Autoridade assistida:
+                                        </label>
+                                        <select
+                                            id="diariasAutoridadeAssistida"
+                                            className={styles.input}
+                                            value={state.diariasAutoridadeAssistida || 'desembargador_trf'}
+                                            onChange={e => update('diariasAutoridadeAssistida', e.target.value as DiariasAutoridadeAssistida)}
+                                        >
+                                            <option value="desembargador_trf">Desembargador Federal / Membro do TRF (base 95% do STF)</option>
+                                            <option value="juiz_federal">Juiz Federal / Juiz Federal Substituto</option>
+                                            <option value="ministro_cjf">Ministro do STM / Membro do CJF ou STF (base 100% do STF)</option>
+                                        </select>
+                                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                            O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 10, § 3º da Res. CJF 340/2015 e art. 9º do Ato STM 799/2024).
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -343,9 +369,9 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <p className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 Valor unitário da diária: {dailyRate > 0 ? formatCurrencyBr(dailyRate) : 'R$ 0,00'}
                             </p>
-                            {state.diariasAssessoramentoMagistrado && !isMagistrate && (
+                            {state.diariasAssessoramentoMagistrado && !isMagistrate && assistedAuthorityInfo && (
                                 <p className="text-amber-800 dark:text-amber-300 font-medium">
-                                    ⭐ Diária calculada com percentual especial de 80% por assessoramento direto a magistrado (Res. CNJ 73/2009).
+                                    ⭐ Diária a 80% da autoridade assistida ({assistedAuthorityInfo.authorityLabel}: {formatCurrencyBr(assistedAuthorityInfo.authorityRate)} → servidor: {formatCurrencyBr(assistedAuthorityInfo.serverRate)}).
                                 </p>
                             )}
                             <p>Desconto automático de auxílios: fins de semana são desconsiderados automaticamente.</p>

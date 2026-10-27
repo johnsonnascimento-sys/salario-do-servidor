@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
     resolveRateKeyCandidates,
     resolveDailiesDailyRate,
+    resolveAssistedAuthorityDailyRate,
     resolveDailiesEmbarkationAdditional,
     applyLdoCapToDailiesGross,
     resolveDailiesDiscountRules,
@@ -86,7 +87,7 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
     });
     assert.equal(rateSubstituto, 1320.26); // 1466.95 * 0.90
 
-    // CJ-4 em viagem regular (60% no PJU/CNJ)
+    // CJ-4 em viagem regular (60% no STM/PJU)
     const rateCj4 = resolveDailiesDailyRate({
         dailiesConfig: configPju,
         cargo: 'Analista Judiciário',
@@ -94,22 +95,56 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
     });
     assert.equal(rateCj4, 880.17); // 1466.95 * 0.60
 
-    // CJ-4 em assessoramento direto a magistrado (80% - art. 6º, § 1º, Res. CNJ 73/2009)
-    const rateCj4Assessoramento = resolveDailiesDailyRate({
+    // Assessoramento escalonado: Ministro / Membro do CJF (80% de 100% STF)
+    const rateAssessoramentoMinistro = resolveDailiesDailyRate({
         dailiesConfig: configPju,
         cargo: 'Analista Judiciário',
         funcao: 'CJ-4',
         assessoramentoMagistrado: true,
+        autoridadeAssistida: 'ministro_cjf',
     });
-    assert.equal(rateCj4Assessoramento, 1173.56); // 1466.95 * 0.80
+    assert.equal(rateAssessoramentoMinistro, 1173.56); // 1466.95 * 0.80
 
-    // Técnico em assessoramento direto a magistrado (salta de 45% para 80%)
-    const rateTecnicoAssessoramento = resolveDailiesDailyRate({
+    // Assessoramento escalonado: Desembargador Federal (80% de 95% STF = 80% de 1.393,60)
+    const rateAssessoramentoDesembargador = resolveDailiesDailyRate({
         dailiesConfig: configPju,
         cargo: 'Técnico Judiciário',
         assessoramentoMagistrado: true,
+        autoridadeAssistida: 'desembargador_trf',
     });
-    assert.equal(rateTecnicoAssessoramento, 1173.56); // 1466.95 * 0.80
+    assert.equal(rateAssessoramentoDesembargador, 1114.88); // 1393.60 * 0.80
+
+    // Assessoramento escalonado na Justiça Federal (CJF): Juiz Federal (80% de 90.25% STF = 80% de 1.323,92)
+    const configCjf: DailiesConfig = {
+        ...configPju,
+        derivedFromMinister: {
+            ...configPju.derivedFromMinister!,
+            ratesPercentages: {
+                ...configPju.derivedFromMinister!.ratesPercentages!,
+                desembargador: 0.95,
+                juiz_titular: 0.9025,
+                cj4: 0.55,
+                analista: 0.55,
+                tecnico: 0.45,
+            }
+        }
+    };
+
+    const rateAssessoramentoJuizCjf = resolveDailiesDailyRate({
+        dailiesConfig: configCjf,
+        cargo: 'Técnico Judiciário',
+        assessoramentoMagistrado: true,
+        autoridadeAssistida: 'juiz_federal',
+    });
+    assert.equal(rateAssessoramentoJuizCjf, 1059.14); // 1323.92 * 0.80
+
+    // CJ-4 e Analista em viagem ordinária no CJF (55% = R$ 806,82)
+    const rateCj4Cjf = resolveDailiesDailyRate({
+        dailiesConfig: configCjf,
+        cargo: 'Analista Judiciário',
+        funcao: 'CJ-4',
+    });
+    assert.equal(rateCj4Cjf, 806.82); // 1466.95 * 0.55
 
     // Magistrado com flag de assessoramento (não altera seu valor, permanece autoridade 95%)
     const rateJuizAssessoramento = resolveDailiesDailyRate({
@@ -277,6 +312,7 @@ test('calculateDailies calcula com precisão para servidor da Justiça Federal (
         cargo: 'Analista Judiciário',
         funcao: 'CJ-4',
         diariasAssessoramentoMagistrado: true,
+        diariasAutoridadeAssistida: 'ministro_cjf',
         diariasQtd: 2,
         diariasEmbarque: 'completo',
         diariasModoDesconto: 'manual',
@@ -425,6 +461,7 @@ test('calculateDailies diferencia viagem regular de CJ-4 (60%) e viagem em asses
         cargo: 'Analista Judiciário',
         funcao: 'CJ-4',
         diariasAssessoramentoMagistrado: true,
+        diariasAutoridadeAssistida: 'ministro_cjf',
         diariasQtd: 1,
         diariasEmbarque: 'nenhum',
         diariasModoDesconto: 'manual',
@@ -438,4 +475,60 @@ test('calculateDailies diferencia viagem regular de CJ-4 (60%) e viagem em asses
     assert.equal(resAssessoramento.bruto, 1173.56);
     assert.equal(resAssessoramento.corteLdo, 20.19); // 1173.56 - 1153.37
     assert.equal(resAssessoramento.valor, 1153.37);
+});
+
+test('resolveAssistedAuthorityDailyRate calcula escalonamento correto por autoridade assistida (CJF e STM)', () => {
+    const configCjf: DailiesConfig = {
+        rates: {},
+        embarkationAdditional: { completo: 0, metade: 0 },
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: {
+                desembargador: 0.95,
+                juiz_titular: 0.9025,
+                cj4: 0.55,
+                analista: 0.55,
+                tecnico: 0.45,
+            },
+            assistancePercentage: 0.80,
+        },
+    };
+
+    // 1) Ministro / Membro do CJF (100% STF): autoridade = 1.466,95, servidor (80%) = 1.173,56
+    const minCjf = resolveAssistedAuthorityDailyRate(configCjf, 'ministro_cjf');
+    assert.equal(minCjf.authorityRate, 1466.95);
+    assert.equal(minCjf.serverRate, 1173.56);
+
+    // 2) Desembargador Federal (95% STF): autoridade = 1.393,60, servidor (80%) = 1.114,88
+    const desTrf = resolveAssistedAuthorityDailyRate(configCjf, 'desembargador_trf');
+    assert.equal(desTrf.authorityRate, 1393.60);
+    assert.equal(desTrf.serverRate, 1114.88);
+
+    // 3) Juiz Federal no CJF (95% de 95% = 90.25% STF): autoridade = 1.323,92, servidor (80%) = 1.059,14
+    const jfCjf = resolveAssistedAuthorityDailyRate(configCjf, 'juiz_federal');
+    assert.equal(jfCjf.authorityRate, 1323.92);
+    assert.equal(jfCjf.serverRate, 1059.14);
+
+    // 4) Juiz Federal no STM (95% Ministro do STM): autoridade = 1.393,60, servidor (80%) = 1.114,88
+    const configStm: DailiesConfig = {
+        rates: {},
+        embarkationAdditional: { completo: 0, metade: 0 },
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: {
+                desembargador: 0.95,
+                juiz_titular: 0.95, // STM art. 3º e Anexo I: 95% do Ministro
+                cj4: 0.60,
+                analista: 0.55,
+                tecnico: 0.45,
+            },
+            assistancePercentage: 0.80,
+        },
+    };
+
+    const jfStm = resolveAssistedAuthorityDailyRate(configStm, 'juiz_federal');
+    assert.equal(jfStm.authorityRate, 1393.60);
+    assert.equal(jfStm.serverRate, 1114.88);
 });

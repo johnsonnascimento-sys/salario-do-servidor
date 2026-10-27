@@ -54,12 +54,15 @@ interface LdoCapInput {
     perDiemLimit: number;
 }
 
+export type DiariasAutoridadeAssistida = 'ministro_cjf' | 'desembargador_trf' | 'juiz_federal';
+
 export interface ResolveDailyRateInput {
     dailiesConfig: DailiesConfig | undefined;
     cargo: string;
     funcao?: string;
     hasCommissionRole?: boolean;
     assessoramentoMagistrado?: boolean;
+    autoridadeAssistida?: DiariasAutoridadeAssistida;
 }
 
 interface ResolveEmbarkationInput {
@@ -164,12 +167,49 @@ const buildHolidaySet = (rules: DailiesDiscountRules) => {
     );
 };
 
+export const resolveAssistedAuthorityDailyRate = (
+    dailiesConfig: DailiesConfig | undefined,
+    autoridade: DiariasAutoridadeAssistida = 'desembargador_trf'
+): { authorityRate: number; serverRate: number; authorityLabel: string } => {
+    const derived = dailiesConfig?.derivedFromMinister;
+    const ministerPerDiem = Math.max(0, Number(derived?.ministerPerDiem || 1466.95));
+    const assistRatio = Number(derived?.assistancePercentage ?? 0.80);
+
+    let authorityRate: number;
+    let authorityLabel: string;
+
+    if (autoridade === 'ministro_cjf') {
+        authorityRate = ministerPerDiem;
+        authorityLabel = 'Ministro / Membro do CJF ou STM';
+    } else if (autoridade === 'desembargador_trf') {
+        const desembargadorPct = Number(derived?.ratesPercentages?.desembargador ?? 0.95);
+        authorityRate = round2(ministerPerDiem * desembargadorPct);
+        authorityLabel = 'Desembargador Federal / Membro de TRF';
+    } else {
+        // Juiz Federal / Substituto
+        // No CJF: 95% do membro do TRF = round2(1393.60 * 0.95) = 1323.92 (ou 90.25% do STF)
+        // No STM: 95% do Ministro do STM = round2(1466.95 * 0.95) = 1393.60
+        const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
+            ? Number(derived.ratesPercentages.juiz_titular)
+            : 0.9025;
+        authorityRate = round2(ministerPerDiem * juizPct);
+        authorityLabel = 'Juiz Federal / Juiz Federal Substituto';
+    }
+
+    return {
+        authorityRate,
+        serverRate: round2(authorityRate * assistRatio),
+        authorityLabel
+    };
+};
+
 export const resolveDailiesDailyRate = ({
     dailiesConfig,
     cargo,
     funcao,
     hasCommissionRole,
-    assessoramentoMagistrado
+    assessoramentoMagistrado,
+    autoridadeAssistida
 }: ResolveDailyRateInput): number => {
     const isCommission = hasCommissionRole ?? Boolean(funcao && normalizeKey(funcao).replace(/[\s\-_]/g, '').startsWith('cj'));
     const fallbackCandidates = resolveRateKeyCandidates(cargo, funcao, isCommission);
@@ -185,17 +225,17 @@ export const resolveDailiesDailyRate = ({
         return Math.max(0, fallbackRate);
     }
 
-    // Regra especial: assessoramento direto a magistrado (Res. CNJ 73/2009 art. 6º, § 1º)
-    // Aplica-se a servidores (não-magistrados)
+    // Regra especial: assessoramento direto a magistrado (Res. CNJ 73/2009 art. 6º, § 4º c/c Res. CJF 340/2015 art. 10, § 3º)
+    // O servidor recebe até 80% do valor da diária atribuído à autoridade assistida
     const isMagistrate = fallbackCandidates.some((c) =>
         ['desembargador', 'juiz_titular', 'juiz_substituto', 'juiz', 'magistrado'].includes(c)
     );
 
-    let percentage = pickCaseInsensitive(derived.ratesPercentages, fallbackCandidates) ?? 0;
     if (!isMagistrate && assessoramentoMagistrado) {
-        percentage = Number(derived.assistancePercentage ?? 0.80);
+        return resolveAssistedAuthorityDailyRate(dailiesConfig, autoridadeAssistida).serverRate;
     }
 
+    const percentage = pickCaseInsensitive(derived.ratesPercentages, fallbackCandidates) ?? 0;
     if (percentage <= 0) {
         return Math.max(0, fallbackRate);
     }

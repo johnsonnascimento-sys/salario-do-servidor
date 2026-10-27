@@ -379,6 +379,7 @@ export interface CalculatorState {
   diariasExtAlimentacao: boolean;
   diariasExtTransporte: boolean;
   diariasAssessoramentoMagistrado: boolean;
+  diariasAutoridadeAssistida: 'ministro_cjf' | 'desembargador_trf' | 'juiz_federal';
 }
 
 export type CalculatedPayrollState = Pick<
@@ -614,6 +615,7 @@ export const INITIAL_STATE: CalculatorState = {
   diariasExtHospedagem: false,
   diariasExtAlimentacao: false,
   diariasExtTransporte: false,
-  diariasAssessoramentoMagistrado: false
+  diariasAssessoramentoMagistrado: false,
+  diariasAutoridadeAssistida: 'desembargador_trf'
 };
 

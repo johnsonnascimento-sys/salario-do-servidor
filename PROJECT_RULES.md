@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 27/10/2026 18:56
+Atualizado em: 27/10/2026 19:38
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -158,4 +158,28 @@ Cada rubrica manual deve suportar:
 8. A coordenacao operacional entre especialistas deve ser atribuida ao `Codex Orchestrator`, quando esse papel estiver em uso.
 9. O `Codex Orchestrator` deve classificar a complexidade da tarefa e definir o nivel de raciocinio recomendado entre `Baixa`, `Media`, `Alta` e `Altissima` antes da execucao, sempre que essa informacao for util para a operacao.
 10. Se o runtime nao permitir alterar programaticamente o nivel de raciocinio, a classificacao continua obrigatoria como recomendacao operacional documentada.
+
+## 11. Regras de Diárias no Poder Judiciário da União (PJU)
+
+1. A referência máxima de valor é a diária de Ministro do Supremo Tribunal Federal (STF), conforme Resolução CNJ Nº 73/2009 e normas setoriais.
+2. Escalonamento na Justiça Federal (Resolução CJF Nº 340/2015, art. 10):
+   - Membro do CJF: 100% da diária de Ministro do STF (R$ 1.466,95).
+   - Membro de TRF (Desembargador Federal): 95% da diária de Ministro do STF (R$ 1.393,60).
+   - Juiz Federal ou Juiz Federal Substituto: 95% da diária do membro do TRF = 90,25% da diária de Ministro do STF (R$ 1.323,92).
+   - Analista Judiciário ou Cargo em Comissão (CJ-1 a CJ-4): 55% da diária de Ministro do STF (R$ 806,82).
+   - Técnico Judiciário ou Função Comissionada (FC-1 a FC-6): 45% da diária de Ministro do STF (R$ 660,13).
+   - Auxiliar Judiciário: equipara-se ao Técnico Judiciário (45%, conforme art. 10, § 7º).
+3. Escalonamento no Superior Tribunal Militar (Ato Normativo STM Nº 799/2024):
+   - Ministro do STM: 100% da diária de Ministro do STF (R$ 1.466,95).
+   - Juiz Federal da JMU / Diretor-Geral e Secretário-Geral: 95% do Ministro do STM (R$ 1.393,60).
+   - Demais Cargos em Comissão: 60% do Ministro do STM (R$ 880,17).
+   - Analista Judiciário: 55% do Ministro do STM (R$ 806,82).
+   - Técnico Judiciário: 45% do Ministro do STM (R$ 660,13).
+4. Assessoramento direto ou segurança a magistrado (art. 6º, § 4º da Resolução CNJ Nº 73/2009, art. 10, § 3º da Resolução CJF Nº 340/2015 e art. 9º do Ato Normativo STM Nº 799/2024):
+   - O servidor que se afastar em assistência direta a magistrado faz jus a diária correspondente a **80% do valor da diária atribuído à autoridade assistida**.
+   - O cálculo é escalonado conforme a autoridade assistida selecionada:
+     - Ministro / Membro do CJF (100% STF) -> 80% de R$ 1.466,95 = **R$ 1.173,56**.
+     - Desembargador Federal / Membro do TRF (95% STF) -> 80% de R$ 1.393,60 = **R$ 1.114,88**.
+     - Juiz Federal / Substituto no CJF (90,25% STF) -> 80% de R$ 1.323,92 = **R$ 1.059,14** (ou na JMU 80% de R$ 1.393,60 = **R$ 1.114,88**).
+   - A opção não se aplica a magistrados em deslocamento institucional.
 

@@ -90,6 +90,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     diariasDescontarAlimentacao: boolean;
     diariasDescontarTransporte: boolean;
     diariasAssessoramentoMagistrado?: boolean;
+    diariasAutoridadeAssistida?: 'ministro_cjf' | 'desembargador_trf' | 'juiz_federal';
     licencaDias: number;
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
