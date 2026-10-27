@@ -131,6 +131,68 @@ export class ConfigService {
             .single();
 
         if (error) {
+            if (orgSlug === 'cjf' || orgSlug.startsWith('trf')) {
+                return {
+                    org_slug: orgSlug,
+                    org_name: orgSlug === 'cjf' ? 'Justiça Federal (CJF e TRFs)' : 'Tribunal Regional Federal',
+                    power_name: 'PJU',
+                    configuration: {
+                        dailies_rules: {
+                            rates: {},
+                            embarkation_additional: {
+                                completo: 586.78,
+                                metade: 293.39
+                            },
+                            embarkation_label: 'Adicional de deslocamento',
+                            normative_info: {
+                                general_rule_label: 'Resolução CNJ Nº 73/2009',
+                                branch_rule_label: 'Resolução CJF Nº 340/2015',
+                                notes: [
+                                    'Regulamentado pela Resolução CJF Nº 340/2015 e Resolução CNJ Nº 73/2009',
+                                    'Valores unitários vinculados à diária de Ministro do STF'
+                                ]
+                            },
+                            derived_from_minister: {
+                                enabled: true,
+                                minister_per_diem: 1466.95,
+                                rates_percentages: {
+                                    desembargador: 0.95,
+                                    juiz: 0.95,
+                                    juiz_titular: 0.95,
+                                    juiz_substituto: 0.90,
+                                    cj4: 0.80,
+                                    cj3: 0.60,
+                                    cj2: 0.60,
+                                    cj1: 0.60,
+                                    cj: 0.60,
+                                    analista: 0.55,
+                                    tecnico: 0.45,
+                                    auxiliar: 0.35
+                                },
+                                embarkation_percentage_full: 0.40,
+                                embarkation_percentage_half: 0.20
+                            },
+                            external_gloss: {
+                                hospedagem: 0.50,
+                                alimentacao: 0.25,
+                                transporte: 0.25
+                            },
+                            ldo_cap: {
+                                enabled: true,
+                                per_diem_limit: 1153.37
+                            },
+                            discount_rules: {
+                                food_divisor: 22,
+                                transport_divisor: 22,
+                                exclude_weekends_and_holidays: true,
+                                holidays: [],
+                                return_day_half_diem_business_day: true,
+                                return_day_half_discount_business_day: true
+                            }
+                        }
+                    }
+                };
+            }
             console.error('Erro ao buscar org_config:', error);
             throw new Error(`Falha ao carregar configuração do órgão ${orgSlug}`);
         }

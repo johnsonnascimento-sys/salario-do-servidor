@@ -38,12 +38,39 @@ export const useCalculatorConfig = (slug: string | undefined) => {
         }
         void (async () => {
             try {
-                const { data, error } = await supabase.from('agencies')
+                const ALLOWED_ORGS: Record<string, { name: string; type: string }> = {
+                    jmu: { name: 'Justiça Militar da União', type: 'JUDICIARY' },
+                    pju: { name: 'Poder Judiciário da União', type: 'JUDICIARY' },
+                    trt2: { name: 'TRT da 2ª Região', type: 'JUDICIARY' },
+                    cjf: { name: 'Justiça Federal (CJF e TRFs)', type: 'JUDICIARY' },
+                    trf1: { name: 'Tribunal Regional Federal da 1ª Região', type: 'JUDICIARY' },
+                    trf2: { name: 'Tribunal Regional Federal da 2ª Região', type: 'JUDICIARY' },
+                    trf3: { name: 'Tribunal Regional Federal da 3ª Região', type: 'JUDICIARY' },
+                    trf4: { name: 'Tribunal Regional Federal da 4ª Região', type: 'JUDICIARY' },
+                    trf5: { name: 'Tribunal Regional Federal da 5ª Região', type: 'JUDICIARY' },
+                    trf6: { name: 'Tribunal Regional Federal da 6ª Região', type: 'JUDICIARY' },
+                };
+                const allowedOrg = ALLOWED_ORGS[resolvedSlug];
+                if (!allowedOrg) throw new Error('Simulador indisponível para este órgão.');
+
+                const { data } = await supabase.from('agencies')
                     .select('name, type, slug').eq('slug', resolvedSlug).single();
-                const ALLOWED_ORGS = new Set(['jmu', 'pju', 'trt2', 'cjf', 'trf1', 'trf2', 'trf3', 'trf4', 'trf5', 'trf6']);
-                if (!ALLOWED_ORGS.has(data.slug)) throw new Error('Simulador indisponível para este órgão.');
-                update({ agency: data.slug === 'jmu' ? { ...data, name: 'Justiça Militar da União' } : data.slug === 'cjf' ? { ...data, name: 'Justiça Federal (CJF e TRFs)' } : data,
-                    agencyService: new AgencyCalculationEngine() });
+
+                const agencyData = data || {
+                    slug: resolvedSlug,
+                    name: allowedOrg.name,
+                    type: allowedOrg.type,
+                };
+                const agencyName = resolvedSlug === 'jmu'
+                    ? 'Justiça Militar da União'
+                    : resolvedSlug === 'cjf'
+                        ? 'Justiça Federal (CJF e TRFs)'
+                        : agencyData.name;
+
+                update({
+                    agency: { ...agencyData, name: agencyName },
+                    agencyService: new AgencyCalculationEngine(),
+                });
             } catch (error) {
                 update({ agencyError: error instanceof Error ? error.message : 'Não foi possível carregar a agência.' });
             } finally { update({ loadingAgency: false }); }
