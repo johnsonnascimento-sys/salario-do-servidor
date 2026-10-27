@@ -4,6 +4,8 @@ A migration `20261026190000_dailies_versioning.sql` é aditiva. Não altera tabe
 
 Em seguida, `20261026190100_dailies_review_drafts.sql` cadastra os metadados de `jf` (configuração salarial vazia) e modelos de percentuais JMU/CJF sem datas nem valores monetários. São rascunhos para revisão, sem efeito em cálculos até publicação administrativa fundamentada. A referência `stf_nacional`, limites e regras faltantes precisam ser completados; nenhuma data de ato é presumida como data de publicação ou início dos efeitos.
 
+`20261027180000_dailies_verified_drafts.sql` acrescenta quatro rascunhos documentais: tabela CJF596 (21/09/2023–09/06/2026), tabela CJF315 (desde 10/06/2026), transcrição do anexo original JMU799 (publicação 14/11/2024, continuidade posterior não validada) e teto JMU926 (23/01/2026–31/12/2026). A tabela atual CJF tem teto documental próprio de R$ 1.165,27; o valor JMU de R$ 1.153,37 não é herdado pela JF. Deslocamento e tetos ficam em referências documentais até definir sua aplicação. Não publicar esses rascunhos isoladamente: não contêm regras completas de cálculo. Conferir `DIARIAS_FONTES_VERIFICADAS.md` para documentos originais, hashes e impedimentos concretos.
+
 ## Preparação e publicação
 
 1. Fazer backup e aplicar primeiro em banco descartável/homologação com as migrations anteriores, inclusive `org_config`, `power_config` e `is_admin_user()`.
@@ -24,6 +26,8 @@ O serviço consulta órgão, intervalo e revisão em uma única RPC. A assinatur
 ## Teste descartável e retorno
 
 `supabase/tests/dailies_versioning.sql` cria dependências sintéticas para banco vazio e aplica a migration; nunca deve rodar em banco existente. Executar via `psql` em PostgreSQL 17 local e porta reservada. Depois executar `node supabase/tests/dailies_concurrency.mjs`, exclusivamente no fixture em `127.0.0.1:55436`.
+
+O fixture aplica as três migrations de diárias e verifica que os dados documentais não foram publicados. A porta alternativa local `25436` pode ser informada como terceiro argumento do teste concorrente quando o Windows impedir o bind em `55436`: `node supabase/tests/dailies_concurrency.mjs dailies_release_20261027 25436`. Nenhum outro host ou porta é aceito pelo script. `npm run test:diarias` inclui a conferência das transcrições monetárias nos próprios literais SQL.
 
 Os testes cobrem RLS anônima/usuário comum, bloqueio de escrita direta, imutabilidade e auditoria, limites inclusivos, expiração, isolamento JMU/JF, divisor inválido, referências, ciclos, moedas, limite/regra obrigatórios, vigência de fontes, substituição, correção, rascunhos sem vigência e publicação concorrente. Os valores e fontes de `example.invalid` são apenas fixtures e não seeds oficiais.
 

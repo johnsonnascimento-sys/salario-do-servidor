@@ -4,7 +4,9 @@ import pg from 'pg';
 
 const database = process.argv[2] || 'postgres';
 assert.match(database, /^(postgres|dailies_[a-z0-9_]+)$/);
-const options = { host: '127.0.0.1', port: 55436, user: 'postgres', database };
+const port = Number(process.argv[3] || 55436);
+assert.ok([55436, 25436].includes(port), 'Only reserved local fixture ports are permitted');
+const options = { host: '127.0.0.1', port, user: 'postgres', database };
 const clients = [new pg.Client(options), new pg.Client(options)];
 try {
   await Promise.all(clients.map(async client => {

@@ -157,4 +157,13 @@ do $$ begin
   if (select count(*) from public.dailies_versions where status='published')<>4 then raise exception 'Review migration published data'; end if;
   if (select branch_key from public.dailies_org_memberships where org_slug='jf')<>'CJF' then raise exception 'JF onboarding failed'; end if;
 end $$;
+select public.dailies_validate_payload('{"rules":{"supplied_lodging_basis":"payable_fraction"}}');
+select pg_temp.expect_failure($q$select public.dailies_validate_payload('{"rules":{"supplied_lodging_basis":"unknown"}}')$q$,'Base da hospedagem fornecida inválida');
+\ir ../migrations/20261027180000_dailies_verified_drafts.sql
+do $$ begin
+  if (select count(*) from public.dailies_versions where status='published')<>4 then raise exception 'Documentary evidence migration published incomplete data'; end if;
+  if (select count(*) from public.dailies_versions where status='draft' and reason like 'EVIDÊNCIA MONETÁRIA PARA REVISÃO:%')<>2 then raise exception 'Verified monetary drafts missing'; end if;
+  if (select count(*) from public.dailies_versions where status='draft' and reason like 'EVIDÊNCIA DE TETO PARA REVISÃO:%')<>1 then raise exception 'Verified ceiling draft missing'; end if;
+  if (select count(*) from public.dailies_versions where status='draft' and reason like 'TRANSCRIÇÃO PARA REVISÃO,%')<>1 then raise exception 'JMU documentary transcription missing'; end if;
+end $$;
 select 'Dailies migration: RLS, immutability, periods, hierarchy and validation passed' as result;

@@ -203,4 +203,29 @@ test('ceilings cannot round a constrained credit above the remaining budget', ()
   b.valid_from = '2026-01-01'; b.payload.limits = { daily: { value: 150.5, currency: 'BRL', applies_to: 'daily_gross', source_ids: ['fixture'] } };
   assert.equal(result(input({ end_date: '2026-01-02' }), [b]).totals.BRL.net, 300);
 });
+test('alternative lodging entitlement never quarters return or no-overnight fractions', () => {
+  const v = version();
+  v.payload.rules.supplied_lodging_fraction = .5;
+  v.payload.rules.supplied_lodging_basis = 'payable_fraction';
+  v.payload.rule_sources.supplied_lodging_basis = ['fixture'];
+  const r = result(input({ circumstances: { supplied_lodging: true } }), [v]);
+  assert.equal(r.available, true);
+  assert.deepEqual(r.parcels.map(p => p.net), [100, 100, 100]);
+  assert.equal(r.totals.BRL.net, 300);
+  const noOvernight = result(input({ circumstances: { supplied_lodging: true, no_overnight: true } }), [v]);
+  assert.deepEqual(noOvernight.parcels.map(p => p.net), [100, 100, 100]);
+  const manual = result(input({ mode: 'quantity', quantity: 2, circumstances: { supplied_lodging: true } }), [v]);
+  assert.equal(manual.totals.BRL.net, 200);
+  assert.equal(replayDailiesMemory(r.memory).totals.BRL.net, 300);
+});
+test('expense-reduction lodging retains cumulative semantics and rejects unknown strategy', () => {
+  const v = version();
+  v.payload.rules.supplied_lodging_fraction = .5;
+  v.payload.rules.supplied_lodging_basis = 'reduction';
+  v.payload.rule_sources.supplied_lodging_basis = ['fixture'];
+  const r = result(input({ circumstances: { supplied_lodging: true } }), [v]);
+  assert.deepEqual(r.parcels.map(p => p.net), [100, 100, 50]);
+  v.payload.rules.supplied_lodging_basis = 'unknown' as any;
+  blocked('INVALID_RULE', input(), [v]);
+});
 console.log(`${count} temporal dailies tests passed.`);

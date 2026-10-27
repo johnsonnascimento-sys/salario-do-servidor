@@ -122,6 +122,7 @@ function requireRules(config: ResolvedDailiesConfig): DailiesRules {
   if (typeof rules.deduct_meals !== 'boolean' || typeof rules.deduct_transport !== 'boolean') fail('INVALID_RULE', 'Regra de desconto inválida.');
   for (const key of ['return_fraction', 'no_overnight_fraction', 'supplied_lodging_fraction', 'supplied_meals_fraction'] as const) fraction(rules[key], key);
   if (rules.supplied_transport_fraction !== undefined) fraction(rules.supplied_transport_fraction, 'Fração transporte fornecido');
+  if (rules.supplied_lodging_basis !== undefined && !['reduction', 'payable_fraction'].includes(rules.supplied_lodging_basis)) fail('INVALID_RULE', 'Base da hospedagem fornecida inválida.');
   if (rules.unit_decimals !== undefined && (!Number.isInteger(rules.unit_decimals) || rules.unit_decimals < 0 || rules.unit_decimals > 6)) fail('INVALID_ROUNDING', 'Casas decimais do valor unitário inválidas.');
   if (rules.unit_rounding !== undefined && !['half_up', 'half_even', 'truncate'].includes(rules.unit_rounding)) fail('INVALID_ROUNDING', 'Arredondamento unitário inválido.');
   if ((rules.unit_rounding === undefined) !== (rules.unit_decimals === undefined)) fail('INVALID_ROUNDING', 'Informe modo e casas decimais para fixação do valor unitário.');
@@ -200,7 +201,8 @@ export function calculateDailies(input: DailiesInput, versions: DailiesVersion[]
       let portion = 1;
       if (input.mode === 'period' && index === days.length - 1) portion = rules.return_fraction;
       if (circumstances.no_overnight) portion = Math.min(portion, rules.no_overnight_fraction);
-      const supplied = [circumstances.supplied_lodging ? rules.supplied_lodging_fraction : undefined, circumstances.supplied_meals ? rules.supplied_meals_fraction : undefined, circumstances.supplied_transport ? rules.supplied_transport_fraction : undefined].filter(v => v !== undefined);
+      if (circumstances.supplied_lodging && rules.supplied_lodging_basis === 'payable_fraction') portion = Math.min(portion, rules.supplied_lodging_fraction);
+      const supplied = [circumstances.supplied_lodging && rules.supplied_lodging_basis !== 'payable_fraction' ? rules.supplied_lodging_fraction : undefined, circumstances.supplied_meals ? rules.supplied_meals_fraction : undefined, circumstances.supplied_transport ? rules.supplied_transport_fraction : undefined].filter(v => v !== undefined);
       if (circumstances.supplied_transport && rules.supplied_transport_fraction === undefined) fail('MISSING_RULE', 'Redução por transporte fornecido não configurada.');
       if (supplied.length > 1 && !rules.supplied_reduction_combination) fail('MISSING_RULE', 'Informe como combinar reduções simultâneas de despesas fornecidas.');
       let reductionFactor = rules.supplied_reduction_combination === 'add_reductions' ? Math.max(0, 1 - supplied.reduce((sum, f) => sum + 1 - f, 0)) : supplied.reduce((product, f) => product * f, 1);

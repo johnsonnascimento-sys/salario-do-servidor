@@ -154,7 +154,7 @@ begin
   end loop;
   if exists(select 1 from jsonb_object_keys(coalesce(p->'rules','{}')) x where x not in (
     'temporal_basis','return_fraction','no_overnight_fraction','supplied_lodging_fraction','supplied_meals_fraction','supplied_transport_fraction',
-    'supplied_reduction_combination','unit_rounding','unit_decimals','rounding','decimals','deduction_divisor','food_divisor','transport_divisor',
+    'supplied_reduction_combination','supplied_lodging_basis','unit_rounding','unit_decimals','rounding','decimals','deduction_divisor','food_divisor','transport_divisor',
     'deduction_fraction','deduct_meals','deduct_transport','deduction_days','deduction_cap','boarding','additional_rates','allowed_reductions')) then raise exception 'Regra desconhecida'; end if;
   if exists(select 1 from jsonb_object_keys(coalesce(p->'auxiliary','{}')) x where x not in ('holidays','weekend_days','source_ids')) then raise exception 'Parâmetro auxiliar desconhecido'; end if;
   if p->'rules' ? 'deduction_divisor' and (p#>>'{rules,deduction_divisor}')::numeric <= 0 then raise exception 'Divisor deve ser positivo'; end if;
@@ -178,6 +178,7 @@ begin
     if p->'rules' ? k and (jsonb_typeof(p->'rules'->k) is distinct from 'number' or (p->'rules'->>k)::numeric<>trunc((p->'rules'->>k)::numeric) or (p->'rules'->>k)::numeric<0 or (p->'rules'->>k)::numeric>6) then raise exception 'Casas decimais inválidas: %',k; end if;
   end loop;
   if p->'rules' ? 'supplied_reduction_combination' and coalesce(p#>>'{rules,supplied_reduction_combination}','') not in ('multiply','add_reductions') then raise exception 'Combinação de reduções inválida'; end if;
+  if p->'rules' ? 'supplied_lodging_basis' and coalesce(p#>>'{rules,supplied_lodging_basis}','') not in ('reduction','payable_fraction') then raise exception 'Base da hospedagem fornecida inválida'; end if;
   if p->'rules' ? 'boarding' then
     v := p#>'{rules,boarding}';
     if coalesce(v->>'count','') not in ('once','per_leg') or coalesce(v->>'rate','')='' or jsonb_typeof(v->'reduction_applies') is distinct from 'boolean' then raise exception 'Regra de embarque inválida'; end if;

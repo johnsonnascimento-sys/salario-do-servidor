@@ -16,6 +16,8 @@ export interface DailiesRules {
   return_fraction: number;
   no_overnight_fraction: number;
   supplied_lodging_fraction: number;
+  /** Alternative entitlement (e.g. CJF art. 6 II), rather than a cumulative expense reduction. */
+  supplied_lodging_basis?: 'reduction' | 'payable_fraction';
   supplied_meals_fraction: number;
   supplied_transport_fraction?: number;
   supplied_reduction_combination?: 'multiply' | 'add_reductions';

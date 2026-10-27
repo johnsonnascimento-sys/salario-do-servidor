@@ -5,6 +5,8 @@
 - Integração da competência única e do acesso TRT-2 da principal, preservando os trabalhos locais anteriores e os campos de diárias. Status salariais normalizados por metadados, sem inferência por data; projeções exigem seleção explícita.
 - Recálculo resolve período pela competência no formulário, adaptador e motor, sem alterar a consulta do snapshot original nem aplicar parcela futura de um período salvo.
 - Hospedagem fornecida pode ser configurada como hipótese alternativa de fração, evitando acumular indevidamente duas meias diárias em um quarto; redução cumulativa continua disponível para regimes que a fundamentem.
+- Fontes originais recuperadas: CJF596/2023 e CJF315/2026, STM799/821/832/926/947 e resolução375. Quatro rascunhos documentais datados transcrevem tabelas e tetos comprovados, sem publicar regime incompleto; teto CJF de R$1.165,27 permanece isolado do teto JMU de R$1.153,37.
+- Validação final: 156 cenários de aplicação/compatibilidade, 30 asserts de transcrições oficiais, TypeScript, build e três migrations em PostgreSQL17 descartável com RLS e publicação concorrente aprovados. Produção não alterada.
 
 ## Diárias temporais JMU / Justiça Federal — 26/10/2026
 
