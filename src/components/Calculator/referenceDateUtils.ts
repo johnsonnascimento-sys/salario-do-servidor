@@ -1,3 +1,6 @@
+import type { SalaryAdjustment } from '../../types';
+import { isProjectedSalaryAdjustment } from '../../utils/salaryScenario';
+
 export const MONTH_TOKEN_TO_INDEX: Record<string, number> = {
     jan: 1,
     janeiro: 1,
@@ -41,15 +44,7 @@ interface LabeledValueOption {
     value: number;
 }
 
-export interface ScheduleEntry {
-    period: number;
-    date?: string;
-    percentage?: number;
-    label?: string;
-    status?: 'promulgated' | 'vetoed' | 'projected';
-    vetoed?: boolean;
-    veto_reference?: string;
-}
+export type ScheduleEntry = Pick<SalaryAdjustment, 'period'> & Partial<Omit<SalaryAdjustment, 'period'>>;
 
 export const normalizeReferenceToken = (value: string) =>
     value
@@ -149,23 +144,23 @@ export const pickPeriodFromScheduleByReference = (
         return null;
     }
 
-    const referenceTimestamp = new Date(referenceYear, Math.max(0, referenceMonth - 1), 1, 23, 59, 59).getTime();
+    if (!Number.isInteger(referenceYear) || !Number.isInteger(referenceMonth) || referenceMonth < 1 || referenceMonth > 12) return null;
+    const competence = `${referenceYear}-${String(referenceMonth).padStart(2, '0')}`;
     const withDate = schedules
-        .filter((entry) => !!entry.date)
-        .filter((entry) => includeVetoed || !entry.vetoed)
+        .filter((entry) => /^\d{4}-(0[1-9]|1[0-2])-\d{2}$/.test(entry.date || ''))
+        .filter((entry) => includeVetoed || !isProjectedSalaryAdjustment(entry))
         .map((entry) => ({
             period: entry.period,
-            timestamp: new Date(`${entry.date}T12:00:00`).getTime(),
+            date: entry.date!,
         }))
-        .filter((entry) => Number.isFinite(entry.timestamp))
-        .sort((a, b) => a.timestamp - b.timestamp);
+        .sort((a, b) => a.date.localeCompare(b.date) || a.period - b.period);
 
     if (withDate.length === 0) {
         return null;
     }
 
-    const applicable = withDate.filter((entry) => entry.timestamp <= referenceTimestamp).pop();
-    return (applicable || withDate[0]).period;
+    const applicable = withDate.filter((entry) => entry.date.slice(0, 7) <= competence).pop();
+    return applicable?.period ?? null;
 };
 
 export const parseReferencePointFromDate = (dateValue: string): ReferencePoint | null => {

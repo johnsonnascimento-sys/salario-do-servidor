@@ -14,6 +14,7 @@ type SimulatorNode = {
   icon?: React.ReactNode;
   type: 'category' | 'simulator';
   slug?: string;
+  dailiesOnly?: boolean;
   children?: SimulatorNode[];
   description?: string;
 };
@@ -40,6 +41,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             type: 'category',
             icon: <ShieldCheck className="w-6 h-6 text-secondary-500" />,
             children: [
+              { id: 'jmu_diarias', name: 'Diárias — JMU', type: 'simulator', slug: 'jmu', dailiesOnly: true, description: 'Simulação independente de diárias, conforme versões publicadas.' },
               {
                 id: 'jmu',
                 name: 'STM e Auditorias (JMU)',
@@ -55,6 +57,7 @@ const SIMULATOR_DATA: SimulatorNode[] = [
             type: 'category',
             icon: <Building2 className="w-6 h-6 text-secondary-500" />,
             children: [
+              { id: 'jf_diarias', name: 'Diárias — Justiça Federal', type: 'simulator', slug: 'jf', dailiesOnly: true, description: 'Simulação independente de diárias, conforme versões publicadas.' },
               { id: 'trf1', name: 'TRF-1', type: 'simulator', slug: '#' },
               { id: 'trf2', name: 'TRF-2', type: 'simulator', slug: '#' },
               { id: 'trf3', name: 'TRF-3', type: 'simulator', slug: '#' },
@@ -196,7 +199,7 @@ export default function Home() {
   const handleNodeClick = (node: SimulatorNode) => {
     if (node.type === 'simulator') {
       if (node.slug && node.slug !== '#') {
-        navigate(`/simulador/${node.slug}`);
+        navigate(`${node.dailiesOnly ? '/diarias' : '/simulador'}/${node.slug}`);
       } else {
         // Apenas para itens "Em breve"
         alert("Simulador em desenvolvimento. Tente a Justiça Militar.");
@@ -401,7 +404,7 @@ export default function Home() {
                   key={node.id}
                   onClick={() => handleNodeClick(node)}
                   className={`
-                    group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 cursor-pointer transition-all duration-300 
+                    group relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 cursor-pointer transition-all duration-300
                     ${node.slug === '#' ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:shadow-secondary/5 hover:-tranneutral-y-1 hover:border-secondary/30'}
                   `}
                 >

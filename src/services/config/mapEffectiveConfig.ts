@@ -1,5 +1,6 @@
 import { AdjustmentScheduleConfig, EffectiveConfig } from './types';
 import { CourtConfig, TaxTable, AdjustmentScheduleEntry } from '../../types';
+import { normalizeSalaryAdjustment } from '../../utils/salaryScenario';
 
 const toNumberKey = (key: string) => {
     const parsed = Number(key.replace(/[^\d.]/g, ''));
@@ -48,18 +49,7 @@ const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
         .reduce<AdjustmentScheduleEntry[]>((acc, [key, entry]) => {
             const numeric = toNumberKey(key);
             if (numeric === null) return acc;
-            const isVetoed = entry.vetoed !== undefined
-                ? entry.vetoed
-                : (entry.status === 'vetoed' || (entry.date ? entry.date >= '2027-01-01' && entry.percentage > 0 : false));
-            acc.push({
-                period: numeric,
-                percentage: entry.percentage,
-                label: entry.label,
-                date: entry.date,
-                status: entry.status ?? (isVetoed ? 'vetoed' : 'promulgated'),
-                vetoed: isVetoed,
-                veto_reference: entry.veto_reference ?? (isVetoed ? 'Veto nº 45/2025' : undefined)
-            });
+            acc.push(normalizeSalaryAdjustment({ ...entry, period: numeric }));
             return acc;
         }, [])
         .sort((a, b) => a.period - b.period);

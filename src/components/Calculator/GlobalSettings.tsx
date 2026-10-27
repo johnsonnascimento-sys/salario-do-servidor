@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { Calendar, Settings, Scale, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
+﻿import React, { useEffect, useMemo, useRef, useId } from 'react';
+import { Calendar, Scale, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
+import { getSalarySchedule, isProjectedSalaryAdjustment, isSalaryProjection, resolveSalaryPeriod } from '../../utils/salaryScenario';
 import {
     MONTH_TOKEN_TO_INDEX,
     compareReferencePoints,
@@ -8,7 +9,6 @@ import {
     parseReferencePointFromDate,
     parseReferencePointFromKey,
     pickBestMenuOptionByReference,
-    pickPeriodFromScheduleByReference,
     pickMaxReferencePoint,
     pickMinReferencePoint,
     toReferenceMonthIndex
@@ -17,6 +17,7 @@ import {
 interface GlobalSettingsProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
+    updateMany?: (patch: Partial<CalculatorState>) => void;
     courtConfig: CourtConfig;
     styles: any;
     preserveRestoredGlobals?: boolean;
@@ -65,6 +66,7 @@ const clampReference = (
 export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     state,
     update,
+    updateMany,
     courtConfig,
     styles,
     preserveRestoredGlobals = false,
@@ -73,9 +75,17 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     const compactLabel = 'block text-label font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1';
 
     const schedules = useMemo(
-        () => [...(courtConfig.adjustment_schedule || [])].sort((a, b) => a.period - b.period),
-        [courtConfig.adjustment_schedule]
+        () => getSalarySchedule(courtConfig, true),
+        [courtConfig]
     );
+
+    const projection = isSalaryProjection(state, courtConfig);
+    const projectionOptions = schedules.filter(isProjectedSalaryAdjustment);
+    const projectionId = useId();
+    const apply = (patch: Partial<CalculatorState>) => {
+        if (updateMany) updateMany(patch);
+        else Object.entries(patch).forEach(([key, value]) => update(key as keyof CalculatorState, value));
+    };
 
     const foodAllowanceOptions = useMemo(
         () => courtConfig.menus?.food_allowance || [],
@@ -222,16 +232,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
             return;
         }
 
-        const nextPeriod = pickPeriodFromScheduleByReference(
-            schedules,
-            clampedReference.year,
-            clampedReference.month,
-            !!state.simularDerrubadaVeto
-        );
-        if (nextPeriod !== null && nextPeriod !== state.periodo) {
-            update('periodo', nextPeriod);
-        }
-
         const nextFoodAllowance = pickBestMenuOptionByReference(foodAllowanceOptions, clampedReference.year, clampedReference.month);
         let nextFoodValue = nextFoodAllowance?.value ?? 0;
         let isFoodProportional = false;
@@ -302,162 +302,55 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         update
     ]);
 
-    const isAnoComVeto = clampedReference.year >= 2027;
+    // Reopening is an explicit recalculation: period follows competence and the explicit scenario flag.
+    // Saved tax tables, benefits and reference dates retain their independent restoration guards above.
+    useEffect(() => {
+        const patch: Partial<CalculatorState> = {};
+        if (state.simularDerrubadaVeto === undefined) patch.simularDerrubadaVeto = false;
+        const next = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: projection }, courtConfig, clampedReference.year, clampedReference.month);
+        if (next !== state.periodo) patch.periodo = next;
+        const selected = projectionOptions.find(entry => entry.period === next);
+        const label = selected?.scenarioLabel || selected?.label;
+        if (projection && label && state.salaryProjectionLabel !== label) patch.salaryProjectionLabel = label;
+        if (Object.keys(patch).length) apply(patch);
+    }, [projection, state.simularDerrubadaVeto, state.periodo, state.salaryProjectionLabel, courtConfig,
+        clampedReference.year, clampedReference.month, update, updateMany]);
 
-    const currentScheduleEntry = useMemo(() => {
-        return schedules.find(s => s.period === state.periodo);
-    }, [schedules, state.periodo]);
-
-    const legalStatusBadge = useMemo(() => {
-        if (state.simularDerrubadaVeto && isAnoComVeto) {
-            return {
-                title: 'Cenário Projetado (Veto Derrubado)',
-                detail: currentScheduleEntry?.label || `Período ${state.periodo}`,
-                isVetoProjection: true,
-            };
-        }
-
-        if (state.periodo >= 2) {
-            return {
-                title: 'Lei nº 15.293/2025 em vigor',
-                detail: currentScheduleEntry?.label || 'Parcela Julho/2026 (+8%)',
-                isVetoProjection: false,
-            };
-        }
-
-        if (state.periodo === 1) {
-            return {
-                title: 'Lei nº 11.416/2006 (Novo AQ)',
-                detail: 'Janeiro a Junho/2026',
-                isVetoProjection: false,
-            };
-        }
-
-        return {
-            title: 'Lei nº 11.416/2006',
-            detail: currentScheduleEntry?.label || 'Tabela Vigente',
-            isVetoProjection: false,
-        };
-    }, [state.periodo, state.simularDerrubadaVeto, isAnoComVeto, currentScheduleEntry]);
+    const resolvedPeriod = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: projection }, courtConfig, clampedReference.year, clampedReference.month);
+    const currentScheduleEntry = schedules.find(entry => entry.period === resolvedPeriod);
+    const activeProjection = projection && !!currentScheduleEntry && isProjectedSalaryAdjustment(currentScheduleEntry);
+    const scheduleLabel = currentScheduleEntry?.label || `Período ${resolvedPeriod}`;
+    const legalReference = currentScheduleEntry?.legalReference || currentScheduleEntry?.veto_reference;
+    const sourceUrl = currentScheduleEntry?.sourceUrl;
+    const scenarioReferences = [...new Set(projectionOptions.map(entry => entry.veto_reference || entry.legalReference).filter(Boolean))];
 
     return (
-        <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm space-y-5">
-            <div className="absolute top-0 right-0 w-28 h-28 bg-primary-500/5 dark:bg-primary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
-
+        <section className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm space-y-5" aria-labelledby={`${projectionId}-heading`}>
+            <div className="absolute top-0 right-0 w-28 h-28 bg-primary-500/5 dark:bg-primary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none" aria-hidden="true"></div>
             <div className="flex items-center justify-between gap-4 flex-wrap relative z-10 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
-                <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                    <h3 className="text-body font-bold text-neutral-800 dark:text-neutral-100">
-                        Mês e ano da folha
-                    </h3>
-                </div>
-
-                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-body-xs font-semibold ${
-                    legalStatusBadge.isVetoProjection
-                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30'
-                        : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
-                }`}>
-                    {legalStatusBadge.isVetoProjection ? (
-                        <AlertCircle className="w-3.5 h-3.5" />
-                    ) : (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                    )}
-                    <span>{legalStatusBadge.title}</span>
-                    <span className="opacity-60">•</span>
-                    <span className="font-normal">{legalStatusBadge.detail}</span>
+                <div className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" aria-hidden="true" /><h3 id={`${projectionId}-heading`} className="text-body font-bold text-neutral-800 dark:text-neutral-100">Mês e ano da folha</h3></div>
+                <div role="status" className={`inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-full text-body-xs font-semibold ${activeProjection ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'}`}>
+                    {activeProjection ? <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> : <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                    <span>{activeProjection ? 'Cenário projetado' : 'Tabela salarial aplicada'}</span><span aria-hidden="true">•</span><span className="font-normal">{scheduleLabel}</span>
                 </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                <div>
-                    <label className={compactLabel}>Competência do Holerite</label>
-                    <div className="flex gap-2">
-                        <select
-                            className={compactInput}
-                            value={monthLabelByNumber(clampedReference.month)}
-                            onChange={e => update('mesRef', e.target.value)}
-                        >
-                            {allowedMonths.map(item => (
-                                <option key={item.label} value={item.label}>{item.label}</option>
-                            ))}
-                        </select>
-
-                        <select
-                            className={`${compactInput} w-32 font-mono font-semibold`}
-                            value={clampedReference.year}
-                            onChange={e => update('anoRef', Number(e.target.value))}
-                        >
-                            {allowedYears.map(year => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <p className="mt-1.5 text-body-xs text-neutral-500 dark:text-neutral-400">
-                        Seleciona automaticamente as tabelas salariais, faixas de IR, PSS e auxílios da época.
-                    </p>
-                </div>
-
-                <div className="flex flex-col justify-center rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-700/60 p-3.5">
-                    <div className="flex items-start gap-2">
-                        <Info className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
-                        <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                Enquadramento Normativo:
-                            </span>{' '}
-                            {legalStatusBadge.isVetoProjection ? (
-                                <span>
-                                    Cálculo condicional com simulação de derrubada do Veto nº 45/2025.
-                                </span>
-                            ) : clampedReference.year >= 2026 ? (
-                                <span>
-                                    Aplicação integral da <strong>Lei nº 15.293/2025</strong> com vigência da parcela de reajuste promulgada.
-                                </span>
-                            ) : (
-                                <span>
-                                    Aplicação das tabelas históricas da <strong>Lei nº 11.416/2006</strong> vigentes no período.
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <fieldset className="min-w-0"><legend className={compactLabel}>Competência do holerite</legend><div className="flex gap-2">
+                    <label className="min-w-0 flex-1"><span className="sr-only">Mês da folha</span><select id={`${projectionId}-month`} className={`${compactInput} min-w-0 w-full`} value={monthLabelByNumber(clampedReference.month)} onChange={e => update('mesRef', e.target.value)}>{allowedMonths.map(item => <option key={item.label} value={item.label}>{item.label}</option>)}</select></label>
+                    <label><span className="sr-only">Ano da folha</span><select id={`${projectionId}-year`} className={`${compactInput} w-28 font-mono font-semibold`} value={clampedReference.year} onChange={e => update('anoRef', Number(e.target.value))}>{allowedYears.map(year => <option key={year} value={year}>{year}</option>)}</select></label>
+                </div><p className="mt-1.5 text-body-xs text-neutral-500 dark:text-neutral-400">A competência seleciona a tabela salarial e as referências históricas de impostos e benefícios.</p></fieldset>
+                <div className="flex flex-col justify-center rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-700/60 p-3.5"><div className="flex items-start gap-2"><Info className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" aria-hidden="true" /><div className="text-body-xs text-neutral-600 dark:text-neutral-300"><span className="font-semibold text-neutral-800 dark:text-neutral-200">Enquadramento da tabela: </span>{legalReference || (activeProjection ? 'Projeção configurada; aplicação condicionada à alteração normativa.' : 'Referência publicada para a competência selecionada.')}{sourceUrl && /^https:\/\//.test(sourceUrl) && <a href={sourceUrl} className="block underline mt-1" target="_blank" rel="noopener noreferrer">Consultar fundamento</a>}</div></div></div>
             </div>
-
-            {isAnoComVeto && (
-                <div className="relative z-10 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                        <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                            <h4 className="text-body-sm font-bold text-amber-800 dark:text-amber-300">
-                                Veto Presidencial nº 45/2025 (Lei nº 15.293/2025)
-                            </h4>
-                            <p className="text-body-xs text-amber-700/90 dark:text-amber-300/80 leading-relaxed">
-                                Os reajustes que constavam da proposta original para 2027 e 2028 foram objeto de <strong>Veto Presidencial</strong>.
-                                O cálculo oficial do simulador reflete estritamente a parcela promulgada vigente em 2026.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between flex-wrap gap-3">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                            <input
-                                type="checkbox"
-                                checked={!!state.simularDerrubadaVeto}
-                                onChange={(e) => update('simularDerrubadaVeto', e.target.checked)}
-                                className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500/30"
-                            />
-                            <span className="text-body-xs font-semibold text-amber-800 dark:text-amber-200">
-                                Simular projeção com eventual derrubada do Veto nº 45/2025
-                            </span>
-                        </label>
-
-                        {state.simularDerrubadaVeto && (
-                            <span className="text-body-xs font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
-                                Projeção Ativa (+8% vetado)
-                            </span>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
+            {(projectionOptions.length > 0 || projection) && <div className="relative z-10 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
+                <div className="flex items-start gap-3"><Scale className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" /><div className="space-y-1"><h4 className="text-body-sm font-bold text-amber-800 dark:text-amber-300">Cenários de projeção</h4><p className="text-body-xs text-amber-700/90 dark:text-amber-300/80 leading-relaxed">As parcelas projetadas cadastradas ficam fora do cálculo normal. Sua simulação depende de seleção explícita e da competência informada.</p>{scenarioReferences.length > 0 && <p className="text-body-xs text-amber-700 dark:text-amber-300">{scenarioReferences.join(' · ')}</p>}</div></div>
+                <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between flex-wrap gap-3"><label htmlFor={projectionId} className="flex min-h-11 items-center gap-2 cursor-pointer select-none"><input id={projectionId} type="checkbox" checked={projection} onChange={event => {
+                    const enabled = event.target.checked;
+                    const next = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: enabled }, courtConfig, clampedReference.year, clampedReference.month);
+                    const selected = schedules.find(entry => entry.period === next);
+                    apply({ simularDerrubadaVeto: enabled, periodo: next, salaryProjectionLabel: enabled && selected && isProjectedSalaryAdjustment(selected) ? selected.scenarioLabel || selected.label : undefined });
+                }} className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500/30" /><span className="text-body-xs font-semibold text-amber-800 dark:text-amber-200">Incluir parcelas projetadas na simulação</span></label>
+                {projection && <span className="text-body-xs font-semibold text-amber-700 dark:text-amber-300">{activeProjection ? 'Projeção ativa — cenário condicionado' : 'Nenhuma parcela projetada aplicável à competência'}</span>}</div>
+            </div>}
+        </section>
     );
 };

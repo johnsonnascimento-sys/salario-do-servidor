@@ -367,6 +367,8 @@ export const useDynamicPresetInstances = ({
                 break;
             case 'diarias':
                 update('diariasQtd', 0);
+                update('dailiesInput', undefined);
+                update('dailiesMemory', undefined);
                 update('diariasEmbarque', 'nenhum');
                 update('diariasModoDesconto', 'manual');
                 update('diariasDataInicio', '');

@@ -15,11 +15,7 @@
 import { IAgencyCalculationParams } from '../types';
 import { CourtConfig } from '../../../../types';
 import { getPayrollRules, isNoFunction } from './configRules';
-
-interface AdjustmentEntry {
-    period: number;
-    percentage: number;
-}
+import { applySalaryCorrections, isSalaryProjection } from '../../../../utils/salaryScenario';
 
 interface PeriodData {
     salario: Record<string, Record<string, number>>;
@@ -27,38 +23,9 @@ interface PeriodData {
     valorVR: number;
 }
 
-const periodDataCache = new WeakMap<CourtConfig, Map<number, PeriodData>>();
-
-const normalizePercentage = (value: number) => (value > 1 ? value / 100 : value);
+const periodDataCache = new WeakMap<CourtConfig, Map<string, PeriodData>>();
 
 export const normalizeAQPercent = (value: number) => (value > 1 ? value / 100 : value);
-
-const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEntry[] | null => {
-    const schedule =
-        (config as any).adjustment_schedule ||
-        (config.values as any)?.adjustment_schedule ||
-        (config.values as any)?.reajustes;
-
-    if (!Array.isArray(schedule)) {
-        return null;
-    }
-
-    return schedule
-        .filter((entry: AdjustmentEntry) => Number.isFinite(entry?.period) && Number.isFinite(entry?.percentage))
-        .filter((entry: AdjustmentEntry) => entry.period <= periodo)
-        .sort((a: AdjustmentEntry, b: AdjustmentEntry) => a.period - b.period);
-};
-
-const applyCorrections = (base: number, periodo: number, config: CourtConfig): number => {
-    const schedule = findCorrectionTable(periodo, config);
-    if (!schedule || schedule.length === 0) {
-        return base;
-    }
-
-    return schedule.reduce((value, entry) => {
-        return value * (1 + normalizePercentage(entry.percentage));
-    }, base);
-};
 
 const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
@@ -71,10 +38,12 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
  * Obtem dados ajustados para o periodo (bases salariais e VR)
  * usando a configuracao do orgao ja carregada.
  */
-export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfig) {
+export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfig, projection?: boolean) {
+    const includeHypothetical = isSalaryProjection({ periodo, simularDerrubadaVeto: projection }, agencyConfig);
+    const cacheKey = `${periodo}:${includeHypothetical}`;
     const cachedByConfig = periodDataCache.get(agencyConfig);
-    if (cachedByConfig?.has(periodo)) {
-        return cachedByConfig.get(periodo)!;
+    if (cachedByConfig?.has(cacheKey)) {
+        return cachedByConfig.get(cacheKey)!;
     }
 
     const config = agencyConfig;
@@ -85,26 +54,26 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
     for (const [cargo, padroes] of Object.entries(salaryBases)) {
         salario[cargo] = {};
         for (const [padrao, valor] of Object.entries(padroes || {})) {
-            salario[cargo][padrao] = applyCorrections(Number(valor), periodo, config);
+            salario[cargo][padrao] = applySalaryCorrections(Number(valor), periodo, config, includeHypothetical);
         }
     }
 
     const func = JSON.parse(JSON.stringify(config.bases?.funcoes || {}));
     const funcoes: any = {};
     for (let key in func) {
-        funcoes[key] = applyCorrections(func[key], periodo, config);
+        funcoes[key] = applySalaryCorrections(func[key], periodo, config, includeHypothetical);
     }
 
     const cj1Base = config.values?.cj1_integral_base || 0;
-    const cj1Adjusted = applyCorrections(cj1Base, periodo, config);
+    const cj1Adjusted = applySalaryCorrections(cj1Base, periodo, config, includeHypothetical);
     const valorVR = Math.round(cj1Adjusted * payrollRules.vrRateOnCj1 * 100) / 100;
 
     const computed: PeriodData = { salario, funcoes, valorVR };
 
     if (cachedByConfig) {
-        cachedByConfig.set(periodo, computed);
+        cachedByConfig.set(cacheKey, computed);
     } else {
-        periodDataCache.set(agencyConfig, new Map([[periodo, computed]]));
+        periodDataCache.set(agencyConfig, new Map([[cacheKey, computed]]));
     }
 
     return computed;
@@ -116,7 +85,7 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
 export async function calculateBase(params: IAgencyCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
@@ -161,7 +130,7 @@ export async function calculateBase(params: IAgencyCalculationParams): Promise<n
 export async function calculateBaseComponents(params: IAgencyCalculationParams) {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
 
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;

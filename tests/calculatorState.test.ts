@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './salaryScenarioUI.test';
 import test from 'node:test';
 import React, { useCallback, useState } from 'react';
 import { act, create } from 'react-test-renderer';
@@ -198,7 +199,7 @@ test('configuraÃ§Ãµes globais mantÃªm competÃªncia antiga e auxÃ­lios salvos na 
     act(() => renderer.unmount());
 });
 
-test('pickPeriodFromScheduleByReference respeita o Veto nº 45/2025 para competências a partir de 2027', () => {
+test('pickPeriodFromScheduleByReference respeita o Veto nÂº 45/2025 para competÃªncias a partir de 2027', () => {
     const schedules = [
         { period: 0, date: '2025-02-01', percentage: 0, label: 'Fev/2025' },
         { period: 1, date: '2026-01-01', percentage: 0, label: 'Jan/2026' },
@@ -207,19 +208,19 @@ test('pickPeriodFromScheduleByReference respeita o Veto nº 45/2025 para competên
         { period: 4, date: '2028-07-01', percentage: 0.08, label: 'Jul/2028 (Vetado)', vetoed: true },
     ];
 
-    // Competência 2026-08 oficial: período 2
+    // CompetÃªncia 2026-08 oficial: perÃ­odo 2
     assert.equal(pickPeriodFromScheduleByReference(schedules, 2026, 8, false), 2);
 
-    // Competência 2027-08 oficial (com veto mantido): período 2 (mantém parcela promulgada)
+    // CompetÃªncia 2027-08 oficial (com veto mantido): perÃ­odo 2 (mantÃ©m parcela promulgada)
     assert.equal(pickPeriodFromScheduleByReference(schedules, 2027, 8, false), 2);
 
-    // Competência 2027-08 em modo de projeção (veto derrubado): período 3
+    // CompetÃªncia 2027-08 em modo de projeÃ§Ã£o (veto derrubado): perÃ­odo 3
     assert.equal(pickPeriodFromScheduleByReference(schedules, 2027, 8, true), 3);
 
-    // Competência 2028-08 oficial: período 2
+    // CompetÃªncia 2028-08 oficial: perÃ­odo 2
     assert.equal(pickPeriodFromScheduleByReference(schedules, 2028, 8, false), 2);
 
-    // Competência 2028-08 em modo de projeção: período 4
+    // CompetÃªncia 2028-08 em modo de projeÃ§Ã£o: perÃ­odo 4
     assert.equal(pickPeriodFromScheduleByReference(schedules, 2028, 8, true), 4);
 });
 
@@ -264,16 +265,16 @@ test('GlobalSettings aplica parcela sancionada em 2027 e alterna com simularDerr
     let renderer: any;
     act(() => { renderer = create(React.createElement(Harness)); });
 
-    // Oficialmente em 2027, deve aplicar o período 2 (último sancionado), NÃO o período 3 vetado
+    // Oficialmente em 2027, deve aplicar o perÃ­odo 2 (Ãºltimo sancionado), NÃƒO o perÃ­odo 3 vetado
     assert.equal(current!.periodo, 2);
 
-    // Ativando simulação de derrubada do veto
+    // Ativando simulaÃ§Ã£o de derrubada do veto
     act(() => {
         updateFn('simularDerrubadaVeto', true);
     });
     assert.equal(current!.periodo, 3);
 
-    // Desativando simulação volta para período 2
+    // Desativando simulaÃ§Ã£o volta para perÃ­odo 2
     act(() => {
         updateFn('simularDerrubadaVeto', false);
     });

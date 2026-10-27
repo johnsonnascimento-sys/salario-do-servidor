@@ -136,6 +136,7 @@ export const useCalculator = () => {
                 ...stripCalculatedFieldsFromCalculatorState(state),
                 // Preserve the audit at save time; recalculation still uses the current engine.
                 pensionMemory: calculatedState.pensionMemory,
+                dailiesMemory: calculationReady ? calculatedState.dailiesMemory : undefined,
             };
             localStorage.setItem(USER_AREA_LAST_CALCULATOR_STATE_KEY, JSON.stringify(persistedState));
             localStorage.setItem(USER_AREA_LAST_RESULT_ROWS_KEY, JSON.stringify(resultRows));
@@ -143,7 +144,7 @@ export const useCalculator = () => {
         } catch (_error) {
             // Ignora falhas de localStorage em modo privado/restrito.
         }
-    }, [state, resultRows, calculatedState.pensionMemory]);
+    }, [state, resultRows, calculatedState.pensionMemory, calculatedState.dailiesMemory, calculationReady]);
 
     const saveCurrentPayslip = useCallback(async () => {
         if (!calculationReady) {
@@ -161,9 +162,10 @@ export const useCalculator = () => {
                 ...stripCalculatedFieldsFromCalculatorState(state),
                 // Preserve the audit at save time; recalculation still uses the current engine.
                 pensionMemory: calculatedState.pensionMemory,
+                dailiesMemory: calculatedState.dailiesMemory,
             };
 
-            if (editPayslipId) {
+            if (editPayslipId && !state.dailiesInput && !state.dailiesMemory && !state.diariasQtd && !state.diariasDataInicio && state.diariasEmbarque === 'nenhum') {
                 const updated = await updatePayslip(editPayslipId, {
                     title,
                     agency_slug: slug || 'jmu',

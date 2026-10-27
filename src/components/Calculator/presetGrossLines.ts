@@ -1,10 +1,5 @@
+import { dailiesResultRows } from '../../utils/dailiesExport';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
-import {
-    resolveDailiesDailyRate,
-    resolveDailiesDiscountRules,
-    resolveDailiesEmbarkationAdditional,
-    summarizeDailiesPeriodMode
-} from '../../utils/dailiesRules';
 import {
     buildCardTaxSummary,
     PresetGrossLine,
@@ -370,66 +365,11 @@ export const buildPresetGrossLines = ({
             ];
         }
         case 'diarias': {
-            const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
-            const discountRules = resolveDailiesDiscountRules(courtConfig?.dailies, transportWorkdays);
-            const periodDiscountRules = { ...discountRules, excludeWeekendsAndHolidays: true };
-            const periodSummary = state.diariasModoDesconto === 'periodo'
-                ? summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
-                : null;
-            const dailyRate = roundCurrency(resolveDailiesDailyRate({
-                dailiesConfig: courtConfig?.dailies,
-                cargo: state.cargo,
-                hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj'))
-            }));
-            const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({
-                dailiesConfig: courtConfig?.dailies,
-                embarkationType: state.diariasEmbarque
-            }));
-            const diariasSemEmbarque = roundCurrency(Math.max(0, (state.diariasBruto || 0) - adicionalEmbarque));
-            const meiaDiariaRetorno = periodSummary?.halfDailyApplied ? roundCurrency(dailyRate * 0.5) : 0;
-            const meioDescAuxAlimRetorno = periodSummary?.halfDiscountApplied && state.diariasDescontarAlimentacao
-                ? roundCurrency((state.auxAlimentacao / discountRules.foodDivisor) * 0.5)
-                : 0;
-            const meioDescAuxTranspRetorno = periodSummary?.halfDiscountApplied && state.diariasDescontarTransporte
-                ? roundCurrency((state.auxTransporteValor / discountRules.transportDivisor) * 0.5)
-                : 0;
-            const totalDescAuxAlim = roundCurrency(state.diariasDescAlim || 0);
-            const totalDescAuxTransp = roundCurrency(state.diariasDescTransp || 0);
-            const descAuxAlimDiariaInteira = roundCurrency(Math.max(0, totalDescAuxAlim - meioDescAuxAlimRetorno));
-            const descAuxTranspDiariaInteira = roundCurrency(Math.max(0, totalDescAuxTransp - meioDescAuxTranspRetorno));
-            const lines: PresetGrossLine[] = [
-                { label: 'Diárias sem adicional de embarque', value: diariasSemEmbarque },
-                { label: 'Adicional de embarque', value: adicionalEmbarque },
-                { label: 'Diárias brutas', value: roundCurrency(state.diariasBruto || 0) }
+            if (!state.dailiesMemory?.totals.BRL) return [];
+            return [
+                ...dailiesResultRows(state.dailiesMemory, 'BRL').map(row => ({ label: row.label, value: row.value, isDiscount: row.type === 'D' })),
+                { label: 'Total diárias líquidas', value: state.dailiesMemory.totals.BRL.net },
             ];
-
-            if (meiaDiariaRetorno > 0) {
-                lines.push({ label: 'Meia diária no retorno', value: meiaDiariaRetorno });
-            }
-
-            const ldoEnabled = Boolean(courtConfig?.dailies?.ldoCap?.enabled);
-            const ldoLimit = roundCurrency(Number(courtConfig?.dailies?.ldoCap?.perDiemLimit || 0));
-            if (ldoEnabled && ldoLimit > 0) {
-                lines.push({ label: 'Limite LDO vigente (por diária)', value: ldoLimit });
-                lines.push({
-                    label: 'Valor enquadrado no limite LDO',
-                    value: roundCurrency(Math.max(0, (state.diariasBruto || 0) - (state.diariasCorteLdo || 0)))
-                });
-            }
-
-            lines.push(
-                { label: 'Corte teto LDO', value: roundCurrency(state.diariasCorteLdo || 0), isDiscount: true },
-                { label: 'Abatimento benef. externo', value: roundCurrency(state.diariasGlosa || 0), isDiscount: true },
-                { label: 'Desconto aux. alimentação (diária inteira)', value: descAuxAlimDiariaInteira, isDiscount: true },
-                { label: 'Desconto aux. alimentação (meia diária)', value: meioDescAuxAlimRetorno, isDiscount: true },
-                { label: 'Desconto aux. transporte (diária inteira)', value: descAuxTranspDiariaInteira, isDiscount: true },
-                { label: 'Desconto aux. transporte (meia diária)', value: meioDescAuxTranspRetorno, isDiscount: true },
-                { label: 'Desconto IR (Diárias)', value: 0, isDiscount: true },
-                { label: 'Desconto PSS (Diárias)', value: 0, isDiscount: true }
-            );
-            lines.push({ label: 'Total diárias líquidas', value: roundCurrency(state.diariasValorTotal || 0) });
-
-            return lines;
         }
         default:
             return [];

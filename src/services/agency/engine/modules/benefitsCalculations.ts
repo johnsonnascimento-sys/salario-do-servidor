@@ -51,7 +51,7 @@ export async function calculateBenefits(params: IAgencyCalculationParams): Promi
         auxTranspCred = params.auxTransporteGasto;
 
         // Debit logic depends on base salary
-        const { salario, funcoes } = await getDataForPeriod(params.periodo, config);
+        const { salario, funcoes } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
         const baseVenc = salario[params.cargo]?.[params.padrao] || 0;
         const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
 
