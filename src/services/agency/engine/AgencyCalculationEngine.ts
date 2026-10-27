@@ -20,6 +20,7 @@
 
 import { IAgencyCalculator, ICalculationResult, ICalculationParams } from '../types';
 import { IAgencyCalculationParams } from './types';
+import { resolveSalaryPeriod } from '../../../utils/salaryScenario';
 
 // Importar mÃ³dulos de cÃ¡lculo
 import { calculateBase, calculateBaseComponents } from './modules/baseCalculations';
@@ -31,6 +32,15 @@ import { calculateSubstitution } from './modules/substitutionCalculations';
 import { calculateDailies } from './modules/dailiesCalculations';
 import { calculateCompensatoryLeave } from './modules/leaveCalculations';
 import { calculateDeductions } from './modules/deductionsCalculations';
+
+/** Recalculation uses the selected competence, without rewriting a stored snapshot. */
+const resolveCalculationPeriod = (params: IAgencyCalculationParams): IAgencyCalculationParams => {
+    if (!params.agencyConfig || !/^\d{4}-(0[1-9]|1[0-2])$/.test(params.competencia || '')) return params;
+    const [year, month] = params.competencia!.split('-').map(Number);
+    const periodo = resolveSalaryPeriod({ periodo: params.periodo, simularDerrubadaVeto: params.simularDerrubadaVeto,
+        anoRef: year, mesRef: String(month) }, params.agencyConfig);
+    return periodo === params.periodo ? params : { ...params, periodo };
+};
 
 const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number }> = []) => {
     return rubricas.reduce(
@@ -63,21 +73,21 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
      * Calcula a base salarial (vencimento + GAJ + FC + AQ + gratificaÃ§Ãµes)
      */
     async calculateBase(params: ICalculationParams): Promise<number> {
-        return await calculateBase(params as IAgencyCalculationParams);
+        return await calculateBase(resolveCalculationPeriod(params as IAgencyCalculationParams));
     }
 
     /**
      * Calcula as deduÃ§Ãµes (PSS, IRRF, Funpresp)
      */
     async calculateDeductions(grossValue: number, params: ICalculationParams): Promise<any> {
-        return await calculateDeductions(grossValue, params as IAgencyCalculationParams);
+        return await calculateDeductions(grossValue, resolveCalculationPeriod(params as IAgencyCalculationParams));
     }
 
     /**
      * Calcula os benefÃ­cios (auxÃ­lios)
      */
     async calculateBenefits(params: ICalculationParams): Promise<any> {
-        return await calculateBenefits(params as IAgencyCalculationParams);
+        return await calculateBenefits(resolveCalculationPeriod(params as IAgencyCalculationParams));
     }
 
     /**
@@ -93,6 +103,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
      * REFATORADO: Agora Ã© async para suportar ConfigService
      */
     async calculateTotal(params: IAgencyCalculationParams): Promise<ICalculationResult> {
+        params = resolveCalculationPeriod(params);
         // 1. Calcular Base Salarial (agora async)
         const base = await calculateBase(params);
         const baseComponents = await calculateBaseComponents(params);

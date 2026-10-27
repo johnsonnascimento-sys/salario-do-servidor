@@ -1,3 +1,4 @@
+import { resolveSalaryPeriod } from '../../utils/salaryScenario';
 import { dailiesResultRows } from '../../utils/dailiesExport';
 /**
  * Hook de Resultados - Calculadora
@@ -188,8 +189,8 @@ export const useCalculatorResults = (
         if (!courtConfig || calculationStatus !== 'ready') {
             return null;
         }
-        return getTablesForPeriod(state.periodo, courtConfig, state.simularDerrubadaVeto);
-    }, [courtConfig, state.periodo, state.simularDerrubadaVeto, calculationStatus]);
+        return getTablesForPeriod(courtConfig ? resolveSalaryPeriod(state, courtConfig) : state.periodo, courtConfig, state.simularDerrubadaVeto);
+    }, [courtConfig, state.periodo, state.mesRef, state.anoRef, state.simularDerrubadaVeto, calculationStatus]);
 
     const effectiveState = useMemo(
         () => mergeEffectiveState(state, calculatedState),

@@ -8,23 +8,36 @@ export interface SalaryScenarioState {
     mesRef?: string;
 }
 
+export type SalaryAdjustmentInput = Omit<SalaryAdjustment, 'status'> & {
+    status?: SalaryAdjustment['status'] | 'enacted' | 'hypothetical';
+};
+
+/** Classify from explicit metadata only; neither a date nor a saved label is legal status. */
+export const isProjectedSalaryAdjustment = (entry: { status?: string; vetoed?: boolean }): boolean =>
+    entry.vetoed === true || ['vetoed', 'projected', 'hypothetical'].includes(entry.status || '');
+
+export const normalizeSalaryAdjustment = (entry: SalaryAdjustmentInput): SalaryAdjustment => {
+    const status = entry.status === 'enacted' ? 'promulgated'
+        : entry.status === 'hypothetical' ? 'projected'
+        : entry.status ?? (entry.vetoed === true ? 'vetoed' : undefined);
+    return { ...entry, status };
+};
+
 const rawSchedule = (config?: CourtConfig | null): SalaryAdjustment[] => {
     const entries = config?.adjustment_schedule ?? config?.values?.adjustment_schedule ?? config?.values?.reajustes;
-    return Array.isArray(entries) ? entries : [];
+    return Array.isArray(entries) ? (entries as SalaryAdjustmentInput[]).map(normalizeSalaryAdjustment) : [];
 };
 
 /** Unclassified legacy configuration retains its former behavior; legal status comes only from configuration. */
 export const getSalarySchedule = (config?: CourtConfig | null, includeHypothetical = false): SalaryAdjustment[] =>
     rawSchedule(config)
         .filter(entry => Number.isFinite(entry.period) && Number.isFinite(entry.percentage))
-        .filter(entry => includeHypothetical || entry.status !== 'hypothetical')
+        .filter(entry => includeHypothetical || !isProjectedSalaryAdjustment(entry))
         .sort((a, b) => a.period - b.period);
 
-/** An explicit false always wins. Only an unclassified legacy input can infer its original scenario. */
-export const isSalaryProjection = (state: SalaryScenarioState, config?: CourtConfig | null): boolean => {
-    if (typeof state.simularDerrubadaVeto === 'boolean') return state.simularDerrubadaVeto;
-    return Boolean(state.salaryProjectionLabel || rawSchedule(config).find(entry => entry.period === state.periodo)?.status === 'hypothetical');
-};
+/** Recalculation requires opt-in. Historical labels are preserved solely as snapshot audit data. */
+export const isSalaryProjection = (state: SalaryScenarioState, _config?: CourtConfig | null): boolean =>
+    state.simularDerrubadaVeto === true;
 
 export const getSalaryCorrections = (periodo: number, config: CourtConfig, projection?: boolean): SalaryAdjustment[] =>
     getSalarySchedule(config, isSalaryProjection({ periodo, simularDerrubadaVeto: projection }, config))
@@ -62,20 +75,31 @@ export const resolveSalaryPeriod = (
     const competence = `${ano}-${String(month).padStart(2, '0')}`;
     const dated = schedule.filter(entry => entry.date && /^\d{4}-(0[1-9]|1[0-2])-\d{2}$/.test(entry.date))
         .sort((a, b) => a.date!.localeCompare(b.date!) || a.period - b.period);
-    return dated.filter(entry => entry.date!.slice(0, 7) <= competence).at(-1)?.period
-        ?? dated[0]?.period ?? schedule.filter(entry => entry.period <= state.periodo).at(-1)?.period ?? schedule[0].period;
+    const applicable = dated.filter(entry => entry.date!.slice(0, 7) <= competence).at(-1);
+    if (applicable) return applicable.period;
+    // Before the first dated adjustment, retain the unadjusted base rather
+    // than selecting a future increase or reviving a saved future period.
+    if (dated.length) return Math.min(state.periodo, Math.min(...dated.map(entry => entry.period)) - 1);
+    return schedule.filter(entry => entry.period <= state.periodo).at(-1)?.period ?? schedule[0].period;
 };
 
 /** Persist the projection label with the snapshot so exports never need today's configuration to describe it. */
 export const getSalaryScenarioNotice = (state: SalaryScenarioState, config?: CourtConfig | null): string[] => {
     if (!isSalaryProjection(state, config)) {
+        if (state.salaryProjectionLabel && state.simularDerrubadaVeto === undefined) return [
+            state.salaryProjectionLabel,
+            'Rótulo preservado do snapshot. A projeção não é ativada automaticamente no recálculo; confirme o cenário para aplicá-la.',
+        ];
         if (!config && state.simularDerrubadaVeto === undefined) return ['Cenário salarial não identificado no holerite salvo.'];
+        if (config && getSalarySchedule(config).some(entry => entry.period <= state.periodo && !entry.status)) return [
+            'Tabela salarial cadastrada sem classificação normativa. Não foi inferida vigência pela data ou pelo percentual.',
+        ];
         return ['Folha vigente — sem aplicação de reajustes hipotéticos.'];
     }
     const hypothetical = getSalarySchedule(config, true)
-        .filter(entry => entry.status === 'hypothetical' && entry.period <= state.periodo);
+        .filter(entry => isProjectedSalaryAdjustment(entry) && entry.period <= state.periodo);
     const last = hypothetical.at(-1);
     const label = state.salaryProjectionLabel || last?.scenarioLabel || 'Projeção de derrubada do veto';
-    const references = [...new Set(hypothetical.map(entry => entry.legalReference).filter(Boolean))];
+    const references = [...new Set(hypothetical.flatMap(entry => [entry.legalReference, entry.veto_reference]).filter(Boolean))];
     return [label, 'Cenário hipotético, condicionado à alteração legislativa. Não corresponde à folha vigente.', ...references as string[]];
 };

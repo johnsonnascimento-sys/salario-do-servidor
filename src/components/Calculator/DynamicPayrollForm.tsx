@@ -1,4 +1,5 @@
 import React from 'react';
+import { resolveSalaryPeriod } from '../../utils/salaryScenario';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
@@ -57,7 +58,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     updateRubrica,
     styles
 }) => {
-    const currentTables = getTablesForPeriod(state.periodo, courtConfig, state.simularDerrubadaVeto);
+    const currentTables = getTablesForPeriod(courtConfig ? resolveSalaryPeriod(state, courtConfig) : state.periodo, courtConfig, state.simularDerrubadaVeto);
     const payrollRules = courtConfig.payrollRules;
     const careerCatalog = courtConfig.careerCatalog;
     const noFunctionCode = careerCatalog?.noFunctionCode ?? '';

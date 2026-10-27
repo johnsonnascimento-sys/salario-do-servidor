@@ -1,5 +1,11 @@
 # Changelog
 
+## Integração da evolução de diárias — 27/10/2026
+
+- Integração da competência única e do acesso TRT-2 da principal, preservando os trabalhos locais anteriores e os campos de diárias. Status salariais normalizados por metadados, sem inferência por data; projeções exigem seleção explícita.
+- Recálculo resolve período pela competência no formulário, adaptador e motor, sem alterar a consulta do snapshot original nem aplicar parcela futura de um período salvo.
+- Hospedagem fornecida pode ser configurada como hipótese alternativa de fração, evitando acumular indevidamente duas meias diárias em um quarto; redução cumulativa continua disponível para regimes que a fundamentem.
+
 ## Diárias temporais JMU / Justiça Federal — 26/10/2026
 
 - Motor compartilhado independente da folha, com seleção por datas, referências encadeadas, regras obrigatórias, fontes por parâmetro, limites e memória reproduzível por moeda. Cadastro faltante bloqueia cálculo, sem fallback monetário legado.
@@ -14,6 +20,18 @@
 - Retirada a opção de Funpresp por competência original das rubricas novas e das rubricas sem essa marcação. O formulário não encaminha mais para a ferramenta removida.
 - Marcações antigas permanecem identificadas como opções salvas, com desmarcação voluntária e orientação para conferir os ajustes existentes. Valores, incidências, motor e snapshots não são convertidos ou alterados automaticamente.
 - Validação: 35 testes de formulário e TypeScript aprovados.
+## Inclusão do TRT-2 (SP) — 20/10/2026
+- Cadastro e ativação do TRT da 2ª Região (`trt2`) no banco Supabase (tabelas `agencies` e `org_config`), herdando 100% das regras e tabelas do Poder Judiciário da União (`PJU`).
+- Liberação da rota `/simulador/trt2` no hook `useCalculatorConfig`.
+- Ativação do card do TRT-2 na página inicial (`Home.tsx`) sob a categoria Justiça do Trabalho.
+- Validação: 21 testes de estado/holerite e typecheck aprovados.
+
+## Competência única ("Mês e ano da folha") e tratamento do Veto nº 45/2025 — 20/10/2026
+- Interface unificada: "Mês e ano da folha" passa a ser o seletor mestre único de competência, eliminando a seleção manual de "Ref. Salarial" e garantindo sincronização automática de tabelas salariais, PSS, IR e benefícios da época.
+- Vigência legal: incorporado o status da Lei nº 15.293/2025 sancionada (parcela de julho/2026, +8%). Competências para 2027 em diante mantêm oficialmente o teto legal sancionado, refletindo com rigor o Veto Presidencial nº 45/2025.
+- Modo de projeção: para competências a partir de 2027, adicionado toggle explícito e aviso informativo sobre o Veto 45/2025 para permitir simular o cenário de eventual derrubada do veto sem comprometer a exatidão do cálculo oficial.
+- Badge informativo: exibição contextual da norma legal aplicável (Lei nº 15.293/2025, Lei nº 11.416/2006 ou Cenário Projetado).
+- Validação: 21 testes de estado/holerite, 28 previdenciários, 4 de ordenação, typecheck e build aprovados.
 
 ## Simplificação dos retroativos — 20/10/2026
 - Retirada a ferramenta de previdência de retroativos do fluxo de novas simulações; lançamentos com valor conhecido continuam nas rubricas manuais.

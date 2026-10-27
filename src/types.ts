@@ -108,19 +108,24 @@ export interface CareerCatalogConfig {
   cargoLabels: Record<string, string>;
 }
 
-export interface SalaryAdjustment {
+export interface AdjustmentScheduleEntry {
   period: number;
   percentage: number;
   label?: string;
   date?: string;
-  status?: 'enacted' | 'hypothetical';
+  status?: 'promulgated' | 'vetoed' | 'projected';
+  vetoed?: boolean;
+  veto_reference?: string;
   scenarioLabel?: string;
   legalReference?: string;
   sourceUrl?: string;
 }
 
+/** Compatibility name for existing snapshot and calculator consumers. */
+export type SalaryAdjustment = AdjustmentScheduleEntry;
+
 export interface CourtConfig {
-  adjustment_schedule?: SalaryAdjustment[];
+  adjustment_schedule?: AdjustmentScheduleEntry[];
   bases: {
     salario: SalaryTable;
     funcoes: FuncoesTable;
@@ -133,8 +138,8 @@ export interface CourtConfig {
     pre_school?: number;
     deducao_dep?: number;
     cj1_integral_base?: number;
-    adjustment_schedule?: SalaryAdjustment[];
-    reajustes?: SalaryAdjustment[];
+    adjustment_schedule?: AdjustmentScheduleEntry[];
+    reajustes?: AdjustmentScheduleEntry[];
   };
   menus?: {
     food_allowance?: Array<{ label: string; value: number }>;

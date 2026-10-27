@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useId } from 'react';
-import { Settings } from 'lucide-react';
+import { Calendar, Scale, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
-import { getSalarySchedule, isSalaryProjection, resolveSalaryPeriod } from '../../utils/salaryScenario';
+import { getSalarySchedule, isProjectedSalaryAdjustment, isSalaryProjection, resolveSalaryPeriod } from '../../utils/salaryScenario';
 import {
     MONTH_TOKEN_TO_INDEX,
     compareReferencePoints,
@@ -75,12 +75,12 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     const compactLabel = 'block text-label font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1';
 
     const schedules = useMemo(
-        () => [...(courtConfig.adjustment_schedule || [])].sort((a, b) => a.period - b.period),
-        [courtConfig.adjustment_schedule]
+        () => getSalarySchedule(courtConfig, true),
+        [courtConfig]
     );
 
     const projection = isSalaryProjection(state, courtConfig);
-    const projectionOptions = getSalarySchedule(courtConfig, true).filter(entry => entry.status === 'hypothetical');
+    const projectionOptions = schedules.filter(isProjectedSalaryAdjustment);
     const projectionId = useId();
     const apply = (patch: Partial<CalculatorState>) => {
         if (updateMany) updateMany(patch);
@@ -146,7 +146,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
             };
         }
 
-        // Floor of reference selector follows salary reference availability.
         const minPoint = salaryReferenceMin || strictMin;
         const maxPoint = strictMax;
 
@@ -222,7 +221,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     }, [clampedReference.year, clampedReference.month, state.anoRef, state.mesRef, update]);
 
     useEffect(() => {
-        const referenceKey = `${clampedReference.year}-${clampedReference.month}-${schedules.length}-${foodAllowanceOptions.length}-${preschoolAllowanceOptions.length}`;
+        const referenceKey = `${clampedReference.year}-${clampedReference.month}-${state.simularDerrubadaVeto ? '1' : '0'}-${schedules.length}-${foodAllowanceOptions.length}-${preschoolAllowanceOptions.length}`;
         if (lastReferenceKeyRef.current === referenceKey) {
             return;
         }
@@ -291,6 +290,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     }, [
         clampedReference.year,
         clampedReference.month,
+        state.simularDerrubadaVeto,
         schedules,
         foodAllowanceOptions,
         preschoolAllowanceOptions,
@@ -302,86 +302,55 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         update
     ]);
 
+    // Reopening is an explicit recalculation: period follows competence and the explicit scenario flag.
+    // Saved tax tables, benefits and reference dates retain their independent restoration guards above.
     useEffect(() => {
         const patch: Partial<CalculatorState> = {};
-        if (state.simularDerrubadaVeto === undefined) patch.simularDerrubadaVeto = projection;
-        if (projection) {
-            const selected = projectionOptions.find(entry => entry.period === state.periodo);
-            if (selected && state.salaryProjectionLabel !== selected.label) patch.salaryProjectionLabel = selected.label;
-        } else if (!preserveSavedReference) {
-            const next = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: false }, courtConfig, clampedReference.year, clampedReference.month);
-            if (next !== state.periodo) patch.periodo = next;
-        }
+        if (state.simularDerrubadaVeto === undefined) patch.simularDerrubadaVeto = false;
+        const next = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: projection }, courtConfig, clampedReference.year, clampedReference.month);
+        if (next !== state.periodo) patch.periodo = next;
+        const selected = projectionOptions.find(entry => entry.period === next);
+        const label = selected?.scenarioLabel || selected?.label;
+        if (projection && label && state.salaryProjectionLabel !== label) patch.salaryProjectionLabel = label;
         if (Object.keys(patch).length) apply(patch);
     }, [projection, state.simularDerrubadaVeto, state.periodo, state.salaryProjectionLabel, courtConfig,
-        clampedReference.year, clampedReference.month, preserveSavedReference, update, updateMany]);
+        clampedReference.year, clampedReference.month, update, updateMany]);
+
+    const resolvedPeriod = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: projection }, courtConfig, clampedReference.year, clampedReference.month);
+    const currentScheduleEntry = schedules.find(entry => entry.period === resolvedPeriod);
+    const activeProjection = projection && !!currentScheduleEntry && isProjectedSalaryAdjustment(currentScheduleEntry);
+    const scheduleLabel = currentScheduleEntry?.label || `Período ${resolvedPeriod}`;
+    const legalReference = currentScheduleEntry?.legalReference || currentScheduleEntry?.veto_reference;
+    const sourceUrl = currentScheduleEntry?.sourceUrl;
+    const scenarioReferences = [...new Set(projectionOptions.map(entry => entry.veto_reference || entry.legalReference).filter(Boolean))];
 
     return (
-        <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full -mr-8 -mt-8 blur-xl"></div>
-            <h3 className={styles.sectionTitle}>
-                <Settings className="w-4 h-4" />
-                Competência e cenário
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                <div>
-                    <label className={compactLabel}>Mês e ano da folha</label>
-                    <div className="flex gap-2">
-                        <select
-                            className={compactInput}
-                            value={monthLabelByNumber(clampedReference.month)}
-                            onChange={e => update('mesRef', e.target.value)}
-                        >
-                            {allowedMonths.map(item => (
-                                <option key={item.label}>{item.label}</option>
-                            ))}
-                        </select>
-
-                        <select
-                            className={`${compactInput} w-28`}
-                            value={clampedReference.year}
-                            onChange={e => update('anoRef', Number(e.target.value))}
-                        >
-                            {allowedYears.map(year => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                <div className="self-end pb-2 text-body-xs text-neutral-600 dark:text-neutral-300">
-                    <span className="font-semibold">Tabela salarial aplicada: </span>
-                    {schedules.find(entry => entry.period === state.periodo)?.label || `Período ${state.periodo}`}
+        <section className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm space-y-5" aria-labelledby={`${projectionId}-heading`}>
+            <div className="absolute top-0 right-0 w-28 h-28 bg-primary-500/5 dark:bg-primary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none" aria-hidden="true"></div>
+            <div className="flex items-center justify-between gap-4 flex-wrap relative z-10 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
+                <div className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" aria-hidden="true" /><h3 id={`${projectionId}-heading`} className="text-body font-bold text-neutral-800 dark:text-neutral-100">Mês e ano da folha</h3></div>
+                <div role="status" className={`inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-full text-body-xs font-semibold ${activeProjection ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'}`}>
+                    {activeProjection ? <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> : <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                    <span>{activeProjection ? 'Cenário projetado' : 'Tabela salarial aplicada'}</span><span aria-hidden="true">•</span><span className="font-normal">{scheduleLabel}</span>
                 </div>
             </div>
-            {projectionOptions.length > 0 && <div className="mt-4 relative z-10 space-y-3">
-                <label htmlFor={projectionId} className="flex items-center gap-2 text-body-xs text-neutral-700 dark:text-neutral-200">
-                    <input id={projectionId} type="checkbox" checked={projection} onChange={event => {
-                        const enabled = event.target.checked;
-                        if (enabled) {
-                            const selected = projectionOptions.find(entry => entry.period === state.periodo) ?? projectionOptions[0];
-                            apply({ simularDerrubadaVeto: true, periodo: selected.period, salaryProjectionLabel: selected.label });
-                        } else {
-                            apply({ simularDerrubadaVeto: false, salaryProjectionLabel: undefined,
-                                periodo: resolveSalaryPeriod({ ...state, simularDerrubadaVeto: false }, courtConfig, clampedReference.year, clampedReference.month) });
-                        }
-                    }} />
-                    Simular derrubada do veto de 2027 e 2028
-                </label>
-                {projection && <label htmlFor={`${projectionId}-period`} className={compactLabel}>Projeção salarial
-                    <select id={`${projectionId}-period`} className={compactInput} value={state.periodo}
-                        onChange={event => {
-                            const selected = projectionOptions.find(entry => entry.period === Number(event.target.value));
-                            if (selected) apply({ periodo: selected.period, simularDerrubadaVeto: true, salaryProjectionLabel: selected.label });
-                        }}>
-                        {!projectionOptions.some(entry => entry.period === state.periodo) && <option value={state.periodo}>Selecione a projeção</option>}
-                        {projectionOptions.map(entry => <option key={entry.period} value={entry.period}>{entry.label}</option>)}
-                    </select>
-                </label>}
-                {projection && <p className="text-body-xs font-normal normal-case tracking-normal text-neutral-600 dark:text-neutral-300">
-                    Projeção com derrubada do veto — reajustes ainda não vigentes. Descontos e benefícios calculados com as tabelas da competência de referência.
-                </p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                <fieldset className="min-w-0"><legend className={compactLabel}>Competência do holerite</legend><div className="flex gap-2">
+                    <label className="min-w-0 flex-1"><span className="sr-only">Mês da folha</span><select id={`${projectionId}-month`} className={`${compactInput} min-w-0 w-full`} value={monthLabelByNumber(clampedReference.month)} onChange={e => update('mesRef', e.target.value)}>{allowedMonths.map(item => <option key={item.label} value={item.label}>{item.label}</option>)}</select></label>
+                    <label><span className="sr-only">Ano da folha</span><select id={`${projectionId}-year`} className={`${compactInput} w-28 font-mono font-semibold`} value={clampedReference.year} onChange={e => update('anoRef', Number(e.target.value))}>{allowedYears.map(year => <option key={year} value={year}>{year}</option>)}</select></label>
+                </div><p className="mt-1.5 text-body-xs text-neutral-500 dark:text-neutral-400">A competência seleciona a tabela salarial e as referências históricas de impostos e benefícios.</p></fieldset>
+                <div className="flex flex-col justify-center rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-700/60 p-3.5"><div className="flex items-start gap-2"><Info className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" aria-hidden="true" /><div className="text-body-xs text-neutral-600 dark:text-neutral-300"><span className="font-semibold text-neutral-800 dark:text-neutral-200">Enquadramento da tabela: </span>{legalReference || (activeProjection ? 'Projeção configurada; aplicação condicionada à alteração normativa.' : 'Referência publicada para a competência selecionada.')}{sourceUrl && /^https:\/\//.test(sourceUrl) && <a href={sourceUrl} className="block underline mt-1" target="_blank" rel="noopener noreferrer">Consultar fundamento</a>}</div></div></div>
+            </div>
+            {(projectionOptions.length > 0 || projection) && <div className="relative z-10 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
+                <div className="flex items-start gap-3"><Scale className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" /><div className="space-y-1"><h4 className="text-body-sm font-bold text-amber-800 dark:text-amber-300">Cenários de projeção</h4><p className="text-body-xs text-amber-700/90 dark:text-amber-300/80 leading-relaxed">As parcelas projetadas cadastradas ficam fora do cálculo normal. Sua simulação depende de seleção explícita e da competência informada.</p>{scenarioReferences.length > 0 && <p className="text-body-xs text-amber-700 dark:text-amber-300">{scenarioReferences.join(' · ')}</p>}</div></div>
+                <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between flex-wrap gap-3"><label htmlFor={projectionId} className="flex min-h-11 items-center gap-2 cursor-pointer select-none"><input id={projectionId} type="checkbox" checked={projection} onChange={event => {
+                    const enabled = event.target.checked;
+                    const next = resolveSalaryPeriod({ ...state, simularDerrubadaVeto: enabled }, courtConfig, clampedReference.year, clampedReference.month);
+                    const selected = schedules.find(entry => entry.period === next);
+                    apply({ simularDerrubadaVeto: enabled, periodo: next, salaryProjectionLabel: enabled && selected && isProjectedSalaryAdjustment(selected) ? selected.scenarioLabel || selected.label : undefined });
+                }} className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500/30" /><span className="text-body-xs font-semibold text-amber-800 dark:text-amber-200">Incluir parcelas projetadas na simulação</span></label>
+                {projection && <span className="text-body-xs font-semibold text-amber-700 dark:text-amber-300">{activeProjection ? 'Projeção ativa — cenário condicionado' : 'Nenhuma parcela projetada aplicável à competência'}</span>}</div>
             </div>}
-        </div>
+        </section>
     );
 };
