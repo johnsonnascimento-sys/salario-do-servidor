@@ -51,16 +51,17 @@ const SIMULATOR_DATA: SimulatorNode[] = [
           },
           {
             id: 'jud_federal_comum',
-            name: 'Justiça Federal (TRFs)',
+            name: 'Justiça Federal (CJF e TRFs)',
             type: 'category',
             icon: <Building2 className="w-6 h-6 text-secondary-500" />,
             children: [
-              { id: 'trf1', name: 'TRF-1', type: 'simulator', slug: '#' },
-              { id: 'trf2', name: 'TRF-2', type: 'simulator', slug: '#' },
-              { id: 'trf3', name: 'TRF-3', type: 'simulator', slug: '#' },
-              { id: 'trf4', name: 'TRF-4', type: 'simulator', slug: '#' },
-              { id: 'trf5', name: 'TRF-5', type: 'simulator', slug: '#' },
-              { id: 'trf6', name: 'TRF-6', type: 'simulator', slug: '#' }
+              { id: 'cjf', name: 'CJF', type: 'simulator', slug: 'cjf', description: 'Conselho da Justiça Federal (Res. CJF 340/2015)' },
+              { id: 'trf1', name: 'TRF-1', type: 'simulator', slug: 'trf1' },
+              { id: 'trf2', name: 'TRF-2', type: 'simulator', slug: 'trf2' },
+              { id: 'trf3', name: 'TRF-3', type: 'simulator', slug: 'trf3' },
+              { id: 'trf4', name: 'TRF-4', type: 'simulator', slug: 'trf4' },
+              { id: 'trf5', name: 'TRF-5', type: 'simulator', slug: 'trf5' },
+              { id: 'trf6', name: 'TRF-6', type: 'simulator', slug: 'trf6' }
             ]
           },
           {

@@ -164,3 +164,33 @@ SET
   org_name = EXCLUDED.org_name,
   power_name = EXCLUDED.power_name,
   configuration = EXCLUDED.configuration;
+
+-- 5) Insere as agências da Justiça Federal na tabela agencies
+INSERT INTO agencies (slug, name, type, is_active)
+VALUES
+  ('cjf', 'Conselho da Justiça Federal', 'JUDICIARY', true),
+  ('trf1', 'Tribunal Regional Federal da 1ª Região', 'JUDICIARY', true),
+  ('trf2', 'Tribunal Regional Federal da 2ª Região', 'JUDICIARY', true),
+  ('trf3', 'Tribunal Regional Federal da 3ª Região', 'JUDICIARY', true),
+  ('trf4', 'Tribunal Regional Federal da 4ª Região', 'JUDICIARY', true),
+  ('trf5', 'Tribunal Regional Federal da 5ª Região', 'JUDICIARY', true),
+  ('trf6', 'Tribunal Regional Federal da 6ª Região', 'JUDICIARY', true)
+ON CONFLICT (slug) DO UPDATE
+SET
+  name = EXCLUDED.name,
+  type = EXCLUDED.type,
+  is_active = EXCLUDED.is_active;
+
+-- 6) Insere os org_configs para os TRFs 2 a 6 herdando PJU com regras da Res. CJF 340/2015
+INSERT INTO org_config (org_slug, org_name, power_name, configuration)
+VALUES
+  ('trf2', 'Tribunal Regional Federal da 2ª Região', 'PJU', '{"dailies_rules": {"embarkation_label": "Adicional de deslocamento", "normative_info": {"general_rule_label": "Resolução CNJ Nº 73/2009", "branch_rule_label": "Resolução CJF Nº 340/2015"}}}'::jsonb),
+  ('trf3', 'Tribunal Regional Federal da 3ª Região', 'PJU', '{"dailies_rules": {"embarkation_label": "Adicional de deslocamento", "normative_info": {"general_rule_label": "Resolução CNJ Nº 73/2009", "branch_rule_label": "Resolução CJF Nº 340/2015"}}}'::jsonb),
+  ('trf4', 'Tribunal Regional Federal da 4ª Região', 'PJU', '{"dailies_rules": {"embarkation_label": "Adicional de deslocamento", "normative_info": {"general_rule_label": "Resolução CNJ Nº 73/2009", "branch_rule_label": "Resolução CJF Nº 340/2015"}}}'::jsonb),
+  ('trf5', 'Tribunal Regional Federal da 5ª Região', 'PJU', '{"dailies_rules": {"embarkation_label": "Adicional de deslocamento", "normative_info": {"general_rule_label": "Resolução CNJ Nº 73/2009", "branch_rule_label": "Resolução CJF Nº 340/2015"}}}'::jsonb),
+  ('trf6', 'Tribunal Regional Federal da 6ª Região', 'PJU', '{"dailies_rules": {"embarkation_label": "Adicional de deslocamento", "normative_info": {"general_rule_label": "Resolução CNJ Nº 73/2009", "branch_rule_label": "Resolução CJF Nº 340/2015"}}}'::jsonb)
+ON CONFLICT (org_slug) DO UPDATE
+SET
+  org_name = EXCLUDED.org_name,
+  power_name = EXCLUDED.power_name,
+  configuration = EXCLUDED.configuration;

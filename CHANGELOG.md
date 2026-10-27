@@ -1,12 +1,14 @@
 # Changelog
 
-## Reutilização do Módulo de Diárias para Tribunais do PJU (CNJ 73/2009, CJF 340/2015 e STM 799/2024) — 27/10/2026
+## Ativação da Justiça Federal (CJF e TRFs 1 a 6) e Módulo de Diárias PJU — 27/10/2026
+- Ativação dos simuladores da Justiça Federal na página inicial (`Home.tsx`): Conselho da Justiça Federal (`cjf`) e Tribunais Regionais Federais (`trf1`, `trf2`, `trf3`, `trf4`, `trf5`, `trf6`).
+- Liberação das rotas `/simulador/cjf` e `/simulador/trf1` a `/simulador/trf6` no hook `useCalculatorConfig`.
 - Arquitetura data-driven e hierárquica aprimorada: diária de referência máxima do Ministro do STF vinculada no modelo PJU, com herança nos ramos do Judiciário e overrides locais de tribunais.
 - CJF (Resolução CJF Nº 340/2015) integrado: suporte a percentuais específicos para Cargos em Comissão (CJ-4 a CJ-1), Magistratura Federal (Desembargador, Juiz Titular e Juiz Substituto) e Cargos Efetivos (Analista, Técnico e Auxiliar).
 - Suporte a múltiplos conselhos e órgãos: padronização sem valores hardcoded, mantendo 100% das regras da JMU (Ato Normativo STM Nº 799/2024).
 - Interface transparente: adição de badge normativo automático exibindo a regulamentação setorial em vigor (ex.: CJF c/c CNJ ou STM c/c CNJ), rótulo contextualizado para Adicional de Deslocamento / Embarque e valor unitário da diária resolvido.
 - Normalização de chaves de cargos e funções com remoção de acentos/diacríticos e fallback em cascata.
-- Nova migration: `013_cjf_dailies_rules_and_pju_unification.sql`.
+- Nova migration: `013_cjf_dailies_rules_and_pju_unification.sql` (inclui cadastro de agencies e org_config para CJF e TRFs 1 a 6).
 - Validação: nova suíte de testes unitários `test:dailies` (7 testes), 21 testes de estado/holerite, 4 de ordenação e TypeScript aprovados sem regressões.
 
 ## Inclusão do TRT-2 (SP) — 20/10/2026
