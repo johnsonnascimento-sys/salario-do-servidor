@@ -1,5 +1,11 @@
 # Changelog
 
+## Reatividade do resumo calculado e detalhamento em diárias de assessoramento — 28/10/2026
+- Reatividade imediata: corrigido o hook `useCalculatorResults` adicionando `state.diariasAssessoramentoMagistrado`, `state.diariasAutoridadeAssistida` e `state.diariasFeriados` ao array de dependências de cálculo (`inputToken`).
+- Sincronização de interface: ao marcar ou desmarcar a opção "Viagem em assessoramento direto / segurança a magistrado" ou alterar a autoridade assistida, os valores de "RESUMO CALCULADO" e "DETALHAMENTO" são recalculados e atualizados instantaneamente em tela.
+- Resolução segura de autoridade: alinhamento dos fallbacks de autoridade assistida em `presetGrossLines.ts` e `stateToParams.ts` para garantir consistência entre o card de diárias, o resumo e o motor de cálculo da agência.
+- Validação: 11 testes em `test:dailies`, 21 testes em `test:payslip` e checagem de tipos TypeScript 100% aprovados.
+
 ## Segregação de autoridades assistidas por ramo judiciário (JMU vs CJF) — 28/10/2026
 - Segregação de catálogo: eliminada a sobreposição de autoridades no seletor de assessoramento direto de diárias.
 - Justiça Militar da União (JMU / STM): o seletor exibe estritamente as autoridades da carreira militar federal (Ministro do STM e Juiz Federal da JMU / Substituto), com fundamentação no Ato Normativo STM Nº 799/2024 art. 9º c/c Res. CNJ 73/2009. Desembargador de TRF e referências ao CJF foram removidos desse simulador.

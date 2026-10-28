@@ -112,7 +112,9 @@ export function mapStateToAgencyParams(
         diariasDescontarAlimentacao: state.diariasDescontarAlimentacao,
         diariasDescontarTransporte: state.diariasDescontarTransporte,
         diariasAssessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
-        diariasAutoridadeAssistida: state.diariasAutoridadeAssistida || 'desembargador_trf',
+        diariasAutoridadeAssistida: (orgSlug === 'jmu' || orgSlug === 'stm')
+            ? (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'ministro_stm')
+            : (state.diariasAutoridadeAssistida === 'ministro_cjf' || state.diariasAutoridadeAssistida === 'ministro_stm' ? 'ministro_cjf' : state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'desembargador_trf'),
         licencaDias: state.licencaDias || 0,
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,

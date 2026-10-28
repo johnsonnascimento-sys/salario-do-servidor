@@ -48,9 +48,11 @@ export const useCalculatorResults = (
         state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries,
         state.diariasQtd, state.diariasEmbarque,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
+        state.diariasFeriados,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
         state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
         state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
+        state.diariasAssessoramentoMagistrado, state.diariasAutoridadeAssistida,
         state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
         courtConfig,
         agency?.slug

@@ -376,13 +376,23 @@ export const buildPresetGrossLines = ({
             const periodSummary = state.diariasModoDesconto === 'periodo'
                 ? summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
                 : null;
+            const isJmu = Boolean(
+                courtConfig?.orgSlug === 'jmu' ||
+                courtConfig?.orgSlug === 'stm' ||
+                courtConfig?.dailies?.normativeInfo?.branchRuleLabel?.includes('STM') ||
+                courtConfig?.dailies?.normativeInfo?.branchRuleLabel?.includes('JMU')
+            );
+            const autoridadeAssistida = isJmu
+                ? (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'ministro_stm')
+                : (state.diariasAutoridadeAssistida === 'ministro_cjf' || state.diariasAutoridadeAssistida === 'ministro_stm' ? 'ministro_cjf' : state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'desembargador_trf');
+
             const dailyRate = roundCurrency(resolveDailiesDailyRate({
                 dailiesConfig: courtConfig?.dailies,
                 cargo: state.cargo,
                 funcao: state.funcao,
                 hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
                 assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
-                autoridadeAssistida: state.diariasAutoridadeAssistida
+                autoridadeAssistida
             }));
             const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({
                 dailiesConfig: courtConfig?.dailies,
