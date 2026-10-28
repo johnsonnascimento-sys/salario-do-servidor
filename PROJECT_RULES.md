@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 27/10/2026 19:38
+Atualizado em: 28/10/2026 14:45
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -177,9 +177,15 @@ Cada rubrica manual deve suportar:
    - Técnico Judiciário: 45% do Ministro do STM (R$ 660,13).
 4. Assessoramento direto ou segurança a magistrado (art. 6º, § 4º da Resolução CNJ Nº 73/2009, art. 10, § 3º da Resolução CJF Nº 340/2015 e art. 9º do Ato Normativo STM Nº 799/2024):
    - O servidor que se afastar em assistência direta a magistrado faz jus a diária correspondente a **80% do valor da diária atribuído à autoridade assistida**.
-   - O cálculo é escalonado conforme a autoridade assistida selecionada:
-     - Ministro / Membro do CJF (100% STF) -> 80% de R$ 1.466,95 = **R$ 1.173,56**.
-     - Desembargador Federal / Membro do TRF (95% STF) -> 80% de R$ 1.393,60 = **R$ 1.114,88**.
-     - Juiz Federal / Substituto no CJF (90,25% STF) -> 80% de R$ 1.323,92 = **R$ 1.059,14** (ou na JMU 80% de R$ 1.393,60 = **R$ 1.114,88**).
+   - As opções de autoridades assistidas e suas fundamentações são estritamente segregadas por ramo judiciário:
+     - **Na Justiça Militar da União (JMU / STM)**:
+       - Ministro do STM (100% STF) -> 80% de R$ 1.466,95 = **R$ 1.173,56**.
+       - Juiz Federal da JMU / Substituto (95% do STM) -> 80% de R$ 1.393,60 = **R$ 1.114,88**.
+       - Não exibir opções da Justiça Federal (como Desembargador de TRF ou Membro do CJF).
+     - **Na Justiça Federal (CJF e TRFs)**:
+       - Desembargador Federal / Membro de TRF (95% STF) -> 80% de R$ 1.393,60 = **R$ 1.114,88**.
+       - Juiz Federal / Substituto (95% do TRF = 90,25% STF) -> 80% de R$ 1.323,92 = **R$ 1.059,14**.
+       - Ministro / Membro do CJF (100% STF) -> 80% de R$ 1.466,95 = **R$ 1.173,56**.
+       - Não exibir opções da JMU (como Ministro do STM).
    - A opção não se aplica a magistrados em deslocamento institucional.
 

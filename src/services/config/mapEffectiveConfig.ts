@@ -116,6 +116,9 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         {};
 
     return {
+        orgSlug: effective.org_slug,
+        orgName: effective.org_name,
+        powerName: effective.power_name,
         adjustment_schedule: toAdjustmentSchedule(effective.adjustment_schedule),
         bases: {
             salario: salaryBasesNormalized,

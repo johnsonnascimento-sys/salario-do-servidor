@@ -55,6 +55,28 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         return norm.includes('juiz') || norm.includes('desembargador') || norm.includes('magistrado');
     }, [state.cargo]);
 
+    const isJmu = useMemo(() => Boolean(
+        courtConfig?.orgSlug === 'jmu' ||
+        courtConfig?.orgSlug === 'stm' ||
+        normativeInfo?.branchRuleLabel?.includes('STM') ||
+        normativeInfo?.branchRuleLabel?.includes('JMU')
+    ), [courtConfig?.orgSlug, normativeInfo?.branchRuleLabel]);
+
+    const effectiveAutoridade: DiariasAutoridadeAssistida = useMemo(() => {
+        if (isJmu) {
+            return (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar')
+                ? 'juiz_federal'
+                : 'ministro_stm';
+        }
+        if (state.diariasAutoridadeAssistida === 'ministro_cjf' || state.diariasAutoridadeAssistida === 'ministro_stm') {
+            return 'ministro_cjf';
+        }
+        if (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar') {
+            return 'juiz_federal';
+        }
+        return 'desembargador_trf';
+    }, [isJmu, state.diariasAutoridadeAssistida]);
+
     const dailyRate = useMemo(
         () => resolveDailiesDailyRate({
             dailiesConfig,
@@ -62,15 +84,15 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
             funcao: state.funcao,
             hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
             assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
-            autoridadeAssistida: state.diariasAutoridadeAssistida
+            autoridadeAssistida: effectiveAutoridade
         }),
-        [dailiesConfig, state.cargo, state.funcao, state.diariasAssessoramentoMagistrado, state.diariasAutoridadeAssistida]
+        [dailiesConfig, state.cargo, state.funcao, state.diariasAssessoramentoMagistrado, effectiveAutoridade]
     );
 
     const assistedAuthorityInfo = useMemo(() => {
         if (!state.diariasAssessoramentoMagistrado || isMagistrate) return null;
-        return resolveAssistedAuthorityDailyRate(dailiesConfig, state.diariasAutoridadeAssistida);
-    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, state.diariasAutoridadeAssistida, isMagistrate]);
+        return resolveAssistedAuthorityDailyRate(dailiesConfig, effectiveAutoridade);
+    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, effectiveAutoridade, isMagistrate]);
 
     const periodSummary = useMemo(() => (
         summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
@@ -338,7 +360,11 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         checked={state.diariasAssessoramentoMagistrado}
                                         onChange={e => update('diariasAssessoramentoMagistrado', e.target.checked)}
                                     />
-                                    <span>Viagem em assessoramento direto / segurança a magistrado (art. 6º, § 4º da Res. CNJ 73/2009)</span>
+                                    <span>
+                                        {isJmu
+                                            ? 'Viagem em assessoramento direto a magistrado (art. 9º do Ato STM 799/2024)'
+                                            : 'Viagem em assessoramento direto / segurança a magistrado (art. 10, § 3º da Res. CJF 340/2015)'}
+                                    </span>
                                 </label>
 
                                 {state.diariasAssessoramentoMagistrado && (
@@ -349,15 +375,26 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         <select
                                             id="diariasAutoridadeAssistida"
                                             className={styles.input}
-                                            value={state.diariasAutoridadeAssistida || 'desembargador_trf'}
+                                            value={effectiveAutoridade}
                                             onChange={e => update('diariasAutoridadeAssistida', e.target.value as DiariasAutoridadeAssistida)}
                                         >
-                                            <option value="desembargador_trf">Desembargador Federal / Membro do TRF (base 95% do STF)</option>
-                                            <option value="juiz_federal">Juiz Federal / Juiz Federal Substituto</option>
-                                            <option value="ministro_cjf">Ministro do STM / Membro do CJF ou STF (base 100% do STF)</option>
+                                            {isJmu ? (
+                                                <>
+                                                    <option value="ministro_stm">Ministro do STM (base 100% do STF)</option>
+                                                    <option value="juiz_federal">Juiz Federal da Justiça Militar / Substituto (base 95% do STM)</option>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <option value="desembargador_trf">Desembargador Federal / Membro do TRF (base 95% do STF)</option>
+                                                    <option value="juiz_federal">Juiz Federal / Juiz Federal Substituto (base 95% do TRF = 90,25% do STF)</option>
+                                                    <option value="ministro_cjf">Ministro / Membro do Conselho da Justiça Federal (CJF)</option>
+                                                </>
+                                            )}
                                         </select>
                                         <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                                            O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 10, § 3º da Res. CJF 340/2015 e art. 9º do Ato STM 799/2024).
+                                            {isJmu
+                                                ? 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 9º do Ato Normativo STM nº 799/2024 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'
+                                                : 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 10, § 3º da Resolução CJF nº 340/2015 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'}
                                         </p>
                                     </div>
                                 )}

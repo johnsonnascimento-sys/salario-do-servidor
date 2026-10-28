@@ -477,10 +477,11 @@ test('calculateDailies diferencia viagem regular de CJ-4 (60%) e viagem em asses
     assert.equal(resAssessoramento.valor, 1153.37);
 });
 
-test('resolveAssistedAuthorityDailyRate calcula escalonamento correto por autoridade assistida (CJF e STM)', () => {
+test('resolveAssistedAuthorityDailyRate calcula escalonamento correto e segregado por órgão (CJF vs STM)', () => {
     const configCjf: DailiesConfig = {
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
+        normativeInfo: { branchRuleLabel: 'Resolução CJF Nº 340/2015' },
         derivedFromMinister: {
             enabled: true,
             ministerPerDiem: 1466.95,
@@ -495,25 +496,29 @@ test('resolveAssistedAuthorityDailyRate calcula escalonamento correto por autori
         },
     };
 
-    // 1) Ministro / Membro do CJF (100% STF): autoridade = 1.466,95, servidor (80%) = 1.173,56
-    const minCjf = resolveAssistedAuthorityDailyRate(configCjf, 'ministro_cjf');
-    assert.equal(minCjf.authorityRate, 1466.95);
-    assert.equal(minCjf.serverRate, 1173.56);
-
-    // 2) Desembargador Federal (95% STF): autoridade = 1.393,60, servidor (80%) = 1.114,88
+    // CJF: 1) Desembargador Federal (95% STF): autoridade = 1.393,60, servidor (80%) = 1.114,88
     const desTrf = resolveAssistedAuthorityDailyRate(configCjf, 'desembargador_trf');
     assert.equal(desTrf.authorityRate, 1393.60);
     assert.equal(desTrf.serverRate, 1114.88);
+    assert.equal(desTrf.authorityLabel, 'Desembargador Federal / Membro do TRF');
 
-    // 3) Juiz Federal no CJF (95% de 95% = 90.25% STF): autoridade = 1.323,92, servidor (80%) = 1.059,14
+    // CJF: 2) Juiz Federal (95% de 95% = 90.25% STF): autoridade = 1.323,92, servidor (80%) = 1.059,14
     const jfCjf = resolveAssistedAuthorityDailyRate(configCjf, 'juiz_federal');
     assert.equal(jfCjf.authorityRate, 1323.92);
     assert.equal(jfCjf.serverRate, 1059.14);
+    assert.equal(jfCjf.authorityLabel, 'Juiz Federal / Juiz Federal Substituto');
 
-    // 4) Juiz Federal no STM (95% Ministro do STM): autoridade = 1.393,60, servidor (80%) = 1.114,88
+    // CJF: 3) Ministro / Membro do CJF (100% STF): autoridade = 1.466,95, servidor (80%) = 1.173,56
+    const minCjf = resolveAssistedAuthorityDailyRate(configCjf, 'ministro_cjf');
+    assert.equal(minCjf.authorityRate, 1466.95);
+    assert.equal(minCjf.serverRate, 1173.56);
+    assert.equal(minCjf.authorityLabel, 'Ministro / Membro do CJF');
+
+    // STM / JMU
     const configStm: DailiesConfig = {
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
+        normativeInfo: { branchRuleLabel: 'Ato Normativo STM Nº 799/2024' },
         derivedFromMinister: {
             enabled: true,
             ministerPerDiem: 1466.95,
@@ -528,7 +533,15 @@ test('resolveAssistedAuthorityDailyRate calcula escalonamento correto por autori
         },
     };
 
+    // STM: 1) Ministro do STM (100% STF): autoridade = 1.466,95, servidor (80%) = 1.173,56
+    const minStm = resolveAssistedAuthorityDailyRate(configStm, 'ministro_stm');
+    assert.equal(minStm.authorityRate, 1466.95);
+    assert.equal(minStm.serverRate, 1173.56);
+    assert.equal(minStm.authorityLabel, 'Ministro do STM');
+
+    // STM: 2) Juiz Federal da Justiça Militar (95% do Ministro STM): autoridade = 1.393,60, servidor (80%) = 1.114,88
     const jfStm = resolveAssistedAuthorityDailyRate(configStm, 'juiz_federal');
     assert.equal(jfStm.authorityRate, 1393.60);
     assert.equal(jfStm.serverRate, 1114.88);
+    assert.equal(jfStm.authorityLabel, 'Juiz Federal da Justiça Militar / Substituto');
 });

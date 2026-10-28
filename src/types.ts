@@ -129,6 +129,9 @@ export interface AdjustmentScheduleEntry {
 }
 
 export interface CourtConfig {
+  orgSlug?: string;
+  orgName?: string;
+  powerName?: string;
   adjustment_schedule?: AdjustmentScheduleEntry[];
   bases: {
     salario: SalaryTable;
@@ -379,7 +382,7 @@ export interface CalculatorState {
   diariasExtAlimentacao: boolean;
   diariasExtTransporte: boolean;
   diariasAssessoramentoMagistrado: boolean;
-  diariasAutoridadeAssistida: 'ministro_cjf' | 'desembargador_trf' | 'juiz_federal';
+  diariasAutoridadeAssistida: 'ministro_cjf' | 'ministro_stm' | 'desembargador_trf' | 'juiz_federal' | 'juiz_militar';
 }
 
 export type CalculatedPayrollState = Pick<

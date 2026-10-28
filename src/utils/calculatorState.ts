@@ -202,7 +202,12 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
             ? merged.diariasFeriados.filter((d): d is string => typeof d === 'string')
             : [],
         diariasAssessoramentoMagistrado: Boolean(merged.diariasAssessoramentoMagistrado),
-        diariasAutoridadeAssistida: (merged.diariasAutoridadeAssistida === 'ministro_cjf' || merged.diariasAutoridadeAssistida === 'juiz_federal')
+        diariasAutoridadeAssistida: (
+            merged.diariasAutoridadeAssistida === 'ministro_cjf' ||
+            merged.diariasAutoridadeAssistida === 'ministro_stm' ||
+            merged.diariasAutoridadeAssistida === 'juiz_federal' ||
+            merged.diariasAutoridadeAssistida === 'juiz_militar'
+        )
             ? merged.diariasAutoridadeAssistida
             : 'desembargador_trf',
     };

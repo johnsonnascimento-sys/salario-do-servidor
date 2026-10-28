@@ -1,5 +1,12 @@
 # Changelog
 
+## Segregação de autoridades assistidas por ramo judiciário (JMU vs CJF) — 28/10/2026
+- Segregação de catálogo: eliminada a sobreposição de autoridades no seletor de assessoramento direto de diárias.
+- Justiça Militar da União (JMU / STM): o seletor exibe estritamente as autoridades da carreira militar federal (Ministro do STM e Juiz Federal da JMU / Substituto), com fundamentação no Ato Normativo STM Nº 799/2024 art. 9º c/c Res. CNJ 73/2009. Desembargador de TRF e referências ao CJF foram removidos desse simulador.
+- Justiça Federal (CJF e TRFs): o seletor exibe estritamente as autoridades da Justiça Federal (Desembargador Federal / Membro do TRF, Juiz Federal / Juiz Federal Substituto e Membro do CJF), com fundamentação na Resolução CJF Nº 340/2015 art. 10, § 3º c/c Res. CNJ 73/2009. Menção a Ministro do STM foi removida desse simulador.
+- Motor de cálculo e tipos: atualização de `CourtConfig`, `mapEffectiveConfig`, tipos do motor e resolução de diárias com fallback seguro dependendo do órgão ativo.
+- Validação: 11 testes em `test:dailies`, 21 testes em `test:payslip` e checagem de tipos TypeScript 100% aprovados.
+
 ## Escalonamento de diárias em assessoramento direto (80% da autoridade assistida) — 27/10/2026
 - Adequação legal ao art. 6º, § 4º da Resolução CNJ Nº 73/2009 (incluído pela Res. CNJ 564/2024), art. 10 da Resolução CJF Nº 340/2015 e art. 9º do Ato Normativo STM Nº 799/2024.
 - Escalonamento da base de cálculo: o servidor recebe até 80% do valor da autoridade para a qual presta assistência direta ou segurança pessoal:
