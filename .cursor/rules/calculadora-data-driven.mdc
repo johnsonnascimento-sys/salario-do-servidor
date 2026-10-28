@@ -44,6 +44,7 @@ alwaysApply: true
 
 ## 6) Schema minimo de diarias
 - `dailies_rules.rates` deve definir valores por cargo e/ou agrupamento.
+- `dailies_rules.embarkation_label` (opcional, default 'Adicional de embarque'; ex.: 'Adicional de deslocamento' no CJF/TRFs).
 - `dailies_rules.embarkation_additional` deve definir `completo` e `metade`.
 - `dailies_rules.derived_from_minister` (quando habilitado) deve permitir recalculo automatico:
   - `enabled`

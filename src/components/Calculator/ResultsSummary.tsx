@@ -158,7 +158,12 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
 
     const isDailiesRow = (label: string) => {
         const normalized = normalizeLabel(label);
-        return normalized.includes('DIARIA') || normalized.includes('ABATIMENTO BENEF. EXTERNO');
+        return (
+            normalized.includes('DIARIA') ||
+            normalized.includes('ABATIMENTO BENEF. EXTERNO') ||
+            normalized.includes('DESLOCAMENTO') ||
+            normalized.includes('EMBARQUE')
+        );
     };
 
     const payrollRows = groupPayslipRowsForDisplay(resultRows.filter((row) => !isDailiesRow(row.label)), state);

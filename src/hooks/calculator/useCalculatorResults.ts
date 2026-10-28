@@ -383,6 +383,8 @@ export const useCalculatorResults = (
         if (effectiveState.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: effectiveState.planoSaude, type: 'D' });
         if (effectiveState.pensao > 0) rows.push({ label: 'PENSÃO ALIMENTÍCIA', value: effectiveState.pensao, type: 'D' });
 
+        const embarkationLabel = (courtConfig?.dailies?.embarkationLabel?.trim() || 'Adicional de embarque');
+        const embarkationLabelUpper = embarkationLabel.toUpperCase();
         const diariasAdicionalEmbarque = resolveDailiesEmbarkationAdditional({
             dailiesConfig: courtConfig?.dailies,
             embarkationType: effectiveState.diariasEmbarque
@@ -390,10 +392,10 @@ export const useCalculatorResults = (
         const diariasSemAdicionalEmbarque = Math.max(0, effectiveState.diariasBruto - diariasAdicionalEmbarque);
 
         if (diariasSemAdicionalEmbarque > 0) {
-            rows.push({ label: 'DIÁRIAS (SEM ADICIONAL DE EMBARQUE)', value: diariasSemAdicionalEmbarque, type: 'C' });
+            rows.push({ label: `DIÁRIAS (SEM ${embarkationLabelUpper})`, value: diariasSemAdicionalEmbarque, type: 'C' });
         }
         if (diariasAdicionalEmbarque > 0) {
-            rows.push({ label: 'ADICIONAL DE EMBARQUE (DIÁRIAS)', value: diariasAdicionalEmbarque, type: 'C' });
+            rows.push({ label: `${embarkationLabelUpper} (DIÁRIAS)`, value: diariasAdicionalEmbarque, type: 'C' });
         }
         if (effectiveState.diariasBruto > 0 && diariasSemAdicionalEmbarque <= 0 && diariasAdicionalEmbarque <= 0) {
             rows.push({ label: 'DIÁRIAS', value: effectiveState.diariasBruto, type: 'C' });

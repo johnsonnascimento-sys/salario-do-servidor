@@ -1,5 +1,15 @@
 # Changelog
 
+## Correção do Adicional de Deslocamento e nomenclatura na Justiça Federal (CJF e TRFs) — 28/10/2026
+- Nomenclatura oficial dinâmica no Detalhamento, PDF e Excel: o termo "Adicional de Embarque" estava fixo em useCalculatorResults.ts e foi tornado 100% dinâmico conforme a configuração de cada órgão (courtConfig.dailies.embarkationLabel). Para a Justiça Federal (CJF e TRFs 1 a 6), passa a exibir corretamente **"ADICIONAL DE DESLOCAMENTO (DIÁRIAS)"** e **"DIÁRIAS (SEM ADICIONAL DE DESLOCAMENTO)"**, enquanto para a JMU/STM mantém "Adicional de embarque e desembarque".
+- Sincronização nos cards (accordion de diárias): o preset de demonstrativo de proventos brutos (presetGrossLines.ts) também passa a utilizar o embarkationLabel dinâmico do órgão.
+- Calibração legal dos valores do Adicional de Deslocamento (art. 17 da Resolução CJF Nº 340/2015):
+  - A norma prevê acréscimo de 80% sobre o valor básico da diária de Analista Judiciário (55% de Ministro do STF).
+  - Portanto, o Adicional de Deslocamento Completo (ida e volta) equivale a 44% da diária de Ministro do STF (80% * 55% = 44%), totalizando **R$ 645,46** (corrigindo o valor anterior de R$ 586,78, que correspondia aos 40% da JMU).
+  - A forma Metade (ida ou volta) decorre expressamente do § 2º do art. 17 c/c o Anexo da Resolução CJF Nº 340/2015 (25% por trecho de uso de veículo oficial ou não), correspondendo a 50% do adicional integral (22% de Ministro do STF), totalizando **R$ 322,73** (corrigindo o valor anterior de R$ 293,39).
+- Nova migration 014_fix_cjf_trf_dailies_rules.sql e atualização do fallback em ConfigService.ts para CJF e TRF1 a TRF6.
+- Validação: 12 testes em test:dailies, 24 testes em test:pension, 21 testes em test:payslip, 4 testes em test:sorting e checagem de tipos TypeScript 100% aprovados.
+
 ## Reatividade do resumo calculado e detalhamento em diárias de assessoramento — 28/10/2026
 - Reatividade imediata: corrigido o hook `useCalculatorResults` adicionando `state.diariasAssessoramentoMagistrado`, `state.diariasAutoridadeAssistida` e `state.diariasFeriados` ao array de dependências de cálculo (`inputToken`).
 - Sincronização de interface: ao marcar ou desmarcar a opção "Viagem em assessoramento direto / segurança a magistrado" ou alterar a autoridade assistida, os valores de "RESUMO CALCULADO" e "DETALHAMENTO" são recalculados e atualizados instantaneamente em tela.

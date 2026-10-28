@@ -140,8 +140,8 @@ export class ConfigService {
                         dailies_rules: {
                             rates: {},
                             embarkation_additional: {
-                                completo: 586.78,
-                                metade: 293.39
+                                completo: 645.46,
+                                metade: 322.73
                             },
                             embarkation_label: 'Adicional de deslocamento',
                             normative_info: {
@@ -169,8 +169,8 @@ export class ConfigService {
                                     tecnico: 0.45,
                                     auxiliar: 0.45
                                 },
-                                embarkation_percentage_full: 0.40,
-                                embarkation_percentage_half: 0.20,
+                                embarkation_percentage_full: 0.44,
+                                embarkation_percentage_half: 0.22,
                                 assistance_percentage: 0.80
                             },
                             external_gloss: {

@@ -178,7 +178,8 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
 });
 
 test('resolveDailiesEmbarkationAdditional calcula adicional de deslocamento / embarque proporcional', () => {
-    const config: DailiesConfig = {
+    // JMU / STM (40% completo e 20% metade)
+    const configJmu: DailiesConfig = {
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
         derivedFromMinister: {
@@ -191,9 +192,27 @@ test('resolveDailiesEmbarkationAdditional calcula adicional de deslocamento / em
         externalGloss: { hospedagem: 0, alimentacao: 0, transporte: 0 },
     };
 
-    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: config, embarkationType: 'completo' }), 586.78);
-    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: config, embarkationType: 'metade' }), 293.39);
-    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: config, embarkationType: 'nenhum' }), 0);
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configJmu, embarkationType: 'completo' }), 586.78);
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configJmu, embarkationType: 'metade' }), 293.39);
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configJmu, embarkationType: 'nenhum' }), 0);
+
+    // Justiça Federal / CJF (80% da diária de Analista = 44% completo e 22% metade - Art. 17 Res. CJF 340/2015)
+    const configCjf: DailiesConfig = {
+        rates: {},
+        embarkationAdditional: { completo: 645.46, metade: 322.73 },
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: { analista: 0.55 },
+            embarkationPercentageFull: 0.44,
+            embarkationPercentageHalf: 0.22,
+        },
+        externalGloss: { hospedagem: 0, alimentacao: 0, transporte: 0 },
+    };
+
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configCjf, embarkationType: 'completo' }), 645.46);
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configCjf, embarkationType: 'metade' }), 322.73);
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configCjf, embarkationType: 'nenhum' }), 0);
 });
 
 test('applyLdoCapToDailiesGross aplica teto da LDO sem quebrar valores inferiores', () => {
@@ -275,17 +294,18 @@ test('summarizeDailiesPeriodMode aplica meia diária e meio desconto de benefíc
 test('calculateDailies calcula com precisão para servidor da Justiça Federal (CJF com CJ-4 e corte de teto LDO)', async () => {
     const dailiesConfig: DailiesConfig = {
         rates: {},
-        embarkationAdditional: { completo: 586.78, metade: 293.39 },
+        embarkationAdditional: { completo: 645.46, metade: 322.73 },
+        embarkationLabel: 'Adicional de deslocamento',
         derivedFromMinister: {
             enabled: true,
             ministerPerDiem: 1466.95,
             ratesPercentages: {
-                cj4: 0.60,
+                cj4: 0.55,
                 analista: 0.55,
                 tecnico: 0.45,
             },
-            embarkationPercentageFull: 0.40,
-            embarkationPercentageHalf: 0.20,
+            embarkationPercentageFull: 0.44,
+            embarkationPercentageHalf: 0.22,
             assistancePercentage: 0.80,
         },
         externalGloss: { hospedagem: 0.50, alimentacao: 0.25, transporte: 0.25 },
@@ -325,15 +345,15 @@ test('calculateDailies calcula com precisão para servidor da Justiça Federal (
         agencyConfig: mockAgencyConfig,
     } as any);
 
-    // Diária unitária do CJ-4 = 1466.95 * 0.8 = 1173.56
-    // Bruto com adicional completo (586.78) = 2 * 1173.56 + 586.78 = 2933.90
-    // Teto LDO: corte de R$ 40,38 na parcela de diárias (2347.12 -> 2306.74) + adicional de R$ 586,78
-    assert.equal(result.bruto, 2933.90);
+    // Diária unitária do CJ-4 em assessoramento a Ministro = 1466.95 * 0.8 = 1173.56
+    // Bruto com adicional completo de deslocamento (645.46) = 2 * 1173.56 + 645.46 = 2992.58
+    // Teto LDO: corte de R$ 40,38 na parcela de diárias (2347.12 -> 2306.74) + adicional de R$ 645,46
+    assert.equal(result.bruto, 2992.58);
     assert.equal(result.corteLdo, 40.38);
     // Dedução alimentação: (1860.51 / 22) * 2 = 169.14
     assert.equal(result.descAlim, 169.14);
-    // Líquido esperado: 2933.90 - 40.38 - 169.14 = 2724.38
-    assert.equal(result.valor, 2724.38);
+    // Líquido esperado: 2992.58 - 40.38 - 169.14 = 2783.06
+    assert.equal(result.valor, 2783.06);
 });
 
 test('enumerateDaysInRange identifica dias úteis, finais de semana e formatações', () => {
@@ -544,4 +564,19 @@ test('resolveAssistedAuthorityDailyRate calcula escalonamento correto e segregad
     assert.equal(jfStm.authorityRate, 1393.60);
     assert.equal(jfStm.serverRate, 1114.88);
     assert.equal(jfStm.authorityLabel, 'Juiz Federal da Justiça Militar / Substituto');
+});
+
+
+test('rótulo do adicional de deslocamento/embarque é dinâmico conforme configuração do órgão', () => {
+    // Para Justiça Federal (CJF e TRFs)
+    const labelCjf = 'Adicional de deslocamento';
+    const upperCjf = labelCjf.toUpperCase();
+    assert.equal(`DIÁRIAS (SEM ${upperCjf})`, 'DIÁRIAS (SEM ADICIONAL DE DESLOCAMENTO)');
+    assert.equal(`${upperCjf} (DIÁRIAS)`, 'ADICIONAL DE DESLOCAMENTO (DIÁRIAS)');
+
+    // Para JMU
+    const labelJmu = 'Adicional de embarque e desembarque';
+    const upperJmu = labelJmu.toUpperCase();
+    assert.equal(`DIÁRIAS (SEM ${upperJmu})`, 'DIÁRIAS (SEM ADICIONAL DE EMBARQUE E DESEMBARQUE)');
+    assert.equal(`${upperJmu} (DIÁRIAS)`, 'ADICIONAL DE EMBARQUE E DESEMBARQUE (DIÁRIAS)');
 });

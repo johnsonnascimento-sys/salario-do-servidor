@@ -410,9 +410,10 @@ export const buildPresetGrossLines = ({
             const totalDescAuxTransp = roundCurrency(state.diariasDescTransp || 0);
             const descAuxAlimDiariaInteira = roundCurrency(Math.max(0, totalDescAuxAlim - meioDescAuxAlimRetorno));
             const descAuxTranspDiariaInteira = roundCurrency(Math.max(0, totalDescAuxTransp - meioDescAuxTranspRetorno));
+            const embarkationLabel = courtConfig?.dailies?.embarkationLabel?.trim() || 'Adicional de embarque';
             const lines: PresetGrossLine[] = [
-                { label: 'Diárias sem adicional de embarque', value: diariasSemEmbarque },
-                { label: 'Adicional de embarque', value: adicionalEmbarque },
+                { label: `Diárias sem ${embarkationLabel.toLowerCase()}`, value: diariasSemEmbarque },
+                { label: embarkationLabel, value: adicionalEmbarque },
                 { label: 'Diárias brutas', value: roundCurrency(state.diariasBruto || 0) }
             ];
 
