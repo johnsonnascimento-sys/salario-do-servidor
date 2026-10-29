@@ -29,6 +29,8 @@ export interface DailiesNormativeInfo {
 }
 
 export interface DailiesConfig {
+  branchId?: string;
+  orgSlug?: string;
   rates: Record<string, number>;
   embarkationAdditional: {
     completo: number;

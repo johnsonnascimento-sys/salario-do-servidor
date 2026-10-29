@@ -379,6 +379,12 @@ export const buildPresetGrossLines = ({
             const isJmu = Boolean(
                 courtConfig?.orgSlug === 'jmu' ||
                 courtConfig?.orgSlug === 'stm' ||
+                courtConfig?.dailies?.branchId === 'jmu' ||
+                courtConfig?.dailies?.branchId === 'stm' ||
+                courtConfig?.dailies?.orgSlug === 'jmu' ||
+                courtConfig?.dailies?.orgSlug === 'stm' ||
+                courtConfig?.dailies?.normativeInfo?.localRuleLabel?.includes('STM') ||
+                courtConfig?.dailies?.normativeInfo?.localRuleLabel?.includes('JMU') ||
                 courtConfig?.dailies?.normativeInfo?.branchRuleLabel?.includes('STM') ||
                 courtConfig?.dailies?.normativeInfo?.branchRuleLabel?.includes('JMU')
             );

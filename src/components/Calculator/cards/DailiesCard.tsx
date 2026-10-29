@@ -58,9 +58,15 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const isJmu = useMemo(() => Boolean(
         courtConfig?.orgSlug === 'jmu' ||
         courtConfig?.orgSlug === 'stm' ||
+        dailiesConfig?.branchId === 'jmu' ||
+        dailiesConfig?.branchId === 'stm' ||
+        dailiesConfig?.orgSlug === 'jmu' ||
+        dailiesConfig?.orgSlug === 'stm' ||
+        normativeInfo?.localRuleLabel?.includes('STM') ||
+        normativeInfo?.localRuleLabel?.includes('JMU') ||
         normativeInfo?.branchRuleLabel?.includes('STM') ||
         normativeInfo?.branchRuleLabel?.includes('JMU')
-    ), [courtConfig?.orgSlug, normativeInfo?.branchRuleLabel]);
+    ), [courtConfig?.orgSlug, dailiesConfig?.branchId, dailiesConfig?.orgSlug, normativeInfo?.localRuleLabel, normativeInfo?.branchRuleLabel]);
 
     const effectiveAutoridade: DiariasAutoridadeAssistida = useMemo(() => {
         if (isJmu) {

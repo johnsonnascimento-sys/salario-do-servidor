@@ -564,6 +564,32 @@ test('resolveAssistedAuthorityDailyRate calcula escalonamento correto e segregad
     assert.equal(jfStm.authorityRate, 1393.60);
     assert.equal(jfStm.serverRate, 1114.88);
     assert.equal(jfStm.authorityLabel, 'Juiz Federal da Justiça Militar / Substituto');
+
+    // Achado 2 da Auditoria: JMU com estrutura real do banco (localRuleLabel, branchId e chave 'juiz')
+    const configJmuReal: DailiesConfig = {
+        branchId: 'jmu',
+        rates: {},
+        embarkationAdditional: { completo: 0, metade: 0 },
+        normativeInfo: {
+            generalRuleLabel: 'Resolução CNJ Nº 73/2009',
+            localRuleLabel: 'Ato Normativo STM Nº 799/2024'
+        },
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: {
+                juiz: 0.95,
+                cj: 0.60,
+                analista: 0.55,
+                tecnico: 0.45
+            },
+            assistancePercentage: 0.80
+        }
+    };
+    const jfJmuReal = resolveAssistedAuthorityDailyRate(configJmuReal, 'juiz_federal');
+    assert.equal(jfJmuReal.authorityRate, 1393.60, 'Autoridade assistida da JMU deve ser 1.393,60 (95% STF)');
+    assert.equal(jfJmuReal.serverRate, 1114.88, 'Diária do servidor em assessoramento a Juiz da JMU deve ser 1.114,88 (80%) e não 1.059,14');
+    assert.equal(jfJmuReal.authorityLabel, 'Juiz Federal da Justiça Militar / Substituto');
 });
 
 

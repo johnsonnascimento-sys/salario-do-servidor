@@ -139,6 +139,10 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         },
         dailies: effective.dailies_rules
             ? {
+                branchId: (effective.dailies_rules as any)?.branch_id ?? (
+                    effective.org_slug === 'jmu' || effective.org_slug === 'stm' ? 'jmu' : 'cjf'
+                ),
+                orgSlug: effective.org_slug,
                 rates: effective.dailies_rules.rates ?? {},
                 embarkationAdditional: {
                     completo: effective.dailies_rules.embarkation_additional?.completo ?? 0,

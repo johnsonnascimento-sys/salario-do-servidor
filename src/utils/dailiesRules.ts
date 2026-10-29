@@ -181,8 +181,17 @@ export const resolveAssistedAuthorityDailyRate = (
     const assistRatio = Number(derived?.assistancePercentage ?? 0.80);
 
     const isJmu = Boolean(
+        dailiesConfig?.branchId === 'jmu' ||
+        dailiesConfig?.branchId === 'stm' ||
+        dailiesConfig?.orgSlug === 'jmu' ||
+        dailiesConfig?.orgSlug === 'stm' ||
+        dailiesConfig?.normativeInfo?.localRuleLabel?.includes('STM') ||
+        dailiesConfig?.normativeInfo?.localRuleLabel?.includes('JMU') ||
         dailiesConfig?.normativeInfo?.branchRuleLabel?.includes('STM') ||
-        dailiesConfig?.normativeInfo?.branchRuleLabel?.includes('JMU')
+        dailiesConfig?.normativeInfo?.branchRuleLabel?.includes('JMU') ||
+        dailiesConfig?.normativeInfo?.notes?.some((n) => n.includes('STM') || n.includes('JMU')) ||
+        autoridade === 'ministro_stm' ||
+        autoridade === 'juiz_militar'
     );
 
     let authorityRate: number;
@@ -192,7 +201,9 @@ export const resolveAssistedAuthorityDailyRate = (
         if (autoridade === 'juiz_federal' || autoridade === 'juiz_militar') {
             const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
                 ? Number(derived.ratesPercentages.juiz_titular)
-                : 0.95;
+                : derived?.ratesPercentages?.juiz !== undefined
+                    ? Number(derived.ratesPercentages.juiz)
+                    : 0.95;
             authorityRate = round2(ministerPerDiem * juizPct);
             authorityLabel = 'Juiz Federal da Justiça Militar / Substituto';
         } else {
@@ -208,7 +219,9 @@ export const resolveAssistedAuthorityDailyRate = (
         } else if (autoridade === 'juiz_federal' || autoridade === 'juiz_militar') {
             const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
                 ? Number(derived.ratesPercentages.juiz_titular)
-                : 0.9025;
+                : derived?.ratesPercentages?.juiz !== undefined
+                    ? Number(derived.ratesPercentages.juiz)
+                    : 0.9025;
             authorityRate = round2(ministerPerDiem * juizPct);
             authorityLabel = 'Juiz Federal / Juiz Federal Substituto';
         } else {
