@@ -109,7 +109,8 @@ test('config hook: hides old org, ignores old responses, fallback and error rese
     assert.equal(latest.courtConfig, config);
     assert.equal(latest.configError, null);
     await act(async () => { tree.update(React.createElement(Probe, { slug: 'missing' })); });
-    await act(async () => { agencyRequests.missing.resolve({ error: {}, data: null }); configRequests.missing.reject(new Error('offline')); });
+    assert.equal(agencyRequests.missing, undefined, 'órgão fora da whitelist não consulta agencies');
+    await act(async () => { configRequests.missing.reject(new Error('offline')); });
     await act(async () => { legacyRequests.missing.resolve(null); });
     assert.ok(latest.agencyError);
     assert.ok(latest.configError);
@@ -151,7 +152,12 @@ import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from
 
 test('anonymized November payslip retains inputs and net amount through restoration and real hook', async () => {
     const fixture = JSON.parse(readFileSync(new URL('./fixtures/november-2026.json', import.meta.url), 'utf8'));
-    const config = mapEffectiveConfigToCourtConfig(fixture.effectiveConfig);
+    // This fixture is an immutable historical snapshot. Recalculation requires an
+    // explicitly reviewed current configuration, rather than inferring legal status by year.
+    const reviewedConfig = structuredClone(fixture.effectiveConfig);
+    for (const period of ['0', '1', '2']) reviewedConfig.adjustment_schedule[period].status = 'promulgated';
+    for (const period of ['3', '4']) reviewedConfig.adjustment_schedule[period].status = 'vetoed';
+    const config = mapEffectiveConfigToCourtConfig(reviewedConfig);
     const restored = hydrateCalculatorState(fixture.calculatorState, fixture.resultRows);
     const engine = new AgencyCalculationEngine();
     const direct = await engine.calculateTotal(mapStateToAgencyParams(restored, 'jmu', config));

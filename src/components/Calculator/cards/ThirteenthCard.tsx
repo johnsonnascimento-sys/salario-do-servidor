@@ -11,6 +11,7 @@ interface ThirteenthCardProps {
 }
 
 const parseCurrencyInput = (value: string) => {
+    if (value.includes('-')) return null;
     const raw = value.replace(/\D/g, '');
     return Number(raw) / 100;
 };
@@ -65,12 +66,13 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
                 <div className="space-y-4">
                     <div>
                         <label className={styles.label}>Adiant. 1ª Parcela (Vencimento)</label>
+                        {state.manualAdiant13 && state.segunda13Venc > 0 && state.adiant13Venc <= 0 && <p role="alert">Informe a primeira parcela de vencimento para calcular a segunda.</p>}
                         {state.manualAdiant13 ? (
                             <input
                                 type="text"
                                 className={styles.input}
                                 value={state.adiant13Venc ? state.adiant13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('adiant13Venc', parseCurrencyInput(e.target.value))}
+                                onChange={e => { const value = parseCurrencyInput(e.target.value); if (value !== null) update('adiant13Venc', value); }}
                                 placeholder="0,00"
                             />
                         ) : (
@@ -95,12 +97,13 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
 
                     <div>
                         <label className={styles.label}>Adiant. 1ª Parcela (FC/CJ)</label>
+                        {state.manualAdiant13 && state.segunda13FC > 0 && state.adiant13FC <= 0 && <p role="alert">Informe a primeira parcela de FC/CJ para calcular a segunda.</p>}
                         {state.manualAdiant13 ? (
                             <input
                                 type="text"
                                 className={styles.input}
                                 value={state.adiant13FC ? state.adiant13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('adiant13FC', parseCurrencyInput(e.target.value))}
+                                onChange={e => { const value = parseCurrencyInput(e.target.value); if (value !== null) update('adiant13FC', value); }}
                                 placeholder="0,00"
                             />
                         ) : (
@@ -130,7 +133,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
                                 type="text"
                                 className={styles.input}
                                 value={state.segunda13Venc ? state.segunda13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('segunda13Venc', parseCurrencyInput(e.target.value))}
+                                onChange={e => { const value = parseCurrencyInput(e.target.value); if (value !== null) update('segunda13Venc', value); }}
                                 placeholder="0,00"
                             />
                         ) : (
@@ -160,7 +163,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
                                 type="text"
                                 className={styles.input}
                                 value={state.segunda13FC ? state.segunda13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('segunda13FC', parseCurrencyInput(e.target.value))}
+                                onChange={e => { const value = parseCurrencyInput(e.target.value); if (value !== null) update('segunda13FC', value); }}
                                 placeholder="0,00"
                             />
                         ) : (

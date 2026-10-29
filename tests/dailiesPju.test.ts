@@ -12,7 +12,18 @@ import {
 } from '../src/utils/dailiesRules';
 import { calculateDailies } from '../src/services/agency/engine/modules/dailiesCalculations';
 import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
-import { DailiesConfig, EffectiveConfig } from '../src/types';
+import { DailiesConfig } from '../src/types';
+import { EffectiveConfig } from '../src/services/config/types';
+
+const jfAuthorities = [
+    { code: 'ministro_cjf', label: 'Ministro / Membro do CJF', percentage: 1 },
+    { code: 'desembargador_trf', label: 'Desembargador Federal / Membro do TRF', rateKey: 'desembargador' },
+    { code: 'juiz_federal', label: 'Juiz Federal / Juiz Federal Substituto', rateKey: 'juiz_titular' },
+];
+const jmuAuthorities = [
+    { code: 'ministro_stm', label: 'Ministro do STM', percentage: 1 },
+    { code: 'juiz_militar', label: 'Juiz Federal da Justiça Militar / Substituto', rateKey: 'juiz_titular' },
+];
 
 test('resolveRateKeyCandidates resolve candidatos adequados para cargos efetivos, funções e magistratura', () => {
     // Analista puro
@@ -48,6 +59,7 @@ test('resolveRateKeyCandidates resolve candidatos adequados para cargos efetivos
 
 test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para CJF e STM', () => {
     const configPju: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
         derivedFromMinister: {
@@ -116,6 +128,7 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
 
     // Assessoramento escalonado na Justiça Federal (CJF): Juiz Federal (80% de 90.25% STF = 80% de 1.323,92)
     const configCjf: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         ...configPju,
         derivedFromMinister: {
             ...configPju.derivedFromMinister!,
@@ -180,6 +193,7 @@ test('resolveDailiesDailyRate calcula diárias derivadas do Ministro do STF para
 test('resolveDailiesEmbarkationAdditional calcula adicional de deslocamento / embarque proporcional', () => {
     // JMU / STM (40% completo e 20% metade)
     const configJmu: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
         derivedFromMinister: {
@@ -198,6 +212,7 @@ test('resolveDailiesEmbarkationAdditional calcula adicional de deslocamento / em
 
     // Justiça Federal / CJF (80% da diária de Analista = 44% completo e 22% metade - Art. 17 Res. CJF 340/2015)
     const configCjf: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         rates: {},
         embarkationAdditional: { completo: 645.46, metade: 322.73 },
         derivedFromMinister: {
@@ -293,6 +308,7 @@ test('summarizeDailiesPeriodMode aplica meia diária e meio desconto de benefíc
 
 test('calculateDailies calcula com precisão para servidor da Justiça Federal (CJF com CJ-4 e corte de teto LDO)', async () => {
     const dailiesConfig: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         rates: {},
         embarkationAdditional: { completo: 645.46, metade: 322.73 },
         embarkationLabel: 'Adicional de deslocamento',
@@ -378,6 +394,7 @@ test('enumerateDaysInRange identifica dias úteis, finais de semana e formataç�
 
 test('calculateDailies no modo período aplica feriados manuais informados pelo usuário', async () => {
     const dailiesConfig: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         rates: { tecnico: 660.13 },
         embarkationAdditional: { completo: 0, metade: 0 },
         discountRules: {
@@ -437,6 +454,7 @@ test('calculateDailies no modo período aplica feriados manuais informados pelo 
 
 test('calculateDailies diferencia viagem regular de CJ-4 (60%) e viagem em assessoramento direto (80%)', async () => {
     const dailiesConfig: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
         derivedFromMinister: {
@@ -499,6 +517,7 @@ test('calculateDailies diferencia viagem regular de CJ-4 (60%) e viagem em asses
 
 test('resolveAssistedAuthorityDailyRate calcula escalonamento correto e segregado por órgão (CJF vs STM)', () => {
     const configCjf: DailiesConfig = {
+        branchId: 'jf', assistedAuthorities: jfAuthorities,
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
         normativeInfo: { branchRuleLabel: 'Resolução CJF Nº 340/2015' },
@@ -536,6 +555,7 @@ test('resolveAssistedAuthorityDailyRate calcula escalonamento correto e segregad
 
     // STM / JMU
     const configStm: DailiesConfig = {
+        branchId: 'jmu', assistedAuthorities: jmuAuthorities,
         rates: {},
         embarkationAdditional: { completo: 0, metade: 0 },
         normativeInfo: { branchRuleLabel: 'Ato Normativo STM Nº 799/2024' },
@@ -560,7 +580,7 @@ test('resolveAssistedAuthorityDailyRate calcula escalonamento correto e segregad
     assert.equal(minStm.authorityLabel, 'Ministro do STM');
 
     // STM: 2) Juiz Federal da Justiça Militar (95% do Ministro STM): autoridade = 1.393,60, servidor (80%) = 1.114,88
-    const jfStm = resolveAssistedAuthorityDailyRate(configStm, 'juiz_federal');
+    const jfStm = resolveAssistedAuthorityDailyRate(configStm, 'juiz_militar');
     assert.equal(jfStm.authorityRate, 1393.60);
     assert.equal(jfStm.serverRate, 1114.88);
     assert.equal(jfStm.authorityLabel, 'Juiz Federal da Justiça Militar / Substituto');
@@ -579,4 +599,52 @@ test('rótulo do adicional de deslocamento/embarque é dinâmico conforme config
     const upperJmu = labelJmu.toUpperCase();
     assert.equal(`DIÁRIAS (SEM ${upperJmu})`, 'DIÁRIAS (SEM ADICIONAL DE EMBARQUE E DESEMBARQUE)');
     assert.equal(`${upperJmu} (DIÁRIAS)`, 'ADICIONAL DE EMBARQUE E DESEMBARQUE (DIÁRIAS)');
+});
+
+test('autoridades dependem do catálogo e percentuais, sem inferência por rótulo normativo', () => {
+    const cfg: DailiesConfig = {
+        branchId: 'jmu', assistedAuthorities: jmuAuthorities,
+        rates: {}, embarkationAdditional: { completo: 0, metade: 0 },
+        externalGloss: { hospedagem: 0, alimentacao: 0, transporte: 0 },
+        derivedFromMinister: { enabled: true, ministerPerDiem: 1466.95, ratesPercentages: { juiz_titular: 0.95 }, embarkationPercentageFull: 0.4, assistancePercentage: 0.8 },
+        normativeInfo: { branchRuleLabel: 'Rótulo editorial sem indicação de ramo' },
+    };
+    assert.equal(resolveAssistedAuthorityDailyRate(cfg, 'juiz_militar').serverRate, 1114.88);
+    assert.equal(resolveAssistedAuthorityDailyRate({ ...cfg, normativeInfo: { branchRuleLabel: 'CJF' } }, 'juiz_militar').serverRate, 1114.88);
+    assert.throws(() => resolveAssistedAuthorityDailyRate(cfg, 'juiz_federal'), /autoridade assistida válida/);
+    assert.throws(() => resolveAssistedAuthorityDailyRate({ ...cfg, assistedAuthorities: undefined }, 'juiz_militar'), /autoridade assistida válida/);
+    assert.throws(() => resolveDailiesDailyRate({ dailiesConfig: undefined, cargo: 'analista' }), /Configuração de diárias incompleta/);
+});
+
+test('cronograma exige status explícito sem inferir veto por ano ou presumir promulgação', () => {
+    const cfg = mapEffectiveConfigToCourtConfig({
+        adjustment_schedule: {
+            '0': { date: '2026-01-01', percentage: 0 },
+            '1': { date: '2027-01-01', percentage: 0.08 },
+            '2': { date: '2028-01-01', percentage: 0.08, status: 'promulgated' },
+            '3': { date: '2029-01-01', percentage: 0.08, status: 'vetoed', veto_reference: 'Fonte explícita' },
+        },
+    } as EffectiveConfig);
+    assert.equal(cfg.adjustment_schedule?.[0].reviewRequired, true);
+    assert.equal(cfg.adjustment_schedule?.[1].status, undefined);
+    assert.equal(cfg.adjustment_schedule?.[1].vetoed, false);
+    assert.equal(cfg.adjustment_schedule?.[1].veto_reference, undefined);
+    assert.equal(cfg.adjustment_schedule?.[2].reviewRequired, false);
+    assert.equal(cfg.adjustment_schedule?.[2].status, 'promulgated');
+    assert.equal(cfg.adjustment_schedule?.[3].vetoed, true);
+});
+
+test('parâmetros ausentes não são convertidos em zero ou percentuais normativos de fallback', () => {
+    const mapped = mapEffectiveConfigToCourtConfig({ dailies_rules: {
+        rates: { analista: 100 }, derived_from_minister: { enabled: true, rates_percentages: {} },
+    } } as unknown as EffectiveConfig).dailies!;
+    assert.equal(mapped.embarkationAdditional.completo, undefined);
+    assert.equal(mapped.derivedFromMinister?.ministerPerDiem, undefined);
+    assert.equal(mapped.derivedFromMinister?.embarkationPercentageFull, undefined);
+    assert.equal(mapped.externalGloss.hospedagem, undefined);
+    assert.equal(mapped.ldoCap?.perDiemLimit, undefined);
+    assert.equal(mapped.discountRules?.foodDivisor, undefined);
+    assert.throws(() => resolveDailiesEmbarkationAdditional({ dailiesConfig: mapped, embarkationType: 'completo' }), /Configuração de diárias incompleta/);
+    assert.throws(() => resolveDailiesDiscountRules(mapped, NaN), /divisor do auxílio-alimentação/);
+    assert.throws(() => resolveDailiesDailyRate({dailiesConfig: {...mapped, derivedFromMinister: undefined}, cargo: 'Analista', assessoramentoMagistrado: true, autoridadeAssistida: 'ministro_cjf'}), /Configuração de diárias incompleta/);
 });

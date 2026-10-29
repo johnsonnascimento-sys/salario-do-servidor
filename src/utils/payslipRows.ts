@@ -198,19 +198,16 @@ const buildIrrfDetails = (
     rows,
     (row) => normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && normalizeLabel(row.label).includes('IREA')
   );
-  const substMonthlyRow = findCreditRow(
-    rows,
-    (row) => normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && !normalizeLabel(row.label).includes('IREA')
-  );
-  const substEaRow = findCreditRow(
-    rows,
-    (row) => normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && normalizeLabel(row.label).includes('IREA')
-  );
+  const substitutionBase = (kind: 'monthly' | 'ea') => rows
+    .filter(row => row.type === 'C' && normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO'))
+    .filter(row => kind === 'ea' ? normalizeLabel(row.label).includes('IREA') : !normalizeLabel(row.label).includes('IREA') && !normalizeLabel(row.label).includes('EXCLUIDOIR'))
+    .reduce((sum, row) => sum + Number(row.value || 0), 0);
+
 
   const items = isEa
     ? [
         { label: 'HORA EXTRA (IR EA)', base: heEaRow?.value || 0 },
-        { label: 'SUBSTITUIÇÃO (IR EA)', base: substEaRow?.value || 0 },
+        { label: 'SUBSTITUIÇÃO (IR EA)', base: substitutionBase('ea') },
         ...(state.rubricasExtras || [])
           .filter((rubrica) => rubrica.incideIR && rubrica.isEA && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
           .map((rubrica, index) => ({
@@ -233,7 +230,7 @@ const buildIrrfDetails = (
         { label: 'ADICIONAL TEMPO DE SERVIÇO', base: state.ats || 0 },
         { label: 'ABONO DE PERMANÊNCIA', base: state.abonoPermanencia || 0 },
         { label: 'HORA EXTRA (IR MENSAL)', base: heMonthlyRow?.value || 0 },
-        { label: 'SUBSTITUIÇÃO (IR MENSAL)', base: substMonthlyRow?.value || 0 },
+        { label: 'SUBSTITUIÇÃO (IR MENSAL)', base: substitutionBase('monthly') },
         ...(state.rubricasExtras || [])
           .filter((rubrica) => rubrica.incideIR && !rubrica.isEA && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
           .map((rubrica, index) => ({
@@ -254,13 +251,14 @@ const buildPssEaDetails = (
   const heEaRow = findCreditRow(rows, (row) =>
     normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && normalizeLabel(row.label).includes('IREA')
   );
-  const substEaRow = findCreditRow(rows, (row) =>
-    normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && normalizeLabel(row.label).includes('IREA')
-  );
+  const substitutionPssEa = rows
+    .filter(row => row.type === 'C' && normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && normalizeLabel(row.label).includes('PSSEA'))
+    .reduce((sum, row) => sum + Number(row.value || 0), 0);
+
 
   const items = [
     { label: 'HORA EXTRA (BASE PSS-EA)', base: state.hePssIsEA ? (heEaRow?.value || 0) : 0 },
-    { label: 'SUBSTITUIÇÃO (BASE PSS-EA)', base: state.substPssIsEA ? (substEaRow?.value || 0) : 0 },
+    { label: 'SUBSTITUIÇÃO (BASE PSS-EA)', base: substitutionPssEa },
     ...(state.rubricasExtras || [])
       .filter((rubrica) => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
       .map((rubrica, index) => ({
@@ -277,14 +275,7 @@ const buildThirteenthPssDetails = (
 ): Array<{ label: string; value: number; type: 'D' }> => {
   if (!state || Number(state.pss13 || 0) <= 0) return [];
 
-  const items = [
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - VENCIMENTO/ATIVO EC', base: state.adiant13Venc || 0 },
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - FC/CJ', base: state.adiant13FC || 0 },
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC', base: state.segunda13Venc || 0 },
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - FC/CJ', base: state.segunda13FC || 0 },
-  ];
-
-  return allocateDetailRows(state.pss13 || 0, items);
+  return [{ label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC', value: Number(state.pss13), type: 'D' }];
 };
 
 export const groupPayslipRowsForDisplay = <T extends RowLike>(

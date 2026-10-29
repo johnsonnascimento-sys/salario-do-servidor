@@ -171,6 +171,8 @@ export interface DailiesNormativeInfoConfig {
 }
 
 export interface DailiesRulesConfig {
+    branch_id?: string;
+    assisted_authorities?: Array<{ code: string; label: string; rate_key?: string; percentage?: number }>;
     rates: Record<string, number>;
     embarkation_additional: {
         completo: number;

@@ -22,11 +22,14 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, compete
                         <label className={styles.label}>Qtd. Dias a indenizar</label>
                         <input
                             type="number"
+                            min="0"
                             className={styles.input}
                             value={state.licencaDias || ''}
-                            onChange={e => update('licencaDias', Number(e.target.value))}
+                            onChange={e => { const value = Number(e.target.value); if (Number.isFinite(value) && value >= 0) update('licencaDias', value); }}
                             placeholder="0"
+                            aria-invalid={state.licencaDias < 0}
                         />
+                        {state.licencaDias < 0 && <p role="alert">Informe uma quantidade de dias não negativa.</p>}
                     </div>
 
                     <label className={styles.checkboxLabel}>

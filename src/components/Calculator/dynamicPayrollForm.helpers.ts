@@ -206,7 +206,7 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
                 )
             );
         case 'licenca':
-            return state.licencaDias > 0;
+            return state.licencaDias !== 0;
         case 'pre_escolar':
             return state.auxPreEscolarQtd > 0;
         case 'aux_transporte':

@@ -113,7 +113,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </div>
                         <div>
                             <label className={styles.label}>Valor</label>
-                            <input type="number" className={styles.input} value={rubrica.valor || ''} onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))} />
+                            <input type="number" min={0} className={styles.input} value={rubrica.valor || ''} onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))} />
                         </div>
                     </div>
 

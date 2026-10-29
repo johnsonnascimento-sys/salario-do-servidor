@@ -41,7 +41,7 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
 export async function calculateOvertime(params: IAgencyCalculationParams): Promise<OvertimeResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
 

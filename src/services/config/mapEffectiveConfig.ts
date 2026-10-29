@@ -1,5 +1,6 @@
 import { AdjustmentScheduleConfig, EffectiveConfig } from './types';
 import { CourtConfig, TaxTable, AdjustmentScheduleEntry } from '../../types';
+import { resolveAdjustmentStatus } from './adjustmentStatus';
 
 const toNumberKey = (key: string) => {
     const parsed = Number(key.replace(/[^\d.]/g, ''));
@@ -48,17 +49,13 @@ const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
         .reduce<AdjustmentScheduleEntry[]>((acc, [key, entry]) => {
             const numeric = toNumberKey(key);
             if (numeric === null) return acc;
-            const isVetoed = entry.vetoed !== undefined
-                ? entry.vetoed
-                : (entry.status === 'vetoed' || (entry.date ? entry.date >= '2027-01-01' && entry.percentage > 0 : false));
             acc.push({
                 period: numeric,
                 percentage: entry.percentage,
                 label: entry.label,
                 date: entry.date,
-                status: entry.status ?? (isVetoed ? 'vetoed' : 'promulgated'),
-                vetoed: isVetoed,
-                veto_reference: entry.veto_reference ?? (isVetoed ? 'Veto nº 45/2025' : undefined)
+                ...resolveAdjustmentStatus(entry),
+                veto_reference: entry.veto_reference,
             });
             return acc;
         }, [])
@@ -139,36 +136,40 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         },
         dailies: effective.dailies_rules
             ? {
+                branchId: effective.dailies_rules.branch_id,
+                assistedAuthorities: effective.dailies_rules.assisted_authorities?.map((authority) => ({
+                    code: authority.code, label: authority.label, rateKey: authority.rate_key, percentage: authority.percentage,
+                })),
                 rates: effective.dailies_rules.rates ?? {},
                 embarkationAdditional: {
-                    completo: effective.dailies_rules.embarkation_additional?.completo ?? 0,
-                    metade: effective.dailies_rules.embarkation_additional?.metade ?? 0,
+                    completo: effective.dailies_rules.embarkation_additional?.completo,
+                    metade: effective.dailies_rules.embarkation_additional?.metade,
                 },
-                derivedFromMinister: {
+                derivedFromMinister: effective.dailies_rules.derived_from_minister ? {
                     enabled: Boolean(effective.dailies_rules.derived_from_minister?.enabled),
-                    ministerPerDiem: Number(effective.dailies_rules.derived_from_minister?.minister_per_diem ?? 0),
+                    ministerPerDiem: effective.dailies_rules.derived_from_minister?.minister_per_diem,
                     ratesPercentages: effective.dailies_rules.derived_from_minister?.rates_percentages ?? {},
-                    embarkationPercentageFull: Number(effective.dailies_rules.derived_from_minister?.embarkation_percentage_full ?? 0),
+                    embarkationPercentageFull: effective.dailies_rules.derived_from_minister?.embarkation_percentage_full,
                     embarkationPercentageHalf: effective.dailies_rules.derived_from_minister?.embarkation_percentage_half !== undefined
                         ? Number(effective.dailies_rules.derived_from_minister?.embarkation_percentage_half)
                         : undefined,
                     assistancePercentage: effective.dailies_rules.derived_from_minister?.assistance_percentage !== undefined
                         ? Number(effective.dailies_rules.derived_from_minister?.assistance_percentage)
                         : undefined,
-                },
+                } : undefined,
                 externalGloss: {
-                    hospedagem: effective.dailies_rules.external_gloss?.hospedagem ?? 0,
-                    alimentacao: effective.dailies_rules.external_gloss?.alimentacao ?? 0,
-                    transporte: effective.dailies_rules.external_gloss?.transporte ?? 0,
+                    hospedagem: effective.dailies_rules.external_gloss?.hospedagem,
+                    alimentacao: effective.dailies_rules.external_gloss?.alimentacao,
+                    transporte: effective.dailies_rules.external_gloss?.transporte,
                 },
                 ldoCap: {
                     enabled: Boolean(effective.dailies_rules.ldo_cap?.enabled),
-                    perDiemLimit: Number(effective.dailies_rules.ldo_cap?.per_diem_limit ?? 0),
+                    perDiemLimit: effective.dailies_rules.ldo_cap?.per_diem_limit,
                 },
                 embarkationLabel: effective.dailies_rules.embarkation_label,
                 discountRules: {
-                    foodDivisor: Number(effective.dailies_rules.discount_rules?.food_divisor ?? 0),
-                    transportDivisor: Number(effective.dailies_rules.discount_rules?.transport_divisor ?? 0),
+                    foodDivisor: effective.dailies_rules.discount_rules?.food_divisor,
+                    transportDivisor: effective.dailies_rules.discount_rules?.transport_divisor,
                     excludeWeekendsAndHolidays: Boolean(effective.dailies_rules.discount_rules?.exclude_weekends_and_holidays),
                     holidays: Array.isArray(effective.dailies_rules.discount_rules?.holidays)
                         ? effective.dailies_rules.discount_rules!.holidays

@@ -1,5 +1,6 @@
 import { CalculatorState, CourtConfig } from '../../../types';
 import { IAgencyCalculationParams } from '../engine/types';
+import { assertNonNegativeFinite } from '../engine/validation';
 
 /**
  * Adaptador: Converte estado React para parâmetros do motor de cálculo da agência.
@@ -13,6 +14,7 @@ export function mapStateToAgencyParams(
     orgSlug: string = 'jmu',
     agencyConfig?: CourtConfig
 ): IAgencyCalculationParams {
+    for (const field of ['emprestimos', 'planoSaude', 'pensao'] as const) assertNonNegativeFinite(field, state[field]);
     return {
         // Base (ICalculationParams)
         grossSalary: 0, // Ignorado pelo JMU (calcula de cargo/padrao)
@@ -27,6 +29,7 @@ export function mapStateToAgencyParams(
 
         // Core Params
         periodo: state.periodo,
+        simularDerrubadaVeto: Boolean(state.simularDerrubadaVeto),
         cargo: state.cargo,
         padrao: state.padrao,
         funcao: state.funcao,
@@ -40,7 +43,7 @@ export function mapStateToAgencyParams(
         // Renda Fixa
         recebeAbono: state.recebeAbono,
         gratEspecificaTipo: state.gratEspecificaTipo,
-        gratEspecificaValor: state.gratEspecificaValor || 0,
+        gratEspecificaValor: state.gratEspecificaValor ?? 0,
         vpni_lei: state.vpni_lei,
         vpni_decisao: state.vpni_decisao,
         ats: state.ats,
@@ -86,8 +89,8 @@ export function mapStateToAgencyParams(
         segunda13FC: state.segunda13FC,
 
         // Hora Extra e Substituição (Fase 8)
-        heQtd50: state.heQtd50 || 0,
-        heQtd100: state.heQtd100 || 0,
+        heQtd50: state.heQtd50 ?? 0,
+        heQtd100: state.heQtd100 ?? 0,
         heIsEA: state.heIsEA,
         hePssIsEA: false,
         heExcluirIR: state.heExcluirIR,
@@ -98,7 +101,7 @@ export function mapStateToAgencyParams(
         substPssIsEA: state.substPssIsEA,
 
         // Diárias e Licença (Fase 9)
-        diariasQtd: state.diariasQtd || 0,
+        diariasQtd: state.diariasQtd ?? 0,
         diariasEmbarque: mapDiariasEmbarque(state.diariasEmbarque),
         diariasModoDesconto: state.diariasModoDesconto,
         diariasDataInicio: state.diariasDataInicio,
@@ -112,10 +115,8 @@ export function mapStateToAgencyParams(
         diariasDescontarAlimentacao: state.diariasDescontarAlimentacao,
         diariasDescontarTransporte: state.diariasDescontarTransporte,
         diariasAssessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
-        diariasAutoridadeAssistida: (orgSlug === 'jmu' || orgSlug === 'stm')
-            ? (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'ministro_stm')
-            : (state.diariasAutoridadeAssistida === 'ministro_cjf' || state.diariasAutoridadeAssistida === 'ministro_stm' ? 'ministro_cjf' : state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'desembargador_trf'),
-        licencaDias: state.licencaDias || 0,
+        diariasAutoridadeAssistida: state.diariasAutoridadeAssistida,
+        licencaDias: state.licencaDias ?? 0,
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,
     };
