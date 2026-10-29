@@ -109,7 +109,7 @@ test('config hook: hides old org, ignores old responses, fallback and error rese
     assert.equal(latest.courtConfig, config);
     assert.equal(latest.configError, null);
     await act(async () => { tree.update(React.createElement(Probe, { slug: 'missing' })); });
-    await act(async () => { agencyRequests.missing.resolve({ error: {}, data: null }); configRequests.missing.reject(new Error('offline')); });
+    await act(async () => { agencyRequests.missing?.resolve({ error: {}, data: null }); configRequests.missing.reject(new Error('offline')); });
     await act(async () => { legacyRequests.missing.resolve(null); });
     assert.ok(latest.agencyError);
     assert.ok(latest.configError);

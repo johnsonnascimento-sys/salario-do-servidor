@@ -80,14 +80,17 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                 const effective = await configService.getEffectiveConfig(resolvedSlug);
                 if (cancelled) return;
                 update({ courtConfig: mapEffectiveConfigToCourtConfig(effective) });
-            } catch (_error) {
+            } catch (error) {
                 if (cancelled) return;
                 try {
                     // Legacy courts config remains a technical fallback only.
                     const court = await getCourtBySlug(resolvedSlug);
                     if (!court?.config) throw new Error('Configuração não encontrada.');
                     update({ courtConfig: court.config as CourtConfig });
-                } catch (_fallbackError) { update({ configError: 'Configuração não encontrada.' }); }
+                } catch (_fallbackError) {
+                    const message = error instanceof Error ? error.message : 'Configuração não encontrada.';
+                    update({ configError: message });
+                }
             } finally { update({ loadingConfig: false }); }
         })();
         return () => { cancelled = true; };

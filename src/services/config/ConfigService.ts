@@ -21,6 +21,22 @@ import {
     OrgConfigRecord,
 } from './types';
 
+export class ConfigLoadError extends Error {
+    readonly code = 'CONFIG_LOAD_FAILED';
+    constructor(message: string, public readonly cause?: unknown) {
+        super(message);
+        this.name = 'ConfigLoadError';
+    }
+}
+
+export class ConfigNotFoundError extends Error {
+    readonly code = 'CONFIG_NOT_FOUND';
+    constructor(orgSlug: string) {
+        super(`Órgão ${orgSlug} não cadastrado na configuração hierárquica`);
+        this.name = 'ConfigNotFoundError';
+    }
+}
+
 export class ConfigService {
     /**
      * Cache de configurações para evitar múltiplas consultas ao banco
@@ -73,14 +89,21 @@ export class ConfigService {
             .is('valid_to', null); // Apenas configs ativas
 
         if (error) {
-            console.error('Erro ao buscar global_config:', error);
-            throw new Error('Falha ao carregar configuração global');
+            console.error('Erro operacional ao buscar global_config:', error);
+            throw new ConfigLoadError('Falha operacional ao carregar configuração global', error);
+        }
+
+        if (!data || data.length === 0) {
+            throw new ConfigNotFoundError('Configuração global ativa não cadastrada');
         }
 
         // Transformar array de registros em objeto estruturado
         const config: Partial<GlobalConfig> = {};
 
         for (const record of data as GlobalConfigRecord[]) {
+            if (Object.prototype.hasOwnProperty.call(config, record.config_key)) {
+                throw new ConfigLoadError(`Mais de uma versão global ativa para ${record.config_key}`);
+            }
             config[record.config_key as keyof GlobalConfig] = record.config_value;
         }
 
@@ -101,16 +124,21 @@ export class ConfigService {
             .is('valid_to', null); // Apenas configs ativas
 
         if (error) {
-            console.error('Erro ao buscar power_config:', error);
-            throw new Error(`Falha ao carregar configuração do poder ${powerName}`);
+            console.error('Erro operacional ao buscar power_config:', error);
+            throw new ConfigLoadError(`Falha operacional ao carregar configuração do poder ${powerName}`, error);
         }
 
-
+        if (!data || data.length === 0) {
+            throw new ConfigNotFoundError(`Configuração ativa do poder ${powerName} não cadastrada`);
+        }
 
         // Transformar array de registros em objeto estruturado
         const config: Partial<PowerConfig> = {};
 
         for (const record of data as PowerConfigRecord[]) {
+            if (Object.prototype.hasOwnProperty.call(config, record.config_key)) {
+                throw new ConfigLoadError(`Mais de uma versão ativa para ${powerName}/${record.config_key}`);
+            }
             config[record.config_key as keyof PowerConfig] = record.config_value;
         }
 
@@ -119,86 +147,123 @@ export class ConfigService {
 
     /**
      * Busca configuração de organização do banco
-     * Retorna regras específicas de um órgão (ex: JMU)
+     * Retorna regras específicas de um órgão (ex: JMU, CJF)
+     *
+     * Distingue ausência de cadastro de erro operacional de consulta.
+     * Caso o registro não exista no banco, recorre a fallback transitório
+     * para os órgãos federais pendentes de aplicação da migration 014.
      * 
-     * @param orgSlug - Slug do órgão (ex: 'jmu')
+     * @param orgSlug - Slug do órgão (ex: 'jmu', 'cjf')
      */
     private async fetchOrgConfig(orgSlug: string): Promise<OrgConfig> {
         const { data, error } = await supabase
             .from('org_config')
             .select('*')
             .eq('org_slug', orgSlug)
-            .single();
+            .maybeSingle();
 
+        // 1. Falha operacional da consulta (banco indisponível, erro de rede, RLS):
+        // Não deve ser mascarada como ausência de registro
         if (error) {
-            if (orgSlug === 'cjf' || orgSlug.startsWith('trf')) {
-                return {
-                    org_slug: orgSlug,
-                    org_name: orgSlug === 'cjf' ? 'Justiça Federal (CJF e TRFs)' : 'Tribunal Regional Federal',
-                    power_name: 'PJU',
-                    configuration: {
-                        dailies_rules: {
-                            rates: {},
-                            embarkation_additional: {
-                                completo: 645.46,
-                                metade: 322.73
-                            },
-                            embarkation_label: 'Adicional de deslocamento',
-                            normative_info: {
-                                general_rule_label: 'Resolução CNJ Nº 73/2009',
-                                branch_rule_label: 'Resolução CJF Nº 340/2015',
-                                notes: [
-                                    'Regulamentado pela Resolução CJF Nº 340/2015 e Resolução CNJ Nº 73/2009',
-                                    'Valores unitários vinculados à diária de Ministro do STF'
-                                ]
-                            },
-                            derived_from_minister: {
-                                enabled: true,
-                                minister_per_diem: 1466.95,
-                                rates_percentages: {
-                                    desembargador: 0.95,
-                                    juiz: 0.9025,
-                                    juiz_titular: 0.9025,
-                                    juiz_substituto: 0.9025,
-                                    cj4: 0.55,
-                                    cj3: 0.55,
-                                    cj2: 0.55,
-                                    cj1: 0.55,
-                                    cj: 0.55,
-                                    analista: 0.55,
-                                    tecnico: 0.45,
-                                    auxiliar: 0.45
-                                },
-                                embarkation_percentage_full: 0.44,
-                                embarkation_percentage_half: 0.22,
-                                assistance_percentage: 0.80
-                            },
-                            external_gloss: {
-                                hospedagem: 0.50,
-                                alimentacao: 0.25,
-                                transporte: 0.25
-                            },
-                            ldo_cap: {
-                                enabled: true,
-                                per_diem_limit: 1153.37
-                            },
-                            discount_rules: {
-                                food_divisor: 22,
-                                transport_divisor: 22,
-                                exclude_weekends_and_holidays: true,
-                                holidays: [],
-                                return_day_half_diem_business_day: true,
-                                return_day_half_discount_business_day: true
-                            }
-                        }
-                    }
-                };
-            }
-            console.error('Erro ao buscar org_config:', error);
-            throw new Error(`Falha ao carregar configuração do órgão ${orgSlug}`);
+            console.error(`Erro operacional ao buscar org_config para "${orgSlug}":`, error);
+            throw new ConfigLoadError(`Falha operacional ao carregar configuração do órgão ${orgSlug}`, error);
         }
 
-        return data as OrgConfigRecord;
+        // 2. Registro cadastrado no banco (caminho data-driven canônico)
+        if (data) {
+            return data as OrgConfigRecord;
+        }
+
+        // 3. Registro ausente no banco:
+        // Verifica se há fallback técnico transitório para evitar indisponibilidade em produção
+        // enquanto a migration 014 não for aplicada no banco de dados.
+        const transitional = this.getTransitionalOrgFallback(orgSlug);
+        if (transitional) {
+            console.warn(
+                `[ConfigService] Órgão "${orgSlug}" não encontrado na tabela org_config do banco de dados. ` +
+                `Utilizando fallback técnico transitório. Aplique migrations/014_fix_cjf_trf_dailies_rules.sql no Supabase.`
+            );
+            return transitional;
+        }
+
+        // 4. Órgão sem registro e sem fallback técnico
+        throw new ConfigNotFoundError(orgSlug);
+    }
+
+    /**
+     * Fallback técnico transitório para órgãos federais antes da aplicação da migration 014.
+     * Segue a estrutura canônica da Resolução CJF Nº 340/2015.
+     */
+    private getTransitionalOrgFallback(orgSlug: string): OrgConfig | null {
+        if (orgSlug === 'cjf' || orgSlug.startsWith('trf')) {
+            const orgName = orgSlug === 'cjf'
+                ? 'Justiça Federal (CJF e TRFs)'
+                : `Tribunal Regional Federal da ${orgSlug.replace('trf', '')}ª Região`;
+
+            return {
+                org_slug: orgSlug,
+                org_name: orgName,
+                power_name: 'PJU',
+                configuration: {
+                    dailies_rules: {
+                        rates: {},
+                        embarkation_additional: {
+                            completo: 645.46,
+                            metade: 322.73
+                        },
+                        embarkation_label: 'Adicional de deslocamento',
+                        normative_info: {
+                            general_rule_label: 'Resolução CNJ Nº 73/2009',
+                            branch_rule_label: 'Resolução CJF Nº 340/2015',
+                            notes: [
+                                'Regulamentado pela Resolução CJF Nº 340/2015 e Resolução CNJ Nº 73/2009',
+                                'Valores unitários vinculados à diária de Ministro do STF',
+                                'Adicional de deslocamento de 80% sobre a diária de Analista Judiciário (art. 17 da Res. CJF 340/2015)'
+                            ]
+                        },
+                        derived_from_minister: {
+                            enabled: true,
+                            minister_per_diem: 1466.95,
+                            rates_percentages: {
+                                desembargador: 0.95,
+                                juiz: 0.9025,
+                                juiz_titular: 0.9025,
+                                juiz_substituto: 0.9025,
+                                cj4: 0.55,
+                                cj3: 0.55,
+                                cj2: 0.55,
+                                cj1: 0.55,
+                                cj: 0.55,
+                                analista: 0.55,
+                                tecnico: 0.45,
+                                auxiliar: 0.45
+                            },
+                            embarkation_percentage_full: 0.44,
+                            embarkation_percentage_half: 0.22,
+                            assistance_percentage: 0.80
+                        },
+                        external_gloss: {
+                            hospedagem: 0.50,
+                            alimentacao: 0.25,
+                            transporte: 0.25
+                        },
+                        ldo_cap: {
+                            enabled: true,
+                            per_diem_limit: 1153.37
+                        },
+                        discount_rules: {
+                            food_divisor: 22,
+                            transport_divisor: 22,
+                            exclude_weekends_and_holidays: true,
+                            holidays: [],
+                            return_day_half_diem_business_day: true,
+                            return_day_half_discount_business_day: true
+                        }
+                    }
+                }
+            };
+        }
+        return null;
     }
 
     /**
