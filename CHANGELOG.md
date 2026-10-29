@@ -1,5 +1,9 @@
 # Changelog
 
+## Não publicado - 29/10/2026
+- Config: definidos modelos e esforcos por especialista no Codex do projeto, com politica de delegacao proporcional ao risco e revisao especializada de calculos preservada.
+- Docs: atualizados o catalogo operacional e a governanca de modelos; configuracao pessoal permanece independente.
+
 ## Correção do Adicional de Deslocamento e nomenclatura na Justiça Federal (CJF e TRFs) — 28/10/2026
 - Nomenclatura oficial dinâmica no Detalhamento, PDF e Excel: o termo "Adicional de Embarque" estava fixo em useCalculatorResults.ts e foi tornado 100% dinâmico conforme a configuração de cada órgão (courtConfig.dailies.embarkationLabel). Para a Justiça Federal (CJF e TRFs 1 a 6), passa a exibir corretamente **"ADICIONAL DE DESLOCAMENTO (DIÁRIAS)"** e **"DIÁRIAS (SEM ADICIONAL DE DESLOCAMENTO)"**, enquanto para a JMU/STM mantém "Adicional de embarque e desembarque".
 - Sincronização nos cards (accordion de diárias): o preset de demonstrativo de proventos brutos (presetGrossLines.ts) também passa a utilizar o embarkationLabel dinâmico do órgão.

@@ -1,0 +1,30 @@
+model = "gpt-6.1-sol"
+model_reasoning_effort = "medium"
+
+[agents.orchestrator]
+description = "Coordena tarefas complexas e integra resultados."
+config_file = "agents/orchestrator.toml"
+
+[agents.repo_explorer]
+description = "Mapeia arquivos e referencias sem decidir regras de negocio."
+config_file = "agents/repo_explorer.toml"
+
+[agents.frontend_calculator]
+description = "Implementa frontend localizado; use Sol para estado complexo ou regras."
+config_file = "agents/frontend_calculator.toml"
+
+[agents.calc_engine]
+description = "Atua no motor oficial e regras de calculo."
+config_file = "agents/calc_engine.toml"
+
+[agents.rules_guardian]
+description = "Revisa regras, normas e aderencia a PROJECT_RULES.md."
+config_file = "agents/rules_guardian.toml"
+
+[agents.supabase_data]
+description = "Trata migrations, seeds, RLS, autenticacao e estrutura de dados."
+config_file = "agents/supabase_data.toml"
+
+[agents.qa_review]
+description = "Revisa mudancas locais de baixo risco; use Sol para mudancas criticas."
+config_file = "agents/qa_review.toml"

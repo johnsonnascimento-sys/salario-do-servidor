@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 28/10/2026 19:35
+Atualizado em: 29/10/2026 14:38
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -152,7 +152,7 @@ Cada rubrica manual deve suportar:
 2. O catalogo de especialistas e operacional; este `PROJECT_RULES.md` continua sendo a unica fonte canonica de regras do projeto.
 3. Toda tarefa que altere calculo oficial, schema, seeds, RLS ou configuracao administrativa deve respeitar este documento antes de qualquer delegacao para subagente.
 4. Tarefas com impacto em calculo oficial devem, no minimo, passar pelo especialista de regras/calculo correspondente antes de conclusao ou merge.
-5. Os nomes de modelo registrados para especialistas (`GPT-5.4`, `GPT-5.4-mini` ou equivalentes futuros) representam preferencia operacional documentada, nao garantia tecnica fixa do repositório.
+5. Os modelos e esforcos registrados no catalogo sao preferencias operacionais, sujeitos a disponibilidade, configuracao e capacidade do runtime.
 6. Quando o runtime do Codex nao expuser selecao explicita de modelo, deve-se usar o papel mais proximo disponivel (`default`, `explorer` ou `worker`) e manter a especializacao pelas instrucoes do catalogo.
 7. Novos especialistas ou mudancas de escopo/modelo preferencial exigem atualizacao conjunta de `src/docs/CODEX_SPECIALISTS.md` e `CHANGELOG.md`.
 8. A coordenacao operacional entre especialistas deve ser atribuida ao `Codex Orchestrator`, quando esse papel estiver em uso.
