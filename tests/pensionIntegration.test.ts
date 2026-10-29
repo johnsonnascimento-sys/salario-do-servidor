@@ -47,7 +47,7 @@ test('real hook reconciles payroll rows, 13th deduction, independent input inval
  const grossLines = buildPresetGrossLines({ instance: { key: 'decimo', presetId: 'decimo' },
   state: { ...current, ...latest.calculatedState }, courtConfig: config, currentTables: { funcoes: { fc1: 1000 } },
   isNovoAQ: false, noFunctionCode: '0', currentFunctionValue: 1000, gratificacaoEspecificaCalculada: 0 });
- assert.equal(grossLines.find(r => r.label === 'Desconto Funpresp (13º salário)')?.value, 340);
+ assert.equal(grossLines.find(r => r.label === 'Desconto Funpresp (Total 13º salário)')?.value, 340);
  const before = latest.calculatedState.valFunpresp;
  current = { ...current, funprespIncluirFC: true };
  await act(async () => { tree.update(React.createElement(Probe)); });

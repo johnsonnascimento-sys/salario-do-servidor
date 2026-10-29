@@ -1,13 +1,6 @@
 # Changelog
 
 ## Não publicado - 29/10/2026
-- Fix: corrigidos os pares independentes do 13º, bloqueio de segunda parcela manual sem adiantamento correspondente, PSS sem FC/CJ e memoria explicita dos totais de parcelas e da folha.
-- Fix: detalhamento consome memoria oficial por instancia de substituicao e por desconto de diarias; feriados da viagem sao preservados, descontos efetivos conciliam com o liquido minimo zero e excesso nao aplicado fica informativo.
-- Fix: entradas negativas ou nao finitas sao rejeitadas no motor; restauracao preserva entradas invalidas para revisao sem alterar snapshots salvos nem substituir codigos de autoridades.
-- Config: removidos fallback normativo CJF/TRF e selecao de ramo por rotulo; catalogo de autoridades e parametros oficiais passam pela hierarquia do banco. Migration `20261029_calculator_config_compliance.sql` prepara CJF/TRF1–6, corrige juiz JMU e preserva overrides e historico PJU.
-- Admin: edicao global/poder cria nova versao transacional com data obrigatoria, confirmacao de impacto e protecao contra versao obsoleta, sobreposicao, repeticao de dia e agendamento futuro.
-- Fix: status de reajuste deixa de ser inferido pelo ano; parcelas sem status exigem revisao administrativa, e veto/projecao sao aplicados somente com opcao explicita, incluindo isolamento de cache.
-- Tests: adicionadas regressoes de motor, apresentacao, configuracao, admin e validacao SQL em PostgreSQL descartavel; corrigido teste de whitelist de carregamento. Producao nao foi alterada; revisar status do cronograma antes da publicacao conforme `src/docs/CALCULATOR_CORRECTIONS_ROLLOUT.md`.
 - Fix: card de diarias passa a exibir a norma local quando configurada; migration 015 completa a referencia normativa da JMU/STM, preservando a norma setorial consumida pelo calculo e os demais valores e configuracoes.
 - Docs: tornado obrigatorio o relatorio final de agente principal e subagentes por tarefa, com modelos e esforcos, distincao entre configuracao e execucao confirmada e registro explicito de ausencia de delegacao.
 - Config: definidos modelos e esforcos por especialista no Codex do projeto, com politica de delegacao proporcional ao risco e revisao especializada de calculos preservada.

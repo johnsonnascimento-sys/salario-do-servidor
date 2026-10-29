@@ -4,8 +4,6 @@ import JsonEditor from '../components/Admin/JsonEditor';
 import { AdminService } from '../services/admin/AdminService';
 import { configService } from '../services/config';
 import { PowerConfig } from '../types/admin';
-import ConfigVersionDateField from '../components/Admin/ConfigVersionDateField';
-import { configurationToday, validateConfigVersionDate } from '../services/admin/configVersionValidation';
 
 export default function AdminPower() {
   const [configs, setConfigs] = useState<PowerConfig[]>([]);
@@ -13,8 +11,6 @@ export default function AdminPower() {
   const [editing, setEditing] = useState<PowerConfig | null>(null);
   const [editValue, setEditValue] = useState(editing?.config_value || {});
   const [saving, setSaving] = useState(false);
-  const [versionDate, setVersionDate] = useState(configurationToday);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedPower, setSelectedPower] = useState('');
 
   const loadConfigs = async () => {
@@ -34,8 +30,6 @@ export default function AdminPower() {
   useEffect(() => {
     if (editing) {
       setEditValue(editing.config_value || {});
-      setVersionDate(configurationToday());
-      setSaveError(null);
     }
   }, [editing]);
 
@@ -51,28 +45,25 @@ export default function AdminPower() {
 
   const handleSave = async () => {
     if (!editing) return;
-    const dateError = validateConfigVersionDate(editing, versionDate);
-    if (dateError) { setSaveError(dateError); return; }
     const confirmed = window.confirm('Essa alteracao impacta os calculos imediatamente. Deseja continuar?');
     if (!confirmed) return;
 
     setSaving(true);
-    setSaveError(null);
     try {
       const payload = {
-        previous_id: editing.id,
+        id: editing.id,
         power_name: editing.power_name,
         config_key: editing.config_key,
         config_value: editValue,
-        valid_from: versionDate,
-        valid_to: null,
+        valid_from: editing.valid_from,
+        valid_to: editing.valid_to,
       };
-      await AdminService.versionPowerConfig(payload);
+      await AdminService.upsertPowerConfig(payload);
       configService.clearCache();
       await loadConfigs();
       setEditing(null);
     } catch (err) {
-      setSaveError((err as Error).message || 'Erro ao salvar.');
+      alert((err as Error).message || 'Erro ao salvar.');
     } finally {
       setSaving(false);
     }
@@ -118,9 +109,7 @@ export default function AdminPower() {
               <button onClick={() => setEditing(null)} className="text-gray-500 hover:text-gray-700">Fechar</button>
             </div>
 
-            <ConfigVersionDateField previous={editing} value={versionDate} onChange={setVersionDate} />
             <JsonEditor value={editValue} onChange={setEditValue} />
-            {saveError && <p role="alert" className="mt-3 text-error-600">{saveError}</p>}
 
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -131,10 +120,10 @@ export default function AdminPower() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving || Boolean(validateConfigVersionDate(editing, versionDate))}
+                disabled={saving}
                 className="px-4 py-2 rounded-md text-body text-white bg-secondary-500 hover:bg-secondary-700 disabled:opacity-60"
               >
-                {saving ? 'Salvando...' : 'Criar nova versão'}
+                {saving ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
           </div>

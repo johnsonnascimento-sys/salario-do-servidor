@@ -36,7 +36,6 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'valFunprespNormal',
     'valFunprespFacultativa',
     'pensionMemory',
-    'calculationMemory',
     'irMensal',
     'irEA',
     'aqIr',
@@ -184,8 +183,8 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
             ? merged.overtimeEntries.map((entry) => ({
                 ...entry,
                 id: entry?.id || createEntryId('he-entry'),
-                qtd50: entry?.qtd50 ?? 0,
-                qtd100: entry?.qtd100 ?? 0,
+                qtd50: Math.max(0, Number(entry?.qtd50 || 0)),
+                qtd100: Math.max(0, Number(entry?.qtd100 || 0)),
                 isEA: Boolean(entry?.isEA),
                 excluirIR: Boolean(entry?.excluirIR),
             }))
@@ -203,9 +202,14 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
             ? merged.diariasFeriados.filter((d): d is string => typeof d === 'string')
             : [],
         diariasAssessoramentoMagistrado: Boolean(merged.diariasAssessoramentoMagistrado),
-        // Codes belong to the configured catalog; restoration must not replace them.
-        diariasAutoridadeAssistida: typeof merged.diariasAutoridadeAssistida === 'string'
-            ? merged.diariasAutoridadeAssistida : '',
+        diariasAutoridadeAssistida: (
+            merged.diariasAutoridadeAssistida === 'ministro_cjf' ||
+            merged.diariasAutoridadeAssistida === 'ministro_stm' ||
+            merged.diariasAutoridadeAssistida === 'juiz_federal' ||
+            merged.diariasAutoridadeAssistida === 'juiz_militar'
+        )
+            ? merged.diariasAutoridadeAssistida
+            : 'desembargador_trf',
     };
 };
 

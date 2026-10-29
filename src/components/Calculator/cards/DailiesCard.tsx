@@ -3,8 +3,11 @@ import { Plane } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import {
     enumerateDaysInRange,
+    resolveDailiesDailyRate,
     resolveDailiesDiscountRules,
-    summarizeDailiesPeriodMode
+    summarizeDailiesPeriodMode,
+    resolveAssistedAuthorityDailyRate,
+    DiariasAutoridadeAssistida
 } from '../../../utils/dailiesRules';
 
 interface DailiesCardProps {
@@ -31,7 +34,7 @@ const isEndBeforeStart = (startDate: string, endDate: string) =>
 
 export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig, competenciaReferencia }) => {
     const dailiesConfig = courtConfig?.dailies;
-    const transportWorkdays = courtConfig?.payrollRules?.transportWorkdays;
+    const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
     const isPeriodMode = state.diariasModoDesconto === 'periodo';
 
     const normativeInfo = dailiesConfig?.normativeInfo;
@@ -39,16 +42,12 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
     const userHolidays = state.diariasFeriados || [];
 
-    const discountConfiguration = useMemo(() => {
-        try {
-            return { rules: resolveDailiesDiscountRules(dailiesConfig, transportWorkdays), error: null };
-        } catch (error) {
-            return { rules: null, error: error instanceof Error ? error.message : 'Configuração de diárias incompleta.' };
-        }
-    }, [dailiesConfig, transportWorkdays]);
-    const discountRules = discountConfiguration.rules;
+    const discountRules = useMemo(
+        () => resolveDailiesDiscountRules(dailiesConfig, transportWorkdays),
+        [dailiesConfig, transportWorkdays]
+    );
     const periodDiscountRules = useMemo(
-        () => discountRules ? { ...discountRules, excludeWeekendsAndHolidays: true, holidays: userHolidays } : null,
+        () => ({ ...discountRules, excludeWeekendsAndHolidays: true, holidays: userHolidays }),
         [discountRules, userHolidays]
     );
     const isMagistrate = useMemo(() => {
@@ -56,13 +55,47 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         return norm.includes('juiz') || norm.includes('desembargador') || norm.includes('magistrado');
     }, [state.cargo]);
 
-    const authorities = dailiesConfig?.assistedAuthorities || [];
-    const effectiveAutoridade = authorities.some(item => item.code === state.diariasAutoridadeAssistida)
-        ? state.diariasAutoridadeAssistida : '';
-    const dailyRate = state.calculationMemory?.dailies?.dailyRate ?? 0;
+    const isJmu = useMemo(() => Boolean(
+        courtConfig?.orgSlug === 'jmu' ||
+        courtConfig?.orgSlug === 'stm' ||
+        normativeInfo?.branchRuleLabel?.includes('STM') ||
+        normativeInfo?.branchRuleLabel?.includes('JMU')
+    ), [courtConfig?.orgSlug, normativeInfo?.branchRuleLabel]);
+
+    const effectiveAutoridade: DiariasAutoridadeAssistida = useMemo(() => {
+        if (isJmu) {
+            return (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar')
+                ? 'juiz_federal'
+                : 'ministro_stm';
+        }
+        if (state.diariasAutoridadeAssistida === 'ministro_cjf' || state.diariasAutoridadeAssistida === 'ministro_stm') {
+            return 'ministro_cjf';
+        }
+        if (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar') {
+            return 'juiz_federal';
+        }
+        return 'desembargador_trf';
+    }, [isJmu, state.diariasAutoridadeAssistida]);
+
+    const dailyRate = useMemo(
+        () => resolveDailiesDailyRate({
+            dailiesConfig,
+            cargo: state.cargo,
+            funcao: state.funcao,
+            hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
+            assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
+            autoridadeAssistida: effectiveAutoridade
+        }),
+        [dailiesConfig, state.cargo, state.funcao, state.diariasAssessoramentoMagistrado, effectiveAutoridade]
+    );
+
+    const assistedAuthorityInfo = useMemo(() => {
+        if (!state.diariasAssessoramentoMagistrado || isMagistrate) return null;
+        return resolveAssistedAuthorityDailyRate(dailiesConfig, effectiveAutoridade);
+    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, effectiveAutoridade, isMagistrate]);
 
     const periodSummary = useMemo(() => (
-        periodDiscountRules ? summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules) : null
+        summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
     ), [state.diariasDataInicio, state.diariasDataFim, periodDiscountRules]);
 
     const periodTravelQty = periodSummary?.totalDays ?? Math.max(0, state.diariasQtd || 0);
@@ -73,6 +106,13 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
     const ldoCapValue = Number(dailiesConfig?.ldoCap?.perDiemLimit || 0);
     const ministerPerDiemValue = Number(dailiesConfig?.derivedFromMinister?.ministerPerDiem || 0);
     const halfDailyValue = periodSummary?.halfDailyApplied ? dailyRate / 2 : 0;
+    const halfFoodDiscountValue = periodSummary?.halfDiscountApplied && state.diariasDescontarAlimentacao
+        ? (state.auxAlimentacao / discountRules.foodDivisor) * 0.5
+        : 0;
+    const halfTransportDiscountValue = periodSummary?.halfDiscountApplied && state.diariasDescontarTransporte
+        ? (state.auxTransporteValor / discountRules.transportDivisor) * 0.5
+        : 0;
+
     const rangeDays = useMemo(() => {
         if (!state.diariasDataInicio || !state.diariasDataFim) return [];
         return enumerateDaysInRange(state.diariasDataInicio, state.diariasDataFim);
@@ -160,8 +200,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
             <div className="space-y-6">
                 <div className={styles.innerBox}>
                     <h4 className={styles.innerBoxTitle}>Diárias de viagem</h4>
-                    {discountConfiguration.error && <p role="alert">Configuração de diárias incompleta: {discountConfiguration.error}</p>}
-            <div className="space-y-4">
+                    <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <label className={styles.checkboxLabel}>
                                 <input
@@ -322,7 +361,9 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         onChange={e => update('diariasAssessoramentoMagistrado', e.target.checked)}
                                     />
                                     <span>
-                                        Viagem em assessoramento direto / segurança a magistrado
+                                        {isJmu
+                                            ? 'Viagem em assessoramento direto a magistrado (art. 9º do Ato STM 799/2024)'
+                                            : 'Viagem em assessoramento direto / segurança a magistrado (art. 10, § 3º da Res. CJF 340/2015)'}
                                     </span>
                                 </label>
 
@@ -335,13 +376,26 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                             id="diariasAutoridadeAssistida"
                                             className={styles.input}
                                             value={effectiveAutoridade}
-                                            onChange={e => update('diariasAutoridadeAssistida', e.target.value)}
+                                            onChange={e => update('diariasAutoridadeAssistida', e.target.value as DiariasAutoridadeAssistida)}
                                         >
-                                            <option value="">Selecione a autoridade assistida</option>
-                                            {authorities.map(authority => <option key={authority.code} value={authority.code}>{authority.label}</option>)}
+                                            {isJmu ? (
+                                                <>
+                                                    <option value="ministro_stm">Ministro do STM (base 100% do STF)</option>
+                                                    <option value="juiz_federal">Juiz Federal da Justiça Militar / Substituto (base 95% do STM)</option>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <option value="desembargador_trf">Desembargador Federal / Membro do TRF (base 95% do STF)</option>
+                                                    <option value="juiz_federal">Juiz Federal / Juiz Federal Substituto (base 95% do TRF = 90,25% do STF)</option>
+                                                    <option value="ministro_cjf">Ministro / Membro do Conselho da Justiça Federal (CJF)</option>
+                                                </>
+                                            )}
                                         </select>
-                                        {!effectiveAutoridade && <p role="alert">Selecione uma autoridade disponível para este órgão.</p>}
-
+                                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                            {isJmu
+                                                ? 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 9º do Ato Normativo STM nº 799/2024 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'
+                                                : 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 10, § 3º da Resolução CJF nº 340/2015 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'}
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -350,11 +404,11 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
                             <p>Os valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
                             <p className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                Valor unitário da diária: {state.calculationMemory?.dailies ? formatCurrencyBr(dailyRate) : 'aguardando cálculo'}
+                                Valor unitário da diária: {dailyRate > 0 ? formatCurrencyBr(dailyRate) : 'R$ 0,00'}
                             </p>
-                            {state.diariasAssessoramentoMagistrado && !isMagistrate && effectiveAutoridade && (
+                            {state.diariasAssessoramentoMagistrado && !isMagistrate && assistedAuthorityInfo && (
                                 <p className="text-amber-800 dark:text-amber-300 font-medium">
-                                    Autoridade assistida: {authorities.find(item => item.code === effectiveAutoridade)?.label}.
+                                    ⭐ Diária a 80% da autoridade assistida ({assistedAuthorityInfo.authorityLabel}: {formatCurrencyBr(assistedAuthorityInfo.authorityRate)} → servidor: {formatCurrencyBr(assistedAuthorityInfo.serverRate)}).
                                 </p>
                             )}
                             <p>Desconto automático de auxílios: fins de semana são desconsiderados automaticamente.</p>
@@ -363,13 +417,13 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             ) : (
                                 <p>Nenhum feriado ou ponto facultativo indicado na viagem.</p>
                             )}
-                            {discountRules && <><p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
+                            <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
                             <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
                             <p>
                                 Regra de retorno:
                                 {discountRules.halfDailyOnBusinessReturnDay ? ' meia diária ativa em qualquer dia' : ' meia diária inativa'} e
                                 {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxílios apenas em dia útil' : ' meio desconto de auxílios inativo'}.
-                            </p></>}
+                            </p>
                             {ldoCapEnabled && ldoCapValue > 0 && (
                                 <p>
                                     Teto LDO por diária: {formatCurrencyBr(ldoCapValue)}
@@ -423,7 +477,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                     {periodSummary.halfDiscountApplied ? (
                                                         <p>
                                                             Retorno em dia útil ({formatIsoDatePtBr(periodSummary.returnDate)}): meio desconto de auxílios aplicado
-.
+                                                            {state.diariasDescontarAlimentacao ? ` | alimentação: ${formatCurrencyBr(halfFoodDiscountValue)}` : ''}
+                                                            {state.diariasDescontarTransporte ? ` | transporte: ${formatCurrencyBr(halfTransportDiscountValue)}` : ''}.
                                                         </p>
                                                     ) : (
                                                         !periodSummary.returnDateIsBusinessDay && (

@@ -6,7 +6,6 @@ import { configService } from '../../services/config';
 import { mapEffectiveConfigToCourtConfig } from '../../services/config/mapEffectiveConfig';
 import { supabase } from '../../lib/supabase';
 import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
-import { normalizeLegacyAdjustmentStatus } from '../../services/config/adjustmentStatus';
 
 type LoadedConfig = {
     slug: string | undefined;
@@ -81,17 +80,14 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                 const effective = await configService.getEffectiveConfig(resolvedSlug);
                 if (cancelled) return;
                 update({ courtConfig: mapEffectiveConfigToCourtConfig(effective) });
-            } catch (error) {
+            } catch (_error) {
                 if (cancelled) return;
                 try {
                     // Legacy courts config remains a technical fallback only.
                     const court = await getCourtBySlug(resolvedSlug);
                     if (!court?.config) throw new Error('Configuração não encontrada.');
-                    update({ courtConfig: normalizeLegacyAdjustmentStatus(court.config as CourtConfig) });
-                } catch (_fallbackError) {
-                    const detail = error instanceof Error ? error.message : 'Falha ao carregar a configuração hierárquica.';
-                    update({ configError: `${detail} O fallback técnico também está indisponível.` });
-                }
+                    update({ courtConfig: court.config as CourtConfig });
+                } catch (_fallbackError) { update({ configError: 'Configuração não encontrada.' }); }
             } finally { update({ loadingConfig: false }); }
         })();
         return () => { cancelled = true; };

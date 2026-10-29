@@ -11,7 +11,6 @@ import { calculatePss } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
-import { assertNonNegativeFinite } from '../validation';
 
 const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
@@ -24,10 +23,9 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
  * Calcula Licenca Compensatoria
  */
 export async function calculateCompensatoryLeave(params: IAgencyCalculationParams): Promise<number> {
-    assertNonNegativeFinite('licencaDias', params.licencaDias);
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
 

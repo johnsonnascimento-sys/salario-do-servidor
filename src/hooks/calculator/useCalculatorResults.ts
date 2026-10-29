@@ -8,11 +8,12 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalculatorState, CalculatedPayrollState, CourtConfig, OvertimeEntry } from '../../types';
+import { CalculatorState, CalculatedPayrollState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
 import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { getTablesForPeriod } from '../../utils/calculations';
+import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
 
 const mergeEffectiveState = (state: CalculatorState, calculatedState: CalculatedPayrollState): CalculatorState => (
@@ -28,7 +29,7 @@ export const useCalculatorResults = (
     const inputToken = useMemo(() => ({ state, agencyService, courtConfig, agency }), [
         agencyService,
         state.mesRef, state.anoRef,
-        state.periodo, state.simularDerrubadaVeto, state.cargo, state.padrao, state.funcao,
+        state.periodo, state.cargo, state.padrao, state.funcao,
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
         state.vpni_lei, state.vpni_decisao, state.ats,
@@ -60,7 +61,7 @@ export const useCalculatorResults = (
     currentTokenRef.current = inputToken;
     const [completed, setCompleted] = useState<{
         token: typeof inputToken; state: CalculatedPayrollState; error: string | null;
-        pensionContexts?: PensionSelectionContexts | null; selectionRequired?: boolean; memory?: import('../../types/calculationMemory').CalculationMemory;
+        pensionContexts?: PensionSelectionContexts | null; selectionRequired?: boolean;
     } | null>(null);
     const canCalculate = Boolean(agencyService && courtConfig && agency?.slug);
     const isCurrent = completed?.token === inputToken;
@@ -96,7 +97,7 @@ export const useCalculatorResults = (
                 }
 
                 const bd = result.breakdown;
-                setCompleted({ token: inputToken, pensionContexts, error: null, memory: result.calculationMemory, state: {
+                setCompleted({ token: inputToken, pensionContexts, error: null, state: {
                     vencimento: bd.vencimento || 0,
                     gaj: bd.gaj || 0,
                     aqTituloValor: bd.aqTitulo || 0,
@@ -110,7 +111,6 @@ export const useCalculatorResults = (
                     valFunprespNormal: bd.funprespNormal || 0,
                     valFunprespFacultativa: bd.funprespFacultativa || 0,
                     pensionMemory: result.pensionMemory,
-                    calculationMemory: result.calculationMemory,
                     irMensal: bd.irrf || 0,
                     irEA: bd.irEA || 0,
                     aqIr: bd.aqIr || 0,
@@ -179,12 +179,12 @@ export const useCalculatorResults = (
         if (!courtConfig || calculationStatus !== 'ready') {
             return null;
         }
-        return getTablesForPeriod(state.periodo, courtConfig, state.simularDerrubadaVeto);
-    }, [courtConfig, state.periodo, state.simularDerrubadaVeto, calculationStatus]);
+        return getTablesForPeriod(state.periodo, courtConfig);
+    }, [courtConfig, state.periodo, calculationStatus]);
 
     const effectiveState = useMemo(
-        () => ({ ...mergeEffectiveState(state, calculatedState), calculationMemory: calculationStatus === 'ready' ? completed?.memory : undefined }),
-        [state, calculatedState, calculationStatus, completed]
+        () => mergeEffectiveState(state, calculatedState),
+        [state, calculatedState]
     );
 
     const resultRows = useMemo(() => {
@@ -222,13 +222,34 @@ export const useCalculatorResults = (
             rows.push({ label: `${labelTipo} - ${effectiveState.funcao.toUpperCase()}`, value: valorFC, type: 'C' });
         }
 
-        const substitutions = effectiveState.calculationMemory?.substitutions || [];
-        substitutions.forEach((entry, index) => {
-            if (entry.total <= 0) return;
-            const incidence = entry.excluirIR ? 'EXCLUÍDO IR' : entry.isEA ? 'IR EA' : 'IR MENSAL';
-            const pss = entry.pssIsEA ? 'PSS EA' : 'PSS MENSAL';
-            rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO ${index + 1} (${incidence} | ${pss})`, value: entry.total, type: 'C' });
-        });
+        const substitutionEntries: SubstitutionEntry[] = effectiveState.substitutionEntries.length > 0
+            ? effectiveState.substitutionEntries
+            : [{
+                id: 'legacy-subst',
+                dias: effectiveState.substDias || {},
+                isEA: effectiveState.substIsEA,
+                excluirIR: false,
+                pssIsEA: effectiveState.substPssIsEA
+            }];
+        const substitutionTotal = Math.max(0, effectiveState.substTotal || 0);
+        const substitutionDaysTotal = substitutionEntries.reduce(
+            (acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0),
+            0
+        );
+        const substitutionDayValue = substitutionDaysTotal > 0 ? substitutionTotal / substitutionDaysTotal : 0;
+        const substitutionMensalTotal = substitutionEntries
+            .filter(entry => !entry.isEA && !entry.excluirIR)
+            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
+        const substitutionEaTotal = substitutionEntries
+            .filter(entry => entry.isEA && !entry.excluirIR)
+            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
+        const substitutionExcluidoTotal = substitutionEntries
+            .filter(entry => entry.excluirIR)
+            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
+
+        if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
+        if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: substitutionEaTotal, type: 'C' });
+        if (substitutionExcluidoTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (EXCLUÍDO IR)', value: substitutionExcluidoTotal, type: 'C' });
 
         const overtimeEntries: OvertimeEntry[] = effectiveState.overtimeEntries.length > 0
             ? effectiveState.overtimeEntries
@@ -364,7 +385,10 @@ export const useCalculatorResults = (
 
         const embarkationLabel = (courtConfig?.dailies?.embarkationLabel?.trim() || 'Adicional de embarque');
         const embarkationLabelUpper = embarkationLabel.toUpperCase();
-        const diariasAdicionalEmbarque = effectiveState.calculationMemory?.dailies?.embarkationAdditional ?? 0;
+        const diariasAdicionalEmbarque = resolveDailiesEmbarkationAdditional({
+            dailiesConfig: courtConfig?.dailies,
+            embarkationType: effectiveState.diariasEmbarque
+        });
         const diariasSemAdicionalEmbarque = Math.max(0, effectiveState.diariasBruto - diariasAdicionalEmbarque);
 
         if (diariasSemAdicionalEmbarque > 0) {

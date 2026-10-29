@@ -302,8 +302,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         update
     ]);
 
-    const isAnoComVeto = schedules.some(entry => (entry.vetoed || entry.status === 'vetoed') && entry.date && entry.date.slice(0, 7) <= `${clampedReference.year}-${String(clampedReference.month).padStart(2, '0')}`);
-    const vetoReferences = [...new Set(schedules.filter(entry => entry.vetoed || entry.status === 'vetoed').map(entry => entry.veto_reference).filter(Boolean))].join(', ');
+    const isAnoComVeto = clampedReference.year >= 2027;
 
     const currentScheduleEntry = useMemo(() => {
         return schedules.find(s => s.period === state.periodo);
@@ -318,9 +317,25 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
             };
         }
 
+        if (state.periodo >= 2) {
+            return {
+                title: 'Lei nº 15.293/2025 em vigor',
+                detail: currentScheduleEntry?.label || 'Parcela Julho/2026 (+8%)',
+                isVetoProjection: false,
+            };
+        }
+
+        if (state.periodo === 1) {
+            return {
+                title: 'Lei nº 11.416/2006 (Novo AQ)',
+                detail: 'Janeiro a Junho/2026',
+                isVetoProjection: false,
+            };
+        }
+
         return {
-            title: currentScheduleEntry?.reviewRequired ? 'Reajuste pendente de revisão' : 'Tabela de remuneração configurada',
-            detail: currentScheduleEntry?.label || `Período ${state.periodo}`,
+            title: 'Lei nº 11.416/2006',
+            detail: currentScheduleEntry?.label || 'Tabela Vigente',
             isVetoProjection: false,
         };
     }, [state.periodo, state.simularDerrubadaVeto, isAnoComVeto, currentScheduleEntry]);
@@ -391,11 +406,15 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                             </span>{' '}
                             {legalStatusBadge.isVetoProjection ? (
                                 <span>
-                                    Cálculo condicional com as parcelas vetadas da configuração.
+                                    Cálculo condicional com simulação de derrubada do Veto nº 45/2025.
+                                </span>
+                            ) : clampedReference.year >= 2026 ? (
+                                <span>
+                                    Aplicação integral da <strong>Lei nº 15.293/2025</strong> com vigência da parcela de reajuste promulgada.
                                 </span>
                             ) : (
                                 <span>
-                                    Aplicação das tabelas e do status de reajuste informados na configuração.
+                                    Aplicação das tabelas históricas da <strong>Lei nº 11.416/2006</strong> vigentes no período.
                                 </span>
                             )}
                         </div>
@@ -403,19 +422,17 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                 </div>
             </div>
 
-            {schedules.some(entry => entry.reviewRequired) && (
-                <p role="alert" className="text-body-xs text-error-600">Há parcelas de reajuste sem status definido. Elas exigem revisão administrativa antes de serem aplicadas.</p>
-            )}
             {isAnoComVeto && (
                 <div className="relative z-10 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
                     <div className="flex items-start gap-3">
                         <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div className="space-y-1">
                             <h4 className="text-body-sm font-bold text-amber-800 dark:text-amber-300">
-                                {vetoReferences || 'Parcelas com veto registrado'}
+                                Veto Presidencial nº 45/2025 (Lei nº 15.293/2025)
                             </h4>
                             <p className="text-body-xs text-amber-700/90 dark:text-amber-300/80 leading-relaxed">
-                                Há parcelas com veto explícito na configuração. O cálculo oficial utiliza as parcelas disponíveis sem veto; a projeção abaixo inclui as parcelas vetadas.
+                                Os reajustes que constavam da proposta original para 2027 e 2028 foram objeto de <strong>Veto Presidencial</strong>.
+                                O cálculo oficial do simulador reflete estritamente a parcela promulgada vigente em 2026.
                             </p>
                         </div>
                     </div>
@@ -429,13 +446,13 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                                 className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500/30"
                             />
                             <span className="text-body-xs font-semibold text-amber-800 dark:text-amber-200">
-                                Simular projeção com as parcelas vetadas
+                                Simular projeção com eventual derrubada do Veto nº 45/2025
                             </span>
                         </label>
 
                         {state.simularDerrubadaVeto && (
                             <span className="text-body-xs font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
-                                Projeção ativa
+                                Projeção Ativa (+8% vetado)
                             </span>
                         )}
                     </div>

@@ -54,7 +54,12 @@ interface LdoCapInput {
     perDiemLimit: number;
 }
 
-export type DiariasAutoridadeAssistida = string;
+export type DiariasAutoridadeAssistida =
+    | 'ministro_cjf'
+    | 'ministro_stm'
+    | 'desembargador_trf'
+    | 'juiz_federal'
+    | 'juiz_militar';
 
 export interface ResolveDailyRateInput {
     dailiesConfig: DailiesConfig | undefined;
@@ -95,13 +100,6 @@ const toIsoDate = (date: Date) => {
 };
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
-
-const requireConfiguredNumber = (value: unknown, label: string, positive = false): number => {
-    if (value === null || value === undefined || !Number.isFinite(Number(value)) || Number(value) < 0 || (positive && Number(value) === 0)) {
-        throw new Error(`Configuração de diárias incompleta: ${label}. Revise o cadastro administrativo.`);
-    }
-    return Number(value);
-};
 
 const normalizeKey = (value: string) =>
     String(value || '')
@@ -179,21 +177,52 @@ export const resolveAssistedAuthorityDailyRate = (
     autoridade?: DiariasAutoridadeAssistida
 ): { authorityRate: number; serverRate: number; authorityLabel: string } => {
     const derived = dailiesConfig?.derivedFromMinister;
-    const ministerPerDiem = requireConfiguredNumber(derived?.ministerPerDiem, 'diária de referência', true);
-    const assistRatio = requireConfiguredNumber(derived?.assistancePercentage, 'percentual de assessoramento', true);
-    const authority = dailiesConfig?.assistedAuthorities?.find((entry) => entry.code === autoridade);
-    if (!dailiesConfig?.branchId || !authority) {
-        throw new Error('Selecione uma autoridade assistida válida para o ramo configurado.');
-    }
-    const percentage = requireConfiguredNumber(
-        authority.percentage ?? (authority.rateKey ? derived?.ratesPercentages?.[authority.rateKey] : undefined),
-        'percentual da autoridade assistida', true
+    const ministerPerDiem = Math.max(0, Number(derived?.ministerPerDiem || 1466.95));
+    const assistRatio = Number(derived?.assistancePercentage ?? 0.80);
+
+    const isJmu = Boolean(
+        dailiesConfig?.normativeInfo?.branchRuleLabel?.includes('STM') ||
+        dailiesConfig?.normativeInfo?.branchRuleLabel?.includes('JMU')
     );
-    const authorityRate = round2(ministerPerDiem * percentage);
+
+    let authorityRate: number;
+    let authorityLabel: string;
+
+    if (isJmu) {
+        if (autoridade === 'juiz_federal' || autoridade === 'juiz_militar') {
+            const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
+                ? Number(derived.ratesPercentages.juiz_titular)
+                : 0.95;
+            authorityRate = round2(ministerPerDiem * juizPct);
+            authorityLabel = 'Juiz Federal da Justiça Militar / Substituto';
+        } else {
+            // ministro_stm ou default na JMU
+            authorityRate = ministerPerDiem;
+            authorityLabel = 'Ministro do STM';
+        }
+    } else {
+        // CJF / TRFs / PJU Geral
+        if (autoridade === 'ministro_cjf' || autoridade === 'ministro_stm') {
+            authorityRate = ministerPerDiem;
+            authorityLabel = 'Ministro / Membro do CJF';
+        } else if (autoridade === 'juiz_federal' || autoridade === 'juiz_militar') {
+            const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
+                ? Number(derived.ratesPercentages.juiz_titular)
+                : 0.9025;
+            authorityRate = round2(ministerPerDiem * juizPct);
+            authorityLabel = 'Juiz Federal / Juiz Federal Substituto';
+        } else {
+            // desembargador_trf ou default no CJF
+            const desembargadorPct = Number(derived?.ratesPercentages?.desembargador ?? 0.95);
+            authorityRate = round2(ministerPerDiem * desembargadorPct);
+            authorityLabel = 'Desembargador Federal / Membro do TRF';
+        }
+    }
+
     return {
         authorityRate,
         serverRate: round2(authorityRate * assistRatio),
-        authorityLabel: authority.label,
+        authorityLabel
     };
 };
 
@@ -207,7 +236,18 @@ export const resolveDailiesDailyRate = ({
 }: ResolveDailyRateInput): number => {
     const isCommission = hasCommissionRole ?? Boolean(funcao && normalizeKey(funcao).replace(/[\s\-_]/g, '').startsWith('cj'));
     const fallbackCandidates = resolveRateKeyCandidates(cargo, funcao, isCommission);
-    const fallbackRate = pickCaseInsensitive(dailiesConfig?.rates, fallbackCandidates);
+    const fallbackRate = pickCaseInsensitive(dailiesConfig?.rates, fallbackCandidates) ?? 0;
+
+    const derived = dailiesConfig?.derivedFromMinister;
+    if (!derived?.enabled) {
+        return Math.max(0, fallbackRate);
+    }
+
+    const ministerPerDiem = Math.max(0, Number(derived.ministerPerDiem || 0));
+    if (ministerPerDiem <= 0) {
+        return Math.max(0, fallbackRate);
+    }
+
     // Regra especial: assessoramento direto a magistrado (Res. CNJ 73/2009 art. 6º, § 4º c/c Res. CJF 340/2015 art. 10, § 3º)
     // O servidor recebe até 80% do valor da diária atribuído à autoridade assistida
     const isMagistrate = fallbackCandidates.some((c) =>
@@ -218,15 +258,12 @@ export const resolveDailiesDailyRate = ({
         return resolveAssistedAuthorityDailyRate(dailiesConfig, autoridadeAssistida).serverRate;
     }
 
-    const derived = dailiesConfig?.derivedFromMinister;
-    if (!derived?.enabled) {
-        return requireConfiguredNumber(fallbackRate, 'valor do cargo/função');
+    const percentage = pickCaseInsensitive(derived.ratesPercentages, fallbackCandidates) ?? 0;
+    if (percentage <= 0) {
+        return Math.max(0, fallbackRate);
     }
-    const ministerPerDiem = requireConfiguredNumber(derived.ministerPerDiem, 'diária de referência', true);
 
-    const percentage = pickCaseInsensitive(derived.ratesPercentages, fallbackCandidates);
-    if (percentage === null && fallbackRate !== null) return requireConfiguredNumber(fallbackRate, 'valor do cargo/função');
-    return round2(ministerPerDiem * requireConfiguredNumber(percentage, 'percentual do cargo/função', true));
+    return round2(ministerPerDiem * percentage);
 };
 
 export const resolveDailiesEmbarkationAdditional = ({
@@ -235,27 +272,43 @@ export const resolveDailiesEmbarkationAdditional = ({
 }: ResolveEmbarkationInput): number => {
     if (embarkationType === 'nenhum') return 0;
 
+    const fallback = embarkationType === 'completo'
+        ? Number(dailiesConfig?.embarkationAdditional?.completo ?? 0)
+        : Number(dailiesConfig?.embarkationAdditional?.metade ?? 0);
+
     const derived = dailiesConfig?.derivedFromMinister;
     if (!derived?.enabled) {
-        const value = embarkationType === 'completo'
-            ? dailiesConfig?.embarkationAdditional?.completo
-            : dailiesConfig?.embarkationAdditional?.metade;
-        return requireConfiguredNumber(value, 'adicional de embarque/deslocamento');
+        return Math.max(0, fallback);
     }
-    const base = requireConfiguredNumber(derived.ministerPerDiem, 'diária de referência', true);
-    const percentage = embarkationType === 'completo'
-        ? derived.embarkationPercentageFull
-        : derived.embarkationPercentageHalf;
-    return round2(base * requireConfiguredNumber(percentage, 'percentual do adicional de embarque/deslocamento'));
+
+    const ministerPerDiem = Math.max(0, Number(derived.ministerPerDiem || 0));
+    if (ministerPerDiem <= 0) {
+        return Math.max(0, fallback);
+    }
+
+    const fullPercentage = Math.max(0, Number(derived.embarkationPercentageFull || 0));
+    const halfPercentage = derived.embarkationPercentageHalf !== undefined
+        ? Math.max(0, Number(derived.embarkationPercentageHalf || 0))
+        : fullPercentage / 2;
+
+    const percentage = embarkationType === 'completo' ? fullPercentage : halfPercentage;
+    if (percentage <= 0) {
+        return Math.max(0, fallback);
+    }
+
+    return round2(ministerPerDiem * percentage);
 };
 
 export const resolveDailiesDiscountRules = (
     dailiesConfig: DailiesConfig | undefined,
     fallbackDivisor: number
 ): DailiesDiscountRules => {
+    const fallback = Math.max(1, Number.isFinite(fallbackDivisor) ? fallbackDivisor : 22);
     const rules = dailiesConfig?.discountRules;
-    const foodDivisor = requireConfiguredNumber(rules?.foodDivisor ?? fallbackDivisor, 'divisor do auxílio-alimentação', true);
-    const transportDivisor = requireConfiguredNumber(rules?.transportDivisor ?? fallbackDivisor, 'divisor do auxílio-transporte', true);
+    const foodDivisorRaw = Number(rules?.foodDivisor);
+    const transportDivisorRaw = Number(rules?.transportDivisor);
+    const foodDivisor = Number.isFinite(foodDivisorRaw) && foodDivisorRaw > 0 ? foodDivisorRaw : fallback;
+    const transportDivisor = Number.isFinite(transportDivisorRaw) && transportDivisorRaw > 0 ? transportDivisorRaw : fallback;
 
     return {
         foodDivisor,

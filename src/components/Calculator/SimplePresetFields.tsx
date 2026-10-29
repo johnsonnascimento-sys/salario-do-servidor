@@ -103,15 +103,15 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className={styles.label}>VPNI (Lei)</label>
-                        <input type="number" min={0} className={styles.input} value={state.vpni_lei} onChange={e => update('vpni_lei', toPositiveNumber(e.target.value))} />
+                        <input type="number" className={styles.input} value={state.vpni_lei} onChange={e => update('vpni_lei', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
                         <label className={styles.label}>VPNI (Decisao)</label>
-                        <input type="number" min={0} className={styles.input} value={state.vpni_decisao} onChange={e => update('vpni_decisao', toPositiveNumber(e.target.value))} />
+                        <input type="number" className={styles.input} value={state.vpni_decisao} onChange={e => update('vpni_decisao', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
                         <label className={styles.label}>ATS</label>
-                        <input type="number" min={0} className={styles.input} value={state.ats} onChange={e => update('ats', toPositiveNumber(e.target.value))} />
+                        <input type="number" className={styles.input} value={state.ats} onChange={e => update('ats', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
             </div>
@@ -135,11 +135,11 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className={styles.label}>Qtd. dependentes</label>
-                        <input type="number" min={0} className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
+                        <input type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
                         <label className={styles.label}>Cota pre-escolar</label>
-                        <input type="number" min={0} className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
+                        <input type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
             </div>
@@ -151,7 +151,7 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
             <div className="space-y-3">
                 <div>
                     <label className={styles.label}>Gasto mensal de transporte</label>
-                    <input type="number" min={0} className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
+                    <input type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
                 </div>
             </div>
         );

@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 29/10/2026 15:17
+Atualizado em: 29/10/2026 14:54
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -79,8 +79,6 @@ Cada rubrica manual deve suportar:
 2. Na 2a parcela, considerar base total aplicavel, aplicar abatimento da 1a parcela e concentrar desconto no resumo da 2a.
 3. Se marcar 2a parcela, marcar automaticamente a 1a correspondente para evitar base incompleta.
 4. Exibir totais brutos e liquidos por parcela.
-5. Tratar vencimento e FC/CJ independentemente: uma segunda parcela nao pode criar base ou abatimento do outro componente. No modo manual, segunda parcela exige primeira parcela correspondente preenchida.
-6. Quando houver acerto da segunda parcela, identificar o adiantamento ja recebido como informativo e distinguir os totais das parcelas dos totais efetivamente lancados na folha.
 
 ### 4.4 Diarias
 
@@ -90,8 +88,7 @@ Cada rubrica manual deve suportar:
 4. Exibir total de diarias liquidas.
 5. No PJU, os valores de diarias e adicionais sao data-driven e podem ser derivados percentualmente da diaria de Ministro do STF (Res. CNJ 73/2009) com regras e percentuais setoriais por ramo/orgao (Ato STM 799/2024, Res. CJF 340/2015, etc.).
 6. No modo por datas, fins de semana sao deduzidos automaticamente por calendario, e feriados/pontos facultativos locais podem ser marcados interativamente pelo usuario para a viagem, evitando acoplamento a calendarios fixos de orgaos especificos.
-7. Para servidores do PJU, disponibilizar opcao de viagem em assessoramento direto ou seguranca a magistrado com diaria a 80% do valor atribuido a autoridade assistida, conforme a secao 11.4, mantendo a diaria comum no percentual regular configurado para o ramo e cargo/funcao.
-8. O catalogo de autoridades e o identificador do ramo devem vir da configuracao; rotulos normativos nao podem decidir calculos. Parametros necessarios ausentes devem impedir o calculo da viagem.
+7. Para servidores do PJU, disponibilizar opcao de viagem em assessoramento direto a magistrado com diaria a 80% do Ministro do STF (art. 6º, § 1º, da Res. CNJ 73/2009 c/c Res. CNJ 564/2024), mantendo a diaria comum no percentual regular do cargo/funcao (como CJ-4 a 60%).
 
 ### 4.5 Detalhamento final
 
@@ -107,7 +104,6 @@ Cada rubrica manual deve suportar:
 ### 4.7 Regra de compatibilidade
 
 1. Nao manter gatilhos fixos hardcoded (incluindo `Johnson*`) para alterar calculos automaticamente.
-2. O status de parcelas de reajuste deve ser explicito na configuracao, sem presumir veto ou promulgacao por data. Parcelas sem status exigem revisao antes de aplicacao; parcelas vetadas ou projetadas somente participam de simulacao explicitamente selecionada.
 
 ### 4.8 Rubricas pre-definidas com multiplas instancias
 

@@ -57,12 +57,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     updateRubrica,
     styles
 }) => {
-    // The engine reports pending configuration through calculationError. Keep
-    // inputs mounted so a restored invalid simulation remains reviewable.
-    const currentTables = React.useMemo(() => {
-        try { return getTablesForPeriod(state.periodo, courtConfig, state.simularDerrubadaVeto); }
-        catch { return { salario: courtConfig.bases?.salario || {}, funcoes: courtConfig.bases?.funcoes || {}, valorVR: 0 }; }
-    }, [state.periodo, courtConfig, state.simularDerrubadaVeto]);
+    const currentTables = getTablesForPeriod(state.periodo, courtConfig);
     const payrollRules = courtConfig.payrollRules;
     const careerCatalog = courtConfig.careerCatalog;
     const noFunctionCode = careerCatalog?.noFunctionCode ?? '';

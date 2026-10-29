@@ -1,5 +1,4 @@
 import type { PensionMemory } from '../../types/pension';
-import type { CalculationMemory } from '../../types/calculationMemory';
 
 /**
  * Identifiers for supported agencies.
@@ -28,7 +27,6 @@ export interface ICalculationResult {
     totalBenefits: number;
     breakdown: Record<string, number>;
     pensionMemory?: PensionMemory;
-    calculationMemory?: CalculationMemory;
 }
 
 /**

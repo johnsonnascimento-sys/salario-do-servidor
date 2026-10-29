@@ -35,7 +35,7 @@ export async function calculateVacation(params: IAgencyCalculationParams): Promi
 
     if (!params.manualFerias) {
         if (params.tipoCalculo === 'jan' || ferias1_3 > 0) {
-            const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
+            const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
             const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
             const gaj = baseVencimento * payrollRules.gajRate;
             const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);

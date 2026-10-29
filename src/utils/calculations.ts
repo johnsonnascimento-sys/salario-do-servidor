@@ -26,14 +26,11 @@ const requireConfig = (config?: CourtConfig): CourtConfig => {
 interface AdjustmentEntry {
     period: number;
     percentage: number;
-    reviewRequired?: boolean;
-    vetoed?: boolean;
-    status?: string;
 }
 
 const normalizePercentage = (value: number) => (value > 1 ? value / 100 : value);
 
-const findCorrectionTable = (periodo: number, config: CourtConfig, includeProjected: boolean): AdjustmentEntry[] | null => {
+const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEntry[] | null => {
     const schedule =
         (config as any).adjustment_schedule ||
         (config.values as any)?.adjustment_schedule ||
@@ -42,19 +39,15 @@ const findCorrectionTable = (periodo: number, config: CourtConfig, includeProjec
     if (!Array.isArray(schedule)) {
         return null;
     }
-    if (schedule.some((entry: AdjustmentEntry) => entry.period <= periodo && entry.reviewRequired)) {
-        throw new Error('Configuração de reajuste pendente de revisão: informe o status da parcela no painel administrativo.');
-    }
 
     return schedule
         .filter((entry: AdjustmentEntry) => Number.isFinite(entry?.period) && Number.isFinite(entry?.percentage))
         .filter((entry: AdjustmentEntry) => entry.period <= periodo)
-        .filter((entry: AdjustmentEntry) => includeProjected || !(entry.vetoed || entry.status === 'vetoed' || entry.status === 'projected'))
         .sort((a: AdjustmentEntry, b: AdjustmentEntry) => a.period - b.period);
 };
 
-const applyCorrections = (base: number, periodo: number, config: CourtConfig, includeProjected: boolean): number => {
-    const schedule = findCorrectionTable(periodo, config, includeProjected);
+const applyCorrections = (base: number, periodo: number, config: CourtConfig): number => {
+    const schedule = findCorrectionTable(periodo, config);
     if (!schedule || schedule.length === 0) {
         return base;
     }
@@ -64,7 +57,7 @@ const applyCorrections = (base: number, periodo: number, config: CourtConfig, in
     }, base);
 };
 
-export const getTablesForPeriod = (periodo: number, config?: CourtConfig, includeProjected = false) => {
+export const getTablesForPeriod = (periodo: number, config?: CourtConfig) => {
     const resolved = requireConfig(config);
     const payrollRules = resolved.payrollRules;
     if (!payrollRules) {
@@ -79,17 +72,17 @@ export const getTablesForPeriod = (periodo: number, config?: CourtConfig, includ
             newSal[cargo] = {};
         }
         for (let padrao in BASES.salario[cargo]) {
-            newSal[cargo][padrao] = applyCorrections(BASES.salario[cargo][padrao], periodo, resolved, includeProjected);
+            newSal[cargo][padrao] = applyCorrections(BASES.salario[cargo][padrao], periodo, resolved);
         }
     }
 
     const newFunc: FuncoesTable = {};
     for (let key in BASES.funcoes) {
-        newFunc[key] = applyCorrections(BASES.funcoes[key], periodo, resolved, includeProjected);
+        newFunc[key] = applyCorrections(BASES.funcoes[key], periodo, resolved);
     }
 
     // Dynamic VR Calculation
-    const cj1Adjusted = applyCorrections(CJ1_BASE, periodo, resolved, includeProjected);
+    const cj1Adjusted = applyCorrections(CJ1_BASE, periodo, resolved);
     const valorVR = Math.round(cj1Adjusted * payrollRules.vrRateOnCj1 * 100) / 100;
 
     return { salario: newSal, funcoes: newFunc, valorVR };
@@ -182,7 +175,7 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
         throw new Error('CourtConfig.payrollRules is required for calculations.');
     }
     const noFunctionCode = resolvedConfig.careerCatalog?.noFunctionCode ?? '';
-    const { salario, funcoes, valorVR } = getTablesForPeriod(state.periodo, config, state.simularDerrubadaVeto);
+    const { salario, funcoes, valorVR } = getTablesForPeriod(state.periodo, config);
     const { baseSemFC, totalComFC, funcaoValor: funcaoValorCalc } = calculateBaseFixa(
         state,
         funcoes,

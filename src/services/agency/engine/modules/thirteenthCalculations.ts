@@ -17,8 +17,6 @@ import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 import { buildComplementaryBase, calculateComplementaryPension } from './pensionCalculations';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
-import type { ThirteenthCalculationMemory } from '../../../../types/calculationMemory';
-import { validateThirteenthInputs } from '../validation';
 
 export interface ThirteenthResult {
     gratNatalinaTotal: number;
@@ -32,7 +30,6 @@ export interface ThirteenthResult {
     segunda13Venc: number;
     segunda13FC: number;
     abono13: number;
-    memory: ThirteenthCalculationMemory;
 }
 
 const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
@@ -48,10 +45,9 @@ const roundCurrency = (value: number) => Math.round(value * 100) / 100;
  * Calcula 13o Salario / Gratificacao Natalina
  */
 export async function calculateThirteenth(params: IAgencyCalculationParams, retroativos: PensionRetroMemory[] = []): Promise<ThirteenthResult> {
-    validateThirteenthInputs(params);
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
+    const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
     const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
@@ -94,10 +90,10 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
             params.tipoCalculo === 'jan' || params.tipoCalculo === 'jun' || params.tipoCalculo === 'nov';
         const forceSegundaByTipo = params.tipoCalculo === 'nov';
 
+        adiant13Venc = forcePrimeiraByTipo || adiant13Venc > 0 ? metadeVencimento13 : 0;
+        adiant13FC = forcePrimeiraByTipo || adiant13FC > 0 ? metadeFC13 : 0;
         segunda13Venc = forceSegundaByTipo || segunda13Venc > 0 ? metadeVencimento13 : 0;
         segunda13FC = forceSegundaByTipo || segunda13FC > 0 ? metadeFC13 : 0;
-        adiant13Venc = forcePrimeiraByTipo || adiant13Venc > 0 || segunda13Venc > 0 ? metadeVencimento13 : 0;
-        adiant13FC = forcePrimeiraByTipo || adiant13FC > 0 || segunda13FC > 0 ? metadeFC13 : 0;
     }
 
     const primeiraParcelaRecebida = adiant13Venc + adiant13FC;
@@ -122,8 +118,10 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     if (houveSegundaParcela) {
         // Se a 2a parcela foi selecionada, considera a 1a parcela na base
         // mesmo quando nao informada manualmente.
-        const primeiraVencParaTributo = segunda13Venc > 0 ? adiant13Venc : 0;
-        const primeiraFCParaTributo = segunda13FC > 0 ? adiant13FC : 0;
+        const primeiraVencParaTributo =
+            adiant13Venc > 0 ? adiant13Venc : metadeVencimento13;
+        const primeiraFCParaTributo =
+            adiant13FC > 0 ? adiant13FC : metadeFC13;
 
         primeiraParcelaDesconto = primeiraVencParaTributo + primeiraFCParaTributo;
 
@@ -174,7 +172,7 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
         const baseIR13 = Math.max(
             0,
-            base13Tributavel + abono13 - pss13 - funpresp13 - (params.dependents * deducaoDep) -
+            gratNatalinaTotal - pss13 - funpresp13 - (params.dependents * deducaoDep) -
             retroativos.filter(entry => entry.destinoIR === '13').reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0)
         );
         ir13 = calculateIrrf(baseIR13, payrollRules.irrfTopRate, deductionVal);
@@ -184,12 +182,6 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     adiant13FC = roundCurrency(adiant13FC);
     segunda13Venc = roundCurrency(segunda13Venc);
     segunda13FC = roundCurrency(segunda13FC);
-
-    const secondVencimento = segunda13Venc > 0 ? roundCurrency(adiant13Venc + segunda13Venc) : 0;
-    const secondFc = segunda13FC > 0 ? roundCurrency(adiant13FC + segunda13FC) : 0;
-    const secondGross = roundCurrency(secondVencimento + secondFc + abono13);
-    const secondDeductions = roundCurrency(pss13 + funpresp13 + ir13 + primeiraParcelaDesconto);
-    const firstGross = roundCurrency(adiant13Venc + adiant13FC);
 
     return {
         gratNatalinaTotal: roundCurrency(gratNatalinaTotal),
@@ -203,14 +195,5 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         segunda13Venc,
         segunda13FC,
         abono13: roundCurrency(abono13),
-        memory: {
-            payroll: { gross: roundCurrency(gratNatalinaTotal), deductions: secondDeductions,
-                net: roundCurrency(gratNatalinaTotal - secondDeductions) },
-            first: { gross: firstGross, deductions: 0, net: firstGross, vencimento: adiant13Venc, fc: adiant13FC },
-            second: { gross: secondGross, deductions: secondDeductions, net: roundCurrency(secondGross - secondDeductions),
-                vencimento: secondVencimento, fc: secondFc, pss: roundCurrency(pss13), funpresp: roundCurrency(funpresp13),
-                ir: roundCurrency(ir13), firstInstallmentDeduction: roundCurrency(primeiraParcelaDesconto), abono: roundCurrency(abono13) },
-            components: { vencimento: { first: adiant13Venc, second: segunda13Venc }, fc: { first: adiant13FC, second: segunda13FC } },
-        },
     };
 }

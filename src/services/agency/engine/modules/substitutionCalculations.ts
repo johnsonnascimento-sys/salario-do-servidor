@@ -34,7 +34,7 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
 export async function calculateSubstitution(params: IAgencyCalculationParams): Promise<SubstitutionResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { funcoes, salario } = await getDataForPeriod(params.periodo, config, params.simularDerrubadaVeto);
+    const { funcoes, salario } = await getDataForPeriod(params.periodo, config);
     const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
 

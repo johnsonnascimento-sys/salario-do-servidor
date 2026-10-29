@@ -31,7 +31,6 @@ import { calculateSubstitution } from './modules/substitutionCalculations';
 import { calculateDailies } from './modules/dailiesCalculations';
 import { calculateCompensatoryLeave } from './modules/leaveCalculations';
 import { calculateDeductions } from './modules/deductionsCalculations';
-import { validateCalculationParams, validateThirteenthInputs } from './validation';
 
 const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number }> = []) => {
     return rubricas.reduce(
@@ -94,8 +93,6 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
      * REFATORADO: Agora Ã© async para suportar ConfigService
      */
     async calculateTotal(params: IAgencyCalculationParams): Promise<ICalculationResult> {
-        validateCalculationParams(params);
-        validateThirteenthInputs(params);
         // 1. Calcular Base Salarial (agora async)
         const base = await calculateBase(params);
         const baseComponents = await calculateBaseComponents(params);
@@ -134,7 +131,6 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 benefits.auxTransporte + dailies.valor + compensatoryLeave,
             pensionMemory: { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,
                 retroativos: deductions.pensionRetroMemory },
-            calculationMemory: { thirteenth: thirteenth.memory, substitutions: substitution.entries, dailies: dailies.memory },
             breakdown: {
                 // Componentes Base Individuais
                 vencimento: baseComponents.vencimento,

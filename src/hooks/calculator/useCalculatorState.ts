@@ -37,7 +37,6 @@ export const useCalculatorState = () => {
     ));
 
     const update = useCallback((field: keyof CalculatorState, value: any) => {
-        if (typeof value === 'number' && (!Number.isFinite(value) || value < 0)) return;
         setState(prev => ({ ...prev, [field]: value }));
     }, []);
 
@@ -46,7 +45,6 @@ export const useCalculatorState = () => {
     }, []);
 
     const updateSubstDays = useCallback((key: string, days: number) => {
-        if (!Number.isFinite(days) || days < 0) return;
         setState(prev => ({
             ...prev,
             substDias: { ...prev.substDias, [key]: days }
@@ -78,7 +76,6 @@ export const useCalculatorState = () => {
     }, []);
 
     const updateRubrica = useCallback((id: string, field: keyof Rubrica, value: any) => {
-        if (field === 'valor' && (typeof value !== 'number' || !Number.isFinite(value) || value < 0)) return;
         setState(prev => ({
             ...prev,
             rubricasExtras: prev.rubricasExtras.map(r => r.id === id ? { ...r, [field]: value } : r)

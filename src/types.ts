@@ -1,4 +1,3 @@
-import type { CalculationMemory } from './types/calculationMemory';
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 export interface SalaryTable {
   [cargo: string]: {
@@ -30,34 +29,32 @@ export interface DailiesNormativeInfo {
 }
 
 export interface DailiesConfig {
-  branchId?: string;
-  assistedAuthorities?: Array<{ code: string; label: string; rateKey?: string; percentage?: number }>;
   rates: Record<string, number>;
   embarkationAdditional: {
-    completo?: number;
-    metade?: number;
+    completo: number;
+    metade: number;
   };
   embarkationLabel?: string;
   derivedFromMinister?: {
     enabled: boolean;
-    ministerPerDiem?: number;
+    ministerPerDiem: number;
     ratesPercentages: Record<string, number>;
-    embarkationPercentageFull?: number;
+    embarkationPercentageFull: number;
     embarkationPercentageHalf?: number;
     assistancePercentage?: number;
   };
   externalGloss: {
-    hospedagem?: number;
-    alimentacao?: number;
-    transporte?: number;
+    hospedagem: number;
+    alimentacao: number;
+    transporte: number;
   };
   ldoCap?: {
     enabled: boolean;
-    perDiemLimit?: number;
+    perDiemLimit: number;
   };
   discountRules?: {
-    foodDivisor?: number;
-    transportDivisor?: number;
+    foodDivisor: number;
+    transportDivisor: number;
     excludeWeekendsAndHolidays: boolean;
     holidays: string[];
     halfDailyOnBusinessReturnDay?: boolean;
@@ -129,7 +126,6 @@ export interface AdjustmentScheduleEntry {
   status?: 'promulgated' | 'vetoed' | 'projected';
   vetoed?: boolean;
   veto_reference?: string;
-  reviewRequired?: boolean;
 }
 
 export interface CourtConfig {
@@ -357,7 +353,6 @@ export interface CalculatorState {
   valFunprespNormal?: number;
   valFunprespFacultativa?: number;
   pensionMemory?: PensionMemory;
-  calculationMemory?: CalculationMemory;
   totalBruto: number;
   totalDescontos: number;
   liquido: number;
@@ -387,7 +382,7 @@ export interface CalculatorState {
   diariasExtAlimentacao: boolean;
   diariasExtTransporte: boolean;
   diariasAssessoramentoMagistrado: boolean;
-  diariasAutoridadeAssistida: string;
+  diariasAutoridadeAssistida: 'ministro_cjf' | 'ministro_stm' | 'desembargador_trf' | 'juiz_federal' | 'juiz_militar';
 }
 
 export type CalculatedPayrollState = Pick<
@@ -405,7 +400,6 @@ export type CalculatedPayrollState = Pick<
   | 'valFunprespNormal'
   | 'valFunprespFacultativa'
   | 'pensionMemory'
-  | 'calculationMemory'
   | 'irMensal'
   | 'irEA'
   | 'aqIr'

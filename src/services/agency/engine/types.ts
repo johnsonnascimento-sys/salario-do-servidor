@@ -12,7 +12,6 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
     agencyConfig?: CourtConfig;
     periodo: number;
-    simularDerrubadaVeto?: boolean;
     cargo: string;
     padrao: string;
     funcao: string;
@@ -91,7 +90,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     diariasDescontarAlimentacao: boolean;
     diariasDescontarTransporte: boolean;
     diariasAssessoramentoMagistrado?: boolean;
-    diariasAutoridadeAssistida?: string;
+    diariasAutoridadeAssistida?: 'ministro_cjf' | 'ministro_stm' | 'desembargador_trf' | 'juiz_federal' | 'juiz_militar';
     licencaDias: number;
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
