@@ -1,6 +1,7 @@
 # Changelog
 
 ## Não publicado - 29/10/2026
+- Fix (Achado 1 da Auditoria): isolamento estrito dos componentes de 13º salário (vencimento e FC/CJ). O abatimento da 1ª parcela e a recomposição da base tributável passam a ser vinculados exclusivamente à existência da 2ª parcela do respectivo componente, impedindo abatimento indevido de FC quando apenas o vencimento for selecionado e tributação indevida de PSS de vencimento quando apenas FC for selecionada.
 - Fix: card de diarias passa a exibir a norma local quando configurada; migration 015 completa a referencia normativa da JMU/STM, preservando a norma setorial consumida pelo calculo e os demais valores e configuracoes.
 - Docs: tornado obrigatorio o relatorio final de agente principal e subagentes por tarefa, com modelos e esforcos, distincao entre configuracao e execucao confirmada e registro explicito de ausencia de delegacao.
 - Config: definidos modelos e esforcos por especialista no Codex do projeto, com politica de delegacao proporcional ao risco e revisao especializada de calculos preservada.

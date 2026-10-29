@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Calculos de 13o Salario / Gratificacao Natalina - JMU
  *
  * Responsavel por calcular:
@@ -90,8 +90,8 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
             params.tipoCalculo === 'jan' || params.tipoCalculo === 'jun' || params.tipoCalculo === 'nov';
         const forceSegundaByTipo = params.tipoCalculo === 'nov';
 
-        adiant13Venc = forcePrimeiraByTipo || adiant13Venc > 0 ? metadeVencimento13 : 0;
-        adiant13FC = forcePrimeiraByTipo || adiant13FC > 0 ? metadeFC13 : 0;
+        adiant13Venc = forcePrimeiraByTipo || adiant13Venc > 0 || segunda13Venc > 0 ? metadeVencimento13 : 0;
+        adiant13FC = forcePrimeiraByTipo || adiant13FC > 0 || segunda13FC > 0 ? metadeFC13 : 0;
         segunda13Venc = forceSegundaByTipo || segunda13Venc > 0 ? metadeVencimento13 : 0;
         segunda13FC = forceSegundaByTipo || segunda13FC > 0 ? metadeFC13 : 0;
     }
@@ -115,13 +115,15 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     // Regra: 1a parcela nao tem IR/PSS.
     // Quando ha 2a parcela, IR/PSS incidem sobre o total (1a + 2a),
     // com abatimento da 1a parcela no contracheque da 2a.
+    // Cada componente (vencimento e FC/CJ) tem seu abatimento e recomposição
+    // vinculados exclusivamente à existência de sua própria 2ª parcela (Regra 4.3.1 e 4.3.2).
     if (houveSegundaParcela) {
-        // Se a 2a parcela foi selecionada, considera a 1a parcela na base
-        // mesmo quando nao informada manualmente.
-        const primeiraVencParaTributo =
-            adiant13Venc > 0 ? adiant13Venc : metadeVencimento13;
-        const primeiraFCParaTributo =
-            adiant13FC > 0 ? adiant13FC : metadeFC13;
+        const primeiraVencParaTributo = segunda13Venc > 0
+            ? (adiant13Venc > 0 ? adiant13Venc : (!params.manualAdiant13 ? metadeVencimento13 : 0))
+            : 0;
+        const primeiraFCParaTributo = segunda13FC > 0
+            ? (adiant13FC > 0 ? adiant13FC : (!params.manualAdiant13 ? metadeFC13 : 0))
+            : 0;
 
         primeiraParcelaDesconto = primeiraVencParaTributo + primeiraFCParaTributo;
 
@@ -172,7 +174,7 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
         const baseIR13 = Math.max(
             0,
-            gratNatalinaTotal - pss13 - funpresp13 - (params.dependents * deducaoDep) -
+            base13Tributavel + abono13 - pss13 - funpresp13 - (params.dependents * deducaoDep) -
             retroativos.filter(entry => entry.destinoIR === '13').reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0)
         );
         ir13 = calculateIrrf(baseIR13, payrollRules.irrfTopRate, deductionVal);
