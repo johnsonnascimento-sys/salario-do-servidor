@@ -97,8 +97,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
     const assistedAuthorityInfo = useMemo(() => {
         if (!state.diariasAssessoramentoMagistrado || isMagistrate) return null;
-        return resolveAssistedAuthorityDailyRate(dailiesConfig, effectiveAutoridade);
-    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, effectiveAutoridade, isMagistrate]);
+        return resolveAssistedAuthorityDailyRate(dailiesConfig, effectiveAutoridade, courtConfig?.orgSlug);
+    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, effectiveAutoridade, isMagistrate, courtConfig?.orgSlug]);
 
     const periodSummary = useMemo(() => (
         summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)

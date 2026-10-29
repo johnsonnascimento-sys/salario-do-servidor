@@ -590,6 +590,14 @@ test('resolveAssistedAuthorityDailyRate calcula escalonamento correto e segregad
     assert.equal(jfJmuReal.authorityRate, 1393.60, 'Autoridade assistida da JMU deve ser 1.393,60 (95% STF)');
     assert.equal(jfJmuReal.serverRate, 1114.88, 'Diária do servidor em assessoramento a Juiz da JMU deve ser 1.114,88 (80%) e não 1.059,14');
     assert.equal(jfJmuReal.authorityLabel, 'Juiz Federal da Justiça Militar / Substituto');
+
+    // Ministro do STM nunca pode receber rótulo de Ministro do CJF
+    const minJmuReal = resolveAssistedAuthorityDailyRate(configJmuReal, 'ministro_stm');
+    assert.equal(minJmuReal.authorityLabel, 'Ministro do STM', 'Ministro do STM não pode ser rotulado como Membro do CJF');
+    assert.equal(minJmuReal.serverRate, 1173.56);
+
+    const minStmIsolated = resolveAssistedAuthorityDailyRate(undefined, 'ministro_stm');
+    assert.equal(minStmIsolated.authorityLabel, 'Ministro do STM');
 });
 
 

@@ -174,13 +174,16 @@ const buildHolidaySet = (rules: DailiesDiscountRules) => {
 
 export const resolveAssistedAuthorityDailyRate = (
     dailiesConfig: DailiesConfig | undefined,
-    autoridade?: DiariasAutoridadeAssistida
+    autoridade?: DiariasAutoridadeAssistida,
+    orgSlug?: string
 ): { authorityRate: number; serverRate: number; authorityLabel: string } => {
     const derived = dailiesConfig?.derivedFromMinister;
     const ministerPerDiem = Math.max(0, Number(derived?.ministerPerDiem || 1466.95));
     const assistRatio = Number(derived?.assistancePercentage ?? 0.80);
 
     const isJmu = Boolean(
+        orgSlug === 'jmu' ||
+        orgSlug === 'stm' ||
         dailiesConfig?.branchId === 'jmu' ||
         dailiesConfig?.branchId === 'stm' ||
         dailiesConfig?.orgSlug === 'jmu' ||
@@ -197,35 +200,38 @@ export const resolveAssistedAuthorityDailyRate = (
     let authorityRate: number;
     let authorityLabel: string;
 
-    if (isJmu) {
-        if (autoridade === 'juiz_federal' || autoridade === 'juiz_militar') {
-            const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
-                ? Number(derived.ratesPercentages.juiz_titular)
-                : derived?.ratesPercentages?.juiz !== undefined
-                    ? Number(derived.ratesPercentages.juiz)
-                    : 0.95;
-            authorityRate = round2(ministerPerDiem * juizPct);
-            authorityLabel = 'Juiz Federal da Justiça Militar / Substituto';
-        } else {
-            // ministro_stm ou default na JMU
+    if (autoridade === 'ministro_stm') {
+        authorityRate = ministerPerDiem;
+        authorityLabel = 'Ministro do STM';
+    } else if (autoridade === 'ministro_cjf') {
+        authorityRate = ministerPerDiem;
+        authorityLabel = 'Ministro / Membro do CJF';
+    } else if (autoridade === 'desembargador_trf') {
+        const desembargadorPct = Number(derived?.ratesPercentages?.desembargador ?? 0.95);
+        authorityRate = round2(ministerPerDiem * desembargadorPct);
+        authorityLabel = 'Desembargador Federal / Membro do TRF';
+    } else if (autoridade === 'juiz_militar' || (autoridade === 'juiz_federal' && isJmu)) {
+        const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
+            ? Number(derived.ratesPercentages.juiz_titular)
+            : derived?.ratesPercentages?.juiz !== undefined
+                ? Number(derived.ratesPercentages.juiz)
+                : 0.95;
+        authorityRate = round2(ministerPerDiem * juizPct);
+        authorityLabel = 'Juiz Federal da Justiça Militar / Substituto';
+    } else if (autoridade === 'juiz_federal') {
+        const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
+            ? Number(derived.ratesPercentages.juiz_titular)
+            : derived?.ratesPercentages?.juiz !== undefined
+                ? Number(derived.ratesPercentages.juiz)
+                : 0.9025;
+        authorityRate = round2(ministerPerDiem * juizPct);
+        authorityLabel = 'Juiz Federal / Juiz Federal Substituto';
+    } else {
+        // Fallback quando não informada autoridade
+        if (isJmu) {
             authorityRate = ministerPerDiem;
             authorityLabel = 'Ministro do STM';
-        }
-    } else {
-        // CJF / TRFs / PJU Geral
-        if (autoridade === 'ministro_cjf' || autoridade === 'ministro_stm') {
-            authorityRate = ministerPerDiem;
-            authorityLabel = 'Ministro / Membro do CJF';
-        } else if (autoridade === 'juiz_federal' || autoridade === 'juiz_militar') {
-            const juizPct = derived?.ratesPercentages?.juiz_titular !== undefined
-                ? Number(derived.ratesPercentages.juiz_titular)
-                : derived?.ratesPercentages?.juiz !== undefined
-                    ? Number(derived.ratesPercentages.juiz)
-                    : 0.9025;
-            authorityRate = round2(ministerPerDiem * juizPct);
-            authorityLabel = 'Juiz Federal / Juiz Federal Substituto';
         } else {
-            // desembargador_trf ou default no CJF
             const desembargadorPct = Number(derived?.ratesPercentages?.desembargador ?? 0.95);
             authorityRate = round2(ministerPerDiem * desembargadorPct);
             authorityLabel = 'Desembargador Federal / Membro do TRF';
