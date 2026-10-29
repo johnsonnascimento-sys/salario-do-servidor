@@ -2,6 +2,8 @@
 
 Catalogo operacional de especialistas. Leia `PROJECT_RULES.md` antes de alterar codigo, schema, seeds ou documentacao. As regras do projeto prevalecem e os modelos e esforcos abaixo dependem da disponibilidade e do runtime.
 
+O relatorio de agentes ao final de cada tarefa segue a secao 10.1 de `PROJECT_RULES.md`, inclusive quando nao houver delegacao.
+
 | Especialista | Modelo e esforco | Finalidade |
 | --- | --- | --- |
 | Codex Orchestrator | GPT-6.1 Sol, medio | Coordenacao, complexidade, integracao e revisao final. Aumentar o esforco conforme a tarefa. |
