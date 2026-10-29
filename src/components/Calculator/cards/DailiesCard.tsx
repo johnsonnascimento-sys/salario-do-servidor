@@ -188,8 +188,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-[11px] font-medium leading-tight">
                         <span>🏛️</span>
                         <span>
-                            {normativeInfo.branchRuleLabel || normativeInfo.generalRuleLabel || 'Regulamentação PJU'}
-                            {normativeInfo.branchRuleLabel && normativeInfo.generalRuleLabel && (
+                            {normativeInfo.localRuleLabel || normativeInfo.branchRuleLabel || normativeInfo.generalRuleLabel || 'Regulamentação PJU'}
+                            {(normativeInfo.localRuleLabel || normativeInfo.branchRuleLabel) && normativeInfo.generalRuleLabel && (
                                 <span className="text-amber-700/80 dark:text-amber-300/80 font-normal"> (c/c {normativeInfo.generalRuleLabel})</span>
                             )}
                         </span>

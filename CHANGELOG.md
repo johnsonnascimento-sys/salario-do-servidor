@@ -1,6 +1,7 @@
 # Changelog
 
 ## Não publicado - 29/10/2026
+- Fix: card de diarias passa a exibir a norma local quando configurada; migration 015 completa a referencia normativa da JMU/STM, preservando a norma setorial consumida pelo calculo e os demais valores e configuracoes.
 - Docs: tornado obrigatorio o relatorio final de agente principal e subagentes por tarefa, com modelos e esforcos, distincao entre configuracao e execucao confirmada e registro explicito de ausencia de delegacao.
 - Config: definidos modelos e esforcos por especialista no Codex do projeto, com politica de delegacao proporcional ao risco e revisao especializada de calculos preservada.
 - Docs: atualizados o catalogo operacional e a governanca de modelos; configuracao pessoal permanece independente.
