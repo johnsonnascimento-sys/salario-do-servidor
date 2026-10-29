@@ -372,7 +372,15 @@ export const buildPresetGrossLines = ({
         case 'diarias': {
             const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
             const discountRules = resolveDailiesDiscountRules(courtConfig?.dailies, transportWorkdays);
-            const periodDiscountRules = { ...discountRules, excludeWeekendsAndHolidays: true };
+            const manualHolidays = Array.isArray(state.diariasFeriados) ? state.diariasFeriados : null;
+            const effectiveHolidays = manualHolidays !== null
+                ? manualHolidays
+                : (discountRules.holidays || []);
+            const periodDiscountRules = {
+                ...discountRules,
+                excludeWeekendsAndHolidays: true,
+                holidays: effectiveHolidays
+            };
             const periodSummary = state.diariasModoDesconto === 'periodo'
                 ? summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
                 : null;

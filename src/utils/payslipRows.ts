@@ -273,18 +273,20 @@ const buildPssEaDetails = (
 };
 
 const buildThirteenthPssDetails = (
-  state?: Pick<CalculatorState, 'pss13' | 'adiant13Venc' | 'adiant13FC' | 'segunda13Venc' | 'segunda13FC'>
+  state?: Pick<CalculatorState, 'pss13' | 'segunda13Venc'>
 ): Array<{ label: string; value: number; type: 'D' }> => {
-  if (!state || Number(state.pss13 || 0) <= 0) return [];
+  const pss13 = roundDetail(state?.pss13 || 0);
+  if (pss13 <= 0) return [];
 
-  const items = [
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - VENCIMENTO/ATIVO EC', base: state.adiant13Venc || 0 },
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 1ª PARCELA - FC/CJ', base: state.adiant13FC || 0 },
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC', base: state.segunda13Venc || 0 },
-    { label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - FC/CJ', base: state.segunda13FC || 0 },
+  // PSS do 13º incide exclusivamente sobre a base contributiva do cargo (vencimento)
+  // e é cobrado na 2ª parcela (Regras 4.3.1 e 4.3.2). Não incide sobre FC/CJ nem na 1ª parcela.
+  return [
+    {
+      label: 'PSS DA GRATIFICAÇÃO NATALINA - 2ª PARCELA - VENCIMENTO/ATIVO EC',
+      value: pss13,
+      type: 'D',
+    },
   ];
-
-  return allocateDetailRows(state.pss13 || 0, items);
 };
 
 export const groupPayslipRowsForDisplay = <T extends RowLike>(

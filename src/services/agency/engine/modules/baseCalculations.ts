@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Calculos de Base Salarial - JMU
  *
  * Responsavel por calcular:
@@ -29,9 +29,9 @@ interface PeriodData {
 
 const periodDataCache = new WeakMap<CourtConfig, Map<number, PeriodData>>();
 
-const normalizePercentage = (value: number) => (value > 1 ? value / 100 : value);
+const normalizePercentage = (value?: number) => (Number(value) > 1 ? Number(value) / 100 : Number(value) || 0);
 
-export const normalizeAQPercent = (value: number) => (value > 1 ? value / 100 : value);
+export const normalizeAQPercent = (value?: number) => (Number(value) > 1 ? Number(value) / 100 : Number(value) || 0);
 
 const findCorrectionTable = (periodo: number, config: CourtConfig): AdjustmentEntry[] | null => {
     const schedule =

@@ -115,7 +115,7 @@ export function mapStateToAgencyParams(
         diariasAutoridadeAssistida: (orgSlug === 'jmu' || orgSlug === 'stm')
             ? (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'ministro_stm')
             : (state.diariasAutoridadeAssistida === 'ministro_cjf' || state.diariasAutoridadeAssistida === 'ministro_stm' ? 'ministro_cjf' : state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'desembargador_trf'),
-        licencaDias: state.licencaDias || 0,
+        licencaDias: Math.max(0, Math.floor(Number(state.licencaDias) || 0)),
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,
     };

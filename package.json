@@ -15,6 +15,7 @@
     "test:dailies": "node scripts/test-dailies-pju.mjs",
     "test:thirteenth": "node scripts/test-thirteenth-isolation.mjs",
     "test:config": "node scripts/test-config-service.mjs",
+    "test:audit": "node scripts/test-audit-findings-remaining.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit-project.cjs",
     "audit:design": "node scripts/audit-design-system.cjs",

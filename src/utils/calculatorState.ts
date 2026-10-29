@@ -201,6 +201,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         diariasFeriados: Array.isArray(merged.diariasFeriados)
             ? merged.diariasFeriados.filter((d): d is string => typeof d === 'string')
             : [],
+        licencaDias: Math.max(0, Math.floor(Number(merged.licencaDias) || 0)),
         diariasAssessoramentoMagistrado: Boolean(merged.diariasAssessoramentoMagistrado),
         diariasAutoridadeAssistida: (
             merged.diariasAutoridadeAssistida === 'ministro_cjf' ||

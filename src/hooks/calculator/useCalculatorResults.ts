@@ -16,6 +16,8 @@ import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
 
+const roundCurrency = (value: number) => Math.round(value * 100) / 100;
+
 const mergeEffectiveState = (state: CalculatorState, calculatedState: CalculatedPayrollState): CalculatorState => (
     { ...state, ...calculatedState } as CalculatorState
 );
@@ -231,25 +233,56 @@ export const useCalculatorResults = (
                 excluirIR: false,
                 pssIsEA: effectiveState.substPssIsEA
             }];
-        const substitutionTotal = Math.max(0, effectiveState.substTotal || 0);
-        const substitutionDaysTotal = substitutionEntries.reduce(
-            (acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0),
-            0
-        );
-        const substitutionDayValue = substitutionDaysTotal > 0 ? substitutionTotal / substitutionDaysTotal : 0;
-        const substitutionMensalTotal = substitutionEntries
-            .filter(entry => !entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
-        const substitutionEaTotal = substitutionEntries
-            .filter(entry => entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
-        const substitutionExcluidoTotal = substitutionEntries
-            .filter(entry => entry.excluirIR)
-            .reduce((acc, entry) => acc + Object.values(entry.dias || {}).reduce((s, d) => s + Math.max(0, Number(d || 0)), 0) * substitutionDayValue, 0);
 
-        if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: substitutionMensalTotal, type: 'C' });
-        if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: substitutionEaTotal, type: 'C' });
-        if (substitutionExcluidoTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (EXCLUÍDO IR)', value: substitutionExcluidoTotal, type: 'C' });
+        const monthDayDivisor = courtConfig.payrollRules?.monthDayDivisor || 30;
+        const baseVencimento = currentTables?.salario?.[effectiveState.cargo]?.[effectiveState.padrao] || 0;
+        let gratVal = 0;
+        if (effectiveState.gratEspecificaTipo === 'gae' || effectiveState.gratEspecificaTipo === 'gas') {
+            gratVal = baseVencimento * (courtConfig.payrollRules?.specificGratificationRate || 0);
+        }
+        const currentFuncVal = (effectiveState.funcao && effectiveState.funcao !== noFunctionCode && currentTables?.funcoes?.[effectiveState.funcao]) || 0;
+        const baseAbatimento = currentFuncVal + gratVal;
+
+        const calcEntryValue = (entry: SubstitutionEntry): number => {
+            let entryTotal = 0;
+            for (const [funcKey, days] of Object.entries(entry.dias || {})) {
+                const safeDays = Math.max(0, Number(days || 0));
+                const destVal = currentTables?.funcoes?.[funcKey] || 0;
+                if (safeDays > 0 && destVal > baseAbatimento && monthDayDivisor > 0) {
+                    entryTotal += ((destVal - baseAbatimento) / monthDayDivisor) * safeDays;
+                }
+            }
+            return Math.round(entryTotal * 100) / 100;
+        };
+
+        let substitutionMensalTotal = 0;
+        let substitutionEaTotal = 0;
+        let substitutionExcluidoTotal = 0;
+
+        for (const entry of substitutionEntries) {
+            const val = calcEntryValue(entry);
+            if (entry.excluirIR) {
+                substitutionExcluidoTotal += val;
+            } else if (entry.isEA) {
+                substitutionEaTotal += val;
+            } else {
+                substitutionMensalTotal += val;
+            }
+        }
+
+        const calculatedSum = substitutionMensalTotal + substitutionEaTotal + substitutionExcluidoTotal;
+        const substitutionTotal = Math.max(0, effectiveState.substTotal || 0);
+        if (calculatedSum === 0 && substitutionTotal > 0) {
+            if (effectiveState.substIsEA) {
+                substitutionEaTotal = substitutionTotal;
+            } else {
+                substitutionMensalTotal = substitutionTotal;
+            }
+        }
+
+        if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: roundCurrency(substitutionMensalTotal), type: 'C' });
+        if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: roundCurrency(substitutionEaTotal), type: 'C' });
+        if (substitutionExcluidoTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (EXCLUÍDO IR)', value: roundCurrency(substitutionExcluidoTotal), type: 'C' });
 
         const overtimeEntries: OvertimeEntry[] = effectiveState.overtimeEntries.length > 0
             ? effectiveState.overtimeEntries

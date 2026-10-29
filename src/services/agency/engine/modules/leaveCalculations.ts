@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Calculos de Licenca Compensatoria - JMU
  * 
  * Responsavel por calcular:
@@ -67,9 +67,10 @@ export async function calculateCompensatoryLeave(params: IAgencyCalculationParam
         }
     }
 
-    // Valor da Licenca = (Base + Abono) / 30 * Dias
+    // Valor da Licenca = (Base + Abono) / 30 * Dias (Regra 4.2.2: dias não aceitam valor negativo)
+    const safeDias = Math.max(0, Math.floor(Number(params.licencaDias) || 0));
     const licencaVal =
-        ((baseLicencaTotal + abonoEstimadoLicenca) / payrollRules.monthDayDivisor) * (params.licencaDias || 0);
+        ((baseLicencaTotal + abonoEstimadoLicenca) / payrollRules.monthDayDivisor) * safeDias;
 
-    return Math.round(licencaVal * 100) / 100;
+    return Math.max(0, Math.round(licencaVal * 100) / 100);
 }

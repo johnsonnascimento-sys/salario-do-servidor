@@ -22,9 +22,14 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, compete
                         <label className={styles.label}>Qtd. Dias a indenizar</label>
                         <input
                             type="number"
+                            min="0"
+                            step="1"
                             className={styles.input}
                             value={state.licencaDias || ''}
-                            onChange={e => update('licencaDias', Number(e.target.value))}
+                            onChange={e => {
+                                const val = e.target.value === '' ? 0 : Math.max(0, Math.floor(Number(e.target.value) || 0));
+                                update('licencaDias', val);
+                            }}
                             placeholder="0"
                         />
                     </div>
