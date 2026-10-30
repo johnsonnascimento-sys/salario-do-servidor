@@ -186,20 +186,17 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
     return (
         <div className={styles.card}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+            <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
                 <h3 className={styles.sectionTitle}>
                     <Plane className="w-4 h-4" /> Diárias
                 </h3>
                 {normativeInfo && (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-[11px] font-medium leading-tight">
-                        <span>🏛️</span>
-                        <span>
-                            {normativeInfo.localRuleLabel || normativeInfo.branchRuleLabel || normativeInfo.generalRuleLabel || 'Regulamentação PJU'}
-                            {(normativeInfo.localRuleLabel || normativeInfo.branchRuleLabel) && normativeInfo.generalRuleLabel && (
-                                <span className="text-amber-700/80 dark:text-amber-300/80 font-normal"> (c/c {normativeInfo.generalRuleLabel})</span>
-                            )}
-                        </span>
-                    </div>
+                    <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                        {normativeInfo.localRuleLabel || normativeInfo.branchRuleLabel || normativeInfo.generalRuleLabel || 'Regulamentação PJU'}
+                        {(normativeInfo.localRuleLabel || normativeInfo.branchRuleLabel) && normativeInfo.generalRuleLabel && (
+                            <span className="font-normal text-gray-400 dark:text-gray-500"> (c/c {normativeInfo.generalRuleLabel})</span>
+                        )}
+                    </span>
                 )}
             </div>
 
