@@ -183,7 +183,7 @@ export const buildPresetGrossLines = ({
             };
             const overtimeEntry = entry || fallbackEntry;
             const overtimeBaseEntries = state.overtimeEntries.length > 0 ? state.overtimeEntries : [fallbackEntry];
-            const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 175;
+            const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 200;
             const baseOvertime = state.vencimento + state.gaj + state.aqTituloValor + state.aqTreinoValor +
                 state.gratEspecificaValor + state.vpni_lei + state.vpni_decisao + state.ats + state.abonoPermanencia;
             const resolveFuncValue = (funcKey?: string) => {

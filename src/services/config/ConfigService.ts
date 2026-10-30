@@ -259,6 +259,16 @@ export class ConfigService {
                             return_day_half_diem_business_day: true,
                             return_day_half_discount_business_day: true
                         }
+                    },
+                    payroll_rules: {
+                        gaj_rate: 1.40,
+                        specific_gratification_rate: 0.35,
+                        vr_rate_on_cj1: 0.05,
+                        month_day_divisor: 30,
+                        overtime_month_hours: 200, // Art. 46, § 1º da Resolução CJF Nº 4/2008 (Res. CJF 186/2012)
+                        transport_workdays: 22,
+                        transport_discount_rate: 0.06,
+                        irrf_top_rate: 0.275
                     }
                 }
             };

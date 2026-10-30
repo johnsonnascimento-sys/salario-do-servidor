@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, AlertTriangle } from 'lucide-react';
 import { OvertimeEntry } from '../../../types';
 
 interface OvertimeCardProps {
@@ -13,13 +13,33 @@ interface OvertimeCardProps {
 export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, functionKeys, competenciaReferencia, styles }) => {
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
 
+    const totalHoras: number = usarSubstituicaoFuncao && entry.horasPorFuncao
+        ? Object.values(entry.horasPorFuncao as Record<string, { qtd50?: number; qtd100?: number }>).reduce(
+            (acc: number, h) => acc + (Number(h?.qtd50) || 0) + (Number(h?.qtd100) || 0),
+            0
+        )
+        : (Number(entry.qtd50) || 0) + (Number(entry.qtd100) || 0);
+
     return (
         <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-                <Clock className="w-4 h-4" /> Serviço Extraordinário (HE)
-            </h3>
+            <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                <h3 className={styles.sectionTitle}>
+                    <Clock className="w-4 h-4" /> Serviço Extraordinário (HE)
+                </h3>
+                <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                    Res. CJF Nº 4/2008 • Divisor 200
+                </span>
+            </div>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
+                    {totalHoras > 44 && (
+                        <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                            <div>
+                                <span className="font-semibold">Atenção ao limite regulamentar:</span> O total lançado ({totalHoras}h) excede o teto mensal de <strong>44 horas</strong> estabelecido no art. 45, § 3º da Resolução CJF Nº 4/2008 (redação dada pela Resolução CJF Nº 973/2025). O cálculo é realizado integralmente para acomodar passivos e acertos retroativos.
+                            </div>
+                        </div>
+                    )}
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <label className={styles.checkboxLabel}>
                             <input

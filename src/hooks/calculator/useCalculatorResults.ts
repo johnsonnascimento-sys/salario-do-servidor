@@ -294,7 +294,7 @@ export const useCalculatorResults = (
                 excluirIR: effectiveState.heExcluirIR,
                 usarSubstituicaoFuncao: false
             }];
-        const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 175;
+        const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 200;
         const baseOvertime = effectiveState.vencimento + effectiveState.gaj + effectiveState.aqTituloValor + effectiveState.aqTreinoValor +
             effectiveState.gratEspecificaValor + effectiveState.vpni_lei + effectiveState.vpni_decisao + effectiveState.ats + effectiveState.abonoPermanencia;
         const calcEntryOvertimeTotal = (entry: OvertimeEntry) => {
