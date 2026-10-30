@@ -203,3 +203,44 @@ test('ConfigService: Retorna overtime_month_hours = 200 para CJF e TRFs na confi
     const effectiveTRF1 = await configService.getEffectiveConfig('trf1');
     assert.equal(effectiveTRF1.payroll_rules.overtime_month_hours, 200);
 });
+
+// =========================================================================
+// Teste 4: JMU adota Resolução STM Nº 374/2025 com divisor 175 e teto 30h
+// =========================================================================
+test('Hora Extra JMU: Divisor 175 para jornada de 35h e teto de 30h (Resolução STM 374/2025 c/ Res. 399/2026)', async () => {
+    const configJMU = makeMockConfig(175);
+    configJMU.orgSlug = 'jmu';
+
+    const params = {
+        periodo: 0,
+        cargo: 'tecnico',
+        padrao: 'C13', // 9052.83
+        funcao: 'sem_funcao',
+        tabelaPSS: '2026',
+        tabelaIR: '2025_maio',
+        regimePrev: 'rpc',
+        recebeAbono: false,
+        gratEspecificaTipo: 'nenhuma',
+        aqTituloVR: 0,
+        aqTreinoVR: 0,
+        aqTituloPerc: 0,
+        aqTreinoPerc: 0,
+        agencyConfig: configJMU,
+        overtimeEntries: [
+            {
+                id: 'he-jmu',
+                qtd50: 10,
+                qtd100: 0,
+                isEA: false,
+                excluirIR: false,
+                usarSubstituicaoFuncao: false
+            }
+        ]
+    };
+
+    // Vencimento = 9.052,83 | GAJ (140%) = 12.673,962 | Remuneração = 21.726,792
+    // Divisor 175: 21.726,792 / 175 = 124,153097
+    // HE 50% (10h) = 124,153097 * 1.5 * 10 = 1.862,30
+    const res = await calculateOvertime(params);
+    assert.equal(Math.round(res.heVal50 * 100) / 100, 1862.30);
+});

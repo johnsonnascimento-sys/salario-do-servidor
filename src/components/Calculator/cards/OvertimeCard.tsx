@@ -1,6 +1,6 @@
 import React from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
-import { OvertimeEntry } from '../../../types';
+import { CourtConfig, OvertimeEntry } from '../../../types';
 
 interface OvertimeCardProps {
     entry: OvertimeEntry;
@@ -8,10 +8,27 @@ interface OvertimeCardProps {
     functionKeys: string[];
     competenciaReferencia: string;
     styles: any;
+    courtConfig?: CourtConfig;
 }
 
-export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, functionKeys, competenciaReferencia, styles }) => {
+export const OvertimeCard: React.FC<OvertimeCardProps> = ({
+    entry,
+    updateEntry,
+    functionKeys,
+    competenciaReferencia,
+    styles,
+    courtConfig
+}) => {
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
+
+    const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
+    const isJMU = orgSlug === 'jmu' || orgSlug === 'stm';
+
+    const divisor = courtConfig?.payrollRules?.overtimeMonthHours || (isJMU ? 175 : 200);
+
+    const normLabel = isJMU
+        ? `Res. STM Nº 374/2025 • Divisor ${divisor}`
+        : `Res. CJF Nº 4/2008 • Divisor ${divisor}`;
 
     const totalHoras: number = usarSubstituicaoFuncao && entry.horasPorFuncao
         ? Object.values(entry.horasPorFuncao as Record<string, { qtd50?: number; qtd100?: number }>).reduce(
@@ -20,6 +37,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
         )
         : (Number(entry.qtd50) || 0) + (Number(entry.qtd100) || 0);
 
+    const tetoHoras = isJMU ? 30 : 44;
+    const isExcedido = totalHoras > tetoHoras;
+
     return (
         <div className={styles.card}>
             <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
@@ -27,16 +47,16 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({ entry, updateEntry, 
                     <Clock className="w-4 h-4" /> Serviço Extraordinário (HE)
                 </h3>
                 <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                    Res. CJF Nº 4/2008 • Divisor 200
+                    {normLabel}
                 </span>
             </div>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
-                    {totalHoras > 44 && (
+                    {isExcedido && (
                         <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
                             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                             <div>
-                                <span className="font-semibold">Atenção ao limite regulamentar:</span> O total lançado ({totalHoras}h) excede o teto mensal de <strong>44 horas</strong> estabelecido no art. 45, § 3º da Resolução CJF Nº 4/2008 (redação dada pela Resolução CJF Nº 973/2025). O cálculo é realizado integralmente para acomodar passivos e acertos retroativos.
+                                <span className="font-semibold">Atenção ao limite regulamentar:</span> O total lançado ({totalHoras}h) excede o teto mensal de <strong>{tetoHoras} horas</strong> estabelecido {isJMU ? 'no art. 6º, caput da Resolução STM Nº 374/2025 (redação da Resolução STM nº 399/2026; limite de 50h no recesso forense)' : 'no art. 45, § 3º da Resolução CJF Nº 4/2008 (redação da Resolução CJF Nº 973/2025)'}. O cálculo é realizado integralmente para acomodar passivos e acertos retroativos.
                             </div>
                         </div>
                     )}

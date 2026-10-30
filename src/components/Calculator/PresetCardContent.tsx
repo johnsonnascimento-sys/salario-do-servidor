@@ -79,6 +79,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
                 functionKeys={functionKeys}
                 competenciaReferencia={competenciaReferencia}
                 styles={styles}
+                courtConfig={courtConfig}
             />
         );
     }
