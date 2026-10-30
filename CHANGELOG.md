@@ -1,5 +1,13 @@
 # Changelog
 
+## Não publicado - 30/10/2026
+- Fix (Serviço Extraordinário da Justiça Federal): adequação do cálculo de horas extras à Resolução CJF Nº 4/2008 (redação da Res. CJF Nº 186/2012). O divisor mensal foi corrigido de 175 para 200 (jornada de 40h semanais / 6 * 30 = 200, art. 46, § 1º) nos fallbacks de cálculo (`useCalculatorResults.ts` e `presetGrossLines.ts`) e no `ConfigService` para o CJF e TRF1 a TRF6, eliminando distorção de +14,28% no valor da hora extra.
+- Feat (Serviço Extraordinário da JMU): parametrização normativa do cálculo de horas extras na Justiça Militar da União com base na Resolução STM Nº 374/2025 (consolidada com a Resolução STM Nº 399/2026). Rótulo dinâmico "Res. STM Nº 374/2025 • Divisor 175" e monitoramento informativo do teto mensal de 30 horas (art. 6º, caput; 50h no recesso forense) no `OvertimeCard.tsx`.
+- Feat (Alerta Regulamentar de Teto): adicionado aviso visual/informativo contextual no card de horas extras quando o quantitativo lançado exceder o limite regulamentar mensal de cada ramo (44h na Justiça Federal conf. Res. CJF 4/2008 art. 45, § 3º com redação da Res. 973/2025, e 30h na JMU conf. Res. STM 374/2025 art. 6º, caput), sem bloquear a digitação para acomodar acertos retroativos e passivos.
+- Database: criada a migração `migrations/016_set_pju_and_cjf_payroll_rules.sql` para registro canônico de `payroll_rules` em `power_config` (PJU / Justiça Federal com divisor 200) e em `org_config` (JMU e STM com divisor 175).
+- Style (Design System): unificada a identidade visual dos badges normativos dos cards de Diárias (`DailiesCard.tsx`) e Serviço Extraordinário (`OvertimeCard.tsx`), substituindo o fundo amarelado de diárias pelo padrão neutro em tons de cinza (`bg-gray-100 dark:bg-gray-800`), harmonizando a interface entre os módulos da JMU e da Justiça Federal.
+- Tests: adicionada nova suíte de testes automatizados em `tests/overtimeFederal.test.ts` e runner `scripts/test-overtime-federal.mjs`, cobrindo divisor 200, divisor 175, base remuneratória com FC/CJ e herança via ConfigService.
+
 ## Não publicado - 29/10/2026
 - Fix (Achado 8 da Auditoria): campo de quantidade de dias de licença compensatória passa a validar limite mínimo não negativo no card (`min="0"` e `Math.max(0, ...)`), no adaptador de parâmetros, na hidratação de estado e no módulo do motor (`leaveCalculations.ts`), impedindo resultados negativos de indenização.
 - Fix (Achado 7 da Auditoria): páginas de administração (`AdminGlobal` e `AdminPower`) passam a acionar versionamento transacional (`versionGlobalConfig` e `versionPowerConfig`) com validação de vigência em vez de sobrescrever registros ativos em `upsert`, preservando o histórico integral de regras conforme Regra 2.3.3.
