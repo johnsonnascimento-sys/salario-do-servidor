@@ -2,9 +2,9 @@
 
 ## Descrição legal e nomenclatura do Adicional de Transporte / Embarque — 03/11/2026
 - Adicionada descrição explicativa detalhada sobre o percentual e a base de cálculo diretamente no card de diárias:
-  - JMU (Ato Normativo STM nº 799/2024, art. 8º): 40% da diária de Ministro do STM para o percurso de ida e volta (R$ 586,78) e 20% para ida ou volta (R$ 293,39).
-  - Justiça Federal (Resolução CJF nº 340/2015, art. 17): 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF) para ida e volta (R$ 645,46) e metade (22% = R$ 322,73) para ida ou volta.
-- Exibição dos valores calculados em reais diretamente nas opções do select (Nenhum, Metade e Completo) para maior transparência ao usuário.
+  - JMU (Ato Normativo STM nº 799/2024, art. 8º): 40% da diária de Ministro do STM para o percurso de ida e volta e 20% para ida ou volta.
+  - Justiça Federal (Resolução CJF nº 340/2015, art. 17): 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF) para percurso completo e metade (22%) para apenas ida ou volta.
+- Exibição dinâmica dos valores calculados em reais diretamente nas opções do select (Nenhum, Metade e Completo), garantindo que atualizações futuras na diária de ministro reflitam imediatamente em todos os cálculos e na interface sem dependência de valores fixados em texto.
 - Ajustada a nomenclatura oficial na Justiça Federal para "Adicional de transporte", em estrita conformidade com o Capítulo V e art. 17 da Resolução CJF nº 340/2015.
 - Criada a migration 017 e atualizado o fallback em ConfigService.ts e nas suítes de teste (test:dailies e test:config).
 

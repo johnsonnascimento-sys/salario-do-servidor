@@ -212,7 +212,7 @@ export class ConfigService {
                             metade: 322.73
                         },
                         embarkation_label: 'Adicional de transporte',
-                        embarkation_description: '80% sobre a diária básica de Analista Judiciário (art. 17 da Resolução CJF nº 340/2015), equivalente a 44% da diária de Ministro do STF (R$ 645,46 no percurso completo e R$ 322,73 na metade).',
+                        embarkation_description: 'Resolução CJF nº 340/2015 (art. 17): adicional de transporte para cobrir despesas de deslocamento de 80% sobre a diária básica de Analista Judiciário (equivalente a 44% da diária de Ministro do STF) para percurso completo e metade (22%) para apenas ida ou volta.',
                         normative_info: {
                             general_rule_label: 'Resolução CNJ Nº 73/2009',
                             branch_rule_label: 'Resolução CJF Nº 340/2015',
