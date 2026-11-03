@@ -177,6 +177,7 @@ export interface DailiesRulesConfig {
         metade: number;
     };
     embarkation_label?: string;
+    embarkation_description?: string;
     derived_from_minister?: {
         enabled: boolean;
         minister_per_diem: number;

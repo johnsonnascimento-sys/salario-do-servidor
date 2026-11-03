@@ -193,7 +193,7 @@ test('ConfigService: CJF ausente do banco aciona fallback técnico transitório 
 
     assert.equal(effective.org_slug, 'cjf');
     assert.equal(effective.power_name, 'PJU');
-    assert.equal(effective.dailies_rules?.embarkation_label, 'Adicional de deslocamento');
+    assert.equal(effective.dailies_rules?.embarkation_label, 'Adicional de transporte');
     assert.equal(effective.dailies_rules?.derived_from_minister?.minister_per_diem, 1466.95);
     assert.equal(effective.dailies_rules?.derived_from_minister?.rates_percentages?.desembargador, 0.95);
     assert.equal(effective.dailies_rules?.derived_from_minister?.rates_percentages?.juiz, 0.9025);

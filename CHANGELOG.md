@@ -1,5 +1,13 @@
 # Changelog
 
+## Descrição legal e nomenclatura do Adicional de Transporte / Embarque — 03/11/2026
+- Adicionada descrição explicativa detalhada sobre o percentual e a base de cálculo diretamente no card de diárias:
+  - JMU (Ato Normativo STM nº 799/2024, art. 8º): 40% da diária de Ministro do STM para o percurso de ida e volta (R$ 586,78) e 20% para ida ou volta (R$ 293,39).
+  - Justiça Federal (Resolução CJF nº 340/2015, art. 17): 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF) para ida e volta (R$ 645,46) e metade (22% = R$ 322,73) para ida ou volta.
+- Exibição dos valores calculados em reais diretamente nas opções do select (Nenhum, Metade e Completo) para maior transparência ao usuário.
+- Ajustada a nomenclatura oficial na Justiça Federal para "Adicional de transporte", em estrita conformidade com o Capítulo V e art. 17 da Resolução CJF nº 340/2015.
+- Criada a migration 017 e atualizado o fallback em ConfigService.ts e nas suítes de teste (test:dailies e test:config).
+
 ## Não publicado - 30/10/2026
 - Fix (Serviço Extraordinário da Justiça Federal): adequação do cálculo de horas extras à Resolução CJF Nº 4/2008 (redação da Res. CJF Nº 186/2012). O divisor mensal foi corrigido de 175 para 200 (jornada de 40h semanais / 6 * 30 = 200, art. 46, § 1º) nos fallbacks de cálculo (`useCalculatorResults.ts` e `presetGrossLines.ts`) e no `ConfigService` para o CJF e TRF1 a TRF6, eliminando distorção de +14,28% no valor da hora extra.
 - Feat (Serviço Extraordinário da JMU): parametrização normativa do cálculo de horas extras na Justiça Militar da União com base na Resolução STM Nº 374/2025 (consolidada com a Resolução STM Nº 399/2026). Rótulo dinâmico "Res. STM Nº 374/2025 • Divisor 175" e monitoramento informativo do teto mensal de 30 horas (art. 6º, caput; 50h no recesso forense) no `OvertimeCard.tsx`.

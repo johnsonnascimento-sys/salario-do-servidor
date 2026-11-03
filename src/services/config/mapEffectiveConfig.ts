@@ -170,6 +170,7 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     perDiemLimit: Number(effective.dailies_rules.ldo_cap?.per_diem_limit ?? 0),
                 },
                 embarkationLabel: effective.dailies_rules.embarkation_label,
+                embarkationDescription: effective.dailies_rules.embarkation_description,
                 discountRules: {
                     foodDivisor: Number(effective.dailies_rules.discount_rules?.food_divisor ?? 0),
                     transportDivisor: Number(effective.dailies_rules.discount_rules?.transport_divisor ?? 0),

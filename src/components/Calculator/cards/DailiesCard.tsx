@@ -7,6 +7,7 @@ import {
     resolveDailiesDiscountRules,
     summarizeDailiesPeriodMode,
     resolveAssistedAuthorityDailyRate,
+    resolveDailiesEmbarkationAdditional,
     DiariasAutoridadeAssistida
 } from '../../../utils/dailiesRules';
 
@@ -99,6 +100,21 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         if (!state.diariasAssessoramentoMagistrado || isMagistrate) return null;
         return resolveAssistedAuthorityDailyRate(dailiesConfig, effectiveAutoridade, courtConfig?.orgSlug);
     }, [dailiesConfig, state.diariasAssessoramentoMagistrado, effectiveAutoridade, isMagistrate, courtConfig?.orgSlug]);
+
+    const embarkationValues = useMemo(() => ({
+        full: resolveDailiesEmbarkationAdditional({ dailiesConfig, embarkationType: 'completo' }),
+        half: resolveDailiesEmbarkationAdditional({ dailiesConfig, embarkationType: 'metade' })
+    }), [dailiesConfig]);
+
+    const embarkationPercentDescription = useMemo(() => {
+        if (dailiesConfig?.embarkationDescription?.trim()) {
+            return dailiesConfig.embarkationDescription.trim();
+        }
+        if (isJmu) {
+            return 'Ato Normativo STM nº 799/2024 (art. 8º): adicional de 40% da diária de Ministro do STM para ida e volta e 20% para apenas ida ou volta.';
+        }
+        return 'Resolução CJF nº 340/2015 (art. 17): adicional de transporte para cobrir despesas de deslocamento de 80% sobre a diária básica de Analista Judiciário (equivalente a 44% da diária de Ministro do STF) para ida e volta e metade (22%) para apenas ida ou volta.';
+    }, [dailiesConfig?.embarkationDescription, isJmu]);
 
     const periodSummary = useMemo(() => (
         summarizeDailiesPeriodMode(state.diariasDataInicio, state.diariasDataFim, periodDiscountRules)
@@ -348,10 +364,17 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                 value={state.diariasEmbarque}
                                 onChange={e => update('diariasEmbarque', e.target.value)}
                             >
-                                <option value="nenhum">Nenhum</option>
-                                <option value="metade">Metade (ida ou volta)</option>
-                                <option value="completo">Completo (ida e volta)</option>
+                                <option value="nenhum">Nenhum (R$ 0,00)</option>
+                                <option value="metade">
+                                    Metade (ida ou volta){embarkationValues.half > 0 ? ` - ${formatCurrencyBr(embarkationValues.half)}` : ''}
+                                </option>
+                                <option value="completo">
+                                    Completo (ida e volta){embarkationValues.full > 0 ? ` - ${formatCurrencyBr(embarkationValues.full)}` : ''}
+                                </option>
                             </select>
+                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
+                                {embarkationPercentDescription}
+                            </p>
                         </div>
 
                         {!isMagistrate && (
@@ -414,6 +437,13 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     ⭐ Diária a 80% da autoridade assistida ({assistedAuthorityInfo.authorityLabel}: {formatCurrencyBr(assistedAuthorityInfo.authorityRate)} → servidor: {formatCurrencyBr(assistedAuthorityInfo.serverRate)}).
                                 </p>
                             )}
+                            <p>
+                                {embarkationLabel}: {state.diariasEmbarque === 'completo'
+                                    ? `Completo (${formatCurrencyBr(embarkationValues.full)})`
+                                    : state.diariasEmbarque === 'metade'
+                                        ? `Metade (${formatCurrencyBr(embarkationValues.half)})`
+                                        : 'Nenhum'}.
+                            </p>
                             <p>Desconto automático de auxílios: fins de semana são desconsiderados automaticamente.</p>
                             {(state.diariasFeriados || []).length > 0 ? (
                                 <p>Feriados e pontos facultativos indicados: {formatDateList(state.diariasFeriados)}.</p>

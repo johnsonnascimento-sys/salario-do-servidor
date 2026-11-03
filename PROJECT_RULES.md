@@ -196,4 +196,6 @@ Cada rubrica manual deve suportar:
        - Ministro / Membro do CJF (100% STF) -> 80% de R$ 1.466,95 = **R$ 1.173,56**.
        - Não exibir opções da JMU (como Ministro do STM).
    - A opção não se aplica a magistrados em deslocamento institucional.
-
+5. Adicional de Transporte / Embarque no PJU:
+   - **Na Justiça Militar da União (JMU / STM - Ato Normativo STM Nº 799/2024, art. 8º):** Denominado "Adicional de embarque e desembarque", correspondente a 40% da diária de Ministro do STM para ida e volta (R$ 586,78) e 20% para ida ou volta (R$ 293,39).
+   - **Na Justiça Federal (CJF e TRFs - Resolução CJF Nº 340/2015, art. 17):** Denominado "Adicional de transporte" (para cobertura de despesas de deslocamento até os locais de embarque e desembarque), correspondente a 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF): Completo para ida e volta (R$ 645,46) e Metade para ida ou volta (22% = R$ 322,73).

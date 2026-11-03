@@ -37,6 +37,7 @@ export interface DailiesConfig {
     metade: number;
   };
   embarkationLabel?: string;
+  embarkationDescription?: string;
   derivedFromMinister?: {
     enabled: boolean;
     ministerPerDiem: number;

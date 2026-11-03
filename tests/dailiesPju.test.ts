@@ -246,7 +246,8 @@ test('mapEffectiveConfig mapeia corretamente metadados normativos e rótulo din�
         org_name: 'Conselho da Justiça Federal',
         power_name: 'PJU',
         dailies_rules: {
-            embarkation_label: 'Adicional de deslocamento',
+            embarkation_label: 'Adicional de transporte',
+            embarkation_description: '80% sobre a diária básica de Analista Judiciário (art. 17 da Resolução CJF nº 340/2015), equivalente a 44% da diária de Ministro do STF.',
             normative_info: {
                 general_rule_label: 'Resolução CNJ Nº 73/2009',
                 branch_rule_label: 'Resolução CJF Nº 340/2015',
@@ -260,7 +261,8 @@ test('mapEffectiveConfig mapeia corretamente metadados normativos e rótulo din�
 
     const courtConfig = mapEffectiveConfigToCourtConfig(mockEffective as EffectiveConfig);
     assert.ok(courtConfig.dailies);
-    assert.equal(courtConfig.dailies.embarkationLabel, 'Adicional de deslocamento');
+    assert.equal(courtConfig.dailies.embarkationLabel, 'Adicional de transporte');
+    assert.ok(courtConfig.dailies.embarkationDescription?.includes('80% sobre a diária básica de Analista'));
     assert.equal(courtConfig.dailies.normativeInfo?.generalRuleLabel, 'Resolução CNJ Nº 73/2009');
     assert.equal(courtConfig.dailies.normativeInfo?.branchRuleLabel, 'Resolução CJF Nº 340/2015');
     assert.deepEqual(courtConfig.dailies.normativeInfo?.notes, ['Nota 1', 'Nota 2']);
@@ -295,7 +297,7 @@ test('calculateDailies calcula com precisão para servidor da Justiça Federal (
     const dailiesConfig: DailiesConfig = {
         rates: {},
         embarkationAdditional: { completo: 645.46, metade: 322.73 },
-        embarkationLabel: 'Adicional de deslocamento',
+        embarkationLabel: 'Adicional de transporte',
         derivedFromMinister: {
             enabled: true,
             ministerPerDiem: 1466.95,
