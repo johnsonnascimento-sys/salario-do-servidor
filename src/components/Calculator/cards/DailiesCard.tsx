@@ -678,7 +678,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         <span>
                                             {isJmu
                                                 ? 'Deslocamento em equipe de trabalho (art. 8º do Ato STM 799/2024)'
-                                                : 'Deslocamento em equipe de trabalho (art. 6º, § 2º da Res. CNJ 73/2009)'}
+                                                : 'Deslocamento em equipe de trabalho (art. 10, § 1º da Res. CJF 340/2015 c/c art. 6º, § 2º da Res. CNJ 73/2009)'}
                                         </span>
                                     </label>
 
@@ -702,7 +702,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
                                                 {isJmu
                                                     ? 'O servidor que se deslocar em equipe de trabalho receberá diária correspondente ao maior valor da diária atribuído entre os servidores membros da equipe (art. 8º do Ato Normativo STM nº 799/2024).'
-                                                    : 'O servidor que se deslocar em equipe de trabalho receberá diária equivalente ao maior valor pago entre os demais servidores membros da equipe (art. 6º, § 2º da Resolução CNJ nº 73/2009).'}
+                                                    : 'O servidor que se deslocar em equipe de trabalho receberá diária equivalente ao maior valor pago entre os demais servidores membros da equipe (art. 10, § 1º da Resolução CJF nº 340/2015 c/c art. 6º, § 2º da Resolução CNJ nº 73/2009).'}
                                             </p>
                                         </div>
                                     )}
@@ -802,7 +802,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             )}
                             {state.diariasEquipeTrabalho && !isMagistrate && selectedTeamOption && (
                                 <p className="text-blue-800 dark:text-blue-300 font-medium">
-                                    ⭐ Diária equiparada por equipe de trabalho ({selectedTeamOption.label}: {formatCurrencyBr(dailyRate)}) {isJmu ? 'conforme art. 8º do Ato STM 799/2024' : 'conforme art. 6º, § 2º da Res. CNJ 73/2009'}.
+                                    ⭐ Diária equiparada por equipe de trabalho ({selectedTeamOption.label}: {formatCurrencyBr(dailyRate)}) {isJmu ? 'conforme art. 8º do Ato STM 799/2024' : 'conforme art. 10, § 1º da Res. CJF 340/2015 c/c art. 6º, § 2º da Res. CNJ 73/2009'}.
                                 </p>
                             )}
                             <p>

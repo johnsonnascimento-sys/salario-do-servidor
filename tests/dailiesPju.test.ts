@@ -934,3 +934,114 @@ test('calculateDailies processa equipe de trabalho e acompanhamento integral no 
     assert.equal(resultIntegral.corteLdo, 333.78);
     assert.equal(resultIntegral.valor, 2306.74);
 });
+
+test('resolveDailiesDailyRate e calculateDailies para Justiça Federal (CJF / TRF) com Equipe de Trabalho (art. 10, § 1º) e Acompanhamento Integral a 90% (art. 6º, § 5º CNJ)', async () => {
+    const configJf: DailiesConfig = {
+        rates: {
+            tecnico: 660.13,
+            analista: 806.82,
+            cj: 806.82
+        },
+        embarkationAdditional: { completo: 645.46, metade: 322.73 },
+        embarkationLabel: 'Adicional de transporte',
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: {
+                desembargador: 0.95,
+                juiz: 0.9025,
+                juiz_titular: 0.9025,
+                juiz_substituto: 0.9025,
+                cj4: 0.55,
+                cj3: 0.55,
+                cj2: 0.55,
+                cj1: 0.55,
+                cj: 0.55,
+                analista: 0.55,
+                tecnico: 0.45,
+                auxiliar: 0.45
+            },
+            embarkationPercentageFull: 0.44,
+            embarkationPercentageHalf: 0.22,
+            assistancePercentage: 0.80,
+            fullTimeAccompanimentPercentage: 0.90
+        },
+        externalGloss: { hospedagem: 0.50, alimentacao: 0.25, transporte: 0.25 },
+        ldoCap: { enabled: true, perDiemLimit: 1153.37 }
+    };
+
+    // 1. Técnico da JF (regular 45% = R$ 660,13) em equipe com Analista (55% = R$ 806,82)
+    const rateTecnicoComAnalistaJf = resolveDailiesDailyRate({
+        dailiesConfig: configJf,
+        cargo: 'Técnico Judiciário',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'analista'
+    });
+    assert.equal(rateTecnicoComAnalistaJf, 806.82);
+
+    // 2. Técnico da JF em equipe com ocupante de CJ-1 a CJ-4 (55% = R$ 806,82)
+    const rateTecnicoComCjJf = resolveDailiesDailyRate({
+        dailiesConfig: configJf,
+        cargo: 'Técnico Judiciário',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'cj'
+    });
+    assert.equal(rateTecnicoComCjJf, 806.82);
+
+    // 3. Analista da JF em equipe de trabalho
+    const rateAnalistaEquipeJf = resolveDailiesDailyRate({
+        dailiesConfig: configJf,
+        cargo: 'Analista Judiciário',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'cj'
+    });
+    assert.equal(rateAnalistaEquipeJf, 806.82);
+
+    // 4. Assessoramento na JF a Ministro / Membro do CJF (100% STF = R$ 1.466,95): 80% vs 90%
+    const minCjfRegular = resolveAssistedAuthorityDailyRate(configJf, 'ministro_cjf', 'cjf', false);
+    assert.equal(minCjfRegular.serverRate, 1173.56);
+    const minCjfIntegral = resolveAssistedAuthorityDailyRate(configJf, 'ministro_cjf', 'cjf', true);
+    assert.equal(minCjfIntegral.serverRate, 1320.26);
+
+    // 5. Assessoramento na JF a Desembargador Federal (95% STF = R$ 1.393,60): 80% vs 90%
+    const trfRegular = resolveAssistedAuthorityDailyRate(configJf, 'desembargador_trf', 'cjf', false);
+    assert.equal(trfRegular.serverRate, 1114.88);
+    const trfIntegral = resolveAssistedAuthorityDailyRate(configJf, 'desembargador_trf', 'cjf', true);
+    assert.equal(trfIntegral.serverRate, 1254.24);
+
+    // 6. Assessoramento na JF a Juiz Federal (90,25% STF = R$ 1.323,92): 80% vs 90%
+    const jfRegular = resolveAssistedAuthorityDailyRate(configJf, 'juiz_federal', 'cjf', false);
+    assert.equal(jfRegular.serverRate, 1059.14);
+    const jfIntegral = resolveAssistedAuthorityDailyRate(configJf, 'juiz_federal', 'cjf', true);
+    assert.equal(jfIntegral.serverRate, 1191.53);
+
+    // 7. Simulação completa no motor para Técnico da JF em Equipe com Analista e 2 trechos de transporte (50%)
+    const resultJfEquipe = await calculateDailies({
+        cargo: 'Técnico Judiciário',
+        padrao: 'C13',
+        lotacao: 'TRF1',
+        funcao: '',
+        agencyConfig: { dailies: configJf, payrollRules: { transportWorkdays: 22 } },
+        diariasQtd: 2,
+        diariasEmbarque: 'nenhum',
+        diariasTrechosTransporte: ['ida_origem', 'volta_destino'], // 2 trechos = 50% = R$ 322,73
+        diariasModoDesconto: 'manual',
+        diariasDataInicio: '',
+        diariasDataFim: '',
+        diariasDiasDescontoAlimentacao: 0,
+        diariasDiasDescontoTransporte: 0,
+        diariasExtHospedagem: false,
+        diariasExtAlimentacao: false,
+        diariasExtTransporte: false,
+        diariasDescontarAlimentacao: false,
+        diariasDescontarTransporte: false,
+        diariasEquipeTrabalho: true,
+        diariasEquipeTrabalhoMaiorCargo: 'analista',
+        licencaDias: 0,
+        baseLicenca: 'auto',
+        incluirAbonoLicenca: false
+    });
+    // Diária = R$ 806,82 * 2 = 1.613,64 + Adicional de transporte (50% = 322,73) = 1.936,37
+    assert.equal(resultJfEquipe.bruto, 1936.37);
+    assert.equal(resultJfEquipe.valor, 1936.37);
+});

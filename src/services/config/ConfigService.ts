@@ -219,7 +219,9 @@ export class ConfigService {
                             notes: [
                                 'Regulamentado pela Resolução CJF Nº 340/2015 e Resolução CNJ Nº 73/2009',
                                 'Valores unitários vinculados à diária de Ministro do STF',
-                                'Adicional de transporte de 80% sobre a diária de Analista Judiciário para cobrir despesas de deslocamento (art. 17 da Res. CJF 340/2015)'
+                                'Adicional de transporte de 80% sobre a diária de Analista Judiciário para cobrir despesas de deslocamento (art. 17 da Res. CJF 340/2015)',
+                                'Equipe de trabalho: diária correspondente ao maior valor da diária entre os membros da equipe (art. 10, § 1º da Res. CJF 340/2015 c/c art. 6º, § 2º da Res. CNJ 73/2009)',
+                                'Acompanhamento de magistrado em tempo integral e mesma hospedagem: diária a 90% da autoridade assistida (art. 6º, § 5º da Res. CNJ 73/2009)'
                             ]
                         },
                         derived_from_minister: {
@@ -241,7 +243,8 @@ export class ConfigService {
                             },
                             embarkation_percentage_full: 0.44,
                             embarkation_percentage_half: 0.22,
-                            assistance_percentage: 0.80
+                            assistance_percentage: 0.80,
+                            full_time_accompaniment_percentage: 0.90
                         },
                         external_gloss: {
                             hospedagem: 0.50,

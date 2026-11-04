@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 04/11/2026 16:32
+Atualizado em: 04/11/2026 17:15
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -215,13 +215,16 @@ Cada rubrica manual deve suportar:
        4. Retorno: local de desembarque até a residência ou trabalho (25%).
      - O adicional não é devido nos trechos realizados com utilização de veículo oficial. A calculadora permite seleção granular via checkboxes de cada trecho realizado sem veículo oficial (0%, 25%, 50%, 75% ou 100%), calculados de forma 100% dinâmica sobre a base do percurso integral derivado da diária de Ministro do STF, sem valores nominais hardcoded.
 
-6. Equipe de Trabalho no PJU (art. 8º do Ato Normativo STM Nº 799/2024 e art. 6º, § 2º da Resolução CNJ Nº 73/2009):
+6. Equipe de Trabalho no PJU (art. 8º do Ato Normativo STM Nº 799/2024, art. 10, § 1º da Resolução CJF Nº 340/2015 e art. 6º, § 2º da Resolução CNJ Nº 73/2009):
    - Os servidores que se afastarem em equipe de trabalho recebem diárias em valores equivalentes, correspondentes ao **maior valor da diária atribuído entre os servidores membros da equipe**.
-   - Na Justiça Militar da União (JMU / STM):
+   - **Na Justiça Militar da União (JMU / STM - art. 8º do Ato Normativo STM Nº 799/2024)**:
      - Se um Técnico Judiciário (45% STM = R$ 660,13) se deslocar em equipe com um Analista Judiciário (55% STM = R$ 806,82), recebe a diária de Analista (**R$ 806,82**).
      - Se o Técnico Judiciário se deslocar com um ocupante de Cargo em Comissão (CJ-1 a CJ-4, 60% STM = R$ 880,17), recebe a diária de CJ (**R$ 880,17**).
      - Se um Analista Judiciário se deslocar com ocupante de CJ, recebe a diária de CJ (**R$ 880,17**).
      - O servidor nunca recebe valor inferior ao do seu próprio cargo/função (`Math.max(regularRate, teamRate)`).
-   - Na Justiça Federal (CJF e TRFs):
-     - Se um Técnico Judiciário (45% STF = R$ 660,13) se deslocar em equipe com Analista ou ocupante de CJ (55% STF = R$ 806,82), recebe a diária de Analista/CJ (**R$ 806,82**).
+   - **Na Justiça Federal (CJF e TRFs - art. 10, § 1º da Resolução CJF Nº 340/2015 c/c art. 6º, § 2º da Resolução CNJ Nº 73/2009)**:
+     - Se um Técnico Judiciário (45% STF = R$ 660,13) se deslocar em equipe com um Analista Judiciário ou com um ocupante de Cargo em Comissão (CJ-1 a CJ-4, ambos a 55% STF = R$ 806,82), recebe a diária correspondente (**R$ 806,82**).
+     - Se um Analista Judiciário se deslocar com ocupante de CJ, mantém a diária de 55% (**R$ 806,82**).
+     - Se um Auxiliar Judiciário se deslocar com Técnico, recebe a diária de Técnico (**R$ 660,13**).
+     - O servidor nunca recebe valor inferior ao do seu próprio cargo/função (`Math.max(regularRate, teamRate)`).
    - A opção não se aplica a magistrados em deslocamento institucional.

@@ -1,12 +1,12 @@
 # Changelog
 
 ## Regras de Equipe de Trabalho e Acompanhamento Integral de Diárias (JMU e JF) — 04/11/2026
-- Feat (Equipe de Trabalho - Ato STM 799/2024 art. 8º / Res. CNJ 73/2009 art. 6º, § 2º):
+- Feat (Equipe de Trabalho - Ato STM 799/2024 art. 8º / Res. CJF 340/2015 art. 10, § 1º / Res. CNJ 73/2009 art. 6º, § 2º):
   - Implementação da opção de deslocamento em equipe de trabalho para servidores (`!isMagistrate`).
   - Equiparação da diária do servidor ao maior valor atribuído entre os servidores membros da equipe (ex.: Técnico viajando com Analista recebe diária de Analista [R$ 806,82 no STM]; viajando com ocupante de CJ recebe diária de CJ [R$ 880,17 no STM]).
   - Garantia de que o servidor nunca receba valor inferior ao do seu próprio cargo (`Math.max(regularRate, teamRate)`).
   - Interface no `DailiesCard.tsx` com select dinâmico cujas opções e valores são calculados em tempo real a partir de `derivedFromMinister` no banco de dados, sem qualquer valor hardcoded.
-- Feat (Acompanhamento em Tempo Integral - Ato STM 799/2024 art. 9º, § 1º / Res. CNJ 73/2009 art. 6º, § 5º):
+- Feat (Acompanhamento em Tempo Integral - Ato STM 799/2024 art. 9º, § 1º / Res. CJF 340/2015 art. 10, § 3º / Res. CNJ 73/2009 art. 6º, § 5º):
   - Nova sub-opção em assessoramento direto a magistrado: "Exigido acompanhamento em tempo integral e hospedagem no mesmo local (diária a 90%)".
   - O percentual da autoridade assistida é elevado dinamicamente de 80% para 90% (Ministro do STM: de R$ 1.173,56 para R$ 1.320,26; Juiz Militar da JMU: de R$ 1.114,88 para R$ 1.254,24; na Justiça Federal: Desembargador de R$ 1.114,88 para R$ 1.254,24, Juiz Federal de R$ 1.059,14 para R$ 1.191,53, Ministro do CJF de R$ 1.173,56 para R$ 1.320,26).
   - Alerta informativo com cálculo discriminado (valor da autoridade e percentual aplicado ao servidor).
