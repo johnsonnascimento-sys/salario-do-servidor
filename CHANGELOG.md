@@ -1,5 +1,20 @@
 # Changelog
 
+## Módulo GAACTA (Resolução STM nº 397/2026 para JMU e JF) — 04/11/2026
+- Feat (GAACTA - Resolução STM nº 397, de 19 de junho de 2026):
+  - Implementação do novo módulo de Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa (GAACTA), que revogou a Resolução STM nº 376/2025 (licença compensatória na JMU), com vigência financeira desde 1º de junho de 2026.
+  - Alíquota regulamentar de 15% (quinze por cento) incidente sobre a remuneração legal do servidor.
+  - Elegibilidade exclusiva a servidores ocupantes de cargo em comissão (CJ-1 a CJ-4), com validação automática e alertas informativos nos dados funcionais.
+  - Natureza estritamente indenizatória (art. 4º): 100% isenta de incidência de Previdência (PSS/RPPS) e Imposto de Renda (IRRF), sem compor base de outros adicionais.
+  - Seleção flexível da base de cálculo via checkboxes dinâmicos (Vencimento Básico, GAJ, Parcela de Opção de CJ, Adicionais de Qualificação por Títulos e Treinamento, ATS, VPNI Lei 9.527/97 ou Judicial, e opcionalmente Abono de Permanência ou parcelas complementares ajustáveis), adaptando-se com precisão à realidade individual de cada servidor da JMU e da JF.
+  - Incompatibilidade legal com horas extras (art. 6º): alertas cruzados informativos no card da GAACTA e no card de Serviço Extraordinário, com checkbox de "Período de recesso judiciário" para a exceção expressa.
+  - Reprodução exata do contracheque de referência oficial do STM (Folha Out/2026 - Ana Cristina Pimentel Carneiro, CJ-03), gerando a base de R$ 43.516,33 e o valor de R$ 6.527,45 na rubrica `INDENIZAÇÃO- GRAT AT ALTA COMPLEX TEC ADM (GAACTA) - EC`.
+- Architecture & Engine:
+  - Novo módulo de cálculo `gaactaCalculations.ts` integrado ao `AgencyCalculationEngine` e tipado em `src/types.ts`.
+  - Componente de interface interativo `GaactaCard.tsx` com estilo moderno, responsivo e suporte a temas claro/escuro.
+  - Suíte de 5 testes unitários e de integração em `tests/gaacta.test.ts` e runner `scripts/test-gaacta.mjs` (`npm run test:gaacta`).
+  - Atualização do `PROJECT_RULES.md` na Seção 12 e governança de regras.
+
 ## Regras de Equipe de Trabalho e Acompanhamento Integral de Diárias (JMU e JF) — 04/11/2026
 - Feat (Equipe de Trabalho - Ato STM 799/2024 art. 8º / Res. CJF 340/2015 art. 10, § 1º / Res. CNJ 73/2009 art. 6º, § 2º):
   - Implementação da opção de deslocamento em equipe de trabalho para servidores (`!isMagistrate`).

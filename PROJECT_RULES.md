@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 04/11/2026 17:15
+Atualizado em: 04/11/2026 18:52
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -228,3 +228,12 @@ Cada rubrica manual deve suportar:
      - Se um Auxiliar Judiciário se deslocar com Técnico, recebe a diária de Técnico (**R$ 660,13**).
      - O servidor nunca recebe valor inferior ao do seu próprio cargo/função (`Math.max(regularRate, teamRate)`).
    - A opção não se aplica a magistrados em deslocamento institucional.
+
+## 12. Gratificação por Atuação de Alta Complexidade (GAACTA - Resolução STM nº 397/2026 e JF)
+
+1. **Origem e revogação:** A Resolução STM nº 376, de 7 de agosto de 2025 (licença compensatória na JMU), foi revogada pela Resolução STM nº 397, de 19 de junho de 2026, com efeitos financeiros a partir de 1º de junho de 2026, instituindo a Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa (GAACTA).
+2. **Beneficiários exclusivos:** A GAACTA é devida privativamente a servidores ocupantes de cargo em comissão (**CJ-1, CJ-2, CJ-3 e CJ-4**) nas estruturas previstas no art. 2º da Resolução STM nº 397/2026 (Gabinetes de Ministros, estruturas vinculadas à Presidência, Secretaria-Geral, Secretaria do Tribunal, Auditoria Interna, Vice-Presidência, Corregedoria, ENFAM, Ouvidoria e Diretores de Secretaria CJ-3 das Auditorias da JMU). Servidores sem função ou com função de confiança (FC-1 a FC-6) não são elegíveis.
+3. **Alíquota e base de cálculo:** O valor da GAACTA corresponde a **15% (quinze por cento)** aplicado sobre o valor da respectiva **remuneração** do servidor comissionado. A composição da base de cálculo é configurável interativamente por checkboxes dinâmicos (Vencimento Básico, GAJ, Parcela de Cargo em Comissão / Opção de CJ, Adicionais de Qualificação por Títulos e Treinamento, Adicional por Tempo de Serviço - ATS, VPNI Lei 9.527/97 ou Decisão Judicial, e opcionalmente Abono de Permanência ou parcelas complementares ajustáveis), adaptando-se às decisões administrativas e à realidade de cada servidor da JMU e da JF.
+4. **Natureza indenizatória e isenção:** A gratificação possui natureza estritamente indenizatória (art. 4º), não integrando a remuneração nem compondo base de cálculo para contribuição previdenciária (PSS/RPPS) nem incidência de imposto de renda (IRRF), nem servindo de base para outros adicionais.
+5. **Incompatibilidade com serviço extraordinário:** O acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário, exceto no período do recesso judiciário (art. 6º). Havendo concomitância, o servidor deverá optar entre a GAACTA e as Horas Extras. A calculadora emite alertas cruzados em ambos os módulos (GAACTA e Horas Extras), mantendo a ressalva ativável para o período de recesso forense.
+6. **Módulo base para a Justiça Federal:** A arquitetura do módulo GAACTA serve de base unificada e parametrizada para a expansão e aplicação na Justiça Federal (JF) e demais órgãos do Poder Judiciário da União.

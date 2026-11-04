@@ -11,6 +11,7 @@ export type PredefinedRubricId =
     | 'hora_extra'
     | 'substituicao'
     | 'licenca'
+    | 'gaacta'
     | 'pre_escolar'
     | 'aux_transporte'
     | 'diarias';
@@ -37,6 +38,7 @@ export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }
     { id: 'hora_extra', label: 'Horas Extras' },
     { id: 'substituicao', label: 'Substituicao' },
     { id: 'licenca', label: 'Licenca Compensatoria' },
+    { id: 'gaacta', label: 'GAACTA - Ativ. Alta Complexidade (CJ)' },
     { id: 'pre_escolar', label: 'Auxilio Pre-Escolar' },
     { id: 'aux_transporte', label: 'Auxilio Transporte' },
     { id: 'diarias', label: 'Diarias de Viagem' }

@@ -57,6 +57,11 @@ export const useCalculatorResults = (
         state.diariasAssessoramentoMagistrado, state.diariasAcompanhamentoIntegral, state.diariasAutoridadeAssistida,
         state.diariasEquipeTrabalho, state.diariasEquipeTrabalhoMaiorCargo,
         state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
+        state.gaactaAtivo, state.gaactaValor, state.gaactaPercentual, state.gaactaRecesso,
+        state.gaactaIncideVencimento, state.gaactaIncideGAJ, state.gaactaIncideFuncao,
+        state.gaactaIncideAQTitulo, state.gaactaIncideAQTreino, state.gaactaIncideATS,
+        state.gaactaIncideVPNI, state.gaactaIncideAbono, state.gaactaIncideGrat,
+        state.gaactaOutrasParcelas, state.gaactaManualBase, state.gaactaBaseManualValor,
         courtConfig,
         agency?.slug
     ]);
@@ -160,6 +165,8 @@ export const useCalculatorResults = (
                     diariasDiasDescontoAlimentacaoCalc: bd.diariasDiasDescAlim || 0,
                     diariasDiasDescontoTransporteCalc: bd.diariasDiasDescTransp || 0,
                     licencaValor: bd.licencaCompensatoria || 0,
+                    gaactaValor: bd.gaacta || 0,
+                    gaactaBaseCalculo: bd.gaactaBase || 0,
                     totalBruto: result.netSalary + result.totalDeductions,
                     totalDescontos: result.totalDeductions,
                     liquido: result.netSalary,
@@ -348,6 +355,7 @@ export const useCalculatorResults = (
         if (effectiveState.auxPreEscolarValor > 0) rows.push({ label: 'AUXÍLIO PRÉ-ESCOLAR', value: effectiveState.auxPreEscolarValor, type: 'C' });
         if (effectiveState.auxTransporteValor > 0) rows.push({ label: 'AUXÍLIO-TRANSPORTE', value: effectiveState.auxTransporteValor, type: 'C' });
         if (effectiveState.licencaValor > 0) rows.push({ label: 'INDENIZAÇÃO LICENÇA COMPENSATÓRIA', value: effectiveState.licencaValor, type: 'C' });
+        if (effectiveState.gaactaValor > 0) rows.push({ label: 'INDENIZAÇÃO- GRAT AT ALTA COMPLEX TEC ADM (GAACTA) - EC', value: effectiveState.gaactaValor, type: 'C' });
         if (effectiveState.abonoPermanencia > 0) rows.push({ label: 'ABONO DE PERMANÊNCIA', value: effectiveState.abonoPermanencia, type: 'C' });
         if (effectiveState.ferias1_3 > 0) rows.push({ label: 'ADICIONAL 1/3 FÉRIAS', value: effectiveState.ferias1_3, type: 'C' });
 

@@ -419,6 +419,9 @@ export const useDynamicPresetInstances = ({
             return;
         }
 
+        if (selectedPreset === 'gaacta') {
+            update('gaactaAtivo', true);
+        }
         if (enabledPresetIds.has(selectedPreset)) return;
         setEnabledPresets(prev => [
             { key: createUniqueId(`preset-${selectedPreset}`), presetId: selectedPreset },

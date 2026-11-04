@@ -265,6 +265,24 @@ export interface CalculatorState {
   baseLicenca: string; // 'auto', 'cj4', 'cj3'...
   incluirAbonoLicenca: boolean;
   licencaValor: number;
+  // GAACTA (Resolução STM nº 397/2026)
+  gaactaAtivo: boolean;
+  gaactaValor: number;
+  gaactaBaseCalculo: number;
+  gaactaPercentual: number;
+  gaactaRecesso: boolean;
+  gaactaIncideVencimento: boolean;
+  gaactaIncideGAJ: boolean;
+  gaactaIncideFuncao: boolean;
+  gaactaIncideAQTitulo: boolean;
+  gaactaIncideAQTreino: boolean;
+  gaactaIncideATS: boolean;
+  gaactaIncideVPNI: boolean;
+  gaactaIncideAbono: boolean;
+  gaactaIncideGrat: boolean;
+  gaactaOutrasParcelas: number;
+  gaactaManualBase: boolean;
+  gaactaBaseManualValor: number;
 
   auxAlimentacao: number;
   auxAlimentacaoProporcional: boolean;
@@ -454,6 +472,8 @@ export type CalculatedPayrollState = Pick<
   | 'diariasDiasDescontoAlimentacaoCalc'
   | 'diariasDiasDescontoTransporteCalc'
   | 'licencaValor'
+  | 'gaactaValor'
+  | 'gaactaBaseCalculo'
   | 'totalBruto'
   | 'totalDescontos'
   | 'liquido'
@@ -515,6 +535,23 @@ export const INITIAL_STATE: CalculatorState = {
   baseLicenca: 'auto',
   incluirAbonoLicenca: true,
   licencaValor: 0,
+  gaactaAtivo: false,
+  gaactaValor: 0,
+  gaactaBaseCalculo: 0,
+  gaactaPercentual: 0.15,
+  gaactaRecesso: false,
+  gaactaIncideVencimento: true,
+  gaactaIncideGAJ: true,
+  gaactaIncideFuncao: true,
+  gaactaIncideAQTitulo: true,
+  gaactaIncideAQTreino: true,
+  gaactaIncideATS: true,
+  gaactaIncideVPNI: true,
+  gaactaIncideAbono: false,
+  gaactaIncideGrat: false,
+  gaactaOutrasParcelas: 0,
+  gaactaManualBase: false,
+  gaactaBaseManualValor: 0,
 
   auxAlimentacao: 0,
   auxAlimentacaoProporcional: false,

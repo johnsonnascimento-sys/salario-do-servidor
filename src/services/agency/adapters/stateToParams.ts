@@ -122,6 +122,24 @@ export function mapStateToAgencyParams(
         licencaDias: Math.max(0, Math.floor(Number(state.licencaDias) || 0)),
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,
+        // GAACTA (Resolução STM nº 397/2026)
+        gaactaAtivo: Boolean(state.gaactaAtivo),
+        gaactaValor: state.gaactaValor || 0,
+        gaactaPercentual: state.gaactaPercentual || 0.15,
+        gaactaRecesso: Boolean(state.gaactaRecesso),
+        gaactaIncideVencimento: state.gaactaIncideVencimento !== false,
+        gaactaIncideGAJ: state.gaactaIncideGAJ !== false,
+        gaactaIncideFuncao: state.gaactaIncideFuncao !== false,
+        gaactaIncideAQTitulo: state.gaactaIncideAQTitulo !== false,
+        gaactaIncideAQTreino: state.gaactaIncideAQTreino !== false,
+        gaactaIncideATS: state.gaactaIncideATS !== false,
+        gaactaIncideVPNI: state.gaactaIncideVPNI !== false,
+        gaactaIncideAbono: Boolean(state.gaactaIncideAbono),
+        gaactaIncideGrat: Boolean(state.gaactaIncideGrat),
+        gaactaOutrasParcelas: state.gaactaOutrasParcelas || 0,
+        gaactaManualBase: Boolean(state.gaactaManualBase),
+        gaactaBaseManualValor: state.gaactaBaseManualValor || 0,
+        abonoPermanencia: state.abonoPermanencia || 0,
     };
 }
 

@@ -99,4 +99,22 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
     rubricasExtras?: Rubrica[];
+    // GAACTA (Resolução STM nº 397/2026)
+    gaactaAtivo?: boolean;
+    gaactaValor?: number;
+    gaactaPercentual?: number;
+    gaactaRecesso?: boolean;
+    gaactaIncideVencimento?: boolean;
+    gaactaIncideGAJ?: boolean;
+    gaactaIncideFuncao?: boolean;
+    gaactaIncideAQTitulo?: boolean;
+    gaactaIncideAQTreino?: boolean;
+    gaactaIncideATS?: boolean;
+    gaactaIncideVPNI?: boolean;
+    gaactaIncideAbono?: boolean;
+    gaactaIncideGrat?: boolean;
+    gaactaOutrasParcelas?: number;
+    gaactaManualBase?: boolean;
+    gaactaBaseManualValor?: number;
+    abonoPermanencia?: number;
 }
