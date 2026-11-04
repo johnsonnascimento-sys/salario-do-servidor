@@ -113,9 +113,12 @@ export function mapStateToAgencyParams(
         diariasDescontarAlimentacao: state.diariasDescontarAlimentacao,
         diariasDescontarTransporte: state.diariasDescontarTransporte,
         diariasAssessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
+        diariasAcompanhamentoIntegral: Boolean(state.diariasAcompanhamentoIntegral),
         diariasAutoridadeAssistida: (orgSlug === 'jmu' || orgSlug === 'stm')
             ? (state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'ministro_stm')
             : (state.diariasAutoridadeAssistida === 'ministro_cjf' || state.diariasAutoridadeAssistida === 'ministro_stm' ? 'ministro_cjf' : state.diariasAutoridadeAssistida === 'juiz_federal' || state.diariasAutoridadeAssistida === 'juiz_militar' ? 'juiz_federal' : 'desembargador_trf'),
+        diariasEquipeTrabalho: Boolean(state.diariasEquipeTrabalho),
+        diariasEquipeTrabalhoMaiorCargo: state.diariasEquipeTrabalhoMaiorCargo,
         licencaDias: Math.max(0, Math.floor(Number(state.licencaDias) || 0)),
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,

@@ -77,7 +77,10 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
         funcao: params.funcao,
         hasCommissionRole: Boolean(params.funcao && params.funcao.toLowerCase().startsWith('cj')),
         assessoramentoMagistrado: Boolean(params.diariasAssessoramentoMagistrado),
-        autoridadeAssistida: params.diariasAutoridadeAssistida
+        acompanhamentoIntegral: Boolean(params.diariasAcompanhamentoIntegral),
+        autoridadeAssistida: params.diariasAutoridadeAssistida,
+        equipeTrabalho: Boolean(params.diariasEquipeTrabalho),
+        equipeTrabalhoMaiorCargo: params.diariasEquipeTrabalhoMaiorCargo
     });
 
     // 2. Adicional de embarque

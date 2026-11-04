@@ -203,6 +203,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
             : [],
         licencaDias: Math.max(0, Math.floor(Number(merged.licencaDias) || 0)),
         diariasAssessoramentoMagistrado: Boolean(merged.diariasAssessoramentoMagistrado),
+        diariasAcompanhamentoIntegral: Boolean(merged.diariasAcompanhamentoIntegral),
         diariasAutoridadeAssistida: (
             merged.diariasAutoridadeAssistida === 'ministro_cjf' ||
             merged.diariasAutoridadeAssistida === 'ministro_stm' ||
@@ -211,6 +212,8 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         )
             ? merged.diariasAutoridadeAssistida
             : 'desembargador_trf',
+        diariasEquipeTrabalho: Boolean(merged.diariasEquipeTrabalho),
+        diariasEquipeTrabalhoMaiorCargo: String(merged.diariasEquipeTrabalhoMaiorCargo || '').trim(),
     };
 };
 

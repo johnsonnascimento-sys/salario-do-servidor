@@ -406,7 +406,10 @@ export const buildPresetGrossLines = ({
                 funcao: state.funcao,
                 hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
                 assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
-                autoridadeAssistida
+                acompanhamentoIntegral: Boolean(state.diariasAcompanhamentoIntegral),
+                autoridadeAssistida,
+                equipeTrabalho: Boolean(state.diariasEquipeTrabalho),
+                equipeTrabalhoMaiorCargo: state.diariasEquipeTrabalhoMaiorCargo
             }));
             const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({
                 dailiesConfig: courtConfig?.dailies,

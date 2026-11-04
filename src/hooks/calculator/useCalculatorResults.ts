@@ -54,7 +54,8 @@ export const useCalculatorResults = (
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,
         state.diariasExtHospedagem, state.diariasExtAlimentacao, state.diariasExtTransporte,
         state.diariasDescontarAlimentacao, state.diariasDescontarTransporte,
-        state.diariasAssessoramentoMagistrado, state.diariasAutoridadeAssistida,
+        state.diariasAssessoramentoMagistrado, state.diariasAcompanhamentoIntegral, state.diariasAutoridadeAssistida,
+        state.diariasEquipeTrabalho, state.diariasEquipeTrabalhoMaiorCargo,
         state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
         courtConfig,
         agency?.slug

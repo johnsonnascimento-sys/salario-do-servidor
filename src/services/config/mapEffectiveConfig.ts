@@ -159,6 +159,9 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     assistancePercentage: effective.dailies_rules.derived_from_minister?.assistance_percentage !== undefined
                         ? Number(effective.dailies_rules.derived_from_minister?.assistance_percentage)
                         : undefined,
+                    fullTimeAccompanimentPercentage: effective.dailies_rules.derived_from_minister?.full_time_accompaniment_percentage !== undefined
+                        ? Number(effective.dailies_rules.derived_from_minister?.full_time_accompaniment_percentage)
+                        : undefined,
                 },
                 externalGloss: {
                     hospedagem: effective.dailies_rules.external_gloss?.hospedagem ?? 0,

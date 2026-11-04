@@ -670,3 +670,267 @@ test('rótulo do adicional de deslocamento/embarque é dinâmico conforme config
     assert.equal(`DIÁRIAS (SEM ${upperJmu})`, 'DIÁRIAS (SEM ADICIONAL DE EMBARQUE E DESEMBARQUE)');
     assert.equal(`${upperJmu} (DIÁRIAS)`, 'ADICIONAL DE EMBARQUE E DESEMBARQUE (DIÁRIAS)');
 });
+
+test('resolveDailiesDailyRate calcula equipe de trabalho corretamente para JMU e JF (Ato STM 799/2024 art. 8º e CNJ 73/2009 art. 6º, § 2º)', () => {
+    const configJmu: DailiesConfig = {
+        rates: {
+            tecnico: 660.13,
+            analista: 806.82,
+            cj: 880.17
+        },
+        embarkationAdditional: { completo: 586.78, metade: 293.39 },
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: {
+                juiz: 0.95,
+                cj: 0.60,
+                analista: 0.55,
+                tecnico: 0.45
+            },
+            embarkationPercentageFull: 0.40,
+            assistancePercentage: 0.80,
+            fullTimeAccompanimentPercentage: 0.90
+        },
+        externalGloss: { hospedagem: 0.55, alimentacao: 0.25, transporte: 0.20 }
+    };
+
+    // 1. Técnico Judiciário (regular 45% = R$ 660,13) em equipe com Analista Judiciário (55% = R$ 806,82)
+    const rateTecnicoComAnalista = resolveDailiesDailyRate({
+        dailiesConfig: configJmu,
+        cargo: 'Técnico Judiciário',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'analista'
+    });
+    assert.equal(rateTecnicoComAnalista, 806.82, 'Técnico com Analista deve receber a diária de Analista (R$ 806,82)');
+
+    // 2. Técnico Judiciário em equipe com Cargo em Comissão (CJ) (60% = R$ 880,17)
+    const rateTecnicoComCj = resolveDailiesDailyRate({
+        dailiesConfig: configJmu,
+        cargo: 'Técnico Judiciário',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'cj'
+    });
+    assert.equal(rateTecnicoComCj, 880.17, 'Técnico com CJ deve receber a diária de CJ (R$ 880,17)');
+
+    // 3. Analista Judiciário (regular 55% = R$ 806,82) em equipe com CJ (60% = R$ 880,17)
+    const rateAnalistaComCj = resolveDailiesDailyRate({
+        dailiesConfig: configJmu,
+        cargo: 'Analista Judiciário',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'cj'
+    });
+    assert.equal(rateAnalistaComCj, 880.17, 'Analista com CJ deve receber a diária de CJ (R$ 880,17)');
+
+    // 4. Analista Judiciário em equipe com Técnico Judiciário (não pode receber menos que o próprio cargo)
+    const rateAnalistaComTecnico = resolveDailiesDailyRate({
+        dailiesConfig: configJmu,
+        cargo: 'Analista Judiciário',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'tecnico'
+    });
+    assert.equal(rateAnalistaComTecnico, 806.82, 'Analista nunca deve receber menos que sua própria diária regular');
+
+    // 5. Servidor ocupante de CJ-4 em equipe de trabalho
+    const rateCjEquipe = resolveDailiesDailyRate({
+        dailiesConfig: configJmu,
+        cargo: 'Analista Judiciário',
+        funcao: 'CJ-4',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'analista'
+    });
+    assert.equal(rateCjEquipe, 880.17, 'Ocupante de CJ mantém a maior diária (R$ 880,17)');
+
+    // 6. Magistrado em deslocamento: equipe de trabalho entre servidores não se aplica
+    const rateJuiz = resolveDailiesDailyRate({
+        dailiesConfig: configJmu,
+        cargo: 'Juiz Federal',
+        equipeTrabalho: true,
+        equipeTrabalhoMaiorCargo: 'cj'
+    });
+    assert.equal(rateJuiz, 1393.60, 'Magistrado mantém diária de magistrado');
+});
+
+test('resolveAssistedAuthorityDailyRate calcula acompanhamento em tempo integral a 90% (Ato STM 799/2024 art. 9º, § 1º e CNJ 73/2009 art. 6º, § 5º)', () => {
+    const configJmu: DailiesConfig = {
+        rates: {},
+        embarkationAdditional: { completo: 0, metade: 0 },
+        derivedFromMinister: {
+            enabled: true,
+            ministerPerDiem: 1466.95,
+            ratesPercentages: {
+                juiz: 0.95,
+                cj: 0.60,
+                analista: 0.55,
+                tecnico: 0.45
+            },
+            assistancePercentage: 0.80,
+            fullTimeAccompanimentPercentage: 0.90
+        },
+        externalGloss: { hospedagem: 0.55, alimentacao: 0.25, transporte: 0.20 }
+    };
+
+    // JMU - Ministro do STM: 80% (R$ 1.173,56) vs 90% (R$ 1.320,26)
+    const minRegular = resolveAssistedAuthorityDailyRate(configJmu, 'ministro_stm', 'jmu', false);
+    assert.equal(minRegular.authorityRate, 1466.95);
+    assert.equal(minRegular.serverRate, 1173.56);
+    assert.equal(minRegular.percentage, 0.80);
+
+    const minIntegral = resolveAssistedAuthorityDailyRate(configJmu, 'ministro_stm', 'jmu', true);
+    assert.equal(minIntegral.authorityRate, 1466.95);
+    assert.equal(minIntegral.serverRate, 1320.26, '90% de 1.466,95 deve ser R$ 1.320,26');
+    assert.equal(minIntegral.percentage, 0.90);
+
+    // JMU - Juiz Federal da JMU (base 95% do STM = R$ 1.393,60): 80% (R$ 1.114,88) vs 90% (R$ 1.254,24)
+    const juizRegular = resolveAssistedAuthorityDailyRate(configJmu, 'juiz_federal', 'jmu', false);
+    assert.equal(juizRegular.authorityRate, 1393.60);
+    assert.equal(juizRegular.serverRate, 1114.88);
+    assert.equal(juizRegular.percentage, 0.80);
+
+    const juizIntegral = resolveAssistedAuthorityDailyRate(configJmu, 'juiz_federal', 'jmu', true);
+    assert.equal(juizIntegral.authorityRate, 1393.60);
+    assert.equal(juizIntegral.serverRate, 1254.24, '90% de 1.393,60 deve ser R$ 1.254,24');
+    assert.equal(juizIntegral.percentage, 0.90);
+
+    // JF / CJF - Desembargador de TRF (95% STF = R$ 1.393,60): 90% (R$ 1.254,24)
+    const configCjf: DailiesConfig = {
+        ...configJmu,
+        derivedFromMinister: {
+            ...configJmu.derivedFromMinister!,
+            ratesPercentages: {
+                desembargador: 0.95,
+                juiz_titular: 0.9025
+            }
+        }
+    };
+    const trfIntegral = resolveAssistedAuthorityDailyRate(configCjf, 'desembargador_trf', 'cjf', true);
+    assert.equal(trfIntegral.serverRate, 1254.24);
+
+    // JF / CJF - Juiz Federal (90,25% STF = R$ 1.323,92): 90% (R$ 1.191,53)
+    const jfIntegral = resolveAssistedAuthorityDailyRate(configCjf, 'juiz_federal', 'cjf', true);
+    assert.equal(jfIntegral.authorityRate, 1323.92);
+    assert.equal(jfIntegral.serverRate, 1191.53, '90% de 1.323,92 deve ser R$ 1.191,53');
+});
+
+test('calculateDailies processa equipe de trabalho e acompanhamento integral no motor de agência da JMU', async () => {
+    const agencyConfig: any = {
+        dailies: {
+            rates: {
+                tecnico: 660.13,
+                analista: 806.82,
+                cj: 880.17
+            },
+            embarkationAdditional: { completo: 586.78, metade: 293.39 },
+            derivedFromMinister: {
+                enabled: true,
+                ministerPerDiem: 1466.95,
+                ratesPercentages: {
+                    juiz: 0.95,
+                    cj: 0.60,
+                    analista: 0.55,
+                    tecnico: 0.45
+                },
+                embarkationPercentageFull: 0.40,
+                assistancePercentage: 0.80,
+                fullTimeAccompanimentPercentage: 0.90
+            },
+            externalGloss: { hospedagem: 0.55, alimentacao: 0.25, transporte: 0.20 },
+            ldoCap: { enabled: true, perDiemLimit: 1153.37 }
+        },
+        payrollRules: { transportWorkdays: 22 }
+    };
+
+    // Caso 1: Técnico em equipe com Analista (3 diárias completas, sem embarque)
+    const resultEquipeAnalista = await calculateDailies({
+        cargo: 'Técnico Judiciário',
+        padrao: 'C13',
+        lotacao: 'STM',
+        funcao: '',
+        agencyConfig,
+        diariasQtd: 3,
+        diariasEmbarque: 'nenhum',
+        diariasModoDesconto: 'manual',
+        diariasDataInicio: '',
+        diariasDataFim: '',
+        diariasDiasDescontoAlimentacao: 0,
+        diariasDiasDescontoTransporte: 0,
+        diariasExtHospedagem: false,
+        diariasExtAlimentacao: false,
+        diariasExtTransporte: false,
+        diariasDescontarAlimentacao: false,
+        diariasDescontarTransporte: false,
+        diariasEquipeTrabalho: true,
+        diariasEquipeTrabalhoMaiorCargo: 'analista',
+        licencaDias: 0,
+        baseLicenca: 'auto',
+        incluirAbonoLicenca: false
+    });
+
+    // 3 * 806,82 = 2.420,46
+    assert.equal(resultEquipeAnalista.bruto, 2420.46);
+    assert.equal(resultEquipeAnalista.valor, 2420.46);
+
+    // Caso 2: Técnico em equipe com CJ (3 diárias completas, sem embarque)
+    const resultEquipeCj = await calculateDailies({
+        cargo: 'Técnico Judiciário',
+        padrao: 'C13',
+        lotacao: 'STM',
+        funcao: '',
+        agencyConfig,
+        diariasQtd: 3,
+        diariasEmbarque: 'nenhum',
+        diariasModoDesconto: 'manual',
+        diariasDataInicio: '',
+        diariasDataFim: '',
+        diariasDiasDescontoAlimentacao: 0,
+        diariasDiasDescontoTransporte: 0,
+        diariasExtHospedagem: false,
+        diariasExtAlimentacao: false,
+        diariasExtTransporte: false,
+        diariasDescontarAlimentacao: false,
+        diariasDescontarTransporte: false,
+        diariasEquipeTrabalho: true,
+        diariasEquipeTrabalhoMaiorCargo: 'cj',
+        licencaDias: 0,
+        baseLicenca: 'auto',
+        incluirAbonoLicenca: false
+    });
+
+    // 3 * 880,17 = 2.640,51
+    assert.equal(resultEquipeCj.bruto, 2640.51);
+    assert.equal(resultEquipeCj.valor, 2640.51);
+
+    // Caso 3: Servidor em acompanhamento integral de Ministro do STM (2 diárias, com corte de teto LDO)
+    const resultIntegral = await calculateDailies({
+        cargo: 'Analista Judiciário',
+        padrao: 'C13',
+        lotacao: 'STM',
+        funcao: '',
+        agencyConfig,
+        diariasQtd: 2,
+        diariasEmbarque: 'nenhum',
+        diariasModoDesconto: 'manual',
+        diariasDataInicio: '',
+        diariasDataFim: '',
+        diariasDiasDescontoAlimentacao: 0,
+        diariasDiasDescontoTransporte: 0,
+        diariasExtHospedagem: false,
+        diariasExtAlimentacao: false,
+        diariasExtTransporte: false,
+        diariasDescontarAlimentacao: false,
+        diariasDescontarTransporte: false,
+        diariasAssessoramentoMagistrado: true,
+        diariasAcompanhamentoIntegral: true,
+        diariasAutoridadeAssistida: 'ministro_stm',
+        licencaDias: 0,
+        baseLicenca: 'auto',
+        incluirAbonoLicenca: false
+    });
+
+    // Diária unitária: R$ 1.320,26. Bruto: 2 * 1.320,26 = 2.640,52
+    // Teto LDO diário = 1.153,37 -> Teto total para 2 dias = 2.306,74
+    // Corte LDO = 2.640,52 - 2.306,74 = 333,78
+    assert.equal(resultIntegral.bruto, 2640.52);
+    assert.equal(resultIntegral.corteLdo, 333.78);
+    assert.equal(resultIntegral.valor, 2306.74);
+});

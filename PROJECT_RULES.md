@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 29/10/2026 14:54
+Atualizado em: 04/11/2026 16:32
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -196,6 +196,15 @@ Cada rubrica manual deve suportar:
        - Ministro / Membro do CJF (100% STF) -> 80% de R$ 1.466,95 = **R$ 1.173,56**.
        - Não exibir opções da JMU (como Ministro do STM).
    - A opção não se aplica a magistrados em deslocamento institucional.
+    - **Acompanhamento de autoridade em tempo integral e hospedagem no mesmo local** (art. 9º, § 1º do Ato Normativo STM Nº 799/2024 e art. 6º, § 5º da Resolução CNJ Nº 73/2009):
+      - O servidor que prestar assistência com exigência de acompanhamento em tempo integral e hospedagem no mesmo local faz jus a diária correspondente a **90% do valor da diária atribuído à autoridade assistida**.
+      - **Na Justiça Militar da União (JMU / STM)**:
+        - Ministro do STM (100% STF) -> 90% de R$ 1.466,95 = **R$ 1.320,26**.
+        - Juiz Federal da JMU / Substituto (95% do STM) -> 90% de R$ 1.393,60 = **R$ 1.254,24**.
+      - **Na Justiça Federal (CJF e TRFs)**:
+        - Desembargador Federal / Membro de TRF (95% STF) -> 90% de R$ 1.393,60 = **R$ 1.254,24**.
+        - Juiz Federal / Substituto (90,25% STF) -> 90% de R$ 1.323,92 = **R$ 1.191,53**.
+        - Ministro / Membro do CJF (100% STF) -> 90% de R$ 1.466,95 = **R$ 1.320,26**.
 5. Adicional de Transporte / Embarque no PJU:
    - **Na Justiça Militar da União (JMU / STM - Ato Normativo STM Nº 799/2024, art. 8º):** Denominado "Adicional de embarque e desembarque", correspondente a 40% da diária de Ministro do STM para ida e volta (R$ 586,78) e 20% para ida ou volta (R$ 293,39).
    - **Na Justiça Federal (CJF e TRFs - Resolução CJF Nº 340/2015, art. 17 e Anexo / Art. 19):** Denominado "Adicional de transporte" (para cobrir despesas de deslocamento até os locais de embarque e desembarque), correspondente a 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF para percurso completo).
@@ -205,3 +214,14 @@ Cada rubrica manual deve suportar:
        3. Retorno: trabalho ou hospedagem até o local de embarque (25%);
        4. Retorno: local de desembarque até a residência ou trabalho (25%).
      - O adicional não é devido nos trechos realizados com utilização de veículo oficial. A calculadora permite seleção granular via checkboxes de cada trecho realizado sem veículo oficial (0%, 25%, 50%, 75% ou 100%), calculados de forma 100% dinâmica sobre a base do percurso integral derivado da diária de Ministro do STF, sem valores nominais hardcoded.
+
+6. Equipe de Trabalho no PJU (art. 8º do Ato Normativo STM Nº 799/2024 e art. 6º, § 2º da Resolução CNJ Nº 73/2009):
+   - Os servidores que se afastarem em equipe de trabalho recebem diárias em valores equivalentes, correspondentes ao **maior valor da diária atribuído entre os servidores membros da equipe**.
+   - Na Justiça Militar da União (JMU / STM):
+     - Se um Técnico Judiciário (45% STM = R$ 660,13) se deslocar em equipe com um Analista Judiciário (55% STM = R$ 806,82), recebe a diária de Analista (**R$ 806,82**).
+     - Se o Técnico Judiciário se deslocar com um ocupante de Cargo em Comissão (CJ-1 a CJ-4, 60% STM = R$ 880,17), recebe a diária de CJ (**R$ 880,17**).
+     - Se um Analista Judiciário se deslocar com ocupante de CJ, recebe a diária de CJ (**R$ 880,17**).
+     - O servidor nunca recebe valor inferior ao do seu próprio cargo/função (`Math.max(regularRate, teamRate)`).
+   - Na Justiça Federal (CJF e TRFs):
+     - Se um Técnico Judiciário (45% STF = R$ 660,13) se deslocar em equipe com Analista ou ocupante de CJ (55% STF = R$ 806,82), recebe a diária de Analista/CJ (**R$ 806,82**).
+   - A opção não se aplica a magistrados em deslocamento institucional.

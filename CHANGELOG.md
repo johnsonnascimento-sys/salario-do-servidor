@@ -1,5 +1,25 @@
 # Changelog
 
+## Regras de Equipe de Trabalho e Acompanhamento Integral de Diárias (JMU e JF) — 04/11/2026
+- Feat (Equipe de Trabalho - Ato STM 799/2024 art. 8º / Res. CNJ 73/2009 art. 6º, § 2º):
+  - Implementação da opção de deslocamento em equipe de trabalho para servidores (`!isMagistrate`).
+  - Equiparação da diária do servidor ao maior valor atribuído entre os servidores membros da equipe (ex.: Técnico viajando com Analista recebe diária de Analista [R$ 806,82 no STM]; viajando com ocupante de CJ recebe diária de CJ [R$ 880,17 no STM]).
+  - Garantia de que o servidor nunca receba valor inferior ao do seu próprio cargo (`Math.max(regularRate, teamRate)`).
+  - Interface no `DailiesCard.tsx` com select dinâmico cujas opções e valores são calculados em tempo real a partir de `derivedFromMinister` no banco de dados, sem qualquer valor hardcoded.
+- Feat (Acompanhamento em Tempo Integral - Ato STM 799/2024 art. 9º, § 1º / Res. CNJ 73/2009 art. 6º, § 5º):
+  - Nova sub-opção em assessoramento direto a magistrado: "Exigido acompanhamento em tempo integral e hospedagem no mesmo local (diária a 90%)".
+  - O percentual da autoridade assistida é elevado dinamicamente de 80% para 90% (Ministro do STM: de R$ 1.173,56 para R$ 1.320,26; Juiz Militar da JMU: de R$ 1.114,88 para R$ 1.254,24; na Justiça Federal: Desembargador de R$ 1.114,88 para R$ 1.254,24, Juiz Federal de R$ 1.059,14 para R$ 1.191,53, Ministro do CJF de R$ 1.173,56 para R$ 1.320,26).
+  - Alerta informativo com cálculo discriminado (valor da autoridade e percentual aplicado ao servidor).
+- Database & Data-Driven:
+  - Criada a migração `migrations/018_add_dailies_team_and_fulltime_rules.sql` enriquecendo `power_config` (PJU) e `org_config` (`jmu`, `stm`, `cjf`, `trf1`) com `full_time_accompaniment_percentage: 0.90` e notas normativas.
+  - Mapeamento em `mapEffectiveConfig.ts` e tipos em `src/services/config/types.ts` e `src/types.ts`.
+- Rastreabilidade e Estado:
+  - Campos tipados adicionados ao `CalculatorState` (`diariasEquipeTrabalho`, `diariasEquipeTrabalhoMaiorCargo`, `diariasAcompanhamentoIntegral`) com hidratação retrocompatível em `calculatorState.ts` e propagação nos adaptadores e no motor oficial de agência (`dailiesCalculations.ts`).
+  - Presets de linhas (`presetGrossLines.ts`) e memo de recálculo (`useCalculatorResults.ts`) atualizados.
+- Tests & Rules:
+  - 15 testes automatizados aprovados em `tests/dailiesPju.test.ts` cobrindo todas as combinações de equipe de trabalho, acompanhamento a 90% e deduções de diárias.
+  - `PROJECT_RULES.md` atualizado na Seção 11 com as normas do Ato Normativo STM Nº 799/2024 e Resoluções CNJ 73/2009 e 564/2024.
+
 ## Seleção por trechos do Adicional de Transporte da Justiça Federal (Res. CJF 340/2015, Anexo) — 04/11/2026
 - Feat (Checkboxes do Anexo do CJF): implementação da seleção de Adicional de Transporte por checkboxes correspondentes aos 4 trechos de deslocamento (afastamento e retorno) previstos no Anexo oficial e no art. 17, § 2º da Resolução CJF Nº 340/2015:
   - 1. Afastamento: residência/trabalho até embarque (25%);

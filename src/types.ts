@@ -45,6 +45,7 @@ export interface DailiesConfig {
     embarkationPercentageFull: number;
     embarkationPercentageHalf?: number;
     assistancePercentage?: number;
+    fullTimeAccompanimentPercentage?: number;
   };
   externalGloss: {
     hospedagem: number;
@@ -386,7 +387,10 @@ export interface CalculatorState {
   diariasExtAlimentacao: boolean;
   diariasExtTransporte: boolean;
   diariasAssessoramentoMagistrado: boolean;
+  diariasAcompanhamentoIntegral: boolean;
   diariasAutoridadeAssistida: 'ministro_cjf' | 'ministro_stm' | 'desembargador_trf' | 'juiz_federal' | 'juiz_militar';
+  diariasEquipeTrabalho: boolean;
+  diariasEquipeTrabalhoMaiorCargo: string;
 }
 
 export type CalculatedPayrollState = Pick<
@@ -624,6 +628,9 @@ export const INITIAL_STATE: CalculatorState = {
   diariasExtAlimentacao: false,
   diariasExtTransporte: false,
   diariasAssessoramentoMagistrado: false,
-  diariasAutoridadeAssistida: 'desembargador_trf'
+  diariasAcompanhamentoIntegral: false,
+  diariasAutoridadeAssistida: 'desembargador_trf',
+  diariasEquipeTrabalho: false,
+  diariasEquipeTrabalhoMaiorCargo: ''
 };
 

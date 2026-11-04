@@ -107,6 +107,51 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         return 'desembargador_trf';
     }, [isJmu, state.diariasAutoridadeAssistida]);
 
+    const teamCargoOptions = useMemo(() => {
+        const options: Array<{ id: string; label: string; rate: number }> = [];
+        const cjRate = resolveDailiesDailyRate({
+            dailiesConfig,
+            cargo: 'Analista Judiciário',
+            funcao: 'CJ-4',
+            hasCommissionRole: true,
+        });
+        const analistaRate = resolveDailiesDailyRate({
+            dailiesConfig,
+            cargo: 'Analista Judiciário',
+        });
+        const tecnicoRate = resolveDailiesDailyRate({
+            dailiesConfig,
+            cargo: 'Técnico Judiciário',
+        });
+
+        options.push({
+            id: 'cj',
+            label: isJmu ? 'Cargo em Comissão (CJ)' : 'Cargo em Comissão (CJ-1 a CJ-4)',
+            rate: cjRate,
+        });
+        options.push({
+            id: 'analista',
+            label: 'Analista Judiciário',
+            rate: analistaRate,
+        });
+        if (state.cargo && state.cargo.toLowerCase().includes('auxiliar')) {
+            options.push({
+                id: 'tecnico',
+                label: 'Técnico Judiciário',
+                rate: tecnicoRate,
+            });
+        }
+        return options;
+    }, [dailiesConfig, isJmu, state.cargo]);
+
+    const defaultTeamCargo = useMemo(() => {
+        const isAnalista = state.cargo && state.cargo.toLowerCase().includes('analista');
+        return isAnalista ? 'cj' : 'analista';
+    }, [state.cargo]);
+
+    const activeTeamCargo = state.diariasEquipeTrabalhoMaiorCargo || defaultTeamCargo;
+    const selectedTeamOption = teamCargoOptions.find(o => o.id === activeTeamCargo) || teamCargoOptions[0];
+
     const dailyRate = useMemo(
         () => resolveDailiesDailyRate({
             dailiesConfig,
@@ -114,15 +159,32 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
             funcao: state.funcao,
             hasCommissionRole: Boolean(state.funcao && state.funcao.toLowerCase().startsWith('cj')),
             assessoramentoMagistrado: Boolean(state.diariasAssessoramentoMagistrado),
-            autoridadeAssistida: effectiveAutoridade
+            acompanhamentoIntegral: Boolean(state.diariasAcompanhamentoIntegral),
+            autoridadeAssistida: effectiveAutoridade,
+            equipeTrabalho: Boolean(state.diariasEquipeTrabalho),
+            equipeTrabalhoMaiorCargo: activeTeamCargo
         }),
-        [dailiesConfig, state.cargo, state.funcao, state.diariasAssessoramentoMagistrado, effectiveAutoridade]
+        [
+            dailiesConfig,
+            state.cargo,
+            state.funcao,
+            state.diariasAssessoramentoMagistrado,
+            state.diariasAcompanhamentoIntegral,
+            effectiveAutoridade,
+            state.diariasEquipeTrabalho,
+            activeTeamCargo
+        ]
     );
 
     const assistedAuthorityInfo = useMemo(() => {
         if (!state.diariasAssessoramentoMagistrado || isMagistrate) return null;
-        return resolveAssistedAuthorityDailyRate(dailiesConfig, effectiveAutoridade, courtConfig?.orgSlug);
-    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, effectiveAutoridade, isMagistrate, courtConfig?.orgSlug]);
+        return resolveAssistedAuthorityDailyRate(
+            dailiesConfig,
+            effectiveAutoridade,
+            courtConfig?.orgSlug,
+            Boolean(state.diariasAcompanhamentoIntegral)
+        );
+    }, [dailiesConfig, state.diariasAssessoramentoMagistrado, state.diariasAcompanhamentoIntegral, effectiveAutoridade, isMagistrate, courtConfig?.orgSlug]);
 
     const embarkationValues = useMemo(() => {
         const full = resolveDailiesEmbarkationAdditional({ dailiesConfig, embarkationType: 'completo' });
@@ -593,52 +655,138 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                         )}
 
                         {!isMagistrate && (
-                            <div className="pt-0.5 space-y-2">
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={state.diariasAssessoramentoMagistrado}
-                                        onChange={e => update('diariasAssessoramentoMagistrado', e.target.checked)}
-                                    />
-                                    <span>
-                                        {isJmu
-                                            ? 'Viagem em assessoramento direto a magistrado (art. 9º do Ato STM 799/2024)'
-                                            : 'Viagem em assessoramento direto / segurança a magistrado (art. 10, § 3º da Res. CJF 340/2015)'}
-                                    </span>
-                                </label>
-
-                                {state.diariasAssessoramentoMagistrado && (
-                                    <div className="pl-6 space-y-1.5">
-                                        <label htmlFor="diariasAutoridadeAssistida" className="block text-caption font-medium text-neutral-700 dark:text-neutral-300">
-                                            Autoridade assistida:
-                                        </label>
-                                        <select
-                                            id="diariasAutoridadeAssistida"
-                                            className={styles.input}
-                                            value={effectiveAutoridade}
-                                            onChange={e => update('diariasAutoridadeAssistida', e.target.value as DiariasAutoridadeAssistida)}
-                                        >
-                                            {isJmu ? (
-                                                <>
-                                                    <option value="ministro_stm">Ministro do STM (base 100% do STF)</option>
-                                                    <option value="juiz_federal">Juiz Federal da Justiça Militar / Substituto (base 95% do STM)</option>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <option value="desembargador_trf">Desembargador Federal / Membro do TRF (base 95% do STF)</option>
-                                                    <option value="juiz_federal">Juiz Federal / Juiz Federal Substituto (base 95% do TRF = 90,25% do STF)</option>
-                                                    <option value="ministro_cjf">Ministro / Membro do Conselho da Justiça Federal (CJF)</option>
-                                                </>
-                                            )}
-                                        </select>
-                                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                            <div className="pt-0.5 space-y-3">
+                                {/* Equipe de Trabalho */}
+                                <div className="space-y-2">
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={Boolean(state.diariasEquipeTrabalho)}
+                                            onChange={e => {
+                                                const checked = e.target.checked;
+                                                update('diariasEquipeTrabalho', checked);
+                                                if (checked) {
+                                                    if (!state.diariasEquipeTrabalhoMaiorCargo) {
+                                                        update('diariasEquipeTrabalhoMaiorCargo', defaultTeamCargo);
+                                                    }
+                                                    update('diariasAssessoramentoMagistrado', false);
+                                                    update('diariasAcompanhamentoIntegral', false);
+                                                }
+                                            }}
+                                        />
+                                        <span>
                                             {isJmu
-                                                ? 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 9º do Ato Normativo STM nº 799/2024 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'
-                                                : 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 10, § 3º da Resolução CJF nº 340/2015 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'}
-                                        </p>
-                                    </div>
-                                )}
+                                                ? 'Deslocamento em equipe de trabalho (art. 8º do Ato STM 799/2024)'
+                                                : 'Deslocamento em equipe de trabalho (art. 6º, § 2º da Res. CNJ 73/2009)'}
+                                        </span>
+                                    </label>
+
+                                    {state.diariasEquipeTrabalho && (
+                                        <div className="pl-6 space-y-1.5">
+                                            <label htmlFor="diariasEquipeTrabalhoMaiorCargo" className="block text-caption font-medium text-neutral-700 dark:text-neutral-300">
+                                                Maior valor da diária entre os membros da equipe:
+                                            </label>
+                                            <select
+                                                id="diariasEquipeTrabalhoMaiorCargo"
+                                                className={styles.input}
+                                                value={activeTeamCargo}
+                                                onChange={e => update('diariasEquipeTrabalhoMaiorCargo', e.target.value)}
+                                            >
+                                                {teamCargoOptions.map((opt) => (
+                                                    <option key={opt.id} value={opt.id}>
+                                                        {opt.label} — {formatCurrencyBr(opt.rate)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                                {isJmu
+                                                    ? 'O servidor que se deslocar em equipe de trabalho receberá diária correspondente ao maior valor da diária atribuído entre os servidores membros da equipe (art. 8º do Ato Normativo STM nº 799/2024).'
+                                                    : 'O servidor que se deslocar em equipe de trabalho receberá diária equivalente ao maior valor pago entre os demais servidores membros da equipe (art. 6º, § 2º da Resolução CNJ nº 73/2009).'}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Assessoramento / Segurança a Magistrado */}
+                                <div className="space-y-2">
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={state.diariasAssessoramentoMagistrado}
+                                            onChange={e => {
+                                                const checked = e.target.checked;
+                                                update('diariasAssessoramentoMagistrado', checked);
+                                                if (checked) {
+                                                    update('diariasEquipeTrabalho', false);
+                                                } else {
+                                                    update('diariasAcompanhamentoIntegral', false);
+                                                }
+                                            }}
+                                        />
+                                        <span>
+                                            {isJmu
+                                                ? 'Viagem em assessoramento direto a magistrado (art. 9º do Ato STM 799/2024)'
+                                                : 'Viagem em assessoramento direto / segurança a magistrado (art. 10, § 3º da Res. CJF 340/2015)'}
+                                        </span>
+                                    </label>
+
+                                    {state.diariasAssessoramentoMagistrado && (
+                                        <div className="pl-6 space-y-2">
+                                            <div className="space-y-1.5">
+                                                <label htmlFor="diariasAutoridadeAssistida" className="block text-caption font-medium text-neutral-700 dark:text-neutral-300">
+                                                    Autoridade assistida:
+                                                </label>
+                                                <select
+                                                    id="diariasAutoridadeAssistida"
+                                                    className={styles.input}
+                                                    value={effectiveAutoridade}
+                                                    onChange={e => update('diariasAutoridadeAssistida', e.target.value as DiariasAutoridadeAssistida)}
+                                                >
+                                                    {isJmu ? (
+                                                        <>
+                                                            <option value="ministro_stm">Ministro do STM (base 100% do STF)</option>
+                                                            <option value="juiz_federal">Juiz Federal da Justiça Militar / Substituto (base 95% do STM)</option>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <option value="desembargador_trf">Desembargador Federal / Membro do TRF (base 95% do STF)</option>
+                                                            <option value="juiz_federal">Juiz Federal / Juiz Federal Substituto (base 95% do TRF = 90,25% do STF)</option>
+                                                            <option value="ministro_cjf">Ministro / Membro do Conselho da Justiça Federal (CJF)</option>
+                                                        </>
+                                                    )}
+                                                </select>
+                                            </div>
+
+                                            <label className="flex items-start gap-2 cursor-pointer text-caption text-neutral-700 dark:text-neutral-300 pt-1">
+                                                <input
+                                                    type="checkbox"
+                                                    className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600 text-primary-600 focus:ring-primary-500 dark:bg-neutral-800"
+                                                    checked={Boolean(state.diariasAcompanhamentoIntegral)}
+                                                    onChange={e => update('diariasAcompanhamentoIntegral', e.target.checked)}
+                                                />
+                                                <span>
+                                                    {isJmu
+                                                        ? 'Exigido acompanhamento em tempo integral e hospedagem no mesmo local (art. 9º, § 1º do Ato STM 799/2024 — diária a 90%)'
+                                                        : 'Exigido acompanhamento em tempo integral e hospedagem no mesmo local (art. 6º, § 5º da Res. CNJ 73/2009 — diária a 90%)'}
+                                                </span>
+                                            </label>
+
+                                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                                {state.diariasAcompanhamentoIntegral ? (
+                                                    isJmu
+                                                        ? 'O servidor faz jus a 90% do valor da diária atribuído à autoridade assistida (art. 9º, § 1º do Ato Normativo STM nº 799/2024 c/c art. 6º, § 5º da Resolução CNJ nº 73/2009).'
+                                                        : 'O servidor faz jus a 90% do valor da diária atribuído à autoridade assistida (art. 6º, § 5º da Resolução CNJ nº 73/2009 c/c Resolução CJF nº 340/2015).'
+                                                ) : (
+                                                    isJmu
+                                                        ? 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 9º do Ato Normativo STM nº 799/2024 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'
+                                                        : 'O servidor faz jus a 80% do valor da diária atribuído à autoridade assistida (art. 10, § 3º da Resolução CJF nº 340/2015 c/c art. 6º, § 4º da Resolução CNJ nº 73/2009).'
+                                                )}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
@@ -649,7 +797,12 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             </p>
                             {state.diariasAssessoramentoMagistrado && !isMagistrate && assistedAuthorityInfo && (
                                 <p className="text-amber-800 dark:text-amber-300 font-medium">
-                                    ⭐ Diária a 80% da autoridade assistida ({assistedAuthorityInfo.authorityLabel}: {formatCurrencyBr(assistedAuthorityInfo.authorityRate)} → servidor: {formatCurrencyBr(assistedAuthorityInfo.serverRate)}).
+                                    ⭐ Diária a {Math.round((assistedAuthorityInfo.percentage ?? 0.8) * 100)}% da autoridade assistida ({assistedAuthorityInfo.authorityLabel}: {formatCurrencyBr(assistedAuthorityInfo.authorityRate)} → servidor: {formatCurrencyBr(assistedAuthorityInfo.serverRate)}).
+                                </p>
+                            )}
+                            {state.diariasEquipeTrabalho && !isMagistrate && selectedTeamOption && (
+                                <p className="text-blue-800 dark:text-blue-300 font-medium">
+                                    ⭐ Diária equiparada por equipe de trabalho ({selectedTeamOption.label}: {formatCurrencyBr(dailyRate)}) {isJmu ? 'conforme art. 8º do Ato STM 799/2024' : 'conforme art. 6º, § 2º da Res. CNJ 73/2009'}.
                                 </p>
                             )}
                             <p>

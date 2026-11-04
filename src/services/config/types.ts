@@ -185,6 +185,7 @@ export interface DailiesRulesConfig {
         embarkation_percentage_full: number;
         embarkation_percentage_half?: number;
         assistance_percentage?: number;
+        full_time_accompaniment_percentage?: number;
     };
     external_gloss: {
         hospedagem: number;

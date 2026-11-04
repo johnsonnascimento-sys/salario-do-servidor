@@ -67,7 +67,10 @@ export interface ResolveDailyRateInput {
     funcao?: string;
     hasCommissionRole?: boolean;
     assessoramentoMagistrado?: boolean;
+    acompanhamentoIntegral?: boolean;
     autoridadeAssistida?: DiariasAutoridadeAssistida;
+    equipeTrabalho?: boolean;
+    equipeTrabalhoMaiorCargo?: string;
 }
 
 interface ResolveEmbarkationInput {
@@ -176,11 +179,14 @@ const buildHolidaySet = (rules: DailiesDiscountRules) => {
 export const resolveAssistedAuthorityDailyRate = (
     dailiesConfig: DailiesConfig | undefined,
     autoridade?: DiariasAutoridadeAssistida,
-    orgSlug?: string
-): { authorityRate: number; serverRate: number; authorityLabel: string } => {
+    orgSlug?: string,
+    acompanhamentoIntegral?: boolean
+): { authorityRate: number; serverRate: number; authorityLabel: string; percentage: number } => {
     const derived = dailiesConfig?.derivedFromMinister;
     const ministerPerDiem = Math.max(0, Number(derived?.ministerPerDiem || 1466.95));
-    const assistRatio = Number(derived?.assistancePercentage ?? 0.80);
+    const assistRatio = acompanhamentoIntegral
+        ? Number(derived?.fullTimeAccompanimentPercentage ?? 0.90)
+        : Number(derived?.assistancePercentage ?? 0.80);
 
     const isJmu = Boolean(
         orgSlug === 'jmu' ||
@@ -242,7 +248,8 @@ export const resolveAssistedAuthorityDailyRate = (
     return {
         authorityRate,
         serverRate: round2(authorityRate * assistRatio),
-        authorityLabel
+        authorityLabel,
+        percentage: assistRatio
     };
 };
 
@@ -252,38 +259,55 @@ export const resolveDailiesDailyRate = ({
     funcao,
     hasCommissionRole,
     assessoramentoMagistrado,
-    autoridadeAssistida
+    acompanhamentoIntegral,
+    autoridadeAssistida,
+    equipeTrabalho,
+    equipeTrabalhoMaiorCargo
 }: ResolveDailyRateInput): number => {
     const isCommission = hasCommissionRole ?? Boolean(funcao && normalizeKey(funcao).replace(/[\s\-_]/g, '').startsWith('cj'));
     const fallbackCandidates = resolveRateKeyCandidates(cargo, funcao, isCommission);
-    const fallbackRate = pickCaseInsensitive(dailiesConfig?.rates, fallbackCandidates) ?? 0;
 
     const derived = dailiesConfig?.derivedFromMinister;
-    if (!derived?.enabled) {
-        return Math.max(0, fallbackRate);
-    }
+    const ministerPerDiem = derived?.enabled ? Math.max(0, Number(derived.ministerPerDiem || 0)) : 0;
 
-    const ministerPerDiem = Math.max(0, Number(derived.ministerPerDiem || 0));
-    if (ministerPerDiem <= 0) {
-        return Math.max(0, fallbackRate);
-    }
+    const calculateRateForCandidates = (candidates: string[]): number => {
+        const fallback = pickCaseInsensitive(dailiesConfig?.rates, candidates) ?? 0;
+        if (!derived?.enabled || ministerPerDiem <= 0) {
+            return Math.max(0, fallback);
+        }
+        const percentage = pickCaseInsensitive(derived.ratesPercentages, candidates) ?? 0;
+        if (percentage <= 0) {
+            return Math.max(0, fallback);
+        }
+        return round2(ministerPerDiem * percentage);
+    };
 
-    // Regra especial: assessoramento direto a magistrado (Res. CNJ 73/2009 art. 6º, § 4º c/c Res. CJF 340/2015 art. 10, § 3º)
-    // O servidor recebe até 80% do valor da diária atribuído à autoridade assistida
+    const regularRate = calculateRateForCandidates(fallbackCandidates);
+
     const isMagistrate = fallbackCandidates.some((c) =>
         ['desembargador', 'juiz_titular', 'juiz_substituto', 'juiz', 'magistrado'].includes(c)
     );
 
+    // Regra especial 1: Assessoramento direto a magistrado (80%) ou tempo integral com mesma hospedagem (90%)
+    // (Ato STM 799/2024 art. 9º / Res. CNJ 73/2009 art. 6º, §§ 4º e 5º)
     if (!isMagistrate && assessoramentoMagistrado) {
-        return resolveAssistedAuthorityDailyRate(dailiesConfig, autoridadeAssistida).serverRate;
+        return resolveAssistedAuthorityDailyRate(
+            dailiesConfig,
+            autoridadeAssistida,
+            dailiesConfig?.orgSlug,
+            acompanhamentoIntegral
+        ).serverRate;
     }
 
-    const percentage = pickCaseInsensitive(derived.ratesPercentages, fallbackCandidates) ?? 0;
-    if (percentage <= 0) {
-        return Math.max(0, fallbackRate);
+    // Regra especial 2: Equipe de Trabalho (Ato STM 799/2024 art. 8º / Res. CNJ 73/2009 art. 6º, § 2º)
+    // O servidor recebe diária correspondente ao maior valor da diária atribuído entre os servidores membros da equipe
+    if (!isMagistrate && equipeTrabalho && equipeTrabalhoMaiorCargo) {
+        const teamCandidates = resolveRateKeyCandidates(equipeTrabalhoMaiorCargo, equipeTrabalhoMaiorCargo);
+        const teamRate = calculateRateForCandidates(teamCandidates);
+        return Math.max(regularRate, teamRate);
     }
 
-    return round2(ministerPerDiem * percentage);
+    return regularRate;
 };
 
 export const resolveDailiesEmbarkationAdditional = ({
