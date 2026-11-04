@@ -10,6 +10,7 @@
  */
 
 import { CourtConfig } from '../../../../types';
+import { calculatePss } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
@@ -113,7 +114,20 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
         base += gratVal;
     }
     if (params.gaactaIncideAbono === true) {
-        base += Number(params.abonoPermanencia) || 0;
+        let abonoVal = Number(params.abonoPermanencia) || 0;
+        if (abonoVal <= 0 && Number(params.calculatedPss) > 0) {
+            abonoVal = Number(params.calculatedPss);
+        }
+        if (abonoVal <= 0) {
+            const pssTable = config.historico_pss?.[params.tabelaPSS];
+            if (pssTable) {
+                const basePrevidenciaria = baseVencimento + gaj + (Number(params.ats) || 0) + (Number(params.vpni_lei) || 0) + (Number(params.vpni_decisao) || 0);
+                const isRpc = params.regimePrev === 'rpc' || params.regimePrev === 'migrado';
+                const baseLimitada = (isRpc && pssTable.teto_rgps) ? Math.min(basePrevidenciaria, pssTable.teto_rgps) : basePrevidenciaria;
+                abonoVal = calculatePss(baseLimitada, pssTable);
+            }
+        }
+        base += abonoVal;
     }
     if (Number(params.gaactaOutrasParcelas) > 0) {
         base += Number(params.gaactaOutrasParcelas);
@@ -129,4 +143,3 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
         isElegivel
     };
 }
-

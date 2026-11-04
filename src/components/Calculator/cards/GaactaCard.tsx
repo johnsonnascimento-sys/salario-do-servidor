@@ -35,6 +35,9 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
     );
 
     const vpniTotal = (Number(state.vpni_lei) || 0) + (Number(state.vpni_decisao) || 0);
+    const valorAbono = Number(state.abonoPermanencia) > 0
+        ? Number(state.abonoPermanencia)
+        : (Number(state.pssMensal) > 0 ? Number(state.pssMensal) : 0);
 
     return (
         <div className={styles.card}>
@@ -205,7 +208,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                                             checked={Boolean(state.gaactaIncideAbono)}
                                             onChange={e => update('gaactaIncideAbono', e.target.checked)}
                                         />
-                                        <span>Abono de Permanência: <strong>R$ {formatCurrency(state.abonoPermanencia || 0)}</strong></span>
+                                        <span>Abono de Permanência: <strong>R$ {formatCurrency(valorAbono)}</strong></span>
                                     </label>
 
                                     {state.gratEspecificaValor > 0 && (

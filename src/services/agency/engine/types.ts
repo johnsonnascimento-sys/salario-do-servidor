@@ -117,4 +117,5 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     gaactaManualBase?: boolean;
     gaactaBaseManualValor?: number;
     abonoPermanencia?: number;
+    calculatedPss?: number;
 }

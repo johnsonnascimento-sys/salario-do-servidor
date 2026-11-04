@@ -107,13 +107,17 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const substitution = await calculateSubstitution(params);
         const dailies = await calculateDailies(params);
         const compensatoryLeave = await calculateCompensatoryLeave(params);
-        const gaactaResult = await calculateGaacta(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
         // 4. Calcular DeduÃ§Ãµes (agora async)
         const deductions = await calculateDeductions(base, params);
         const thirteenth = await calculateThirteenth(params, deductions.pensionRetroMemory);
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
+        const gaactaResult = await calculateGaacta({
+            ...params,
+            abonoPermanencia: abonoPerm > 0 ? abonoPerm : (Number(params.abonoPermanencia) || deductions.pss),
+            calculatedPss: deductions.pss
+        });
 
         // 5. Calcular Totais
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
