@@ -115,7 +115,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
         const gaactaResult = await calculateGaacta({
             ...params,
-            abonoPermanencia: abonoPerm > 0 ? abonoPerm : (Number(params.abonoPermanencia) || deductions.pss),
+            abonoPermanencia: abonoPerm,
             calculatedPss: deductions.pss
         });
 

@@ -93,7 +93,7 @@ test('GAACTA: Servidor comissionado CJ-3 tem elegibilidade confirmada', async ()
     assert.equal(result.valor, Math.round(result.baseCalculo * 0.15 * 100) / 100);
 });
 
-test('GAACTA: Servidor sem cargo em comissao (sem CJ) nao e elegivel', async () => {
+test('GAACTA: Servidor sem cargo em comissao (sem CJ) nao e elegivel e recebe valor 0', async () => {
     const params: any = {
         orgSlug: 'jmu',
         agencyConfig: mockJmuConfig,
@@ -109,6 +109,8 @@ test('GAACTA: Servidor sem cargo em comissao (sem CJ) nao e elegivel', async () 
 
     const result = await calculateGaacta(params);
     assert.equal(result.isElegivel, false);
+    assert.equal(result.valor, 0);
+    assert.equal(result.baseCalculo, 0);
 });
 
 test('GAACTA: Caso Real STM - Servidora Ana Cristina Pimentel Carneiro (CJ-03)', async () => {
@@ -171,10 +173,11 @@ test('GAACTA: Composicao flexivel por checkboxes permite desmarcar parcelas', as
     assert.equal(Math.round((resComTodas.valor - resSemVpni.valor) * 100) / 100, 300); // 15% de 2000 = 300
 });
 
-test('GAACTA: Checkbox de Abono de Permanencia altera dinamicamente a base e a gratificacao', async () => {
+test('GAACTA: Abono de Permanencia so incide se o servidor tiver o modulo de abono ativo', async () => {
     const engine = new AgencyCalculationEngine();
 
-    const stateSemAbono: any = {
+    // 1. Servidor SEM modulo de abono ativo
+    const stateSemAbonoModulo: any = {
         ...INITIAL_STATE,
         periodo: 1,
         cargo: 'analista',
@@ -183,34 +186,34 @@ test('GAACTA: Checkbox de Abono de Permanencia altera dinamicamente a base e a g
         tabelaPSS: '2026',
         tabelaIR: '2025_maio',
         regimePrev: 'rpc',
-        recebeAbono: false,
+        recebeAbono: false, // Modulo inativo ou apagado
         gaactaAtivo: true,
-        gaactaIncideAbono: false
+        gaactaIncideAbono: true // Mesmo marcado, nao deve incluir abono
     };
 
-    const paramsSemAbono = mapStateToAgencyParams(stateSemAbono, 'jmu', mockJmuConfig);
-    const resultSemAbono = await engine.calculateTotal(paramsSemAbono);
+    const paramsSemAbonoModulo = mapStateToAgencyParams(stateSemAbonoModulo, 'jmu', mockJmuConfig);
+    const resultSemAbonoModulo = await engine.calculateTotal(paramsSemAbonoModulo);
 
-    const stateComAbono: any = {
-        ...stateSemAbono,
-        gaactaIncideAbono: true
+    const stateComAbonoModulo: any = {
+        ...stateSemAbonoModulo,
+        recebeAbono: true // Modulo ativo
     };
 
-    const paramsComAbono = mapStateToAgencyParams(stateComAbono, 'jmu', mockJmuConfig);
-    const resultComAbono = await engine.calculateTotal(paramsComAbono);
+    const paramsComAbonoModulo = mapStateToAgencyParams(stateComAbonoModulo, 'jmu', mockJmuConfig);
+    const resultComAbonoModulo = await engine.calculateTotal(paramsComAbonoModulo);
 
-    // No RPC em 2026, a contribuicao do PSS sobre o teto do RGPS (8475.55) e R$ 988,09
-    const expectedPss = resultSemAbono.breakdown.pss; // 988.09
+    // O PSS do servidor sobre o teto RGPS (8475.55) e R$ 988,09
+    const expectedPss = resultSemAbonoModulo.breakdown.pss; // 988.09
     assert.ok(expectedPss > 0, 'PSS deve ser maior que zero');
 
-    // A base da GAACTA deve aumentar exatamente no valor do PSS (abono)
-    const diffBase = Math.round((resultComAbono.breakdown.gaactaBase - resultSemAbono.breakdown.gaactaBase) * 100) / 100;
+    // Quando recebeAbono e false, o abono NAO e incluido na base da GAACTA
+    const diffBase = Math.round((resultComAbonoModulo.breakdown.gaactaBase - resultSemAbonoModulo.breakdown.gaactaBase) * 100) / 100;
     assert.equal(diffBase, expectedPss);
 
-    // O valor da GAACTA com abono deve corresponder a 15% da nova base
-    const expectedGaactaComAbono = Math.round(resultComAbono.breakdown.gaactaBase * 0.15 * 100) / 100;
-    assert.equal(resultComAbono.breakdown.gaacta, expectedGaactaComAbono);
-    assert.ok(resultComAbono.breakdown.gaacta > resultSemAbono.breakdown.gaacta);
+    // E a GAACTA com abono ativo e calculada com 15% sobre a base acrescida
+    const expectedGaactaComAbono = Math.round(resultComAbonoModulo.breakdown.gaactaBase * 0.15 * 100) / 100;
+    assert.equal(resultComAbonoModulo.breakdown.gaacta, expectedGaactaComAbono);
+    assert.ok(resultComAbonoModulo.breakdown.gaacta > resultSemAbonoModulo.breakdown.gaacta);
 });
 
 test('GAACTA: Integracao com AgencyCalculationEngine comprova natureza indenizatoria (sem descontos)', async () => {

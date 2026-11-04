@@ -35,9 +35,10 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
     );
 
     const vpniTotal = (Number(state.vpni_lei) || 0) + (Number(state.vpni_decisao) || 0);
-    const valorAbono = Number(state.abonoPermanencia) > 0
-        ? Number(state.abonoPermanencia)
-        : (Number(state.pssMensal) > 0 ? Number(state.pssMensal) : 0);
+    const temAbonoAtivo = Boolean(state.recebeAbono);
+    const valorAbono = temAbonoAtivo
+        ? (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0)
+        : 0;
 
     return (
         <div className={styles.card}>
@@ -201,14 +202,22 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                                         <span>VPNI (Lei 9.527 / Judicial): <strong>R$ {formatCurrency(vpniTotal)}</strong></span>
                                     </label>
 
-                                    <label className={styles.checkboxLabel}>
+                                    <label className={`${styles.checkboxLabel} ${!temAbonoAtivo ? 'opacity-60 cursor-not-allowed' : ''}`}>
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            checked={Boolean(state.gaactaIncideAbono)}
+                                            disabled={!temAbonoAtivo}
+                                            checked={temAbonoAtivo && Boolean(state.gaactaIncideAbono)}
                                             onChange={e => update('gaactaIncideAbono', e.target.checked)}
                                         />
-                                        <span>Abono de Permanência: <strong>R$ {formatCurrency(valorAbono)}</strong></span>
+                                        <span>
+                                            Abono de Permanência: <strong>R$ {formatCurrency(valorAbono)}</strong>
+                                            {!temAbonoAtivo && (
+                                                <span className="text-[10px] text-gray-500 dark:text-gray-400 block font-normal">
+                                                    (Requer módulo &quot;Abono de Permanência&quot; ativo)
+                                                </span>
+                                            )}
+                                        </span>
                                     </label>
 
                                     {state.gratEspecificaValor > 0 && (

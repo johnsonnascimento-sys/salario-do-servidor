@@ -10,7 +10,6 @@
  */
 
 import { CourtConfig } from '../../../../types';
-import { calculatePss } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
@@ -33,18 +32,28 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     const funcaoStr = (params.funcao || '').toLowerCase();
     const isElegivel = funcaoStr.startsWith('cj');
 
+    const percentual = Number.isFinite(params.gaactaPercentual) && params.gaactaPercentual > 0
+        ? params.gaactaPercentual
+        : 0.15;
+
+    // Se nao for elegivel (nao for CJ), nao faz jus a GAACTA conf. arts. 2º e 3º
+    if (!isElegivel) {
+        return {
+            baseCalculo: 0,
+            percentual,
+            valor: 0,
+            isElegivel: false
+        };
+    }
+
     if (!params.gaactaAtivo && !(params.gaactaValor && params.gaactaValor > 0)) {
         return {
             baseCalculo: 0,
-            percentual: 0.15,
+            percentual,
             valor: 0,
             isElegivel
         };
     }
-
-    const percentual = Number.isFinite(params.gaactaPercentual) && params.gaactaPercentual > 0
-        ? params.gaactaPercentual
-        : 0.15;
 
     // Se o usuario travou uma base manual
     if (params.gaactaManualBase && Number(params.gaactaBaseManualValor) > 0) {
@@ -110,23 +119,12 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     if (params.gaactaIncideVPNI !== false) {
         base += (Number(params.vpni_lei) || 0) + (Number(params.vpni_decisao) || 0);
     }
-    if (params.gaactaIncideGrat === true) {
+    if (params.gaactaIncideGrat === true && (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas')) {
         base += gratVal;
     }
-    if (params.gaactaIncideAbono === true) {
-        let abonoVal = Number(params.abonoPermanencia) || 0;
-        if (abonoVal <= 0 && Number(params.calculatedPss) > 0) {
-            abonoVal = Number(params.calculatedPss);
-        }
-        if (abonoVal <= 0) {
-            const pssTable = config.historico_pss?.[params.tabelaPSS];
-            if (pssTable) {
-                const basePrevidenciaria = baseVencimento + gaj + (Number(params.ats) || 0) + (Number(params.vpni_lei) || 0) + (Number(params.vpni_decisao) || 0);
-                const isRpc = params.regimePrev === 'rpc' || params.regimePrev === 'migrado';
-                const baseLimitada = (isRpc && pssTable.teto_rgps) ? Math.min(basePrevidenciaria, pssTable.teto_rgps) : basePrevidenciaria;
-                abonoVal = calculatePss(baseLimitada, pssTable);
-            }
-        }
+    // Abono de Permanencia so incide se o servidor efetivamente receber abono (modulo ativo)
+    if (params.gaactaIncideAbono === true && params.recebeAbono) {
+        const abonoVal = Number(params.abonoPermanencia) || 0;
         base += abonoVal;
     }
     if (Number(params.gaactaOutrasParcelas) > 0) {
