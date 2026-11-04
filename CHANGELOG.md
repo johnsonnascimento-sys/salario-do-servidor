@@ -1,6 +1,6 @@
 # Changelog
 
-## Módulo GAACTA (Resolução STM nº 397/2026 para JMU e JF) — 04/11/2026
+## Módulo GAACTA e Deploy de Produção (Resolução STM nº 397/2026) — 04/11/2026
 - Feat (GAACTA - Resolução STM nº 397, de 19 de junho de 2026):
   - Implementação do novo módulo de Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa (GAACTA), que revogou a Resolução STM nº 376/2025 (licença compensatória na JMU), com vigência financeira desde 1º de junho de 2026.
   - Alíquota regulamentar de 15% (quinze por cento) incidente sobre a remuneração legal do servidor.
