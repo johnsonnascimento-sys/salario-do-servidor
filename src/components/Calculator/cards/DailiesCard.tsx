@@ -124,10 +124,71 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
         return resolveAssistedAuthorityDailyRate(dailiesConfig, effectiveAutoridade, courtConfig?.orgSlug);
     }, [dailiesConfig, state.diariasAssessoramentoMagistrado, effectiveAutoridade, isMagistrate, courtConfig?.orgSlug]);
 
-    const embarkationValues = useMemo(() => ({
-        full: resolveDailiesEmbarkationAdditional({ dailiesConfig, embarkationType: 'completo' }),
-        half: resolveDailiesEmbarkationAdditional({ dailiesConfig, embarkationType: 'metade' })
-    }), [dailiesConfig]);
+    const embarkationValues = useMemo(() => {
+        const full = resolveDailiesEmbarkationAdditional({ dailiesConfig, embarkationType: 'completo' });
+        const half = resolveDailiesEmbarkationAdditional({ dailiesConfig, embarkationType: 'metade' });
+        const quarter = Math.round((full / 4) * 100) / 100;
+        return { full, half, quarter };
+    }, [dailiesConfig]);
+
+    const selectedTrechos = useMemo<string[]>(() => {
+        if (Array.isArray(state.diariasTrechosTransporte)) {
+            return state.diariasTrechosTransporte;
+        }
+        if (state.diariasEmbarque === 'completo') {
+            return CJF_TRANSPORTE_TRECHOS.map(t => t.id);
+        }
+        if (state.diariasEmbarque === 'metade') {
+            return ['afastamento_origem', 'afastamento_destino'];
+        }
+        return [];
+    }, [state.diariasTrechosTransporte, state.diariasEmbarque]);
+
+    const currentEmbarkationValue = useMemo(() => {
+        return resolveDailiesEmbarkationAdditional({
+            dailiesConfig,
+            embarkationType: state.diariasEmbarque,
+            trechosTransporte: !isJmu ? selectedTrechos : undefined
+        });
+    }, [dailiesConfig, state.diariasEmbarque, isJmu, selectedTrechos]);
+
+    const handleToggleTrecho = (trechoId: string) => {
+        const next = new Set(selectedTrechos);
+        if (next.has(trechoId)) {
+            next.delete(trechoId);
+        } else {
+            next.add(trechoId);
+        }
+        const nextArr = CJF_TRANSPORTE_TRECHOS.map(t => t.id).filter(id => next.has(id));
+        update('diariasTrechosTransporte', nextArr);
+
+        if (nextArr.length === 4) {
+            update('diariasEmbarque', 'completo');
+        } else if (nextArr.length === 2) {
+            update('diariasEmbarque', 'metade');
+        } else if (nextArr.length === 0) {
+            update('diariasEmbarque', 'nenhum');
+        } else {
+            update('diariasEmbarque', 'metade');
+        }
+    };
+
+    const handleSelectAllTrechos = (mode: 'todos' | 'nenhum' | 'ida' | 'volta') => {
+        let nextArr: string[] = [];
+        let nextEmbarque: 'nenhum' | 'metade' | 'completo' = 'nenhum';
+        if (mode === 'todos') {
+            nextArr = CJF_TRANSPORTE_TRECHOS.map(t => t.id);
+            nextEmbarque = 'completo';
+        } else if (mode === 'ida') {
+            nextArr = ['afastamento_origem', 'afastamento_destino'];
+            nextEmbarque = 'metade';
+        } else if (mode === 'volta') {
+            nextArr = ['retorno_origem', 'retorno_destino'];
+            nextEmbarque = 'metade';
+        }
+        update('diariasTrechosTransporte', nextArr);
+        update('diariasEmbarque', nextEmbarque);
+    };
 
     const embarkationPercentDescription = useMemo(() => {
         if (dailiesConfig?.embarkationDescription?.trim()) {
@@ -380,25 +441,156 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             </div>
                         )}
 
-                        <div>
-                            <label className={styles.label}>{embarkationLabel}</label>
-                            <select
-                                className={styles.input}
-                                value={state.diariasEmbarque}
-                                onChange={e => update('diariasEmbarque', e.target.value)}
-                            >
-                                <option value="nenhum">Nenhum (R$ 0,00)</option>
-                                <option value="metade">
-                                    Metade (ida ou volta){embarkationValues.half > 0 ? ` - ${formatCurrencyBr(embarkationValues.half)}` : ''}
-                                </option>
-                                <option value="completo">
-                                    Completo (ida e volta){embarkationValues.full > 0 ? ` - ${formatCurrencyBr(embarkationValues.full)}` : ''}
-                                </option>
-                            </select>
-                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
-                                {embarkationPercentDescription}
-                            </p>
-                        </div>
+                        {isJmu ? (
+                            <div>
+                                <label className={styles.label}>{embarkationLabel}</label>
+                                <select
+                                    className={styles.input}
+                                    value={state.diariasEmbarque}
+                                    onChange={e => update('diariasEmbarque', e.target.value)}
+                                >
+                                    <option value="nenhum">Nenhum (R$ 0,00)</option>
+                                    <option value="metade">
+                                        Metade (ida ou volta){embarkationValues.half > 0 ? ` - ${formatCurrencyBr(embarkationValues.half)}` : ''}
+                                    </option>
+                                    <option value="completo">
+                                        Completo (ida e volta){embarkationValues.full > 0 ? ` - ${formatCurrencyBr(embarkationValues.full)}` : ''}
+                                    </option>
+                                </select>
+                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
+                                    {embarkationPercentDescription}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className={styles.label}>{embarkationLabel}</label>
+                                    <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
+                                        Res. CJF 340/2015 • Anexo
+                                    </span>
+                                </div>
+
+                                <p className="text-[12px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                    Assinale os trechos realizados <strong>sem veículo oficial</strong> (art. 17, § 2º). Cada trecho dá direito a 25% do adicional ({formatCurrencyBr(embarkationValues.quarter)}):
+                                </p>
+
+                                <div className="flex flex-wrap gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelectAllTrechos('todos')}
+                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                            selectedTrechos.length === 4
+                                                ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+                                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                        }`}
+                                    >
+                                        Todos (100% • Completo)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelectAllTrechos('ida')}
+                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                            selectedTrechos.length === 2 && selectedTrechos.includes('afastamento_origem') && selectedTrechos.includes('afastamento_destino')
+                                                ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+                                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                        }`}
+                                    >
+                                        Apenas Ida (50%)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelectAllTrechos('volta')}
+                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                            selectedTrechos.length === 2 && selectedTrechos.includes('retorno_origem') && selectedTrechos.includes('retorno_destino')
+                                                ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
+                                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                        }`}
+                                    >
+                                        Apenas Volta (50%)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelectAllTrechos('nenhum')}
+                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                            selectedTrechos.length === 0
+                                                ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700'
+                                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                        }`}
+                                    >
+                                        Nenhum (0%)
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2 rounded-lg border border-neutral-200 dark:border-neutral-700 p-2.5 bg-neutral-50/50 dark:bg-neutral-900/50">
+                                    <div>
+                                        <span className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
+                                            I - No afastamento da sede (ida)
+                                        </span>
+                                        <div className="space-y-1.5 pl-1">
+                                            {CJF_TRANSPORTE_TRECHOS.slice(0, 2).map(trecho => {
+                                                const isChecked = selectedTrechos.includes(trecho.id);
+                                                return (
+                                                    <label key={trecho.id} className="flex items-start gap-2 text-[12px] text-neutral-700 dark:text-neutral-300 cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
+                                                            checked={isChecked}
+                                                            onChange={() => handleToggleTrecho(trecho.id)}
+                                                        />
+                                                        <div className="flex-1 flex items-center justify-between gap-1">
+                                                            <span>{trecho.label}</span>
+                                                            <span className={`text-[11px] font-mono whitespace-nowrap ${isChecked ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                                                                +25% ({formatCurrencyBr(embarkationValues.quarter)})
+                                                            </span>
+                                                        </div>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                                        <span className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
+                                            II - No retorno à sede (volta)
+                                        </span>
+                                        <div className="space-y-1.5 pl-1">
+                                            {CJF_TRANSPORTE_TRECHOS.slice(2, 4).map(trecho => {
+                                                const isChecked = selectedTrechos.includes(trecho.id);
+                                                return (
+                                                    <label key={trecho.id} className="flex items-start gap-2 text-[12px] text-neutral-700 dark:text-neutral-300 cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
+                                                            checked={isChecked}
+                                                            onChange={() => handleToggleTrecho(trecho.id)}
+                                                        />
+                                                        <div className="flex-1 flex items-center justify-between gap-1">
+                                                            <span>{trecho.label}</span>
+                                                            <span className={`text-[11px] font-mono whitespace-nowrap ${isChecked ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                                                                +25% ({formatCurrencyBr(embarkationValues.quarter)})
+                                                            </span>
+                                                        </div>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 text-[12px]">
+                                    <span className="text-neutral-700 dark:text-neutral-300 font-medium">
+                                        Total do adicional ({selectedTrechos.length} de 4 trechos):
+                                    </span>
+                                    <span className="font-bold text-blue-700 dark:text-blue-300 font-mono">
+                                        {formatCurrencyBr(currentEmbarkationValue)}
+                                    </span>
+                                </div>
+
+                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                    {embarkationPercentDescription}
+                                </p>
+                            </div>
+                        )}
 
                         {!isMagistrate && (
                             <div className="pt-0.5 space-y-2">
@@ -461,11 +653,17 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                 </p>
                             )}
                             <p>
-                                {embarkationLabel}: {state.diariasEmbarque === 'completo'
-                                    ? `Completo (${formatCurrencyBr(embarkationValues.full)})`
-                                    : state.diariasEmbarque === 'metade'
-                                        ? `Metade (${formatCurrencyBr(embarkationValues.half)})`
-                                        : 'Nenhum'}.
+                                {embarkationLabel}: {isJmu ? (
+                                    state.diariasEmbarque === 'completo'
+                                        ? `Completo (${formatCurrencyBr(embarkationValues.full)})`
+                                        : state.diariasEmbarque === 'metade'
+                                            ? `Metade (${formatCurrencyBr(embarkationValues.half)})`
+                                            : 'Nenhum'
+                                ) : (
+                                    selectedTrechos.length > 0
+                                        ? `${selectedTrechos.length} de 4 trechos (${formatCurrencyBr(currentEmbarkationValue)})`
+                                        : 'Nenhum (0 trechos)'
+                                )}.
                             </p>
                             <p>Desconto automático de auxílios: fins de semana são desconsiderados automaticamente.</p>
                             {(state.diariasFeriados || []).length > 0 ? (
