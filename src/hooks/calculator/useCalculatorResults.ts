@@ -48,7 +48,7 @@ export const useCalculatorResults = (
         state.feriasDesc, state.feriasDescManual,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
         state.heQtd50, state.heQtd100, state.heIsEA, state.heExcluirIR, state.overtimeEntries, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries,
-        state.diariasQtd, state.diariasEmbarque,
+        state.diariasQtd, state.diariasEmbarque, state.diariasTrechosTransporte,
         state.diariasModoDesconto, state.diariasDataInicio, state.diariasDataFim,
         state.diariasFeriados,
         state.diariasDiasDescontoAlimentacao, state.diariasDiasDescontoTransporte,

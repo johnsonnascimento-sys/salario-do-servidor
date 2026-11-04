@@ -83,7 +83,8 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
     // 2. Adicional de embarque
     const adicionalEmbarque = resolveDailiesEmbarkationAdditional({
         dailiesConfig,
-        embarkationType: params.diariasEmbarque
+        embarkationType: params.diariasEmbarque,
+        trechosTransporte: params.diariasTrechosTransporte
     });
 
     // 3. Bruto + corte por teto LDO

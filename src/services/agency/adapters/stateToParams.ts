@@ -100,6 +100,7 @@ export function mapStateToAgencyParams(
         // Diárias e Licença (Fase 9)
         diariasQtd: state.diariasQtd || 0,
         diariasEmbarque: mapDiariasEmbarque(state.diariasEmbarque),
+        diariasTrechosTransporte: state.diariasTrechosTransporte || [],
         diariasModoDesconto: state.diariasModoDesconto,
         diariasDataInicio: state.diariasDataInicio,
         diariasDataFim: state.diariasDataFim,

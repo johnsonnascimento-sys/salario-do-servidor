@@ -1,5 +1,16 @@
 # Changelog
 
+## Seleção por trechos do Adicional de Transporte da Justiça Federal (Res. CJF 340/2015, Anexo) — 04/11/2026
+- Feat (Checkboxes do Anexo do CJF): implementação da seleção de Adicional de Transporte por checkboxes correspondentes aos 4 trechos de deslocamento (afastamento e retorno) previstos no Anexo oficial e no art. 17, § 2º da Resolução CJF Nº 340/2015:
+  - 1. Afastamento: residência/trabalho até embarque (25%);
+  - 2. Afastamento: desembarque até trabalho/hospedagem (25%);
+  - 3. Retorno: trabalho/hospedagem até embarque (25%);
+  - 4. Retorno: desembarque até residência/trabalho (25%).
+- Ações rápidas de seleção ("Todos - 100%", "Apenas Ida - 50%", "Apenas Volta - 50%", "Nenhum - 0%") no card de diárias (`DailiesCard.tsx`).
+- Totalmente dinâmico (sem hardcoded): cálculo unitário e acumulado de cada trecho (25% cada) derivado em tempo real da diária de Ministro do STF (`fullValue / 4` e `count / 4`), adaptando-se instantaneamente a qualquer reajuste de diária.
+- Manutenção da compatibilidade na JMU/STM (que permanece com o select padrão de ida e volta conf. Ato STM 799/2024) e retrocompatibilidade estrita em `CalculatorState`, `useCalculatorResults.ts`, `presetGrossLines.ts` e `dailiesCalculations.ts`.
+- Testes automatizados expandidos em `tests/dailiesPju.test.ts` validando granularidade fracionada (0%, 25%, 50%, 75%, 100%) e reajuste dinâmico.
+
 ## Descrição legal e nomenclatura do Adicional de Transporte / Embarque — 03/11/2026
 - Adicionada descrição explicativa detalhada sobre o percentual e a base de cálculo diretamente no card de diárias:
   - JMU (Ato Normativo STM nº 799/2024, art. 8º): 40% da diária de Ministro do STM para o percurso de ida e volta e 20% para ida ou volta.

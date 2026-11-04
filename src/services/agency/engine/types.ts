@@ -78,6 +78,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     // Diarias e Licencas
     diariasQtd: number;
     diariasEmbarque: 'nenhum' | 'metade' | 'completo';
+    diariasTrechosTransporte?: string[];
     diariasModoDesconto: 'periodo' | 'manual';
     diariasDataInicio: string;
     diariasDataFim: string;

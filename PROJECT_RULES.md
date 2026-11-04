@@ -198,4 +198,10 @@ Cada rubrica manual deve suportar:
    - A opção não se aplica a magistrados em deslocamento institucional.
 5. Adicional de Transporte / Embarque no PJU:
    - **Na Justiça Militar da União (JMU / STM - Ato Normativo STM Nº 799/2024, art. 8º):** Denominado "Adicional de embarque e desembarque", correspondente a 40% da diária de Ministro do STM para ida e volta (R$ 586,78) e 20% para ida ou volta (R$ 293,39).
-   - **Na Justiça Federal (CJF e TRFs - Resolução CJF Nº 340/2015, art. 17):** Denominado "Adicional de transporte" (para cobertura de despesas de deslocamento até os locais de embarque e desembarque), correspondente a 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF): Completo para ida e volta (R$ 645,46) e Metade para ida ou volta (22% = R$ 322,73).
+   - **Na Justiça Federal (CJF e TRFs - Resolução CJF Nº 340/2015, art. 17 e Anexo / Art. 19):** Denominado "Adicional de transporte" (para cobrir despesas de deslocamento até os locais de embarque e desembarque), correspondente a 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF para percurso completo).
+     - Conforme o Anexo da Res. CJF 340/2015 ("Uso de Veículo Oficial") e art. 17, § 2º, a viagem padrão é dividida em **4 trechos autônomos de 25% cada**:
+       1. Afastamento: residência ou trabalho até o local de embarque (25%);
+       2. Afastamento: local de desembarque até o trabalho ou hospedagem (25%);
+       3. Retorno: trabalho ou hospedagem até o local de embarque (25%);
+       4. Retorno: local de desembarque até a residência ou trabalho (25%).
+     - O adicional não é devido nos trechos realizados com utilização de veículo oficial. A calculadora permite seleção granular via checkboxes de cada trecho realizado sem veículo oficial (0%, 25%, 50%, 75% ou 100%), calculados de forma 100% dinâmica sobre a base do percurso integral derivado da diária de Ministro do STF, sem valores nominais hardcoded.

@@ -73,6 +73,7 @@ export interface ResolveDailyRateInput {
 interface ResolveEmbarkationInput {
     dailiesConfig: DailiesConfig | undefined;
     embarkationType: 'nenhum' | 'metade' | 'completo';
+    trechosTransporte?: string[];
 }
 
 const normalizeIsoDate = (value: string): string | null => {
@@ -287,35 +288,44 @@ export const resolveDailiesDailyRate = ({
 
 export const resolveDailiesEmbarkationAdditional = ({
     dailiesConfig,
-    embarkationType
+    embarkationType,
+    trechosTransporte
 }: ResolveEmbarkationInput): number => {
-    if (embarkationType === 'nenhum') return 0;
-
-    const fallback = embarkationType === 'completo'
-        ? Number(dailiesConfig?.embarkationAdditional?.completo ?? 0)
-        : Number(dailiesConfig?.embarkationAdditional?.metade ?? 0);
+    const fallbackCompleto = Number(dailiesConfig?.embarkationAdditional?.completo ?? 0);
+    const fallbackMetade = Number(dailiesConfig?.embarkationAdditional?.metade ?? 0);
 
     const derived = dailiesConfig?.derivedFromMinister;
-    if (!derived?.enabled) {
-        return Math.max(0, fallback);
+    const ministerPerDiem = derived?.enabled ? Math.max(0, Number(derived.ministerPerDiem || 0)) : 0;
+    const fullPercentage = derived?.enabled ? Math.max(0, Number(derived.embarkationPercentageFull || 0)) : 0;
+    const halfPercentage = derived?.enabled
+        ? (derived.embarkationPercentageHalf !== undefined
+            ? Math.max(0, Number(derived.embarkationPercentageHalf || 0))
+            : fullPercentage / 2)
+        : 0;
+
+    const fullValue = (derived?.enabled && ministerPerDiem > 0 && fullPercentage > 0)
+        ? round2(ministerPerDiem * fullPercentage)
+        : Math.max(0, fallbackCompleto);
+
+    const halfValue = (derived?.enabled && ministerPerDiem > 0 && halfPercentage > 0)
+        ? round2(ministerPerDiem * halfPercentage)
+        : Math.max(0, fallbackMetade);
+
+    // Quando informado o array de trechos selecionados (Resolução CJF nº 340/2015, art. 19 / Anexo):
+    // Cada trecho assinalado sem veículo oficial garante 25% do percurso integral.
+    if (Array.isArray(trechosTransporte)) {
+        const count = Math.min(4, Math.max(0, trechosTransporte.length));
+        if (count === 0) return 0;
+        if (count === 4) return fullValue;
+        if (count === 2) return halfValue;
+        return round2(fullValue * (count / 4));
     }
 
-    const ministerPerDiem = Math.max(0, Number(derived.ministerPerDiem || 0));
-    if (ministerPerDiem <= 0) {
-        return Math.max(0, fallback);
-    }
+    if (embarkationType === 'nenhum') return 0;
+    if (embarkationType === 'metade') return halfValue;
+    if (embarkationType === 'completo') return fullValue;
 
-    const fullPercentage = Math.max(0, Number(derived.embarkationPercentageFull || 0));
-    const halfPercentage = derived.embarkationPercentageHalf !== undefined
-        ? Math.max(0, Number(derived.embarkationPercentageHalf || 0))
-        : fullPercentage / 2;
-
-    const percentage = embarkationType === 'completo' ? fullPercentage : halfPercentage;
-    if (percentage <= 0) {
-        return Math.max(0, fallback);
-    }
-
-    return round2(ministerPerDiem * percentage);
+    return 0;
 };
 
 export const resolveDailiesDiscountRules = (

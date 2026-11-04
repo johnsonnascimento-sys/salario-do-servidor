@@ -29,6 +29,29 @@ const formatDateList = (dates: string[]) => (
     dates.length > 0 ? dates.map(formatIsoDatePtBr).join(', ') : 'nenhum'
 );
 const isIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+const CJF_TRANSPORTE_TRECHOS = [
+    {
+        id: 'afastamento_origem',
+        group: 'I - No afastamento da sede (ida)',
+        label: 'Do local de trabalho ou residência até o local de embarque'
+    },
+    {
+        id: 'afastamento_destino',
+        group: 'I - No afastamento da sede (ida)',
+        label: 'Do local de desembarque até o local de trabalho ou hospedagem'
+    },
+    {
+        id: 'retorno_origem',
+        group: 'II - No retorno à sede (volta)',
+        label: 'Do local de trabalho ou hospedagem até o local de embarque'
+    },
+    {
+        id: 'retorno_destino',
+        group: 'II - No retorno à sede (volta)',
+        label: 'Do local de desembarque até o local de trabalho ou residência'
+    }
+] as const;
+
 const formatCurrencyBr = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const isEndBeforeStart = (startDate: string, endDate: string) =>
     isIsoDate(startDate) && isIsoDate(endDate) && endDate < startDate;

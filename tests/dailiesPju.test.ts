@@ -213,6 +213,60 @@ test('resolveDailiesEmbarkationAdditional calcula adicional de deslocamento / em
     assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configCjf, embarkationType: 'completo' }), 645.46);
     assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configCjf, embarkationType: 'metade' }), 322.73);
     assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configCjf, embarkationType: 'nenhum' }), 0);
+
+    // Justiça Federal / CJF por trechos do Anexo (Resolução CJF Nº 340/2015, art. 19 / Anexo):
+    // 4 trechos de 25% (Afastamento 1 e 2, Retorno 1 e 2)
+    assert.equal(resolveDailiesEmbarkationAdditional({
+        dailiesConfig: configCjf,
+        embarkationType: 'nenhum',
+        trechosTransporte: []
+    }), 0);
+
+    assert.equal(resolveDailiesEmbarkationAdditional({
+        dailiesConfig: configCjf,
+        embarkationType: 'metade',
+        trechosTransporte: ['afastamento_origem'] // 1 trecho = 25% de 645.46
+    }), 161.37);
+
+    assert.equal(resolveDailiesEmbarkationAdditional({
+        dailiesConfig: configCjf,
+        embarkationType: 'metade',
+        trechosTransporte: ['afastamento_origem', 'afastamento_destino'] // 2 trechos = 50% = metade
+    }), 322.73);
+
+    assert.equal(resolveDailiesEmbarkationAdditional({
+        dailiesConfig: configCjf,
+        embarkationType: 'metade',
+        trechosTransporte: ['afastamento_origem', 'afastamento_destino', 'retorno_origem'] // 3 trechos = 75%
+    }), 484.10);
+
+    assert.equal(resolveDailiesEmbarkationAdditional({
+        dailiesConfig: configCjf,
+        embarkationType: 'completo',
+        trechosTransporte: ['afastamento_origem', 'afastamento_destino', 'retorno_origem', 'retorno_destino'] // 4 trechos = 100% = completo
+    }), 645.46);
+
+    // Validar comportamento 100% dinâmico (não hardcoded) caso a diária do Ministro do STF seja alterada
+    const configReajustada: DailiesConfig = {
+        ...configCjf,
+        derivedFromMinister: {
+            ...configCjf.derivedFromMinister!,
+            ministerPerDiem: 2000.00 // Reajuste hipotético
+        }
+    };
+    // 2000 * 0.44 = 880.00
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configReajustada, embarkationType: 'completo' }), 880.00);
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: configReajustada, embarkationType: 'metade' }), 440.00);
+    assert.equal(resolveDailiesEmbarkationAdditional({
+        dailiesConfig: configReajustada,
+        embarkationType: 'metade',
+        trechosTransporte: ['afastamento_origem'] // 1 trecho: 880 * 0.25 = 220.00
+    }), 220.00);
+    assert.equal(resolveDailiesEmbarkationAdditional({
+        dailiesConfig: configReajustada,
+        embarkationType: 'metade',
+        trechosTransporte: ['afastamento_origem', 'afastamento_destino', 'retorno_origem'] // 3 trechos: 880 * 0.75 = 660.00
+    }), 660.00);
 });
 
 test('applyLdoCapToDailiesGross aplica teto da LDO sem quebrar valores inferiores', () => {
