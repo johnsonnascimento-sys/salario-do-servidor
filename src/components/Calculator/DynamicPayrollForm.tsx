@@ -295,6 +295,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 calculationReady={calculationReady && Boolean(state.pensionMemory)}
                 funprespParticipacao={state.funprespParticipacao}
                 pensionMemory={state.pensionMemory}
+                pensionRetroEntries={(inputState ?? state).pensionRetroEntries}
                 totalCreditos={totalCreditos}
                 totalDescontos={totalDescontos}
                 styles={styles}

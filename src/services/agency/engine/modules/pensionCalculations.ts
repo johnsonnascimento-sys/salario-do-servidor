@@ -2,6 +2,7 @@ import type { CourtConfig } from '../../../../types';
 import type { PensionCalculationMemory, PensionParticipation, PensionRetroMemory } from '../../../../types/pension';
 import type { IAgencyCalculationParams } from '../types';
 import { calculatePss } from '../../../../core/calculations/taxUtils';
+import { assertPensionRubricsReady, PensionCalculationPendingError, prepareLinkedPensionRetroEntry } from './pensionPending';
 
 export const roundPension = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 export const hasPensionCeiling = (regime: string) => regime === 'migrado' || regime === 'rpc';
@@ -170,10 +171,30 @@ export const calculateComplementaryPension = (
 
 /** Recompute historical total due, then subtract actual paid amount. Never use today's marginal rate. */
 export const calculatePensionRetroactives = (params: IAgencyCalculationParams): PensionRetroMemory[] => {
+    assertPensionRubricsReady(params);
     const entries = params.pensionRetroEntries || [];
     const ids = new Set<string>();
     const competenceKeys = new Set<string>();
     return entries.map(entry => {
+        if (entry.vinculos !== undefined) {
+            try {
+                const prepared = prepareLinkedPensionRetroEntry(params, entry);
+                const resolved = prepared.entry;
+                const complementary = calculateComplementaryPension(prepared.params, resolved.baseRppsDevida!, resolved.baseComplementarDevida!, resolved.tipo!);
+                const table = requirePensionTable(prepared.params);
+                const rpps = roundPension(calculatePss(complementary.baseRpps, table) - resolved.contribuicaoRppsRecolhida!);
+                const complementar = roundPension(complementary.descontoFolha - resolved.contribuicaoComplementarRecolhida!);
+                if (rpps < 0 || complementar < 0) throw new Error('recolhimento superior ao devido; confira a restituição separadamente, sem compensação automática.');
+                return { id: resolved.id, competencia: resolved.competencia, tipo: resolved.tipo!, destinoIR: resolved.destinoIR!, modo: 'completo',
+                    rpps, complementar, justificativa: resolved.justificativa, entrada: resolved,
+                    regraHistoricaId: prepared.rule.id, fonteHistorica: prepared.rule.source, teto: table.teto_rgps,
+                    baseRppsDevida: resolved.baseRppsDevida, baseComplementarDevida: resolved.baseComplementarDevida } as PensionRetroMemory;
+            } catch (error) {
+                if (error instanceof PensionCalculationPendingError) throw error;
+                throw new PensionCalculationPendingError(entry.vinculos.map(link => link.rubricaId),
+                    `Apuração pendente (${entry.competencia}): ${error instanceof Error ? error.message : 'confira os dados históricos.'}`);
+            }
+        }
         if (entry.modo !== undefined && !['completo', 'manual'].includes(entry.modo)) fail('modo do retroativo inválido.');
         if (entry.tipo !== undefined && !['mensal', '13'].includes(entry.tipo)) fail('espécie do retroativo inválida.');
         if (!entry.id || ids.has(entry.id)) fail('identificador de retroativo ausente ou duplicado.');

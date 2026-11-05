@@ -1,6 +1,11 @@
 /** Auditable pension inputs. Monetary amounts are BRL; rates are decimal. */
 export type PensionParticipation = 'nao' | 'patrocinado' | 'vinculado';
 
+export interface PensionRetroLink {
+    rubricaId: string;
+    valor: number;
+}
+
 export interface PensionRetroEntry {
     id: string;
     competencia: string;
@@ -23,6 +28,9 @@ export interface PensionRetroEntry {
     ajusteRpps?: number;
     ajusteComplementar?: number;
     justificativa?: string;
+    /** Presence identifies the linked flow; legacy standalone adjustments omit this field. */
+    vinculos?: PensionRetroLink[];
+    regraHistoricaId?: string;
 }
 
 export interface PensionCalculationMemory {
@@ -59,6 +67,11 @@ export interface PensionRetroMemory {
     complementar: number;
     justificativa?: string;
     entrada?: PensionRetroEntry;
+    regraHistoricaId?: string;
+    fonteHistorica?: string;
+    teto?: number;
+    baseRppsDevida?: number;
+    baseComplementarDevida?: number;
 }
 
 export interface PensionMemory {

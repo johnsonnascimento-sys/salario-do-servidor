@@ -85,6 +85,14 @@ export interface PrevidenciaComplementarPowerConfig {
     incidence_rules?: { fc: boolean; gas: boolean; gae: boolean; aqTreino: boolean };
     base_rule: string;
     include_thirteenth: boolean;
+    historical_rules?: Array<{
+        id: string;
+        valid_from: string;
+        valid_to?: string | null;
+        source: string;
+        tabela_pss: string;
+        configuration: Omit<PrevidenciaComplementarPowerConfig, 'historical_rules'>;
+    }>;
     costing_disclosure?: {
         loading_normal?: number;
         loading_facultative?: number;

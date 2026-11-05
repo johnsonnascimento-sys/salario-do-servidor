@@ -22,8 +22,17 @@ export const buildPensionAuditRows = (memory?: PensionMemory): Array<[string, st
     for (const item of memory.retroativos) {
         rows.push(['Destino IR do retroativo', item.destinoIR]);
         for (const [key, value] of Object.entries(item.entrada || {})) {
+            if (key === 'vinculos') continue;
             if (value !== undefined) rows.push([`Entrada histórica ${key}`, typeof value === 'number' ? value : String(value)]);
         }
+        for (const link of item.entrada?.vinculos || []) {
+            rows.push(['Rubrica vinculada (ID)', link.rubricaId], ['Valor distribuído na competência', link.valor]);
+        }
+        if (item.regraHistoricaId) rows.push(['Regra histórica utilizada', item.regraHistoricaId]);
+        if (item.fonteHistorica) rows.push(['Fonte histórica', item.fonteHistorica]);
+        if (item.teto !== undefined) rows.push(['Teto histórico RGPS', item.teto]);
+        if (item.baseRppsDevida !== undefined) rows.push(['Base RPPS histórica corrigida', item.baseRppsDevida]);
+        if (item.baseComplementarDevida !== undefined) rows.push(['Base Funpresp histórica corrigida', item.baseComplementarDevida]);
         rows.push(
         [`Retroativo ${item.competencia} ${item.tipo} (${item.modo})`, item.justificativa || 'Apuração por competência'],
         ['Diferença RPPS', item.rpps], ['Diferença Funpresp', item.complementar]);

@@ -7,7 +7,7 @@ export const applyCalculatorPatch = (previous: CalculatorState, patch: Partial<C
     const pensionChanged = (patch.regimePrev !== undefined && patch.regimePrev !== previous.regimePrev) ||
         (patch.funprespParticipacao !== undefined && patch.funprespParticipacao !== previous.funprespParticipacao);
     const pensionRetroEntries = pensionChanged && patch.pensionRetroEntries === undefined
-        ? (previous.pensionRetroEntries ?? []).map(entry => entry.modo === 'manual' ? entry : {
+        ? (previous.pensionRetroEntries ?? []).map(entry => entry.modo === 'manual' || entry.vinculos !== undefined ? entry : {
             ...entry, regimePrev: entry.regimePrev ?? previous.regimePrev,
             participacao: entry.participacao ?? previous.funprespParticipacao,
         }) : patch.pensionRetroEntries ?? previous.pensionRetroEntries;

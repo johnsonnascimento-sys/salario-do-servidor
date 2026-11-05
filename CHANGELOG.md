@@ -1,5 +1,15 @@
 # Changelog
 
+## Funpresp em Rubricas Manuais — Etapa 2: vínculos e apuração histórica — 05/11/2026
+- Disponibilizado o cadastro da primeira competência e a distribuição de uma rubrica entre competências ou de várias rubricas na mesma apuração, incluindo PSS histórico com incidência independente da Funpresp.
+- Novos lançamentos exigem situação previdenciária histórica explícita e bases originais/recolhimentos; as bases corrigidas são derivadas dos vínculos. Trocas na seleção mensal não preenchem nem apagam escolhas históricas.
+- O motor confere valores em centavos, distribuição integral, referências válidas, duplicidade, competência/espécie e contribuições já recolhidas. Casos incompletos, incompatíveis ou de restituição permanecem em `Apuração pendente`, sem dupla cobrança nem uso da alíquota marginal atual.
+- Acrescentado contrato data-driven `historical_rules` / `historicalRules` para regras com fonte, tabela e vigência explícitas. Novas apurações não usam a configuração complementar atual como fallback histórico.
+- Memória e exportação PDF/Excel passam a detalhar os vínculos, valores distribuídos, bases corrigidas e referências da regra utilizada. Ajustes antigos isolados continuam disponíveis para revisão, sem liberar rubricas novas sem vínculo.
+- O PSS histórico vinculado também é apresentado no grupo da competência, sem desconto individual calculado pela taxa mensal nem líquido individual definitivo, inclusive em rubricas sem Funpresp.
+- Limite desta entrega: sem cadastrar ou inventar parâmetros legais. Competências sem regra histórica configurada continuam pendentes; o catálogo e o cadastro oficial de regras por vigência serão concluídos na etapa 3. Nenhuma migration, seed ou dado de produção foi aplicado.
+- Validação: testes do fluxo de cadastro e edição, integridade dos vínculos, regimes históricos, ausência de regras, persistência, concorrência assíncrona e exportação, além das suítes existentes.
+
 ## Funpresp em Rubricas Manuais — Etapa 1: resumo compartilhado e apuração pendente — 05/11/2026
 - Removidos o desconto individual fictício de Funpresp e o fallback fixo de alíquota em `rubricasTax`. Os totais continuam sendo apurados exclusivamente pelo motor previdenciário existente.
 - Os cards de rubricas com Funpresp compartilhada não apresentam líquido individual definitivo. Um resumo baseado na memória do motor distingue folha mensal, 13º e retroativos, contribuições normal/facultativa, aportes, pagamentos externos e patrocínio informativo.

@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { exportToExcel, exportToPDF } from '../src/services/exportService';
 import { INITIAL_STATE } from '../src/types';
 import type { PensionMemory } from '../src/types/pension';
+import { buildPensionAuditRows } from '../src/utils/pensionExport';
 
 const memory: PensionMemory = { mensal: { competencia: '2026-09', tipo: 'mensal', participacao: 'patrocinado',
  teto: 5000, baseRppsIntegral: 9000, baseRpps: 5000, baseComplementarIntegral: 9000, baseComplementar: 4000,
@@ -37,4 +38,28 @@ test('PDF contains a separate audit page and only the employee contribution as p
  assert.ok((pdf.match(/\/Type \/Page\b/g) || []).length >= 2);
  assert.match(pdf, /FUNPRESP-JUD/);
  assert.match(pdf, /8660|8\.660/);
+});
+
+test('linked historical allocation and provenance survive XLSX and PDF export without opaque objects', async () => {
+ const linked: PensionMemory = { ...memory, retroativos: [{ id: 'retro-linked', competencia: '2025-07', tipo: 'mensal',
+  modo: 'completo', destinoIR: 'ea', rpps: 0, complementar: 30, regraHistoricaId: 'rule-original',
+  fonteHistorica: 'https://example.test/historical-rule', teto: 5000, baseRppsDevida: 4500, baseComplementarDevida: 5500,
+  entrada: { id: 'retro-linked', competencia: '2025-07', regraHistoricaId: 'rule-original',
+   vinculos: [{ rubricaId: 'historica', valor: 1000 }] } }] };
+ const exportedState = { ...state, pensionMemory: linked };
+ assert.equal(buildPensionAuditRows(linked).some(([, value]) => String(value).includes('[object Object]')), false);
+ (globalThis as any).__pensionFiles = [];
+ exportToExcel(exportedState, rows, null);
+ const [file] = (globalThis as any).__pensionFiles;
+ const workbook = XLSX.read(await file.blob.arrayBuffer(), { type: 'array' });
+ const audit = XLSX.utils.sheet_to_json(workbook.Sheets['Memória previdenciária'], { header: 1 }) as any[][];
+ assert.ok(audit.some(([label, value]) => label === 'Rubrica vinculada (ID)' && value === 'historica'));
+ assert.ok(audit.some(([label, value]) => label === 'Valor distribuído na competência' && value === 1000));
+ assert.ok(audit.some(([label, value]) => label === 'Regra histórica utilizada' && value === 'rule-original'));
+ assert.ok(audit.some(([label, value]) => label === 'Fonte histórica' && value === 'https://example.test/historical-rule'));
+ (globalThis as any).__pensionFiles = [];
+ exportToPDF(exportedState, rows, null);
+ const pdf = new TextDecoder('latin1').decode(await (globalThis as any).__pensionFiles[0].blob.arrayBuffer());
+ assert.match(pdf, /historica/);
+ assert.match(pdf, /rule-original/);
 });

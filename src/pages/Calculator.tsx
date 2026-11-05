@@ -265,7 +265,8 @@ export default function Calculator() {
                     {calculationPending && <div id="calculator-pension-pending" role="status" aria-live="polite" className="rounded-xl border border-warning-300 bg-warning-50 dark:bg-warning-900/20 p-4 text-body text-warning-700 dark:text-warning-300">
                         <p className="font-semibold">Apuração pendente</p>
                         <p className="mt-1">{calculationPending.message}</p>
-                        <p className="mt-2">A vinculação histórica dessas rubricas ainda não está disponível. Seus dados foram mantidos.</p>
+                        <p className="mt-2">Revise a distribuição e os dados no formulário de apuração por competência. Seus dados foram mantidos.</p>
+                        <a href="#pension-retro-form" className="mt-2 inline-block font-semibold underline">Revisar apuração por competência</a>
                         <ul className="mt-2 list-disc pl-5">
                             {state.rubricasExtras.filter(rubrica => calculationPending.rubricaIds.includes(rubrica.id)).map(rubrica =>
                                 <li key={rubrica.id}>{rubrica.descricao.trim() || 'Rubrica manual sem descrição'}</li>)}

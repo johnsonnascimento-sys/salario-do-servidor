@@ -23,5 +23,8 @@ const server = await createServer({ configFile: false, ssr: { noExternal: ['reac
         load(id) { if (id.startsWith('\0pension-pending-')) return Object.values(mocks)[Number(id.slice('\0pension-pending-'.length))]; },
     }],
 });
-try { await server.ssrLoadModule('/tests/pensionPending.test.ts'); }
+try {
+    await server.ssrLoadModule('/tests/pensionPending.test.ts');
+    await server.ssrLoadModule('/tests/pensionStage2Integration.test.ts');
+}
 finally { await server.close(); }

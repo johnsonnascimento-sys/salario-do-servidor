@@ -12,6 +12,7 @@
     "test:pension": "node scripts/test-pension.mjs && node scripts/test-pension-integration.mjs",
     "test:pension-form": "node scripts/test-pension-form.mjs",
     "test:pension-stage1": "node scripts/test-manual-rubricas-pension.mjs && node scripts/test-pension-pending.mjs",
+    "test:pension-stage2": "node scripts/test-pension-retro-links.mjs && node scripts/test-pension-retro-workflow.mjs && node scripts/test-pension-pending.mjs",
     "test:payslip": "node scripts/test-calculator-state.mjs",
     "test:dailies": "node scripts/test-dailies-pju.mjs",
     "test:thirteenth": "node scripts/test-thirteenth-isolation.mjs",

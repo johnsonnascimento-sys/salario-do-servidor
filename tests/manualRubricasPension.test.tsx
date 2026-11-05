@@ -18,13 +18,13 @@ const memory: PensionMemory = { mensal: month, thirteenth: { ...month, tipo: '13
     facultativa: 0, facultativaExterna: 0, aporteFolha: 0, aporteExterno: 0, descontoFolha: 42.5 },
     retroativos: [{ id: 'retro', competencia: '2025-12', tipo: 'mensal', modo: 'manual', destinoIR: 'ea',
         rpps: 10, complementar: 15 }] };
-const render = ({ current = rubric, ready = true, participation = 'patrocinado', withMemory = true,
+const render = ({ current = rubric, ready = true, participation = 'patrocinado', withMemory = true, dataMemory = memory,
     taxes = { r: { ir: 0, pss: 0, funpresp: 85, totalDescontos: 85, liquido: 915 } } }: {
-        current?: Rubrica; ready?: boolean; participation?: PensionParticipation; withMemory?: boolean;
+        current?: Rubrica; ready?: boolean; participation?: PensionParticipation; withMemory?: boolean; dataMemory?: PensionMemory;
         taxes?: Record<string, { ir: number; pss: number; funpresp: number; totalDescontos: number; liquido: number }>;
     } = {}) => renderToStaticMarkup(<ManualRubricasSection rubricas={[current]} styles={{}} totalCreditos={1000}
         totalDescontos={0} rubricasTax={taxes} calculationReady={ready} funprespParticipacao={participation}
-        pensionMemory={withMemory ? memory : undefined} addRubrica={() => {}} removeRubrica={() => {}}
+        pensionMemory={withMemory ? dataMemory : undefined} addRubrica={() => {}} removeRubrica={() => {}}
         updateRubrica={() => {}} toPositiveNumber={Number} />).replace(/\s|&nbsp;/g, ' ');
 
 test('não apresenta resumo antigo nem líquido enquanto a apuração está pendente', () => {
@@ -69,6 +69,20 @@ test('participante vinculado não recebe desconto ou líquido individual atribu�
 
 test('rubrica histórica mantém pendência mesmo quando não há participação atual', () => {
     const html = render({ current: { ...rubric, funprespCompetenciaSeparada: true }, participation: 'nao', ready: false });
-    assert.match(html, /competência original: a vinculação histórica dessas rubricas ainda não está disponível/);
+    assert.match(html, /Apuração por competência/);
+    assert.match(html, /href="#pension-retro-form"/);
     assert.doesNotMatch(html, /Parcela teste Líquido|915,00/);
 });
+
+for (const incideFunpresp of [false, true]) {
+    test(`PSS histórico compartilhado não usa taxa mensal no card (Funpresp: ${incideFunpresp})`, () => {
+        const historicalMemory: PensionMemory = { ...memory, retroativos: [{ ...memory.retroativos[0], rpps: 80 }] };
+        const html = render({ current: { ...rubric, pssCompetenciaSeparada: true, incideFunpresp,
+            funprespCompetenciaSeparada: incideFunpresp }, participation: 'nao', dataMemory: historicalMemory,
+            taxes: { r: { ir: 0, pss: 100, funpresp: 0, totalDescontos: 100, liquido: 900 } } });
+        assert.match(html, /Diferença RPPS descontada em folha/);
+        assert.match(html, /80,00/);
+        assert.match(html, /Líquido individual não apurado/);
+        assert.doesNotMatch(html, /Desconto PSS-EA \(Parcela teste\)|Parcela teste Líquido|900,00/);
+    });
+}

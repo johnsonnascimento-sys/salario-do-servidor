@@ -1,9 +1,10 @@
 import React from 'react';
 import type { PensionCalculationMemory, PensionMemory } from '../../types/pension';
+import type { Rubrica } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 
 /** Informational breakdown only: the payroll engine already accounts for the deductions. */
-export const SharedPensionSummary: React.FC<{ memory: PensionMemory }> = ({ memory }) => {
+export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: Rubrica[] }> = ({ memory, rubricas = [] }) => {
     const group = (item: PensionCalculationMemory) => {
         const facultativaFolha = Math.round((item.facultativa - item.facultativaExterna) * 100) / 100;
         const lines: Array<[string, number]> = [
@@ -33,8 +34,15 @@ export const SharedPensionSummary: React.FC<{ memory: PensionMemory }> = ({ memo
         {memory.retroativos.map(entry => <section key={entry.id} className="mt-3">
             <h5 className="font-semibold">Retroativo — {entry.competencia} — {entry.tipo === '13' ? '13º salário' : 'Mensal'}</h5>
             <dl className="mt-1"><div className="flex flex-wrap justify-between gap-2">
+                <dt>Diferença RPPS descontada em folha</dt><dd className="font-mono">{formatCurrency(entry.rpps)}</dd>
+            </div><div className="flex flex-wrap justify-between gap-2">
                 <dt>Diferença Funpresp descontada em folha</dt><dd className="font-mono">{formatCurrency(entry.complementar)}</dd>
             </div></dl>
+            {entry.entrada?.vinculos?.map((link, index) => <div className="flex flex-wrap justify-between gap-2" key={`${link.rubricaId}-${index}`}>
+                <span>{rubricas.find(rubrica => rubrica.id === link.rubricaId)?.descricao.trim() || 'Rubrica vinculada'}</span>
+                <span className="font-mono">{formatCurrency(link.valor)}</span>
+            </div>)}
+            {entry.fonteHistorica && <p>Fonte: {entry.fonteHistorica}</p>}
         </section>)}
     </section>;
 };
