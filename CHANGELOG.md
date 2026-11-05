@@ -1,5 +1,37 @@
 # Changelog
 
+## Funpresp — homologação integrada e aplicação autorizada da configuração — 05/11/2026
+- Adicionados `test:pension-homologation` (snapshot de configuração + PostgreSQL descartável + formulário/motor reais) e `validate:pension-homologation` (configuração efetiva por acesso público ao projeto explicitamente indicado, somente leitura).
+- Homologação local com cópia atual das configurações de `salario_do_servidor`: versionamento, idempotência, merge do órgão, modalidades previdenciárias, opção por protocolo, exclusões, histórico e restauração aprovados.
+- Após confirmação expressa do usuário, aplicada `20261105_pju_pension_catalog.sql` nesse projeto. Versão de 19/10/2026 encerrada em 04/11/2026 e nova versão ativa de 05/11/2026; JSONs anteriores, outras chaves, configuração global e override da JMU preservados e conferidos por leitura pública.
+- Cenários do formulário completo e motor também aprovados com a configuração pública após aplicação. Suíte da etapa 3: 48 testes aprovados, sem skips; TypeScript aprovado. Sem publicação do código do site ou alterações em usuários/holerites. Limites e reprodução em `src/docs/HOMOLOGACAO_FUNPRESP_2026-11-05.md`.
+
+## Funpresp em Rubricas Manuais — Etapa 3: catálogo e governança por vigência — 05/11/2026
+- Integrado catálogo data-driven de naturezas obrigatórias, facultativas, excluídas e pendentes ao motor e ao formulário. Ausência de natureza ou fonte não certifica créditos de participantes; histórico usa seu próprio catálogo e situação previdenciária.
+- Inclusões facultativas exigem data e referência de opção expressa; protocolo no curso do mês exige confirmação do valor elegível desde a opção, sem prorrata automática. Edições relevantes invalidam a confirmação. Classificação e fontes aparecem na memória e na auditoria PDF/Excel, mantendo totais compartilhados sem rateio individual.
+- Fechados os desvios de PSS histórico sem vínculo quando a participação atual é inexistente e de Funpresp mensal com PSS histórico sem validação mensal. O contexto de seleção permanece editável durante a pendência, sem normalização automática nem resultado definitivo.
+- Serviço admin valida catálogo, vigências e versões históricas; bloqueia reescrita direta de previdência publicada, alteração retroativa de regras e substituição dos catálogos por overrides locais. Versionamento exige origem ativa, data válida e posterior, sem agendamento futuro.
+- Preparados seed canônico e migration candidata `20261105_pju_pension_catalog.sql`: catálogo de 2026, histórico abril–dezembro/2026 e URPs oficiais disponíveis até outubro/2026, preservando cadastros anteriores e `incidence_rules`. GAS, GAE, AQ de treinamento e outras verbas não comprovadas continuam pendentes no catálogo manual. Sem aplicação em banco externo ou publicação.
+- Validação: testes de catálogo, opção expressa, formulário, transição pendente/concluído, auditoria, administração e SQL real em PostgreSQL embarcado descartável, além das suítes existentes, TypeScript e build local.
+
+## Funpresp em Rubricas Manuais — Etapa 2: vínculos e apuração histórica — 05/11/2026
+- Disponibilizado o cadastro da primeira competência e a distribuição de uma rubrica entre competências ou de várias rubricas na mesma apuração, incluindo PSS histórico com incidência independente da Funpresp.
+- Novos lançamentos exigem situação previdenciária histórica explícita e bases originais/recolhimentos; as bases corrigidas são derivadas dos vínculos. Trocas na seleção mensal não preenchem nem apagam escolhas históricas.
+- O motor confere valores em centavos, distribuição integral, referências válidas, duplicidade, competência/espécie e contribuições já recolhidas. Casos incompletos, incompatíveis ou de restituição permanecem em `Apuração pendente`, sem dupla cobrança nem uso da alíquota marginal atual.
+- Acrescentado contrato data-driven `historical_rules` / `historicalRules` para regras com fonte, tabela e vigência explícitas. Novas apurações não usam a configuração complementar atual como fallback histórico.
+- Memória e exportação PDF/Excel passam a detalhar os vínculos, valores distribuídos, bases corrigidas e referências da regra utilizada. Ajustes antigos isolados continuam disponíveis para revisão, sem liberar rubricas novas sem vínculo.
+- O PSS histórico vinculado também é apresentado no grupo da competência, sem desconto individual calculado pela taxa mensal nem líquido individual definitivo, inclusive em rubricas sem Funpresp.
+- Limite desta entrega: sem cadastrar ou inventar parâmetros legais. Competências sem regra histórica configurada continuam pendentes; o catálogo e o cadastro oficial de regras por vigência serão concluídos na etapa 3. Nenhuma migration, seed ou dado de produção foi aplicado.
+- Validação: testes do fluxo de cadastro e edição, integridade dos vínculos, regimes históricos, ausência de regras, persistência, concorrência assíncrona e exportação, além das suítes existentes.
+
+## Funpresp em Rubricas Manuais — Etapa 1: resumo compartilhado e apuração pendente — 05/11/2026
+- Removidos o desconto individual fictício de Funpresp e o fallback fixo de alíquota em `rubricasTax`. Os totais continuam sendo apurados exclusivamente pelo motor previdenciário existente.
+- Os cards de rubricas com Funpresp compartilhada não apresentam líquido individual definitivo. Um resumo baseado na memória do motor distingue folha mensal, 13º e retroativos, contribuições normal/facultativa, aportes, pagamentos externos e patrocínio informativo.
+- Criado o estado `pension_pending` para rubricas positivas com incidência complementar e competência original ainda sem vínculo histórico verificável, independentemente da participação ou do regime atual. Ajustes salvos alheios não liberam a apuração; a flag histórica sem incidência complementar não bloqueia.
+- Durante a pendência, entradas e snapshots salvos são preservados, resultados anteriores são ocultados e salvar/exportar permanecem bloqueados. Uma resposta assíncrona antiga não substitui a pendência atual.
+- Limites desta entrega: vinculação e cadastro completos dos retroativos pertencem à etapa 2; catálogo de verbas e regras históricas por vigência pertencem à etapa 3. Nenhuma configuração legal, migration ou dado de produção foi alterado nesta etapa.
+- Validação: testes novos do motor, apresentação, transição de estados, concorrência assíncrona e bloqueio de salvar/exportar (`test:pension-stage1`), além das suítes previdenciárias e de persistência existentes.
+
 ## Resumo Calculado em Rubricas Manuais e Remoção Definitiva de Resíduos de VPNI/ATS — 05/11/2026
 - Feat & Fix (ManualRubricasSection e GaactaCard):
   - Integração do componente oficial `PresetGrossSummary` ("Resumo calculado") a cada card individual criado em "Rubricas Manuais", detalhando Bruto, descontos tributários (IRRF, PSS, Funpresp) com base nas incidências marcadas e Líquido individual da rubrica.

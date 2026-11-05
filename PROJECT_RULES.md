@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 05/11/2026 18:13
+Atualizado em: 05/11/2026 20:06
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -66,7 +66,15 @@ Cada rubrica manual deve suportar:
 5. Incidencia em IR (EA)
 6. Incidencia em PSS
 7. Incidencia em PSS (EA)
-8. Resumo calculado (`PresetGrossSummary`) com detalhamento de Bruto, deduções aplicadas (IR, PSS, Funpresp) e Líquido individual da rubrica.
+8. Resumo calculado (`PresetGrossSummary`) com Bruto e detalhamento disponível de IR/PSS. A Funpresp deve ser apresentada em resumo compartilhado por folha mensal, 13o e competência histórica, usando a memória do motor, sem rateio individual. O PSS por competência original também deve aparecer no grupo histórico, sem estimativa individual pela taxa mensal. Quando a rubrica participar dessas apurações compartilhadas, não apresentar líquido individual definitivo.
+9. Não exibir descontos ou líquidos provenientes de cálculo anterior enquanto a simulação atual não estiver concluída. Patrocínio e pagamentos externos são informativos e não reduzem o líquido da folha.
+10. Rubricas com valor positivo, inclusão na Funpresp e competência original exigem distribuição integral em vínculos históricos verificáveis. No novo fluxo, a distribuição também deve cobrir as rubricas com PSS por competência original; cada incidência permanece independente. Ajustes legados sem vínculo não resolvem essa pendência. A marcação de competência original sozinha não cria incidência complementar.
+11. Pendências preservam as entradas e impedem a apresentação, exportação e salvamento de um resultado definitivo. Snapshots já salvos permanecem preservados; não preencher automaticamente o regime ou a participação histórica dos novos lançamentos a partir da seleção mensal.
+12. A apuração vinculada consolida as rubricas por competência e espécie (mensal ou 13o), deriva as bases corrigidas das bases originais e dos valores distribuídos e calcula a contribuição devida menos a já recolhida. Distribuição incompleta, divergências, duplicações e restituições a tratar permanecem pendentes, sem omissão ou compensação automática.
+13. Novas apurações exigem regra histórica cadastrada com identificador, fonte, tabela PSS e vigência aplicáveis à competência original. Não substituir lacunas pela configuração complementar atual. Créditos positivos com PSS por competência original exigem vínculos mesmo sem participação complementar atual; ajustes legados isolados não liberam essas rubricas.
+14. A natureza previdenciária da rubrica manual vem de catálogo com fonte e vigência, distinguindo inclusão obrigatória, facultativa, exclusão e enquadramento pendente. Créditos positivos de participantes exigem classificação mesmo com o checkbox desmarcado. No histórico, aplicar o catálogo próprio da competência; PSS histórico não dispensa a validação da Funpresp mensal quando selecionada.
+15. Inclusão facultativa exige data real e referência da opção expressa. Se a opção começa após o primeiro dia da competência, exigir confirmação do valor elegível desde o protocolo, sem prorrata automática. Alterações em valor, natureza, data ou distribuição histórica invalidam essa confirmação. Memória e exportação registram classificação, fonte, competência e dados da opção, sem rateio previdenciário individual.
+16. Ausência de catálogo, regra, enquadramento ou parâmetro oficial impede resultado definitivo quando necessário à apuração. O candidato local da etapa 3 cobre catálogo de 2026 e regras históricas de abril a dezembro/2026; períodos e verbas não comprovados continuam pendentes. Cadastro preparado não significa aplicação em produção.
 
 ### 4.2 Descontos e entradas
 
@@ -119,6 +127,7 @@ Cada rubrica manual deve suportar:
 3. Politica esperada de acesso:
    - leitura de `*_config` para simulacao
    - escrita restrita a admin/service role
+4. No serviço administrativo, configurações previdenciárias publicadas exigem versionamento, preservando conteúdo das regras anteriores. Regra aberta só pode ser encerrada na fronteira mensal da nova vigência com sucessora explícita. Não permitir versão futura ou originada de registro encerrado. Catálogo e histórico são governados em `power_config`; o editor de órgão não pode criar, remover ou reescrever esses arrays locais. Estas validações do serviço não substituem restrições de acesso do banco.
 
 ## 6. Regras de manutencao e extensao
 

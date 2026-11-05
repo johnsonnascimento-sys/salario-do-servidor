@@ -1,9 +1,14 @@
 import React from 'react';
 import { DollarSign, Minus, Plus, Trash2 } from 'lucide-react';
-import { Rubrica, RubricaTaxDetail } from '../../types';
+import { Rubrica, RubricaTaxDetail, PrevidenciaComplementarConfig } from '../../types';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { formatCurrency } from '../../utils/calculations';
+import type { PensionMemory, PensionParticipation, PensionRetroEntry } from '../../types/pension';
+import { SharedPensionSummary } from './SharedPensionSummary';
+import { getPensionRubricDistribution } from '../../services/agency/engine/modules/pensionPending';
+import { PensionRubricFields } from './PensionRubricFields';
+import { resolvePensionRubricRule } from '../../services/agency/engine/modules/pensionCatalog';
 
 interface ManualRubricasSectionProps {
     rubricas: Rubrica[];
@@ -11,6 +16,12 @@ interface ManualRubricasSectionProps {
     totalCreditos: number;
     totalDescontos: number;
     rubricasTax?: Record<string, RubricaTaxDetail>;
+    calculationReady: boolean;
+    funprespParticipacao: PensionParticipation;
+    pensionMemory?: PensionMemory;
+    pensionRetroEntries?: PensionRetroEntry[];
+    pensionConfig?: PrevidenciaComplementarConfig;
+    competencia?: string;
     addRubrica: (tipo?: Rubrica['tipo']) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
@@ -23,11 +34,18 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     totalCreditos,
     totalDescontos,
     rubricasTax,
+    calculationReady,
+    funprespParticipacao,
+    pensionMemory,
+    pensionRetroEntries = [],
+    pensionConfig,
+    competencia = '',
     addRubrica,
     removeRubrica,
     updateRubrica,
     toPositiveNumber
 }) => {
+    const distributed = getPensionRubricDistribution({ pensionRetroEntries });
     const getRubricaLines = (rubrica: Rubrica, index: number): PresetGrossLine[] => {
         const valor = Number(rubrica.valor) || 0;
         const fallbackLabel = `${rubrica.tipo === 'C' ? 'Crédito' : 'Desconto'} #${index + 1}`;
@@ -40,7 +58,12 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
             ];
         }
 
-        const tax = rubricasTax?.[rubrica.id];
+        // Calculated values from a previously saved snapshot must never be shown
+        // while the current input is being recalculated or has a pending issue.
+        const tax = calculationReady ? rubricasTax?.[rubrica.id] : undefined;
+        const sharedPension = Boolean(rubrica.incideFunpresp &&
+            (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao'));
+        const sharedHistoricalPss = Boolean(rubrica.pssCompetenciaSeparada);
         const lines: PresetGrossLine[] = [
             { label: `${label} Bruto`, value: valor }
         ];
@@ -50,16 +73,12 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 const irLabel = rubrica.isEA ? `Desconto IR-EA (${label})` : `Desconto IR (${label})`;
                 lines.push({ label: irLabel, value: tax.ir, isDiscount: true });
             }
-            if (tax.pss > 0) {
-                const pssLabel = rubrica.pssCompetenciaSeparada ? `Desconto PSS-EA (${label})` : `Desconto PSS (${label})`;
-                lines.push({ label: pssLabel, value: tax.pss, isDiscount: true });
+            if (tax.pss > 0 && !sharedHistoricalPss) {
+                lines.push({ label: `Desconto PSS (${label})`, value: tax.pss, isDiscount: true });
             }
-            if (tax.funpresp > 0) {
-                lines.push({ label: `Desconto Funpresp (${label})`, value: tax.funpresp, isDiscount: true });
-            }
-            lines.push({ label: `${label} Líquido`, value: tax.liquido });
-        } else {
-            lines.push({ label: `${label} Líquido`, value: valor });
+            // There is no unique per-rubric Funpresp amount when the base and
+            // ceiling are shared. Do not reuse a stored legacy allocation.
+            if (!sharedPension && !sharedHistoricalPss && !(tax.funpresp > 0)) lines.push({ label: `${label} Líquido`, value: tax.liquido });
         }
 
         return lines;
@@ -115,9 +134,14 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </div>
                     </div>
                 )}
+                {calculationReady && pensionMemory && <SharedPensionSummary memory={pensionMemory} rubricas={rubricas} />}
             </div>
 
-            {rubricas.map((rubrica, index) => (
+            {rubricas.map((rubrica, index) => {
+                const historical = Boolean(rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada));
+                let classification: string | undefined;
+                try { classification = resolvePensionRubricRule(pensionConfig, rubrica.pensionRubricId, competencia).classification; } catch { /* Pending classification. */ }
+                return (
                 <div key={rubrica.id} className={`${styles.card} space-y-4`}>
                     <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2">
@@ -158,6 +182,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </div>
                     </div>
 
+                    <PensionRubricFields rubrica={rubrica} competencia={competencia} config={pensionConfig} styles={styles} updateRubrica={updateRubrica} />
                     <div className="flex items-center gap-4 flex-wrap">
                         <label className={styles.checkboxLabel}>
                             <input
@@ -221,6 +246,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </label>
                         <label className={styles.checkboxLabel}>
                             <input type="checkbox" className={styles.checkbox} checked={Boolean(rubrica.incideFunpresp)}
+                                disabled={!historical && ((classification === 'obrigatoria' && Boolean(rubrica.incideFunpresp)) ||
+                                    (classification === 'excluida' && !rubrica.incideFunpresp))}
                                 onChange={e => updateRubrica(rubrica.id, 'incideFunpresp', e.target.checked)} />
                             <span>Incluir na base da Funpresp (independente do PSS)</span>
                         </label>
@@ -232,8 +259,27 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     </div>
 
                     <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />
+                    {(rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)) && <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                        <p>Apuração por competência: {formatCurrency(distributed[rubrica.id] ?? 0)} de {formatCurrency(Number(rubrica.valor) || 0)} distribuídos.</p>
+                        {!calculationReady && <p>A distribuição, por si só, não conclui a apuração previdenciária.</p>}
+                        <a className="font-semibold underline" href="#pension-retro-form">Apurar por competência</a>
+                    </div>}
+                    {rubrica.incideFunpresp && !rubrica.funprespCompetenciaSeparada && funprespParticipacao !== 'nao' && <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                        Esta rubrica integra a base compartilhada da Funpresp mensal. Confira o desconto no resumo previdenciário.
+                    </p>}
+                    {rubrica.tipo === 'C' && (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
+                        (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao'))) && <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                            Líquido individual não apurado: consulte as contribuições previdenciárias no resumo compartilhado.
+                        </p>}
+                    {rubrica.tipo === 'C' && !calculationReady && <p role="status" className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                        Resumo de descontos e líquido indisponível enquanto o cálculo não for concluído.
+                    </p>}
+                    {rubrica.tipo === 'C' && calculationReady && (!rubricasTax?.[rubrica.id] || (rubricasTax[rubrica.id].funpresp > 0)) && <p role="status" className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                        Líquido individual indisponível para esta rubrica. Confira o cálculo atualizado da folha.
+                    </p>}
                 </div>
-            ))}
+                );
+            })}
         </>
     );
 };

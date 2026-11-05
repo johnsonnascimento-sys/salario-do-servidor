@@ -6,6 +6,8 @@ import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCal
 import { buildComplementaryBase, calculateComplementaryPension, calculatePensionRetroactives } from '../src/services/agency/engine/modules/pensionCalculations';
 import type { IAgencyCalculationParams } from '../src/services/agency/engine/types';
 import { buildPensionContext, calculateMonthlyPensionContext, getPensionEligibility } from '../src/services/agency/engine/modules/pensionContext';
+import { calculateDeductions } from '../src/services/agency/engine/modules/deductionsCalculations';
+import { assertPensionRubricsReady, PensionCalculationPendingError } from '../src/services/agency/engine/modules/pensionPending';
 
 // Deliberately synthetic rates and amounts; no production configuration is read or changed.
 const configuration = (): CourtConfig => ({
@@ -27,6 +29,10 @@ const configuration = (): CourtConfig => ({
         urpByCompetence: { '2026-07': 100, '2025-11': 90 },
         urpSourcesByCompetence: { '2026-07': 'https://example.test/2026-07', '2025-11': 'https://example.test/2025-11' },
         incidenceRules: { fc: true, gas: true, gae: true, aqTreino: true },
+        rubricCatalog: [
+            { id: 'teste_credito', label: 'Parcela de teste', classification: 'obrigatoria', validFrom: '2000-01', source: 'https://example.test/credito' },
+            { id: 'teste_excluida', label: 'Parcela excluída de teste', classification: 'excluida', validFrom: '2000-01', source: 'https://example.test/excluida' },
+        ],
     },
 });
 const parameters = (patch: Partial<IAgencyCalculationParams> = {}): IAgencyCalculationParams => ({
@@ -63,7 +69,7 @@ test('monthly context precedes current participation validation and uses the exa
         funprespIncluirGAS: true, gratEspecificaTipo: 'gas', aqTreinoPerc: 0.01,
         funprespIncluirAQTreino: true, incidirPSSGrat: true,
         rubricasExtras: [{ id: 'r', descricao: 'Teste', valor: 100, tipo: 'D', incideIR: true,
-            incidePSS: true, isEA: false, incideFunpresp: true }] });
+            incidePSS: true, isEA: false, incideFunpresp: true, pensionRubricId: 'teste_credito' }] });
     const context = await calculateMonthlyPensionContext(p);
     assert.equal(context.base, 10560);
     assert.equal(context.baseRppsIntegral, 9500);
@@ -77,6 +83,8 @@ test('monthly context precedes current participation validation and uses the exa
     assert.equal(memory.baseRppsIntegral, context.baseRppsIntegral);
     assert.deepEqual(memory.componentes, context.componentes);
     assert.equal(memory.normal, 78);
+    assert.deepEqual(memory.enquadramentos, [{ rubricaId: 'r', ruleId: 'teste_credito', classification: 'obrigatoria',
+        source: 'https://example.test/credito', competencia: '2026-07' }]);
 });
 
 test('context uses selected historical table, does not substitute missing tables or salary data', async () => {
@@ -199,10 +207,120 @@ test('linked salary maximum, supplementary one-off minimum, and nonfinite bases 
 
 test('manual rubrics have independent opt-in complementary incidence', async () => {
     const p = parameters({ rubricasExtras: [{ id: 'r', descricao: 'Teste', valor: 100, tipo: 'C', incideIR: true,
-        incidePSS: false, isEA: false, pssCompetenciaSeparada: false, incideFunpresp: true }] });
+        incidePSS: false, isEA: false, pssCompetenciaSeparada: false, incideFunpresp: true, pensionRubricId: 'teste_credito' }] });
     const result = await new AgencyCalculationEngine().calculateTotal(p);
     assert.equal(result.breakdown.baseRpps, 5000);
     assert.equal(result.breakdown.baseFunpresp, 4100);
+});
+
+const complementaryRubric = (id = 'r', valor = 1000) => ({
+    id, descricao: 'Parcela remuneratória de teste', valor, tipo: 'C' as const,
+    incideIR: false, incidePSS: false, isEA: false, pssCompetenciaSeparada: false,
+    incideFunpresp: true, pensionRubricId: 'teste_credito',
+});
+
+test('manual rubric details do not invent complementary deductions for nonparticipants or linked participants', async () => {
+    const engine = new AgencyCalculationEngine();
+    for (const regimePrev of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
+        const p = parameters({ regimePrev, funprespParticipacao: 'nao', funprespAliq: 0,
+            rubricasExtras: [complementaryRubric()] });
+        const noPlan = await engine.calculateTotal(p);
+        assert.equal(noPlan.breakdown.funpresp, 0);
+        assert.equal(noPlan.breakdown.rubricasTax.r.funpresp, 0);
+        assert.equal(noPlan.breakdown.rubricasTax.r.liquido, 1000);
+    }
+    const linkedParams = parameters({ regimePrev: 'antigo', funprespParticipacao: 'vinculado',
+        funprespBaseIntegral: 2000, funprespVinculadaInicio: '2026-07', funprespAliq: 0.085 });
+    const before = await engine.calculateTotal(linkedParams);
+    const after = await engine.calculateTotal({ ...linkedParams, rubricasExtras: [complementaryRubric()] });
+    assert.equal(after.breakdown.funpresp, 170);
+    assert.equal(after.breakdown.funpresp, before.breakdown.funpresp);
+    assert.equal(after.breakdown.rubricasTax.r.funpresp, 0);
+    assert.equal(after.breakdown.rubricasTax.r.totalDescontos, 0);
+});
+
+test('shared complementary assessment reconciles crossing the ceiling and multiple manual rubrics without allocation', async () => {
+    const config = configuration();
+    config.bases.salario.teste.A1 = 3000; // Monthly eligible salary is 4500; synthetic ceiling is 5000.
+    const p = parameters({ agencyConfig: config, funcao: '0', rubricasExtras: [complementaryRubric()] });
+    const engine = new AgencyCalculationEngine();
+    const one = await engine.calculateTotal(p);
+    assert.equal(one.breakdown.baseFunpresp, 500);
+    assert.equal(one.breakdown.funpresp, 42.5);
+    assert.equal(one.pensionMemory!.mensal.descontoFolha, 42.5);
+    assert.equal(one.breakdown.rubricasTax.r.funpresp, 0);
+    const rubrics = [complementaryRubric('first'), complementaryRubric('second')];
+    const multiple = await engine.calculateTotal({ ...p, rubricasExtras: rubrics });
+    assert.equal(multiple.breakdown.funpresp, 127.5);
+    assert.equal(multiple.pensionMemory!.mensal.descontoFolha, 127.5);
+    assert.equal(multiple.breakdown.rubricasTax.first.funpresp, 0);
+    assert.equal(multiple.breakdown.rubricasTax.second.funpresp, 0);
+    assert.deepEqual(await engine.calculateTotal({ ...p, rubricasExtras: [...rubrics].reverse() }), multiple);
+    assert.equal(multiple.totalDeductions, multiple.breakdown.pss + multiple.breakdown.funpresp + multiple.breakdown.irrf);
+});
+
+test('manual rubric assessment keeps facultative payroll deductions, external contributions and matching separate', async () => {
+    const engine = new AgencyCalculationEngine();
+    const p = parameters({ rubricasExtras: [complementaryRubric()], funprespFacul: 0.025, funprespFaculValor: 150 });
+    const payroll = await engine.calculateTotal({ ...p, funprespFaculForma: 'folha' });
+    const external = await engine.calculateTotal({ ...p, funprespFaculForma: 'externo' });
+    assert.equal(payroll.breakdown.funpresp, 700); // 5000 * (8.5% + 2.5%) + 150.
+    assert.equal(payroll.breakdown.funprespPatrocinador, 425);
+    assert.equal(payroll.pensionMemory!.mensal.facultativa, 125);
+    assert.equal(external.breakdown.funpresp, 425);
+    assert.equal(external.pensionMemory!.mensal.facultativaExterna, 125);
+    assert.equal(external.pensionMemory!.mensal.aporteExterno, 150);
+    assert.equal(external.breakdown.funprespPatrocinador, 425);
+    for (const result of [payroll, external]) assert.equal(result.breakdown.rubricasTax.r.funpresp, 0);
+});
+
+test('original-competence complementary rubrics remain pending in every current regime and participation', async () => {
+    const engine = new AgencyCalculationEngine();
+    for (const regimePrev of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
+        for (const funprespParticipacao of ['nao', 'vinculado', 'patrocinado'] as const) {
+            const p = parameters({ regimePrev, funprespParticipacao,
+                rubricasExtras: [{ ...complementaryRubric('historical'), funprespCompetenciaSeparada: true }] });
+            await assert.rejects(engine.calculateTotal(p), (error: unknown) => {
+                assert.ok(error instanceof PensionCalculationPendingError);
+                assert.equal(error.code, 'PENSION_CALCULATION_PENDING');
+                assert.deepEqual(error.rubricaIds, ['historical']);
+                assert.match(error.message, /Apuração pendente/);
+                return true;
+            });
+        }
+    }
+});
+
+test('unrelated historical adjustments cannot release a manual rubric awaiting linkage', async () => {
+    const p = parameters({ rubricasExtras: [{ ...complementaryRubric('historical'), funprespCompetenciaSeparada: true }],
+        pensionRetroEntries: [{ id: 'unrelated', competencia: '2025-01', modo: 'manual',
+            ajusteRpps: 0, ajusteComplementar: 0, justificativa: 'Ajuste de outra competência' }] });
+    await assert.rejects(new AgencyCalculationEngine().calculateTotal(p), PensionCalculationPendingError);
+    for (const regimePrev of ['antigo', 'rpc'] as const) {
+        await assert.rejects(new AgencyCalculationEngine().calculateTotal({ ...p, regimePrev,
+            funprespParticipacao: 'nao' }), PensionCalculationPendingError);
+    }
+    // The same documented legacy adjustment remains supported without an unlinked marked rubric.
+    const result = await new AgencyCalculationEngine().calculateTotal({ ...p, rubricasExtras: [] });
+    assert.equal(result.breakdown.funprespEA, 0);
+    assert.equal(result.pensionMemory!.retroativos.length, 1);
+});
+
+test('original-competence flag alone and empty rubrics do not create complementary pending assessments', async () => {
+    for (const regimePrev of ['antigo', 'rpc'] as const) {
+        const p = parameters({ regimePrev, funprespParticipacao: 'nao',
+            rubricasExtras: [{ ...complementaryRubric(), incideFunpresp: false, funprespCompetenciaSeparada: true }] });
+        assert.equal((await new AgencyCalculationEngine().calculateTotal(p)).breakdown.funprespEA, 0);
+        const empty = { ...p, rubricasExtras: [{ ...complementaryRubric('empty', 0), funprespCompetenciaSeparada: true }] };
+        assert.doesNotThrow(() => assertPensionRubricsReady(empty));
+        assert.equal((await new AgencyCalculationEngine().calculateTotal(empty)).breakdown.funprespEA, 0);
+    }
+});
+
+test('complementary pending assessment is detected before monthly pension context validation', async () => {
+    const p = parameters({ agencyConfig: undefined,
+        rubricasExtras: [{ ...complementaryRubric('historical'), funprespCompetenciaSeparada: true }] });
+    await assert.rejects(calculateDeductions(0, p), PensionCalculationPendingError);
 });
 
 test('historical recalculation uses historical total less actually paid, with separate 13th ceiling', () => {
@@ -255,16 +373,16 @@ test('anonymous August and September payroll reconciliation: capped RPPS plus op
     assert.equal(Math.round((september.breakdown.pss + september.breakdown.funpresp) * 100) / 100, 1557.88);
     const august = await engine.calculateTotal({ ...p, rubricasExtras: [{ id: 'passivo', descricao: 'Passivo previdenciário EC',
         tipo: 'C', valor: 61.99, incidePSS: true, incideIR: true, isEA: false,
-        pssCompetenciaSeparada: false, incideFunpresp: true }] });
+        pssCompetenciaSeparada: false, incideFunpresp: true, pensionRubricId: 'teste_credito' }] });
     assert.equal(august.breakdown.funpresp, 575.06);
     assert.equal(Math.round((august.breakdown.pss + august.breakdown.funpresp) * 100) / 100, 1563.15);
 });
 
-test('retroactive destinations reduce only the selected IR base and flags do not double charge', async () => {
+test('documented standalone legacy adjustments reduce only the selected IR base without duplicating pension', async () => {
     const engine = new AgencyCalculationEngine();
     const base = parameters({ adiant13Venc: 1, segunda13Venc: 1,
         rubricasExtras: [{ id: 'r', descricao: 'Retroativo', tipo: 'C', valor: 1000,
-            incideIR: true, incidePSS: true, pssCompetenciaSeparada: true, isEA: true }] });
+            incideIR: true, incidePSS: false, pssCompetenciaSeparada: false, isEA: true, pensionRubricId: 'teste_excluida' }] });
     for (const destinoIR of ['mensal', 'ea', '13'] as const) {
         const result = await engine.calculateTotal({ ...base, pensionRetroEntries: [{ id: 'm', competencia: '2025-01',
             modo: 'manual', destinoIR, ajusteRpps: 100, ajusteComplementar: 50, justificativa: 'Apuração individualizada' }] });
@@ -277,7 +395,7 @@ test('retroactive destinations reduce only the selected IR base and flags do not
             assert.equal(Math.round((noAdjustment.breakdown[field] - result.breakdown[field]) * 100) / 100,
                 destination === destinoIR ? 30 : 0);
         }
-        // Removing EA flags only changes calculation classification, never adds a second pension assessment.
+        // No historical PSS flag may stand in for a verified link; this checks the standalone legacy adjustment only.
         const comparison = await engine.calculateTotal({ ...base,
             rubricasExtras: base.rubricasExtras!.map(r => ({ ...r, incidePSS: false, pssCompetenciaSeparada: false })),
             pensionRetroEntries: [{ id: 'm', competencia: '2025-01', modo: 'manual', destinoIR,

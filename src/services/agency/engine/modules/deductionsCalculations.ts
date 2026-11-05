@@ -15,6 +15,8 @@ import { calculateMonthlyPensionContext } from './pensionContext';
 import { calculateOvertime } from './overtimeCalculations';
 import { calculateSubstitution } from './substitutionCalculations';
 import { calculateComplementaryPension, calculatePensionRetroactives, hasPensionCeiling, roundPension } from './pensionCalculations';
+import { assertPensionRubricsReady, PensionCalculationPendingError } from './pensionPending';
+import { validateMonthlyPensionRubrics } from './pensionCatalog';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
 
 export interface DeductionsResult {
@@ -100,6 +102,7 @@ const getMarginalPssRate = (
  * Calcula Deducoes (PSS, IRRF, Funpresp)
  */
 export async function calculateDeductions(grossValue: number, params: IAgencyCalculationParams): Promise<DeductionsResult> {
+    assertPensionRubricsReady(params);
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const rubricasAdjustments = calculateRubricasBaseAdjustments(params.rubricasExtras);
@@ -127,6 +130,17 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const substitutionPssEABase = substitution.entries
         .filter((entry) => entry.pssIsEA)
         .reduce((acc, entry) => acc + entry.total, 0);
+
+    const linkedEntries = (params.pensionRetroEntries ?? []).filter(entry => entry.vinculos !== undefined);
+    const linkedRubricIds = new Set(linkedEntries.flatMap(entry => entry.vinculos!.map(link => link.rubricaId)));
+    if (linkedEntries.length > 0) {
+        const unlinkedPss = (params.rubricasExtras ?? []).some(rubrica => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0 && !linkedRubricIds.has(rubrica.id));
+        const overtimePending = params.hePssIsEA && !hasOvertimeEntries && overtime.heTotal > 0;
+        const substitutionPending = hasSubstitutionEntries ? substitution.entries.some(entry => entry.pssIsEA && entry.total > 0)
+            : params.substPssIsEA && substitution.total > 0;
+        if (unlinkedPss || overtimePending || substitutionPending) throw new PensionCalculationPendingError([...linkedRubricIds],
+            'Apuração pendente: há parcelas de PSS por competência sem vínculo com a apuração histórica; confira todos os passivos antes de concluir.');
+    }
 
     const basePSS = pensionContext.baseRppsIntegral;
 
@@ -167,12 +181,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     // IRRF Base
     const abonoPerm = params.recebeAbono ? pssMensal : 0;
 
-    // Retroactive contributions must still be supplied by original competence.
-    if (usaTeto && !params.pensionRetroEntries?.length &&
-        params.rubricasExtras?.some(rubrica => rubrica.funprespCompetenciaSeparada)) {
-        throw new Error('Previdência: use apuração por competência para previdência complementar retroativa.');
-    }
     const pensionMemory = calculateComplementaryPension(params, basePSS, pensionContext.base, 'mensal', pensionContext.componentes);
+    pensionMemory.enquadramentos = validateMonthlyPensionRubrics(params);
     if (!usaTeto && pssEA !== 0 && !params.pensionRetroEntries?.length) {
         pensionMemory.avisos = ['PSS de exercício anterior legado usa alíquota marginal atual; confira e informe apuração por competência antes de utilizá-lo como conferência oficial.'];
     }
@@ -258,7 +268,6 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     }
 
     const irEaRate = baseIREA > 0 ? irEA / baseIREA : 0;
-    const funprespAliq = params.funprespAliq || 0.085;
     const rubricasTax: Record<string, RubricaTaxDetail> = {};
 
     for (const r of params.rubricasExtras || []) {
@@ -275,13 +284,13 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
             const ir = r.isEA
                 ? Math.round(valor * irEaRate * 100) / 100
                 : (r.incideIR ? Math.round(valor * irEffectiveRate * 100) / 100 : 0);
-            const pss = (r.incidePSS || r.pssCompetenciaSeparada)
+            // Linked historical RPPS is assessed once by competence, never allocated at today's rate.
+            const pss = r.pssCompetenciaSeparada && linkedRubricIds.has(r.id) ? 0 : (r.incidePSS || r.pssCompetenciaSeparada)
                 ? Math.round(valor * pssEffectiveRate * 100) / 100
                 : 0;
-            const funpresp = r.incideFunpresp
-                ? Math.round(valor * funprespAliq * 100) / 100
-                : 0;
-            const totalDesc = Math.min(valor, ir + pss + funpresp);
+            // Complementary pension belongs to the shared assessment, not a per-rubric allocation.
+            const funpresp = 0;
+            const totalDesc = Math.min(valor, ir + pss);
             const liquido = Math.max(0, Math.round((valor - totalDesc) * 100) / 100);
             rubricasTax[r.id] = {
                 ir,
