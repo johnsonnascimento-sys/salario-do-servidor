@@ -1,5 +1,11 @@
 # Changelog
 
+## Funpresp — homologação integrada e aplicação autorizada da configuração — 05/11/2026
+- Adicionados `test:pension-homologation` (snapshot de configuração + PostgreSQL descartável + formulário/motor reais) e `validate:pension-homologation` (configuração efetiva por acesso público ao projeto explicitamente indicado, somente leitura).
+- Homologação local com cópia atual das configurações de `salario_do_servidor`: versionamento, idempotência, merge do órgão, modalidades previdenciárias, opção por protocolo, exclusões, histórico e restauração aprovados.
+- Após confirmação expressa do usuário, aplicada `20261105_pju_pension_catalog.sql` nesse projeto. Versão de 19/10/2026 encerrada em 04/11/2026 e nova versão ativa de 05/11/2026; JSONs anteriores, outras chaves, configuração global e override da JMU preservados e conferidos por leitura pública.
+- Cenários do formulário completo e motor também aprovados com a configuração pública após aplicação. Suíte da etapa 3: 48 testes aprovados, sem skips; TypeScript aprovado. Sem publicação do código do site ou alterações em usuários/holerites. Limites e reprodução em `src/docs/HOMOLOGACAO_FUNPRESP_2026-11-05.md`.
+
 ## Funpresp em Rubricas Manuais — Etapa 3: catálogo e governança por vigência — 05/11/2026
 - Integrado catálogo data-driven de naturezas obrigatórias, facultativas, excluídas e pendentes ao motor e ao formulário. Ausência de natureza ou fonte não certifica créditos de participantes; histórico usa seu próprio catálogo e situação previdenciária.
 - Inclusões facultativas exigem data e referência de opção expressa; protocolo no curso do mês exige confirmação do valor elegível desde a opção, sem prorrata automática. Edições relevantes invalidam a confirmação. Classificação e fontes aparecem na memória e na auditoria PDF/Excel, mantendo totais compartilhados sem rateio individual.

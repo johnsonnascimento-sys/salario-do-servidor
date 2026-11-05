@@ -2,7 +2,7 @@
 
 Atualização da implementação: 05/11/2026. Conferência e conciliação originais: 19/10/2026. Este relatório registra fundamentos e limites; `PROJECT_RULES.md` permanece a referência canônica de arquitetura e governança.
 
-## Entrega local das três etapas
+## Entrega das três etapas e aplicação da configuração
 
 As etapas 1 e 2 removeram o desconto fictício individual e disponibilizaram apuração compartilhada e vínculos históricos. A etapa 3 acrescenta natureza da verba, fonte e vigência, com validação própria na competência original. Créditos positivos com PSS original exigem vínculos independentemente da participação atual. Ajustes legados isolados permanecem separados e não liberam rubricas sinalizadas sem vínculo.
 
@@ -10,7 +10,7 @@ O candidato [pju_pension_catalog_2026.json](../../supabase/seeds/pju_pension_cat
 
 O art. 14, § 1º, do regulamento vincula efeitos da opção ao protocolo. O formulário exige data e referência documental; opção posterior ao primeiro dia exige confirmação de que o valor lançado já considera a parcela elegível, sem cálculo automático de prorrata. A memória e as exportações guardam esse enquadramento. Os totais de Funpresp continuam compartilhados por apuração, sem promessa de conciliação individual de cada rubrica.
 
-A migration candidata [20261105_pju_pension_catalog.sql](../../supabase/migrations/20261105_pju_pension_catalog.sql) foi testada em PostgreSQL embarcado descartável, preservando JSON anterior, idempotência e rollback por conflito. Não foi aplicada em produção. Para homologar, conferir configuração efetiva e overrides de órgão, tabela PSS e fontes pelo fluxo administrativo. Catálogo ausente ou verba não comprovada mantém a simulação pendente quando seu enquadramento for necessário.
+A migration [20261105_pju_pension_catalog.sql](../../supabase/migrations/20261105_pju_pension_catalog.sql) foi testada em PostgreSQL embarcado descartável, preservando JSON anterior, idempotência e rollback por conflito. Em 05/11/2026, após confirmação expressa do usuário, foi aplicada no projeto `salario_do_servidor`. A configuração efetiva da JMU foi conferida pelo acesso público; os JSONs anteriores e demais configurações foram preservados. O código do site não foi publicado nesta operação. Evidências e limites em [HOMOLOGACAO_FUNPRESP_2026-11-05.md](./HOMOLOGACAO_FUNPRESP_2026-11-05.md). Catálogo ausente ou verba não comprovada mantém a simulação pendente quando seu enquadramento for necessário.
 
 O serviço administrativo exige versionamento para previdência publicada e preserva versões anteriores; não substitui RLS nem protege contra SQL administrativo direto. Testes locais: `test:pension-stage3`, além das suítes previdenciárias das etapas anteriores. Os testes SQL requerem `PENSION_PGLITE_MODULE` apontando para instalação descartável de `@electric-sql/pglite`; sem ela, são explicitamente ignorados.
 
