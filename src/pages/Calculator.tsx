@@ -28,6 +28,7 @@ export default function Calculator() {
         effectiveState,
         calculationStatus,
         calculationError,
+        calculationPending,
         pensionContexts,
         calculationReady,
         loadingAgency,
@@ -185,6 +186,10 @@ export default function Calculator() {
         lastRestoreSourceRef.current = 'blank';
     };
 
+    const resultMessage = calculationStatus === 'pension_pending' ? 'Apuração pendente'
+        : calculationStatus === 'selection_required' ? 'Revise a participação previdenciária'
+            : calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...';
+
     if (loadingConfig || loadingAgency) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -217,7 +222,7 @@ export default function Calculator() {
         <>
             <MobileResultsBar
                 calculationReady={calculationReady}
-                resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
+                resultMessage={resultMessage}
                 savingPayslip={savingPayslip}
                 liquido={effectiveState.liquido}
                 onExportPDF={initiateExportPDF}
@@ -257,7 +262,18 @@ export default function Calculator() {
                         <p className="font-semibold">Não foi possível calcular esta simulação</p>
                         <p className="mt-1">{calculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
                     </div>}
+                    {calculationPending && <div id="calculator-pension-pending" role="status" aria-live="polite" className="rounded-xl border border-warning-300 bg-warning-50 dark:bg-warning-900/20 p-4 text-body text-warning-700 dark:text-warning-300">
+                        <p className="font-semibold">Apuração pendente</p>
+                        <p className="mt-1">{calculationPending.message}</p>
+                        <p className="mt-2">A vinculação histórica dessas rubricas ainda não está disponível. Seus dados foram mantidos.</p>
+                        <ul className="mt-2 list-disc pl-5">
+                            {state.rubricasExtras.filter(rubrica => calculationPending.rubricaIds.includes(rubrica.id)).map(rubrica =>
+                                <li key={rubrica.id}>{rubrica.descricao.trim() || 'Rubrica manual sem descrição'}</li>)}
+                        </ul>
+                        <p className="mt-2">Seus dados foram mantidos. O resultado final, o salvamento do holerite e a exportação ficam indisponíveis até a apuração ser concluída.</p>
+                    </div>}
                     <DynamicPayrollForm
+                        calculationReady={calculationReady}
                         updateMany={updateMany}
                         pensionContexts={pensionContexts}
                         calculationError={calculationError}
@@ -283,14 +299,15 @@ export default function Calculator() {
                         resultRows={resultRows}
                     /> : <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
-                        {calculationError || 'Calculando os valores do holerite...'}
+                        {calculationPending ? 'Conclua a apuração previdenciária para apresentar o resultado final.'
+                            : calculationError || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
                     </p>}
                 </div>
 
                 <ActionFooter
                     errorDetail={calculationError}
                     calculationReady={calculationReady}
-                    resultMessage={calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...'}
+                    resultMessage={resultMessage}
                     state={effectiveState}
                     onExportPDF={initiateExportPDF}
                     onExportExcel={initiateExportExcel}

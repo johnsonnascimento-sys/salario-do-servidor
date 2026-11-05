@@ -15,6 +15,7 @@ import { calculateMonthlyPensionContext } from './pensionContext';
 import { calculateOvertime } from './overtimeCalculations';
 import { calculateSubstitution } from './substitutionCalculations';
 import { calculateComplementaryPension, calculatePensionRetroactives, hasPensionCeiling, roundPension } from './pensionCalculations';
+import { assertPensionRubricsReady } from './pensionPending';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
 
 export interface DeductionsResult {
@@ -100,6 +101,7 @@ const getMarginalPssRate = (
  * Calcula Deducoes (PSS, IRRF, Funpresp)
  */
 export async function calculateDeductions(grossValue: number, params: IAgencyCalculationParams): Promise<DeductionsResult> {
+    assertPensionRubricsReady(params);
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const rubricasAdjustments = calculateRubricasBaseAdjustments(params.rubricasExtras);
@@ -167,11 +169,6 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     // IRRF Base
     const abonoPerm = params.recebeAbono ? pssMensal : 0;
 
-    // Retroactive contributions must still be supplied by original competence.
-    if (usaTeto && !params.pensionRetroEntries?.length &&
-        params.rubricasExtras?.some(rubrica => rubrica.funprespCompetenciaSeparada)) {
-        throw new Error('Previdência: use apuração por competência para previdência complementar retroativa.');
-    }
     const pensionMemory = calculateComplementaryPension(params, basePSS, pensionContext.base, 'mensal', pensionContext.componentes);
     if (!usaTeto && pssEA !== 0 && !params.pensionRetroEntries?.length) {
         pensionMemory.avisos = ['PSS de exercício anterior legado usa alíquota marginal atual; confira e informe apuração por competência antes de utilizá-lo como conferência oficial.'];
@@ -258,7 +255,6 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     }
 
     const irEaRate = baseIREA > 0 ? irEA / baseIREA : 0;
-    const funprespAliq = params.funprespAliq || 0.085;
     const rubricasTax: Record<string, RubricaTaxDetail> = {};
 
     for (const r of params.rubricasExtras || []) {
@@ -278,10 +274,9 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
             const pss = (r.incidePSS || r.pssCompetenciaSeparada)
                 ? Math.round(valor * pssEffectiveRate * 100) / 100
                 : 0;
-            const funpresp = r.incideFunpresp
-                ? Math.round(valor * funprespAliq * 100) / 100
-                : 0;
-            const totalDesc = Math.min(valor, ir + pss + funpresp);
+            // Complementary pension belongs to the shared assessment, not a per-rubric allocation.
+            const funpresp = 0;
+            const totalDesc = Math.min(valor, ir + pss);
             const liquido = Math.max(0, Math.round((valor - totalDesc) * 100) / 100);
             rubricasTax[r.id] = {
                 ir,

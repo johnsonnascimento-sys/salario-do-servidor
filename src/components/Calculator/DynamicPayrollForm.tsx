@@ -33,6 +33,7 @@ interface DynamicPayrollFormProps {
     pensionContexts?: PensionSelectionContexts | null;
     preserveRestoredGlobals?: boolean;
     calculationError?: string | null;
+    calculationReady?: boolean;
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     courtConfig: CourtConfig;
@@ -49,6 +50,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     pensionContexts,
     preserveRestoredGlobals = false,
     calculationError,
+    calculationReady = false,
     update,
     updateSubstDays,
     courtConfig,
@@ -290,6 +292,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <ManualRubricasSection
                 rubricas={state.rubricasExtras}
                 rubricasTax={state.rubricasTax}
+                calculationReady={calculationReady && Boolean(state.pensionMemory)}
+                funprespParticipacao={state.funprespParticipacao}
+                pensionMemory={state.pensionMemory}
                 totalCreditos={totalCreditos}
                 totalDescontos={totalDescontos}
                 styles={styles}

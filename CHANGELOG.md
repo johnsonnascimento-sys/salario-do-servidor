@@ -1,5 +1,13 @@
 # Changelog
 
+## Funpresp em Rubricas Manuais — Etapa 1: resumo compartilhado e apuração pendente — 05/11/2026
+- Removidos o desconto individual fictício de Funpresp e o fallback fixo de alíquota em `rubricasTax`. Os totais continuam sendo apurados exclusivamente pelo motor previdenciário existente.
+- Os cards de rubricas com Funpresp compartilhada não apresentam líquido individual definitivo. Um resumo baseado na memória do motor distingue folha mensal, 13º e retroativos, contribuições normal/facultativa, aportes, pagamentos externos e patrocínio informativo.
+- Criado o estado `pension_pending` para rubricas positivas com incidência complementar e competência original ainda sem vínculo histórico verificável, independentemente da participação ou do regime atual. Ajustes salvos alheios não liberam a apuração; a flag histórica sem incidência complementar não bloqueia.
+- Durante a pendência, entradas e snapshots salvos são preservados, resultados anteriores são ocultados e salvar/exportar permanecem bloqueados. Uma resposta assíncrona antiga não substitui a pendência atual.
+- Limites desta entrega: vinculação e cadastro completos dos retroativos pertencem à etapa 2; catálogo de verbas e regras históricas por vigência pertencem à etapa 3. Nenhuma configuração legal, migration ou dado de produção foi alterado nesta etapa.
+- Validação: testes novos do motor, apresentação, transição de estados, concorrência assíncrona e bloqueio de salvar/exportar (`test:pension-stage1`), além das suítes previdenciárias e de persistência existentes.
+
 ## Resumo Calculado em Rubricas Manuais e Remoção Definitiva de Resíduos de VPNI/ATS — 05/11/2026
 - Feat & Fix (ManualRubricasSection e GaactaCard):
   - Integração do componente oficial `PresetGrossSummary` ("Resumo calculado") a cada card individual criado em "Rubricas Manuais", detalhando Bruto, descontos tributários (IRRF, PSS, Funpresp) com base nas incidências marcadas e Líquido individual da rubrica.

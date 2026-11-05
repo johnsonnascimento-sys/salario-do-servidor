@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 05/11/2026 18:13
+Atualizado em: 05/11/2026 19:39
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -66,7 +66,10 @@ Cada rubrica manual deve suportar:
 5. Incidencia em IR (EA)
 6. Incidencia em PSS
 7. Incidencia em PSS (EA)
-8. Resumo calculado (`PresetGrossSummary`) com detalhamento de Bruto, deduções aplicadas (IR, PSS, Funpresp) e Líquido individual da rubrica.
+8. Resumo calculado (`PresetGrossSummary`) com Bruto e detalhamento disponível de IR/PSS. A Funpresp deve ser apresentada em resumo compartilhado por folha mensal, 13o e competência histórica, usando a memória do motor, sem rateio individual. Quando a rubrica participar dessa apuração compartilhada, não apresentar líquido individual definitivo.
+9. Não exibir descontos ou líquidos provenientes de cálculo anterior enquanto a simulação atual não estiver concluída. Patrocínio e pagamentos externos são informativos e não reduzem o líquido da folha.
+10. Na primeira etapa de correção da Funpresp, rubricas com valor positivo, inclusão na Funpresp e competência original permanecem em `Apuração pendente` até existir vínculo histórico verificável. A condição independe do regime ou participação atuais; ajustes legados sem vínculo não resolvem a pendência. A marcação de competência original sozinha não cria incidência complementar.
+11. Pendências preservam as entradas e impedem a apresentação, exportação e salvamento de um resultado definitivo. Snapshots já salvos permanecem preservados; o cadastro completo de competências e o catálogo normativo serão tratados nas etapas seguintes.
 
 ### 4.2 Descontos e entradas
 
