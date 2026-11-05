@@ -16,6 +16,7 @@ import { calculateOvertime } from './overtimeCalculations';
 import { calculateSubstitution } from './substitutionCalculations';
 import { calculateComplementaryPension, calculatePensionRetroactives, hasPensionCeiling, roundPension } from './pensionCalculations';
 import { assertPensionRubricsReady, PensionCalculationPendingError } from './pensionPending';
+import { validateMonthlyPensionRubrics } from './pensionCatalog';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
 
 export interface DeductionsResult {
@@ -181,6 +182,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const abonoPerm = params.recebeAbono ? pssMensal : 0;
 
     const pensionMemory = calculateComplementaryPension(params, basePSS, pensionContext.base, 'mensal', pensionContext.componentes);
+    pensionMemory.enquadramentos = validateMonthlyPensionRubrics(params);
     if (!usaTeto && pssEA !== 0 && !params.pensionRetroEntries?.length) {
         pensionMemory.avisos = ['PSS de exercício anterior legado usa alíquota marginal atual; confira e informe apuração por competência antes de utilizá-lo como conferência oficial.'];
     }

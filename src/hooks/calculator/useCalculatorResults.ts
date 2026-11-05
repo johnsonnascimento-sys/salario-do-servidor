@@ -13,6 +13,7 @@ import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalc
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { assertPensionRubricsReady, PensionCalculationPendingError } from '../../services/agency/engine/modules/pensionPending';
+import { calculateMonthlyPensionContext } from '../../services/agency/engine/modules/pensionContext';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
@@ -184,7 +185,14 @@ export const useCalculatorResults = (
                     return;
                 }
                 if (error instanceof PensionCalculationPendingError) {
-                    setCompleted({ token: inputToken, pensionContexts: null, state: getEmptyCalculatedPayrollState(),
+                    // Editing today's selection must remain possible while a manual rubric is under review.
+                    // This context guides explicit choices only; it does not certify a final calculation.
+                    try {
+                        const monthly = await calculateMonthlyPensionContext(mapStateToAgencyParams(state, agency.slug, courtConfig));
+                        pensionContexts = { monthly, retro: {}, requiresChoice: false };
+                    } catch { pensionContexts = null; }
+                    if (cancelled || currentTokenRef.current !== inputToken) return;
+                    setCompleted({ token: inputToken, pensionContexts, state: getEmptyCalculatedPayrollState(),
                         error: null, pensionPending: { message: error.message, rubricaIds: error.rubricaIds } });
                     return;
                 }

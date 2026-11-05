@@ -9,9 +9,10 @@ import { applyCalculatorPatch, hydrateCalculatorState, stripCalculatedFieldsFrom
 import { buildPensionAuditRows } from '../src/utils/pensionExport';
 import { useCalculator } from '../src/hooks/useCalculator';
 import { CALCULATOR_DRAFT_STORAGE_KEY } from '../src/constants/storage';
+import { syntheticPensionCatalog, syntheticPensionOption } from './fixtures/syntheticPensionCatalog';
 
 // All amounts, rates and sources in this fixture are synthetic; production configuration is never accessed.
-const complementary: PrevidenciaComplementarConfig = { enabled: true, scope: 'teste', baseRule: 'excedente_teto_rgps',
+const complementary: PrevidenciaComplementarConfig = { rubricCatalog: syntheticPensionCatalog, enabled: true, scope: 'teste', baseRule: 'excedente_teto_rgps',
     includeThirteenth: true, sponsoredRate: { min: .05, max: .09, step: .005, defaultRpc: .085 },
     facultativeRate: { minIfPositive: .025, default: 0 } };
 const configuration = (): CourtConfig => ({ bases: { salario: { teste: { A1: 6000 } }, funcoes: {} }, values: {},
@@ -26,7 +27,7 @@ const configuration = (): CourtConfig => ({ bases: { salario: { teste: { A1: 600
 const initial = (): CalculatorState => ({ ...INITIAL_STATE, nome: 'Teste', cargo: 'teste', padrao: 'A1', funcao: '0',
     anoRef: 2026, mesRef: 'SETEMBRO', tabelaPSS: 'atual', tabelaIR: 'teste', regimePrev: 'antigo',
     funprespParticipacao: 'nao', funprespAliq: .085, funprespRevisarOpcoes: false,
-    rubricasExtras: [{ id: 'historica', descricao: 'Crédito histórico', tipo: 'C', valor: 1000,
+    rubricasExtras: [{ ...syntheticPensionOption, id: 'historica', descricao: 'Crédito histórico', tipo: 'C', valor: 1000,
         incideIR: false, isEA: true, incidePSS: false, pssCompetenciaSeparada: false,
         incideFunpresp: true, funprespCompetenciaSeparada: true }],
     pensionRetroEntries: [{ id: 'retro', competencia: '2025-07', modo: 'completo', tipo: 'mensal', destinoIR: 'ea',
@@ -35,6 +36,32 @@ const initial = (): CalculatorState => ({ ...INITIAL_STATE, nome: 'Teste', cargo
         contribuicaoRppsRecolhida: 450, contribuicaoComplementarRecolhida: 0, aliquotaNormal: .06, aliquotaFacultativa: 0 }],
 });
 const agency = { slug: 'jmu', name: 'JMU', type: 'judiciary' };
+
+test('catalog and mid-month protocol pending can be corrected explicitly without losing current participation', async () => {
+    const config = configuration();
+    let state = { ...initial(), regimePrev: 'rpc', funprespParticipacao: 'patrocinado', pensionRetroEntries: [],
+        rubricasExtras: [{ ...initial().rubricasExtras[0], funprespCompetenciaSeparada: false,
+            pensionRubricId: undefined, pensionOptionDate: '2026-09-20', pensionOptionAmountConfirmed: false }] } as CalculatorState;
+    let latest!: ReturnType<typeof useCalculatorResults>;
+    // Keep the engine stable across renders, as in the application.
+    const engine = new AgencyCalculationEngine();
+    function StableProbe() { latest = useCalculatorResults(state, engine, config, agency); return null; }
+    let tree!: ReturnType<typeof create>;
+    await act(async () => { tree = create(React.createElement(StableProbe)); });
+    assert.equal(latest.calculationStatus, 'pension_pending');
+    assert.equal(latest.pensionContexts?.requiresChoice, false);
+    assert.equal(state.funprespParticipacao, 'patrocinado');
+    state = { ...state, rubricasExtras: state.rubricasExtras.map(row => ({ ...row, pensionRubricId: 'fixture_optional' })) };
+    await act(async () => tree.update(React.createElement(StableProbe)));
+    assert.equal(latest.calculationStatus, 'pension_pending');
+    state = { ...state, rubricasExtras: state.rubricasExtras.map(row => ({ ...row, pensionOptionAmountConfirmed: true })) };
+    await act(async () => tree.update(React.createElement(StableProbe)));
+    assert.equal(latest.calculationStatus, 'ready', latest.calculationPending?.message ?? latest.calculationError ?? '');
+    const audit = buildPensionAuditRows(latest.calculatedState.pensionMemory);
+    assert.ok(audit.some(([label, value]) => label === 'Data da opção expressa' && value === '2026-09-20'));
+    assert.deepEqual(latest.calculatedState.pensionMemory?.mensal.enquadramentos?.map(item => item.ruleId), ['fixture_optional']);
+    await act(async () => tree.unmount());
+});
 
 test('monthly changes do not silently populate missing historical choices in linked drafts', () => {
     const state = initial();

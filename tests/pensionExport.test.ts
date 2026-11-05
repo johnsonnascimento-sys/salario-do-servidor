@@ -44,6 +44,9 @@ test('linked historical allocation and provenance survive XLSX and PDF export wi
  const linked: PensionMemory = { ...memory, retroativos: [{ id: 'retro-linked', competencia: '2025-07', tipo: 'mensal',
   modo: 'completo', destinoIR: 'ea', rpps: 0, complementar: 30, regraHistoricaId: 'rule-original',
   fonteHistorica: 'https://example.test/historical-rule', teto: 5000, baseRppsDevida: 4500, baseComplementarDevida: 5500,
+  enquadramentos: [{ rubricaId: 'historica', ruleId: 'optional-original', classification: 'facultativa',
+   source: 'https://example.test/original-classification', competencia: '2025-07', optionDate: '2025-07-20',
+   optionReference: 'PROTOCOL-ORIGINAL', optionAmountConfirmed: true }],
   entrada: { id: 'retro-linked', competencia: '2025-07', regraHistoricaId: 'rule-original',
    vinculos: [{ rubricaId: 'historica', valor: 1000 }] } }] };
  const exportedState = { ...state, pensionMemory: linked };
@@ -57,9 +60,14 @@ test('linked historical allocation and provenance survive XLSX and PDF export wi
  assert.ok(audit.some(([label, value]) => label === 'Valor distribuído na competência' && value === 1000));
  assert.ok(audit.some(([label, value]) => label === 'Regra histórica utilizada' && value === 'rule-original'));
  assert.ok(audit.some(([label, value]) => label === 'Fonte histórica' && value === 'https://example.test/historical-rule'));
+ assert.ok(audit.some(([label, value]) => label === 'Fonte do enquadramento' && value === 'https://example.test/original-classification'));
+ assert.ok(audit.some(([label, value]) => label === 'Protocolo da opção expressa' && value === 'PROTOCOL-ORIGINAL'));
  (globalThis as any).__pensionFiles = [];
  exportToPDF(exportedState, rows, null);
  const pdf = new TextDecoder('latin1').decode(await (globalThis as any).__pensionFiles[0].blob.arrayBuffer());
  assert.match(pdf, /historica/);
  assert.match(pdf, /rule-original/);
+ assert.match(pdf, /optional-original/);
+ assert.match(pdf, /PROTOCOL-ORIGINAL/);
+ assert.match(pdf, /2025-07-20/);
 });

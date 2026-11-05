@@ -8,6 +8,7 @@ import { useCalculatorResults } from '../src/hooks/calculator/useCalculatorResul
 import { useCalculator } from '../src/hooks/useCalculator';
 import { CALCULATOR_DRAFT_STORAGE_KEY } from '../src/constants/storage';
 import { hydrateCalculatorState } from '../src/utils/calculatorState';
+import { syntheticPensionCatalog, syntheticPensionOption } from './fixtures/syntheticPensionCatalog';
 
 const config: CourtConfig = {
     bases: { salario: { teste: { A1: 6000 } }, funcoes: {} },
@@ -16,14 +17,14 @@ const config: CourtConfig = {
     payrollRules: { gajRate: .5, specificGratificationRate: .1, vrRateOnCj1: .1, monthDayDivisor: 30,
         overtimeMonthHours: 200, transportWorkdays: 22, transportDiscountRate: .06, irrfTopRate: .2 },
     careerCatalog: { noFunctionCode: '0', noFunctionLabel: 'Sem função', cargoLabels: {} },
-    previdenciaComplementar: { enabled: true, scope: 'teste', baseRule: 'excedente_teto_rgps', includeThirteenth: true,
+    previdenciaComplementar: { rubricCatalog: syntheticPensionCatalog, enabled: true, scope: 'teste', baseRule: 'excedente_teto_rgps', includeThirteenth: true,
         sponsoredRate: { min: .065, max: .085, step: .005, defaultRpc: .085 }, facultativeRate: { minIfPositive: .025, default: 0 } },
 };
 const agency = { slug: 'jmu', name: 'JMU', type: 'judiciary' };
 const initial = (): CalculatorState => ({ ...INITIAL_STATE, nome: 'Teste', anoRef: 2026, mesRef: 'SETEMBRO',
     cargo: 'teste', padrao: 'A1', funcao: '0', tabelaPSS: 'teste', tabelaIR: 'teste', regimePrev: 'rpc',
     funprespParticipacao: 'patrocinado', funprespAliq: .085, funprespRevisarOpcoes: false });
-const rubric = { id: 'historica', descricao: 'Crédito histórico', valor: 1000, tipo: 'C' as const,
+const rubric = { ...syntheticPensionOption, id: 'historica', descricao: 'Crédito histórico', valor: 1000, tipo: 'C' as const,
     incideIR: true, incidePSS: false, isEA: true, pssCompetenciaSeparada: false,
     incideFunpresp: true, funprespCompetenciaSeparada: true };
 
@@ -47,7 +48,7 @@ test('pending history replaces ready output, preserves inputs and precedes month
     assert.equal(latest.calculationStatus, 'pension_pending');
     assert.equal(latest.calculationError, null);
     assert.deepEqual(latest.calculationPending?.rubricaIds, ['historica']);
-    assert.equal(latest.pensionContexts, null);
+    assert.equal(latest.pensionContexts?.requiresChoice, false);
     assert.deepEqual(latest.resultRows, []);
     assert.equal(latest.calculatedState.pensionMemory, undefined);
     assert.deepEqual(latest.calculatedState.rubricasTax, {});

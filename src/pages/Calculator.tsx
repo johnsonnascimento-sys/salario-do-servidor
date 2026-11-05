@@ -275,6 +275,7 @@ export default function Calculator() {
                     </div>}
                     <DynamicPayrollForm
                         calculationReady={calculationReady}
+                        pensionPending={Boolean(calculationPending)}
                         updateMany={updateMany}
                         pensionContexts={pensionContexts}
                         calculationError={calculationError}

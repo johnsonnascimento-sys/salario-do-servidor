@@ -188,6 +188,7 @@ export const calculatePensionRetroactives = (params: IAgencyCalculationParams): 
                 return { id: resolved.id, competencia: resolved.competencia, tipo: resolved.tipo!, destinoIR: resolved.destinoIR!, modo: 'completo',
                     rpps, complementar, justificativa: resolved.justificativa, entrada: resolved,
                     regraHistoricaId: prepared.rule.id, fonteHistorica: prepared.rule.source, teto: table.teto_rgps,
+                    enquadramentos: prepared.enquadramentos,
                     baseRppsDevida: resolved.baseRppsDevida, baseComplementarDevida: resolved.baseComplementarDevida } as PensionRetroMemory;
             } catch (error) {
                 if (error instanceof PensionCalculationPendingError) throw error;

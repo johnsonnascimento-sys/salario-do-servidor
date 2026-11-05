@@ -1,5 +1,13 @@
 # Changelog
 
+## Funpresp em Rubricas Manuais — Etapa 3: catálogo e governança por vigência — 05/11/2026
+- Integrado catálogo data-driven de naturezas obrigatórias, facultativas, excluídas e pendentes ao motor e ao formulário. Ausência de natureza ou fonte não certifica créditos de participantes; histórico usa seu próprio catálogo e situação previdenciária.
+- Inclusões facultativas exigem data e referência de opção expressa; protocolo no curso do mês exige confirmação do valor elegível desde a opção, sem prorrata automática. Edições relevantes invalidam a confirmação. Classificação e fontes aparecem na memória e na auditoria PDF/Excel, mantendo totais compartilhados sem rateio individual.
+- Fechados os desvios de PSS histórico sem vínculo quando a participação atual é inexistente e de Funpresp mensal com PSS histórico sem validação mensal. O contexto de seleção permanece editável durante a pendência, sem normalização automática nem resultado definitivo.
+- Serviço admin valida catálogo, vigências e versões históricas; bloqueia reescrita direta de previdência publicada, alteração retroativa de regras e substituição dos catálogos por overrides locais. Versionamento exige origem ativa, data válida e posterior, sem agendamento futuro.
+- Preparados seed canônico e migration candidata `20261105_pju_pension_catalog.sql`: catálogo de 2026, histórico abril–dezembro/2026 e URPs oficiais disponíveis até outubro/2026, preservando cadastros anteriores e `incidence_rules`. GAS, GAE, AQ de treinamento e outras verbas não comprovadas continuam pendentes no catálogo manual. Sem aplicação em banco externo ou publicação.
+- Validação: testes de catálogo, opção expressa, formulário, transição pendente/concluído, auditoria, administração e SQL real em PostgreSQL embarcado descartável, além das suítes existentes, TypeScript e build local.
+
 ## Funpresp em Rubricas Manuais — Etapa 2: vínculos e apuração histórica — 05/11/2026
 - Disponibilizado o cadastro da primeira competência e a distribuição de uma rubrica entre competências ou de várias rubricas na mesma apuração, incluindo PSS histórico com incidência independente da Funpresp.
 - Novos lançamentos exigem situação previdenciária histórica explícita e bases originais/recolhimentos; as bases corrigidas são derivadas dos vínculos. Trocas na seleção mensal não preenchem nem apagam escolhas históricas.

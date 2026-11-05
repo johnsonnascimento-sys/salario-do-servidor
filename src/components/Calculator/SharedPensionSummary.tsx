@@ -1,10 +1,19 @@
 import React from 'react';
-import type { PensionCalculationMemory, PensionMemory } from '../../types/pension';
+import type { PensionCalculationMemory, PensionMemory, PensionRubricAssessment } from '../../types/pension';
 import type { Rubrica } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 
 /** Informational breakdown only: the payroll engine already accounts for the deductions. */
 export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: Rubrica[] }> = ({ memory, rubricas = [] }) => {
+    const assessments = (items: PensionRubricAssessment[] = []) => items.length > 0 && <details className="mt-2">
+        <summary>Enquadramentos e fontes das rubricas</summary>
+        {items.map(item => <div key={item.rubricaId} className="mt-2 break-words">
+            <p>{rubricas.find(rubrica => rubrica.id === item.rubricaId)?.descricao || item.rubricaId} — {item.ruleId} ({item.classification}) — {item.competencia}</p>
+            <p>Fonte: {item.source}</p>
+            {item.optionDate && <p>Opção: {item.optionDate} — {item.optionReference}</p>}
+            {item.optionAmountConfirmed && <p>Valor elegível desde a opção confirmado pelo usuário.</p>}
+        </div>)}
+    </details>;
     const group = (item: PensionCalculationMemory) => {
         const facultativaFolha = Math.round((item.facultativa - item.facultativaExterna) * 100) / 100;
         const lines: Array<[string, number]> = [
@@ -23,6 +32,7 @@ export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: 
                     <dt>{label}</dt><dd className="font-mono">{formatCurrency(value)}</dd>
                 </div>)}
             </dl>
+            {assessments(item.enquadramentos)}
         </section>;
     };
 
@@ -43,6 +53,7 @@ export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: 
                 <span className="font-mono">{formatCurrency(link.valor)}</span>
             </div>)}
             {entry.fonteHistorica && <p>Fonte: {entry.fonteHistorica}</p>}
+            {assessments(entry.enquadramentos)}
         </section>)}
     </section>;
 };

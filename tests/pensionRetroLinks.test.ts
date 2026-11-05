@@ -9,9 +9,10 @@ import { assertPensionRubricsReady, deriveLinkedPensionBases, getPensionRubricDi
 import { resolveHistoricalPensionContext } from '../src/services/agency/engine/modules/pensionSelectionContext';
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
 import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
+import { syntheticPensionCatalog, syntheticPensionOption } from './fixtures/syntheticPensionCatalog';
 
 // All amounts, rates and sources are synthetic. No legal configuration or database is changed.
-const historical: PrevidenciaComplementarConfig = { enabled: true, scope: 'teste', baseRule: 'excedente_teto_rgps',
+const historical: PrevidenciaComplementarConfig = { rubricCatalog: syntheticPensionCatalog, enabled: true, scope: 'teste', baseRule: 'excedente_teto_rgps',
     includeThirteenth: true, sponsoredRate: { min: .05, max: .07, step: .01, defaultRpc: .06 },
     linkedRate: { min: .05, max: .07, step: .01 }, facultativeRate: { minIfPositive: .01, default: 0 },
     minimumUrpUnits: 10, urpByCompetence: { '2026-01': 100 }, urpSourcesByCompetence: { '2026-01': 'fonte sintética' } };
@@ -26,7 +27,7 @@ const configuration = (): CourtConfig => ({
         historicalRules: [{ id: 'regra-antiga', validFrom: '2026-01', validTo: '2026-07', source: 'fonte histórica sintética',
             tabelaPSS: 'antiga', configuration: structuredClone(historical) }] },
 });
-const rubric = (id = 'r', valor = 500) => ({ id, descricao: 'Crédito histórico', valor, tipo: 'C' as const,
+const rubric = (id = 'r', valor = 500) => ({ ...syntheticPensionOption, id, descricao: 'Crédito histórico', valor, tipo: 'C' as const,
     incideIR: false, incidePSS: false, isEA: true, pssCompetenciaSeparada: false,
     incideFunpresp: true, funprespCompetenciaSeparada: true });
 const entry = (patch: Partial<PensionRetroEntry> = {}): PensionRetroEntry => ({ id: 'e', competencia: '2026-01', modo: 'completo',

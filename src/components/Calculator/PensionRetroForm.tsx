@@ -16,11 +16,12 @@ interface Props {
     pensionParams?: IAgencyCalculationParams;
     pensionContexts?: PensionSelectionContexts | null;
     allowNormalization?: boolean;
+    invalidateOptionConfirmation?: (rubricaIds: string[]) => void;
 }
 
 const newRetroId = () => globalThis.crypto?.randomUUID?.() ?? `retro-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTableOptions, pensionParams, pensionContexts }) => {
+export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTableOptions, pensionParams, pensionContexts, invalidateOptionConfirmation }) => {
     const entries = state.pensionRetroEntries ?? [];
     const rubrics = state.rubricasExtras ?? [];
     const eligible = rubrics.filter(rubrica => Number(rubrica.valor) > 0 &&
@@ -28,7 +29,13 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
     const distributed = getPensionRubricDistribution({ pensionRetroEntries: entries });
     const openForHistory = entries.length > 0 || rubrics.some(rubrica => rubrica.pssCompetenciaSeparada ||
         (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada));
-    const replace = (id: string, changes: Partial<PensionRetroEntry>) => update('pensionRetroEntries', entries.map(entry => entry.id === id ? { ...entry, ...changes } : entry));
+    const replace = (id: string, changes: Partial<PensionRetroEntry>) => {
+        if (['vinculos', 'competencia', 'regraHistoricaId', 'tipo'].some(key => key in changes)) {
+            const previous = entries.find(entry => entry.id === id);
+            invalidateOptionConfirmation?.([...new Set([...(previous?.vinculos ?? []), ...(changes.vinculos ?? [])].map(link => link.rubricaId))]);
+        }
+        update('pensionRetroEntries', entries.map(entry => entry.id === id ? { ...entry, ...changes } : entry));
+    };
     const currency = (entry: PensionRetroEntry, key: keyof PensionRetroEntry, label: string) => <label className={styles.label} key={key}>{label} (R$)
         <input type="number" min={0} step="0.01" className={styles.input} value={entry[key] === undefined ? '' : String(entry[key])}
             onChange={e => replace(entry.id, { [key]: e.target.value === '' ? undefined : toPositiveNumber(e.target.value) })} />
@@ -160,7 +167,10 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
                     {linked && selectedRule && <p className="text-body-xs">Fonte da regra histórica: {selectedRule.source}</p>}
                     {selectedParticipation === 'vinculado' && <p className="text-body-xs">Informe o salário de participação escolhido na competência; ele será conferido com os limites históricos.</p>}
                 </>}
-                <button type="button" className="text-error-600 underline" onClick={() => update('pensionRetroEntries', entries.filter(item => item.id !== entry.id))}>Remover {linked ? 'competência' : 'ajuste salvo'} {index + 1}</button>
+                <button type="button" className="text-error-600 underline" onClick={() => {
+                    invalidateOptionConfirmation?.((entry.vinculos ?? []).map(link => link.rubricaId));
+                    update('pensionRetroEntries', entries.filter(item => item.id !== entry.id));
+                }}>Remover {linked ? 'competência' : 'ajuste salvo'} {index + 1}</button>
             </fieldset>;
         })}
     </details>;

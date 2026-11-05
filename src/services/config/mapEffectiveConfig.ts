@@ -23,6 +23,8 @@ const mapComplementaryConfig = (config: Omit<PrevidenciaComplementarPowerConfig,
     incidenceRules: config.incidence_rules,
     baseRule: config.base_rule ?? 'excedente_teto_rgps',
     includeThirteenth: Boolean(config.include_thirteenth),
+    rubricCatalog: config.rubric_catalog?.map(rule => ({ id: rule.id, label: rule.label,
+        classification: rule.classification, validFrom: rule.valid_from, validTo: rule.valid_to, source: rule.source })),
     costingDisclosure: {
         loadingNormal: config.costing_disclosure?.loading_normal,
         loadingFacultative: config.costing_disclosure?.loading_facultative,
