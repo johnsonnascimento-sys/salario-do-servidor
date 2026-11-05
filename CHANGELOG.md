@@ -9,6 +9,7 @@
     - Alinhamento de valores monetários com a fonte monoespacial canônica (`font-mono`).
     - Integração do card ao collapsible oficial do sistema `PresetGrossSummary` através da adição do preset `case 'gaacta'` em `presetGrossLines.ts`.
     - Harmonização dos alertas de incompatibilidade legal cruzada entre GAACTA e Serviço Extraordinário (`OvertimeCard.tsx`).
+    - Eliminação do badge verde duplicado (`presetLabel`) no topo do card da GAACTA, consolidando a identificação visual diretamente no cabeçalho unificado com o badge normativo `Res. STM Nº 397/2026 • 15%` e o botão de exclusão.
     - Auditoria de Design System aprovada: eliminação de 32 violações, elevando o Health Score geral para 97.8/100 (0 violações em `GaactaCard.tsx`).
 
 ## Módulo GAACTA e Deploy de Produção (Resolução STM nº 397/2026) — 04/11/2026

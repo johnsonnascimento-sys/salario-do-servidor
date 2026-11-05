@@ -60,7 +60,18 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
         <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
                 {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
-                <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{presetLabel}</span>
+                {instance.presetId === 'gaacta' ? (
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-body-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+                            Gratificação por Atividades de Alta Complexidade
+                        </span>
+                        <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
+                            Res. STM Nº 397/2026 • 15%
+                        </span>
+                    </div>
+                ) : (
+                    <span className="px-2.5 py-1 rounded-full text-body-xs font-bold bg-primary/10 text-primary">{presetLabel}</span>
+                )}
                 {MULTI_INSTANCE_PRESETS.has(instance.presetId) && (
                     <span className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700">
                         Múltiplo

@@ -41,15 +41,6 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-body-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
-                    Gratificação por Atividades de Alta Complexidade
-                </span>
-                <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
-                    Res. STM Nº 397/2026 • 15%
-                </span>
-            </div>
-
             {/* Alerta de Elegibilidade: Privativo de CJ */}
             {!isCJ && (
                 <div className="p-3 rounded-xl bg-warning-50 dark:bg-warning-950/30 border border-warning-200 dark:border-warning-800/60 text-body-xs text-warning-800 dark:text-warning-300 flex items-start gap-2.5">
