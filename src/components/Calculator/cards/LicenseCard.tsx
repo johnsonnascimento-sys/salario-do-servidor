@@ -1,5 +1,4 @@
 import React from 'react';
-import { Briefcase } from 'lucide-react';
 import { CalculatorState } from '../../../types';
 
 interface LicenseCardProps {
@@ -9,13 +8,9 @@ interface LicenseCardProps {
     styles: any;
 }
 
-export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, competenciaReferencia, styles }) => {
+export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, styles }) => {
     return (
-        <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Licença Compensatória
-            </h3>
-
+        <div className="space-y-4">
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     <div>
@@ -41,7 +36,7 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, compete
                             onChange={e => update('incluirAbonoLicenca', e.target.checked)}
                             className={styles.checkbox}
                         />
-                        Incluir abono na base?
+                        <span>Incluir abono na base?</span>
                     </label>
                 </div>
             </div>

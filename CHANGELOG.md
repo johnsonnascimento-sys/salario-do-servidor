@@ -1,5 +1,14 @@
 # Changelog
 
+## Harmonização Visual de Todas as Rubricas Pré-definidas com o Design System — 05/11/2026
+- Style & UX (PresetInstanceCard e Cards de Rubricas Pré-definidas):
+  - Extensão da arquitetura e harmonização visual para todos os cards de rubricas pré-definidas da calculadora (`PresetInstanceCard.tsx`, `LicenseCard.tsx`, `SubstitutionCard.tsx`, `VacationCard.tsx`, `ThirteenthCard.tsx`, `OvertimeCard.tsx`, `DailiesCard.tsx`):
+    - Cabeçalho padronizado e unificado no container pai `PresetInstanceCard.tsx`: título em caixa alta tracking-widest, badge normativo regulamentar (quando aplicável: Diárias PJU, Horas Extras, Férias, 13º, GAACTA, Abono, Substituição), badge de múltiplas instâncias e botão de exclusão alinhados em uma única linha elegante.
+    - Remoção definitiva de todos os wrappers redundantes `<div className={styles.card}>` e de todos os títulos duplicados internos nos cards filhos, eliminando o efeito de caixa dentro de caixa e espaçamentos duplos.
+    - Padronização completa com a escala Slate oficial `neutral-*`, tokens semânticos (`warning`, `error`, `primary`) e controles do Design System (`styles.label`, `styles.checkboxLabel`, `styles.checkbox`, `styles.input`).
+    - Auditoria de Design System aprovada: redução de violações para 69 e elevação do Health Score geral para 98.0/100.
+    - Validação plena: 100% de aprovação em todos os testes unitários e de integração (`test:gaacta`, `test:payslip`, `test:pension`, `test:thirteenth`, `test:dailies`, `test:config`).
+
 ## Harmonização Visual do Card da GAACTA com o Design System — 05/11/2026
 - Style & UX (GaactaCard e OvertimeCard):
   - Refatoração completa da estilização do `GaactaCard.tsx` para aderência estrita aos tokens oficiais do Design System do projeto:

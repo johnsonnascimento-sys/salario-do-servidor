@@ -1,5 +1,4 @@
 import React from 'react';
-import { Briefcase } from 'lucide-react';
 import { SubstitutionEntry } from '../../../types';
 
 interface SubstitutionCardProps {
@@ -10,16 +9,13 @@ interface SubstitutionCardProps {
     styles: any;
 }
 
-export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, competenciaReferencia, styles }) => {
+export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, styles }) => {
     const updateDays = (key: string, days: number) => {
         updateEntry(entry.id, { dias: { ...entry.dias, [key]: days } });
     };
 
     return (
-        <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-                <Briefcase className="w-4 h-4" /> Substituição de Função
-            </h3>
+        <div className="space-y-4">
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">

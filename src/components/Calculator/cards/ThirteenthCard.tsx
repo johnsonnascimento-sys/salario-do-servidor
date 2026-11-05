@@ -1,5 +1,4 @@
 import React from 'react';
-import { Gift } from 'lucide-react';
 import { CalculatorState } from '../../../types';
 import { formatCurrency } from '../../../utils/calculations';
 
@@ -15,7 +14,7 @@ const parseCurrencyInput = (value: string) => {
     return Number(raw) / 100;
 };
 
-export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, competenciaReferencia, styles }) => {
+export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, styles }) => {
     const renderAutoToggle = (enabled: boolean, amount: number, label: string, onToggle: () => void) => (
         <div
             className={styles.innerBox + ' cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors'}
@@ -39,149 +38,134 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, c
     );
 
     return (
-        <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-                <Gift className="w-4 h-4" />
-                Gratificação Natalina
-            </h3>
+        <div className="space-y-4">
+            <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                1ª parcela sem IR/PSS. Na 2ª parcela, IR e PSS sobre o total (1ª + 2ª), sem PSS sobre FC/CJ, com abatimento da 1ª parcela.
+            </p>
 
-            <div className="space-y-4">
-                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                    1ª parcela sem IR/PSS. Na 2ª parcela, IR e PSS sobre o total (1ª + 2ª), sem PSS sobre FC/CJ, com abatimento da 1ª parcela.
-                </p>
+            <div className="flex justify-end">
+                <label className={styles.checkboxLabel}>
+                    <input
+                        type="checkbox"
+                        checked={state.manualAdiant13}
+                        onChange={e => update('manualAdiant13', e.target.checked)}
+                        className={styles.checkbox}
+                    />
+                    Digitar valores manualmente
+                </label>
+            </div>
 
-                <div className="flex justify-end">
-                    <label className={styles.checkboxLabel}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className={styles.label}>Adiantamento (Vencimento)</label>
+                    {state.manualAdiant13 ? (
                         <input
-                            type="checkbox"
-                            checked={state.manualAdiant13}
-                            onChange={e => update('manualAdiant13', e.target.checked)}
-                            className={styles.checkbox}
+                            type="text"
+                            className={styles.input}
+                            value={state.adiant13Venc ? state.adiant13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                            onChange={e => update('adiant13Venc', parseCurrencyInput(e.target.value))}
+                            placeholder="0,00"
                         />
-                        Controles manuais
-                    </label>
-                </div>
-
-                <div className="space-y-4">
-                    <div>
-                        <label className={styles.label}>Adiant. 1ª Parcela (Vencimento)</label>
-                        {state.manualAdiant13 ? (
-                            <input
-                                type="text"
-                                className={styles.input}
-                                value={state.adiant13Venc ? state.adiant13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('adiant13Venc', parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                            />
-                        ) : (
-                            renderAutoToggle(
-                                state.adiant13Venc > 0,
-                                state.adiant13Venc,
-                                'Receber adiantamento',
-                                () => {
-                                    const nextEnabled = !(state.adiant13Venc > 0);
-                                    if (nextEnabled) {
-                                        update('adiant13Venc', 1);
-                                        return;
-                                    }
-                                    update('adiant13Venc', 0);
-                                    if (state.segunda13Venc > 0) {
-                                        update('segunda13Venc', 0);
-                                    }
-                                }
-                            )
-                        )}
-                    </div>
-
-                    <div>
-                        <label className={styles.label}>Adiant. 1ª Parcela (FC/CJ)</label>
-                        {state.manualAdiant13 ? (
-                            <input
-                                type="text"
-                                className={styles.input}
-                                value={state.adiant13FC ? state.adiant13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('adiant13FC', parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                            />
-                        ) : (
-                            renderAutoToggle(
-                                state.adiant13FC > 0,
-                                state.adiant13FC,
-                                'Receber adiantamento',
-                                () => {
-                                    const nextEnabled = !(state.adiant13FC > 0);
-                                    if (nextEnabled) {
-                                        update('adiant13FC', 1);
-                                        return;
-                                    }
-                                    update('adiant13FC', 0);
-                                    if (state.segunda13FC > 0) {
-                                        update('segunda13FC', 0);
-                                    }
-                                }
-                            )
-                        )}
-                    </div>
-
-                    <div>
-                        <label className={styles.label}>2ª Parcela (Vencimento)</label>
-                        {state.manualAdiant13 ? (
-                            <input
-                                type="text"
-                                className={styles.input}
-                                value={state.segunda13Venc ? state.segunda13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('segunda13Venc', parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                            />
-                        ) : (
-                            renderAutoToggle(
-                                state.segunda13Venc > 0,
-                                state.segunda13Venc,
-                                'Receber segunda parcela',
-                                () => {
-                                    const nextEnabled = !(state.segunda13Venc > 0);
-                                    if (nextEnabled) {
-                                        update('segunda13Venc', 1);
-                                        if (state.adiant13Venc <= 0) {
-                                            update('adiant13Venc', 1);
-                                        }
-                                        return;
-                                    }
+                    ) : (
+                        renderAutoToggle(
+                            state.adiant13Venc > 0,
+                            state.adiant13Venc,
+                            'Receber adiantamento',
+                            () => {
+                                const nextEnabled = !(state.adiant13Venc > 0);
+                                if (!nextEnabled && state.segunda13Venc > 0) {
                                     update('segunda13Venc', 0);
                                 }
-                            )
-                        )}
-                    </div>
+                                update('adiant13Venc', nextEnabled ? 1 : 0);
+                            }
+                        )
+                    )}
+                </div>
 
-                    <div>
-                        <label className={styles.label}>2ª Parcela (FC/CJ)</label>
-                        {state.manualAdiant13 ? (
-                            <input
-                                type="text"
-                                className={styles.input}
-                                value={state.segunda13FC ? state.segunda13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('segunda13FC', parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                            />
-                        ) : (
-                            renderAutoToggle(
-                                state.segunda13FC > 0,
-                                state.segunda13FC,
-                                'Receber segunda parcela',
-                                () => {
-                                    const nextEnabled = !(state.segunda13FC > 0);
-                                    if (nextEnabled) {
-                                        update('segunda13FC', 1);
-                                        if (state.adiant13FC <= 0) {
-                                            update('adiant13FC', 1);
-                                        }
-                                        return;
-                                    }
+                <div>
+                    <label className={styles.label}>Adiantamento (FC/CJ)</label>
+                    {state.manualAdiant13 ? (
+                        <input
+                            type="text"
+                            className={styles.input}
+                            value={state.adiant13FC ? state.adiant13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                            onChange={e => update('adiant13FC', parseCurrencyInput(e.target.value))}
+                            placeholder="0,00"
+                        />
+                    ) : (
+                        renderAutoToggle(
+                            state.adiant13FC > 0,
+                            state.adiant13FC,
+                            'Receber adiantamento',
+                            () => {
+                                const nextEnabled = !(state.adiant13FC > 0);
+                                if (!nextEnabled && state.segunda13FC > 0) {
                                     update('segunda13FC', 0);
                                 }
-                            )
-                        )}
-                    </div>
+                                update('adiant13FC', nextEnabled ? 1 : 0);
+                            }
+                        )
+                    )}
+                </div>
+
+                <div>
+                    <label className={styles.label}>2ª Parcela (Vencimento)</label>
+                    {state.manualAdiant13 ? (
+                        <input
+                            type="text"
+                            className={styles.input}
+                            value={state.segunda13Venc ? state.segunda13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                            onChange={e => update('segunda13Venc', parseCurrencyInput(e.target.value))}
+                            placeholder="0,00"
+                        />
+                    ) : (
+                        renderAutoToggle(
+                            state.segunda13Venc > 0,
+                            state.segunda13Venc,
+                            'Receber segunda parcela',
+                            () => {
+                                const nextEnabled = !(state.segunda13Venc > 0);
+                                if (nextEnabled) {
+                                    update('segunda13Venc', 1);
+                                    if (state.adiant13Venc <= 0) {
+                                        update('adiant13Venc', 1);
+                                    }
+                                    return;
+                                }
+                                update('segunda13Venc', 0);
+                            }
+                        )
+                    )}
+                </div>
+
+                <div>
+                    <label className={styles.label}>2ª Parcela (FC/CJ)</label>
+                    {state.manualAdiant13 ? (
+                        <input
+                            type="text"
+                            className={styles.input}
+                            value={state.segunda13FC ? state.segunda13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                            onChange={e => update('segunda13FC', parseCurrencyInput(e.target.value))}
+                            placeholder="0,00"
+                        />
+                    ) : (
+                        renderAutoToggle(
+                            state.segunda13FC > 0,
+                            state.segunda13FC,
+                            'Receber segunda parcela',
+                            () => {
+                                const nextEnabled = !(state.segunda13FC > 0);
+                                if (nextEnabled) {
+                                    update('segunda13FC', 1);
+                                    if (state.adiant13FC <= 0) {
+                                        update('adiant13FC', 1);
+                                    }
+                                    return;
+                                }
+                                update('segunda13FC', 0);
+                            }
+                        )
+                    )}
                 </div>
             </div>
         </div>
