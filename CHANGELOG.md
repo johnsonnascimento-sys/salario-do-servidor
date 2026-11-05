@@ -1,5 +1,16 @@
 # Changelog
 
+## Harmonização Visual do Card da GAACTA com o Design System — 05/11/2026
+- Style & UX (GaactaCard e OvertimeCard):
+  - Refatoração completa da estilização do `GaactaCard.tsx` para aderência estrita aos tokens oficiais do Design System do projeto:
+    - Remoção do container duplicado `<div className={styles.card}>` interno, eliminando bordas duplas e espaçamento redundante dentro do `PresetInstanceCard`.
+    - Substituição de cores fora do padrão (`gray-*`, `amber-*`, `rose-*`, `emerald-*`, `blue-*`) pela paleta canônica `neutral-*` e tokens semânticos (`warning`, `error`, `primary`).
+    - Padronização de tipografia e controles com `styles.label`, `styles.checkboxLabel`, `styles.checkbox` e `styles.input`.
+    - Alinhamento de valores monetários com a fonte monoespacial canônica (`font-mono`).
+    - Integração do card ao collapsible oficial do sistema `PresetGrossSummary` através da adição do preset `case 'gaacta'` em `presetGrossLines.ts`.
+    - Harmonização dos alertas de incompatibilidade legal cruzada entre GAACTA e Serviço Extraordinário (`OvertimeCard.tsx`).
+    - Auditoria de Design System aprovada: eliminação de 32 violações, elevando o Health Score geral para 97.8/100 (0 violações em `GaactaCard.tsx`).
+
 ## Módulo GAACTA e Deploy de Produção (Resolução STM nº 397/2026) — 04/11/2026
 - Feat (GAACTA - Resolução STM nº 397, de 19 de junho de 2026):
   - Implementação do novo módulo de Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa (GAACTA), que revogou a Resolução STM nº 376/2025 (licença compensatória na JMU), com vigência financeira desde 1º de junho de 2026.

@@ -57,10 +57,13 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     {gaactaAtivo && !gaactaRecesso && (
-                        <div className="p-2.5 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2">
-                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
-                            <div>
-                                <span className="font-semibold">Incompatibilidade Legal (Res. STM nº 397/2026, art. 6º):</span> O acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário. Em período concomitante, o servidor deverá <strong>optar</strong> entre a GAACTA e o serviço extraordinário (salvo no período do recesso judiciário).
+                        <div className="p-3 rounded-xl bg-error-50 dark:bg-error-950/30 border border-error-200 dark:border-error-800/60 text-body-xs text-error-800 dark:text-error-300 flex items-start gap-2.5">
+                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-error-600 dark:text-error-400" />
+                            <div className="space-y-0.5">
+                                <span className="font-bold text-body-xs block text-error-900 dark:text-error-200">Incompatibilidade Legal (Res. STM nº 397/2026, art. 6º)</span>
+                                <p className="text-body-xs text-error-800 dark:text-error-300">
+                                    O acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário. Em período concomitante, o servidor deverá <strong>optar</strong> entre a GAACTA e o serviço extraordinário (salvo no período do recesso judiciário).
+                                </p>
                             </div>
                         </div>
                     )}

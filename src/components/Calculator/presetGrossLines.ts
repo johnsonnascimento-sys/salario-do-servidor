@@ -462,6 +462,12 @@ export const buildPresetGrossLines = ({
 
             return lines;
         }
+        case 'gaacta': {
+            return [
+                { label: 'Base apurada da GAACTA', value: roundCurrency(state.gaactaBaseCalculo || 0) },
+                { label: 'GAACTA (15% indenizatória)', value: roundCurrency(state.gaactaValor || 0) }
+            ];
+        }
         default:
             return [];
     }
