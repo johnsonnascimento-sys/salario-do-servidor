@@ -1,5 +1,11 @@
 # Changelog
 
+## Correção da Exibição do Cargo em Comissão (CJ) na Base da GAACTA — 05/11/2026
+- Fix & UI (GaactaCard e State Management):
+  - Inclusão do campo `funcaoValor` no `CalculatorState`, `CalculatedPayrollState` e na lista `CALCULATED_STATE_KEYS`.
+  - Mapeamento e propagação de `funcaoValor` a partir de `result.breakdown.funcaoValor` no hook `useCalculatorResults.ts`.
+  - Atualização do componente `GaactaCard.tsx` para resolver `valorFuncao` priorizando o valor calculado pelo motor com fallback reativo imediato para as tabelas do período (`getTablesForPeriod(state.periodo, courtConfig)`), corrigindo a exibição de R$ 0,00 no checkbox de Cargo em Comissão (CJ).
+
 ## Harmonização Visual de Todas as Rubricas Pré-definidas com o Design System — 05/11/2026
 - Style & UX (PresetInstanceCard e Cards de Rubricas Pré-definidas):
   - Extensão da arquitetura e harmonização visual para todos os cards de rubricas pré-definidas da calculadora (`PresetInstanceCard.tsx`, `LicenseCard.tsx`, `SubstitutionCard.tsx`, `VacationCard.tsx`, `ThirteenthCard.tsx`, `OvertimeCard.tsx`, `DailiesCard.tsx`):

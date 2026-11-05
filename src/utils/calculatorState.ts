@@ -25,6 +25,7 @@ export const PERSISTED_CALCULATED_INPUT_KEYS = [
 export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'vencimento',
     'gaj',
+    'funcaoValor',
     'aqTituloValor',
     'aqTreinoValor',
     'gratEspecificaValor',

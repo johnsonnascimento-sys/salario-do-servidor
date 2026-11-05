@@ -108,6 +108,7 @@ export const useCalculatorResults = (
                 setCompleted({ token: inputToken, pensionContexts, error: null, state: {
                     vencimento: bd.vencimento || 0,
                     gaj: bd.gaj || 0,
+                    funcaoValor: bd.funcaoValor || 0,
                     aqTituloValor: bd.aqTitulo || 0,
                     aqTreinoValor: bd.aqTreino || 0,
                     gratEspecificaValor: bd.gratEspecifica || 0,

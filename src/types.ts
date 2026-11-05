@@ -222,6 +222,7 @@ export interface CalculatorState {
   cargo: string;
   padrao: string;
   funcao: string; // '0' for none, or key like 'fc1'
+  funcaoValor?: number;
   vencimento: number;
   gaj: number;
   vpni_lei: number;
@@ -415,6 +416,7 @@ export type CalculatedPayrollState = Pick<
   CalculatorState,
   | 'vencimento'
   | 'gaj'
+  | 'funcaoValor'
   | 'aqTituloValor'
   | 'aqTreinoValor'
   | 'gratEspecificaValor'
@@ -496,6 +498,7 @@ export const INITIAL_STATE: CalculatorState = {
   cargo: '',
   padrao: '',
   funcao: '',
+  funcaoValor: 0,
   vencimento: 0,
   gaj: 0,
   vpni_lei: 0,

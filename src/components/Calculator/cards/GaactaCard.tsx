@@ -1,11 +1,13 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
+import { getTablesForPeriod } from '../../../utils/calculations';
 
 interface GaactaCardProps {
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
     styles: any;
+
     courtConfig?: CourtConfig;
     competenciaReferencia?: string;
 }
@@ -20,10 +22,22 @@ const formatCurrency = (val: number) => {
 export const GaactaCard: React.FC<GaactaCardProps> = ({
     state,
     update,
-    styles
+    styles,
+    courtConfig
 }) => {
     const funcaoStr = (state.funcao || '').toLowerCase();
     const isCJ = funcaoStr.startsWith('cj');
+
+    // Resolver valor do cargo/função (prioriza cálculo do motor, com fallback para tabela de configuração)
+    let valorFuncao = Number(state.funcaoValor) || 0;
+    if (valorFuncao === 0 && state.funcao && courtConfig) {
+        try {
+            const tables = getTablesForPeriod(state.periodo, courtConfig);
+            valorFuncao = tables.funcoes[state.funcao] || 0;
+        } catch {
+            // fallback se config ainda não estiver carregada
+        }
+    }
 
     // Verificar se há horas extras ativas
     const hasOvertime = Boolean(
@@ -163,7 +177,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                                 />
                                 <span className="flex-1 flex items-center justify-between gap-2">
                                     <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Cargo em Comissão (CJ)</span>
-                                    <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">R$ {formatCurrency(state.funcaoValor || 0)}</span>
+                                    <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">R$ {formatCurrency(valorFuncao)}</span>
                                 </span>
                             </label>
 
