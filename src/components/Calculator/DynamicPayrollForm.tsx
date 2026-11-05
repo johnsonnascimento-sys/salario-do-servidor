@@ -289,6 +289,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             <ManualRubricasSection
                 rubricas={state.rubricasExtras}
+                rubricasTax={state.rubricasTax}
                 totalCreditos={totalCreditos}
                 totalDescontos={totalDescontos}
                 styles={styles}

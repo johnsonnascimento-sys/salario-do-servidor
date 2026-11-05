@@ -148,14 +148,10 @@ test('GAACTA: Composicao flexivel por checkboxes permite desmarcar parcelas', as
         cargo: 'analista',
         padrao: 'C13',
         funcao: 'cj3',
-        ats: 1000,
-        vpni_lei: 2000,
         gaactaAtivo: true,
         gaactaIncideVencimento: true,
         gaactaIncideGAJ: true,
         gaactaIncideFuncao: true,
-        gaactaIncideATS: true,
-        gaactaIncideVPNI: true,
         grossSalary: 0,
         dependents: 0,
         discounts: 0
@@ -163,14 +159,15 @@ test('GAACTA: Composicao flexivel por checkboxes permite desmarcar parcelas', as
 
     const resComTodas = await calculateGaacta(paramsComTodas);
 
-    const paramsSemVpni = {
+    const paramsSemGAJ = {
         ...paramsComTodas,
-        gaactaIncideVPNI: false
+        gaactaIncideGAJ: false
     };
 
-    const resSemVpni = await calculateGaacta(paramsSemVpni);
-    assert.equal(Math.round((resComTodas.baseCalculo - resSemVpni.baseCalculo) * 100) / 100, 2000);
-    assert.equal(Math.round((resComTodas.valor - resSemVpni.valor) * 100) / 100, 300); // 15% de 2000 = 300
+    const resSemGAJ = await calculateGaacta(paramsSemGAJ);
+    // Vencimento = 10035.51, GAJ (140%) = 14049.71
+    assert.equal(Math.round((resComTodas.baseCalculo - resSemGAJ.baseCalculo) * 100) / 100, 14049.71);
+    assert.equal(Math.round((resComTodas.valor - resSemGAJ.valor) * 100) / 100, 2107.45); // 15% de 14049.71 = 2107.45
 });
 
 test('GAACTA: Abono de Permanencia so incide se o servidor tiver o modulo de abono ativo', async () => {

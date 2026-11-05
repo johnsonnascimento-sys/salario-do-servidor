@@ -162,6 +162,14 @@ export interface CourtConfig {
   careerCatalog?: CareerCatalogConfig;
 }
 
+export interface RubricaTaxDetail {
+  ir: number;
+  pss: number;
+  funpresp: number;
+  totalDescontos: number;
+  liquido: number;
+}
+
 export interface Rubrica {
   id: string;
   descricao: string;
@@ -285,6 +293,7 @@ export interface CalculatorState {
   gaactaManualBase: boolean;
   gaactaBaseManualValor: number;
   gaactaRubricasInclusas?: Record<string, boolean>;
+  rubricasTax?: Record<string, RubricaTaxDetail>;
 
   auxAlimentacao: number;
   auxAlimentacaoProporcional: boolean;
@@ -477,6 +486,7 @@ export type CalculatedPayrollState = Pick<
   | 'licencaValor'
   | 'gaactaValor'
   | 'gaactaBaseCalculo'
+  | 'rubricasTax'
   | 'totalBruto'
   | 'totalDescontos'
   | 'liquido'
@@ -557,6 +567,7 @@ export const INITIAL_STATE: CalculatorState = {
   gaactaManualBase: false,
   gaactaBaseManualValor: 0,
   gaactaRubricasInclusas: {},
+  rubricasTax: {},
 
   auxAlimentacao: 0,
   auxAlimentacaoProporcional: false,

@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 05/11/2026 17:45
+Atualizado em: 05/11/2026 18:13
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -66,6 +66,7 @@ Cada rubrica manual deve suportar:
 5. Incidencia em IR (EA)
 6. Incidencia em PSS
 7. Incidencia em PSS (EA)
+8. Resumo calculado (`PresetGrossSummary`) com detalhamento de Bruto, deduções aplicadas (IR, PSS, Funpresp) e Líquido individual da rubrica.
 
 ### 4.2 Descontos e entradas
 

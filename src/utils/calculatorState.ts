@@ -85,6 +85,7 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'licencaValor',
     'gaactaValor',
     'gaactaBaseCalculo',
+    'rubricasTax',
     'totalBruto',
     'totalDescontos',
     'liquido',

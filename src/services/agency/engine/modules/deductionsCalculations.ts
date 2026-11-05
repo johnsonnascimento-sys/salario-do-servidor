@@ -7,7 +7,7 @@
  * - Funpresp (Fundacao de Previdencia Complementar)
  */
 
-import { CourtConfig, Rubrica } from '../../../../types';
+import { CourtConfig, Rubrica, RubricaTaxDetail } from '../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getPayrollRules } from './configRules';
@@ -42,6 +42,7 @@ export interface DeductionsResult {
     substitutionIrEA: number;
     substitutionPss: number;
     total: number;
+    rubricasTax: Record<string, RubricaTaxDetail>;
 }
 
 const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
@@ -256,6 +257,42 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         substitutionIr += substitutionIrEA;
     }
 
+    const irEaRate = baseIREA > 0 ? irEA / baseIREA : 0;
+    const funprespAliq = params.funprespAliq || 0.085;
+    const rubricasTax: Record<string, RubricaTaxDetail> = {};
+
+    for (const r of params.rubricasExtras || []) {
+        const valor = Number(r.valor) || 0;
+        if (r.tipo === 'D') {
+            rubricasTax[r.id] = {
+                ir: 0,
+                pss: 0,
+                funpresp: 0,
+                totalDescontos: valor,
+                liquido: 0
+            };
+        } else {
+            const ir = r.isEA
+                ? Math.round(valor * irEaRate * 100) / 100
+                : (r.incideIR ? Math.round(valor * irEffectiveRate * 100) / 100 : 0);
+            const pss = (r.incidePSS || r.pssCompetenciaSeparada)
+                ? Math.round(valor * pssEffectiveRate * 100) / 100
+                : 0;
+            const funpresp = r.incideFunpresp
+                ? Math.round(valor * funprespAliq * 100) / 100
+                : 0;
+            const totalDesc = Math.min(valor, ir + pss + funpresp);
+            const liquido = Math.max(0, Math.round((valor - totalDesc) * 100) / 100);
+            rubricasTax[r.id] = {
+                ir,
+                pss,
+                funpresp,
+                totalDescontos: totalDesc,
+                liquido
+            };
+        }
+    }
+
     return {
         pss: pssMensal,
         pssEA,
@@ -280,6 +317,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         substitutionIrMensal,
         substitutionIrEA,
         substitutionPss,
-        total: pssMensal + pssEA + valFunpresp + funprespEA + irMensal + irEA
+        total: pssMensal + pssEA + valFunpresp + funprespEA + irMensal + irEA,
+        rubricasTax
     };
 }

@@ -113,13 +113,6 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     if (params.gaactaIncideAQTreino !== false) {
         base += aqTreinoVal;
     }
-    // Parcelas legadas (se existirem em snapshots salvos)
-    if (params.gaactaIncideATS !== false && (Number(params.ats) || 0) > 0) {
-        base += Number(params.ats) || 0;
-    }
-    if (params.gaactaIncideVPNI !== false && ((Number(params.vpni_lei) || 0) + (Number(params.vpni_decisao) || 0)) > 0) {
-        base += (Number(params.vpni_lei) || 0) + (Number(params.vpni_decisao) || 0);
-    }
     // Rubricas Manuais Dinâmicas (Créditos selecionados)
     if (Array.isArray(params.rubricasExtras)) {
         for (const rubrica of params.rubricasExtras) {

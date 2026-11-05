@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Agency Calculation Engine - Orquestrador de CÃ¡lculos
  * 
  * Motor de cÃ¡lculo por agÃªncia.
@@ -222,7 +222,8 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 // BenefÃ­cios
                 ...benefits,
                 rubricasDinamicasCredito: rubricasTotals.creditos,
-                rubricasDinamicasDebito: rubricasTotals.debitos
+                rubricasDinamicasDebito: rubricasTotals.debitos,
+                rubricasTax: deductions.rubricasTax
             }
         };
     }

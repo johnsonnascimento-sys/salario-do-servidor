@@ -25,7 +25,7 @@ export interface ICalculationResult {
     netSalary: number;
     totalDeductions: number;
     totalBenefits: number;
-    breakdown: Record<string, number>;
+    breakdown: Record<string, any>;
     pensionMemory?: PensionMemory;
 }
 

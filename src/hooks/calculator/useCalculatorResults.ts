@@ -168,6 +168,7 @@ export const useCalculatorResults = (
                     licencaValor: bd.licencaCompensatoria || 0,
                     gaactaValor: bd.gaacta || 0,
                     gaactaBaseCalculo: bd.gaactaBase || 0,
+                    rubricasTax: bd.rubricasTax || {},
                     totalBruto: result.netSalary + result.totalDeductions,
                     totalDescontos: result.totalDeductions,
                     liquido: result.netSalary,

@@ -1,5 +1,12 @@
 # Changelog
 
+## Resumo Calculado em Rubricas Manuais e Remoção Definitiva de Resíduos de VPNI/ATS — 05/11/2026
+- Feat & Fix (ManualRubricasSection e GaactaCard):
+  - Integração do componente oficial `PresetGrossSummary` ("Resumo calculado") a cada card individual criado em "Rubricas Manuais", detalhando Bruto, descontos tributários (IRRF, PSS, Funpresp) com base nas incidências marcadas e Líquido individual da rubrica.
+  - Implementação do cálculo de detalhamento tributário individual de rubricas (`rubricasTax`) diretamente no motor de agência (`deductionsCalculations.ts` e `AgencyCalculationEngine.ts`), alimentado de forma data-driven e reativa.
+  - Remoção completa de checkboxes e referências legadas a VPNI e ATS do card `GaactaCard.tsx`, garantindo que a base da gratificação utilize exclusivamente as parcelas legais padronizadas e as rubricas manuais de crédito ativamente criadas e selecionadas.
+  - Normalização e limpeza automática de valores legados residuais (`state.vpni_lei`, `state.vpni_decisao`, `state.ats`) em `usePayrollFormNormalization.ts`.
+
 ## Remoção do Card Vantagens Pessoais e Integração Dinâmica na GAACTA — 05/11/2026
 - Feat & Architecture (Preset e Cálculo Dinâmico):
   - Remoção do card pré-definido estático "Vantagens Pessoais" (`PREDEFINED_OPTIONS`), migrando o lançamento de parcelas variáveis ou decorrentes de leis históricas (ex.: VPNI e ATS) para o módulo flexível de "Rubricas Manuais" (créditos dinâmicos).

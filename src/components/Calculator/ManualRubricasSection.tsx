@@ -1,6 +1,8 @@
 import React from 'react';
 import { DollarSign, Minus, Plus, Trash2 } from 'lucide-react';
-import { Rubrica } from '../../types';
+import { Rubrica, RubricaTaxDetail } from '../../types';
+import { PresetGrossSummary } from './PresetGrossSummary';
+import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { formatCurrency } from '../../utils/calculations';
 
 interface ManualRubricasSectionProps {
@@ -8,6 +10,7 @@ interface ManualRubricasSectionProps {
     styles: any;
     totalCreditos: number;
     totalDescontos: number;
+    rubricasTax?: Record<string, RubricaTaxDetail>;
     addRubrica: (tipo?: Rubrica['tipo']) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
@@ -19,11 +22,49 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     styles,
     totalCreditos,
     totalDescontos,
+    rubricasTax,
     addRubrica,
     removeRubrica,
     updateRubrica,
     toPositiveNumber
 }) => {
+    const getRubricaLines = (rubrica: Rubrica, index: number): PresetGrossLine[] => {
+        const valor = Number(rubrica.valor) || 0;
+        const fallbackLabel = `${rubrica.tipo === 'C' ? 'Crédito' : 'Desconto'} #${index + 1}`;
+        const label = (rubrica.descricao || '').trim() || fallbackLabel;
+
+        if (rubrica.tipo === 'D') {
+            return [
+                { label: `${label} (Desconto)`, value: valor, isDiscount: true },
+                { label: 'Total Desconto', value: valor, isDiscount: true }
+            ];
+        }
+
+        const tax = rubricasTax?.[rubrica.id];
+        const lines: PresetGrossLine[] = [
+            { label: `${label} Bruto`, value: valor }
+        ];
+
+        if (tax) {
+            if (tax.ir > 0) {
+                const irLabel = rubrica.isEA ? `Desconto IR-EA (${label})` : `Desconto IR (${label})`;
+                lines.push({ label: irLabel, value: tax.ir, isDiscount: true });
+            }
+            if (tax.pss > 0) {
+                const pssLabel = rubrica.pssCompetenciaSeparada ? `Desconto PSS-EA (${label})` : `Desconto PSS (${label})`;
+                lines.push({ label: pssLabel, value: tax.pss, isDiscount: true });
+            }
+            if (tax.funpresp > 0) {
+                lines.push({ label: `Desconto Funpresp (${label})`, value: tax.funpresp, isDiscount: true });
+            }
+            lines.push({ label: `${label} Líquido`, value: tax.liquido });
+        } else {
+            lines.push({ label: `${label} Líquido`, value: valor });
+        }
+
+        return lines;
+    };
+
     return (
         <>
             <div className={styles.card}>
@@ -189,6 +230,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             <span>Funpresp por competência original (informar na apuração de retroativos)</span>
                         </label>
                     </div>
+
+                    <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />
                 </div>
             ))}
         </>

@@ -57,6 +57,14 @@ export const usePayrollFormNormalization = ({
     }, [padroes, state.padrao, update]);
 
     useEffect(() => {
+        if ((state.vpni_lei || 0) > 0 || (state.vpni_decisao || 0) > 0 || (state.ats || 0) > 0) {
+            update('vpni_lei', 0);
+            update('vpni_decisao', 0);
+            update('ats', 0);
+        }
+    }, [state.vpni_lei, state.vpni_decisao, state.ats, update]);
+
+    useEffect(() => {
         if (!noFunctionCode) return;
         const validFunctions = new Set([noFunctionCode, ...functionKeys]);
         if (!state.funcao) {
