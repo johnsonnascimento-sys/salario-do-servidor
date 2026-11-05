@@ -31,7 +31,7 @@ export interface PresetInstance {
 
 export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
     { id: 'gratificacao', label: 'Gratificacao Especifica (GAE/GAS)' },
-    { id: 'vantagens', label: 'Vantagens Pessoais' },
+
     { id: 'abono', label: 'Abono de Permanencia' },
     { id: 'ferias', label: 'Ferias' },
     { id: 'decimo', label: '13o Salario' },
@@ -162,7 +162,7 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
         case 'gratificacao':
             return state.gratEspecificaTipo !== '0' || state.gratEspecificaValor > 0;
         case 'vantagens':
-            return state.vpni_lei > 0 || state.vpni_decisao > 0 || state.ats > 0;
+            return false;
         case 'abono':
             return state.recebeAbono;
         case 'ferias':

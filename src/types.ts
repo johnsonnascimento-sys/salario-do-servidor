@@ -284,6 +284,7 @@ export interface CalculatorState {
   gaactaOutrasParcelas: number;
   gaactaManualBase: boolean;
   gaactaBaseManualValor: number;
+  gaactaRubricasInclusas?: Record<string, boolean>;
 
   auxAlimentacao: number;
   auxAlimentacaoProporcional: boolean;
@@ -555,6 +556,7 @@ export const INITIAL_STATE: CalculatorState = {
   gaactaOutrasParcelas: 0,
   gaactaManualBase: false,
   gaactaBaseManualValor: 0,
+  gaactaRubricasInclusas: {},
 
   auxAlimentacao: 0,
   auxAlimentacaoProporcional: false,

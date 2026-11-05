@@ -61,7 +61,7 @@ export const useCalculatorResults = (
         state.gaactaIncideVencimento, state.gaactaIncideGAJ, state.gaactaIncideFuncao,
         state.gaactaIncideAQTitulo, state.gaactaIncideAQTreino, state.gaactaIncideATS,
         state.gaactaIncideVPNI, state.gaactaIncideAbono, state.gaactaIncideGrat,
-        state.gaactaOutrasParcelas, state.gaactaManualBase, state.gaactaBaseManualValor,
+        state.gaactaOutrasParcelas, state.gaactaManualBase, state.gaactaBaseManualValor, state.gaactaRubricasInclusas,
         courtConfig,
         agency?.slug
     ]);

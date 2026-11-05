@@ -1,5 +1,14 @@
 # Changelog
 
+## Remoção do Card Vantagens Pessoais e Integração Dinâmica na GAACTA — 05/11/2026
+- Feat & Architecture (Preset e Cálculo Dinâmico):
+  - Remoção do card pré-definido estático "Vantagens Pessoais" (`PREDEFINED_OPTIONS`), migrando o lançamento de parcelas variáveis ou decorrentes de leis históricas (ex.: VPNI e ATS) para o módulo flexível de "Rubricas Manuais" (créditos dinâmicos).
+  - Suporte completo no motor de cálculo (`calculateGaacta` e `AgencyCalculationEngine`) para identificar e somar na base de 15% da GAACTA as rubricas manuais dinâmicas de crédito (`rubricasExtras` com `tipo: 'C'`), ignorando rubricas de débito.
+  - Implementação de seleção dinâmica granular por checkbox no card da GAACTA (`GaactaCard.tsx`), permitindo ao usuário marcar ou desmarcar individualmente cada crédito manual adicionado.
+  - Adição da propriedade reativa `gaactaRubricasInclusas` em `CalculatorState`, `INITIAL_STATE`, `IAgencyCalculationParams` e no hook `useCalculatorResults.ts` para disparar recálculo instantâneo ao alternar checkboxes.
+  - Preservação da retrocompatibilidade com holerites e snapshots antigos que contenham campos legados `state.ats`, `state.vpni_lei` e `state.vpni_decisao` com valores positivos.
+  - Cobertura de testes unitários automatizados em `tests/gaacta.test.ts` validando adição dinâmica de créditos manuais, exclusão por desmarcação de checkbox e rejeição de débitos na base da gratificação.
+
 ## Correção da Exibição do Cargo em Comissão (CJ) na Base da GAACTA — 05/11/2026
 - Fix & UI (GaactaCard e State Management):
   - Inclusão do campo `funcaoValor` no `CalculatorState`, `CalculatedPayrollState` e na lista `CALCULATED_STATE_KEYS`.

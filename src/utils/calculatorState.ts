@@ -220,6 +220,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         gaactaOutrasParcelas: Math.max(0, Number(merged.gaactaOutrasParcelas) || 0),
         gaactaManualBase: Boolean(merged.gaactaManualBase),
         gaactaBaseManualValor: Math.max(0, Number(merged.gaactaBaseManualValor) || 0),
+        gaactaRubricasInclusas: typeof merged.gaactaRubricasInclusas === 'object' && merged.gaactaRubricasInclusas !== null ? { ...merged.gaactaRubricasInclusas } : {},
         diariasAssessoramentoMagistrado: Boolean(merged.diariasAssessoramentoMagistrado),
         diariasAcompanhamentoIntegral: Boolean(merged.diariasAcompanhamentoIntegral),
         diariasAutoridadeAssistida: (

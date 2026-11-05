@@ -13,6 +13,7 @@ interface GaactaCardProps {
 }
 
 const formatCurrency = (val: number) => {
+
     return (Number(val) || 0).toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -52,6 +53,10 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
     const valorAbono = temAbonoAtivo
         ? (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0)
         : 0;
+
+    const creditRubricas = React.useMemo(() => {
+        return (state.rubricasExtras || []).filter(r => r.tipo === 'C');
+    }, [state.rubricasExtras]);
 
     return (
         <div className="space-y-4">
@@ -207,31 +212,66 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                                 </span>
                             </label>
 
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.checkbox}
-                                    checked={state.gaactaIncideATS !== false}
-                                    onChange={e => update('gaactaIncideATS', e.target.checked)}
-                                />
-                                <span className="flex-1 flex items-center justify-between gap-2">
-                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300">ATS (Tempo de Serviço)</span>
-                                    <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">R$ {formatCurrency(state.ats || 0)}</span>
-                                </span>
-                            </label>
+                            {creditRubricas.map((rubrica, idx) => {
+                                const isChecked = state.gaactaRubricasInclusas
+                                    ? state.gaactaRubricasInclusas[rubrica.id] !== false
+                                    : true;
+                                const label = rubrica.descricao.trim() || `Crédito Dinâmico #${idx + 1}`;
+                                return (
+                                    <label key={rubrica.id} className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={isChecked}
+                                            onChange={e => {
+                                                const current = state.gaactaRubricasInclusas || {};
+                                                update('gaactaRubricasInclusas', {
+                                                    ...current,
+                                                    [rubrica.id]: e.target.checked
+                                                });
+                                            }}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
+                                                {label}
+                                            </span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold shrink-0">
+                                                R$ {formatCurrency(rubrica.valor || 0)}
+                                            </span>
+                                        </span>
+                                    </label>
+                                );
+                            })}
 
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.checkbox}
-                                    checked={state.gaactaIncideVPNI !== false}
-                                    onChange={e => update('gaactaIncideVPNI', e.target.checked)}
-                                />
-                                <span className="flex-1 flex items-center justify-between gap-2">
-                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300">VPNI (Lei / Judicial)</span>
-                                    <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">R$ {formatCurrency(vpniTotal)}</span>
-                                </span>
-                            </label>
+                            {(state.ats || 0) > 0 && (
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={state.gaactaIncideATS !== false}
+                                        onChange={e => update('gaactaIncideATS', e.target.checked)}
+                                    />
+                                    <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate">ATS (Tempo de Serviço - Legado)</span>
+                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold shrink-0">R$ {formatCurrency(state.ats || 0)}</span>
+                                    </span>
+                                </label>
+                            )}
+
+                            {vpniTotal > 0 && (
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={state.gaactaIncideVPNI !== false}
+                                        onChange={e => update('gaactaIncideVPNI', e.target.checked)}
+                                    />
+                                    <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate">VPNI (Lei / Judicial - Legado)</span>
+                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold shrink-0">R$ {formatCurrency(vpniTotal)}</span>
+                                    </span>
+                                </label>
+                            )}
 
                             <label className={`${styles.checkboxLabel} ${!temAbonoAtivo ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <input

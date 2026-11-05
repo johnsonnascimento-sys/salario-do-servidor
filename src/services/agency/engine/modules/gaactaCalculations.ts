@@ -113,11 +113,25 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     if (params.gaactaIncideAQTreino !== false) {
         base += aqTreinoVal;
     }
-    if (params.gaactaIncideATS !== false) {
+    // Parcelas legadas (se existirem em snapshots salvos)
+    if (params.gaactaIncideATS !== false && (Number(params.ats) || 0) > 0) {
         base += Number(params.ats) || 0;
     }
-    if (params.gaactaIncideVPNI !== false) {
+    if (params.gaactaIncideVPNI !== false && ((Number(params.vpni_lei) || 0) + (Number(params.vpni_decisao) || 0)) > 0) {
         base += (Number(params.vpni_lei) || 0) + (Number(params.vpni_decisao) || 0);
+    }
+    // Rubricas Manuais Dinâmicas (Créditos selecionados)
+    if (Array.isArray(params.rubricasExtras)) {
+        for (const rubrica of params.rubricasExtras) {
+            if (rubrica.tipo === 'C') {
+                const isChecked = params.gaactaRubricasInclusas
+                    ? params.gaactaRubricasInclusas[rubrica.id] !== false
+                    : true;
+                if (isChecked) {
+                    base += Number(rubrica.valor) || 0;
+                }
+            }
+        }
     }
     if (params.gaactaIncideGrat === true && (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas')) {
         base += gratVal;

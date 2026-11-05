@@ -139,6 +139,7 @@ export function mapStateToAgencyParams(
         gaactaOutrasParcelas: state.gaactaOutrasParcelas || 0,
         gaactaManualBase: Boolean(state.gaactaManualBase),
         gaactaBaseManualValor: state.gaactaBaseManualValor || 0,
+        gaactaRubricasInclusas: state.gaactaRubricasInclusas || {},
         abonoPermanencia: state.abonoPermanencia || 0,
     };
 }

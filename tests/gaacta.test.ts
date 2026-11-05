@@ -260,3 +260,51 @@ test('GAACTA: Integracao com AgencyCalculationEngine comprova natureza indenizat
         6527.45
     );
 });
+
+test('GAACTA: Rubricas manuais de crédito (como VPNI e ATS dinâmicos) entram na base e respeitam checkboxes', async () => {
+    const paramsBase: any = {
+        orgSlug: 'jmu',
+        agencyConfig: mockJmuConfig,
+        periodo: 1,
+        cargo: 'analista',
+        padrao: 'C13',
+        funcao: 'cj3',
+        gaactaAtivo: true,
+        grossSalary: 0,
+        dependents: 0,
+        discounts: 0,
+        rubricasExtras: [
+            { id: 'rub-vpni', descricao: 'VPNI (Lei 9.527/97)', valor: 2500, tipo: 'C', incideIR: false, incidePSS: false, isEA: false, pssCompetenciaSeparada: false },
+            { id: 'rub-ats', descricao: 'ATS (Tempo de Serviço)', valor: 1100, tipo: 'C', incideIR: false, incidePSS: false, isEA: false, pssCompetenciaSeparada: false },
+            { id: 'rub-desc', descricao: 'Desconto Avulso', valor: 600, tipo: 'D', incideIR: false, incidePSS: false, isEA: false, pssCompetenciaSeparada: false }
+        ]
+    };
+
+    // 1. Sem restrição explícita (padrão ativo): os 2 créditos entram na base, o débito é ignorado
+    const resPadrao = await calculateGaacta(paramsBase);
+
+    const paramsSemRubricas = { ...paramsBase, rubricasExtras: [] };
+    const resSemRubricas = await calculateGaacta(paramsSemRubricas);
+
+    // Diferença na base deve ser exatamente 2500 + 1100 = 3600 (débito de 600 ignorado)
+    const diffBase = Math.round((resPadrao.baseCalculo - resSemRubricas.baseCalculo) * 100) / 100;
+    assert.equal(diffBase, 3600);
+    // 15% de 3600 = 540
+    assert.equal(Math.round((resPadrao.valor - resSemRubricas.valor) * 100) / 100, 540);
+
+    // 2. Desmarcando o checkbox da VPNI dinâmica via gaactaRubricasInclusas
+    const paramsDesmarcandoVPNI = {
+        ...paramsBase,
+        gaactaRubricasInclusas: {
+            'rub-vpni': false,
+            'rub-ats': true
+        }
+    };
+    const resDesmarcandoVPNI = await calculateGaacta(paramsDesmarcandoVPNI);
+
+    // Base deve ter apenas o ATS (+1100) em relação ao sem rubricas
+    const diffBaseApenasATS = Math.round((resDesmarcandoVPNI.baseCalculo - resSemRubricas.baseCalculo) * 100) / 100;
+    assert.equal(diffBaseApenasATS, 1100);
+    // 15% de 1100 = 165
+    assert.equal(Math.round((resDesmarcandoVPNI.valor - resSemRubricas.valor) * 100) / 100, 165);
+});
