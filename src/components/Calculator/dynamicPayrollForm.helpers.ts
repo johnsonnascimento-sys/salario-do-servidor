@@ -214,7 +214,12 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
         case 'aux_transporte':
             return state.auxTransporteGasto > 0;
         case 'diarias':
-            return state.diariasQtd > 0 || state.diariasEmbarque !== 'nenhum';
+            // No modo por datas, a quantidade é derivada pelo motor e pode
+            // permanecer zerada na entrada salva. Mesmo uma data incompleta
+            // precisa continuar visível para o usuário concluir a viagem.
+            return state.diariasQtd > 0 || state.diariasEmbarque !== 'nenhum' ||
+                Boolean(state.diariasDataInicio || state.diariasDataFim) ||
+                (Array.isArray(state.diariasTrechosTransporte) && state.diariasTrechosTransporte.length > 0);
         default:
             return false;
     }

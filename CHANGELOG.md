@@ -1,5 +1,10 @@
 # Changelog
 
+## Restauração do card de diárias e verificação de exportações — 06/11/2026
+- Corrige a detecção de viagens preenchidas por datas e de trechos de transporte ao restaurar o rascunho ou abrir um holerite salvo: o card volta a exibir os dados que compõem o resultado.
+- Ao remover diárias, limpa também os trechos de transporte para impedir adicional residual no cálculo.
+- Regressões de persistência/restauração/remoção e validação dos arquivos produzidos pelos geradores reais PDF e Excel, incluindo créditos, descontos e totais. Não altera tabelas ou percentuais oficiais.
+
 ## Regularização do cadastro do CJF — 06/11/2026
 - Migração administrativa específica para criar `org_config.cjf` ausente, com overrides mínimos equivalentes ao fallback da versão publicada `5114567`.
 - Preserva integralmente a configuração efetiva e os resultados atuais, incluindo divisor de HE 200, VR de 5% e regras específicas de diárias; não altera JMU, TRFs ou registros históricos globais/PJU.

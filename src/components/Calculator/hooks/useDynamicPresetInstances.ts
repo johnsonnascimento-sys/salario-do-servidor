@@ -368,9 +368,11 @@ export const useDynamicPresetInstances = ({
             case 'diarias':
                 update('diariasQtd', 0);
                 update('diariasEmbarque', 'nenhum');
+                update('diariasTrechosTransporte', []);
                 update('diariasModoDesconto', 'manual');
                 update('diariasDataInicio', '');
                 update('diariasDataFim', '');
+                update('diariasFeriados', []);
                 update('diariasDiasDescontoAlimentacao', 0);
                 update('diariasDiasDescontoTransporte', 0);
                 update('diariasDiasDescontoAlimentacaoCalc', 0);
