@@ -1,5 +1,10 @@
 # Changelog
 
+## Regularização do cadastro do CJF — 06/11/2026
+- Migração administrativa específica para criar `org_config.cjf` ausente, com overrides mínimos equivalentes ao fallback da versão publicada `5114567`.
+- Preserva integralmente a configuração efetiva e os resultados atuais, incluindo divisor de HE 200, VR de 5% e regras específicas de diárias; não altera JMU, TRFs ou registros históricos globais/PJU.
+- Verificador administrativo com TLS validado, backup local, guardas contra concorrência, ensaio com rollback e comparação integral de configuração e de 66 cenários do motor. Procedimento e evidências em `src/docs/CJF_CONFIG_REPAIR_2026-11-06.md`.
+
 ## Resumo Calculado em Rubricas Manuais e Remoção Definitiva de Resíduos de VPNI/ATS — 05/11/2026
 - Feat & Fix (ManualRubricasSection e GaactaCard):
   - Integração do componente oficial `PresetGrossSummary` ("Resumo calculado") a cada card individual criado em "Rubricas Manuais", detalhando Bruto, descontos tributários (IRRF, PSS, Funpresp) com base nas incidências marcadas e Líquido individual da rubrica.
