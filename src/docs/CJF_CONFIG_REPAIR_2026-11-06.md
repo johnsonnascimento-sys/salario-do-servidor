@@ -70,8 +70,17 @@ anterior das tabelas de configuração, sem credenciais ou holerites.
 
 ## Estado da aplicação
 
-Preparada e ensaiada; o resultado da aplicação e da conferência pública será
-registrado após sua execução. Não exige deploy do frontend.
+Aplicada e confirmada em produção em 06/11/2026, pela conexão administrativa
+com TLS validado. O verificador confirmou COMMIT, igualdade da configuração
+pública com a baseline e preservação das demais configurações.
+
+Conferência em nova aba de `https://www.salariodoservidor.com.br/simulador/cjf`:
+
+- Título da Justiça Federal e detalhamento carregados normalmente.
+- Console sem erros ou avisos; o aviso de fallback CJF desapareceu.
+- Mesmo estado anteriormente observado no navegador: líquido do holerite
+  R$ 21.228,26 e resultado combinado R$ 26.047,96, ambos preservados.
+- Frontend permaneceu na versão `5114567`; nenhuma nova implantação foi necessária.
 
 ## Reversão
 
