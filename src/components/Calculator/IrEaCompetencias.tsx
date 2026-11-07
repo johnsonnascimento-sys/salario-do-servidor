@@ -52,9 +52,11 @@ export const IrEaCompetencias: React.FC<Props> = ({
 }) => {
     const scrollToIrEa = () => {
         if (typeof document === 'undefined') return;
-        const target = document.getElementById('apuracao-ir-ea') || document.getElementById('memoria-ir-ea');
+        const target = document.getElementById('memoria-ir-ea') || document.getElementById('apuracao-ir-ea');
         if (target) {
-            const details = target.querySelector('details') || target.closest('details');
+            const details = (target.tagName?.toLowerCase() === 'details'
+                ? target
+                : target.querySelector('details') || target.closest('details')) as HTMLDetailsElement | null;
             if (details) {
                 details.open = true;
             }

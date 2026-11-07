@@ -258,7 +258,7 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
                         <div className="space-y-3">
                             {state.pensionMemory && <PensionMemory memory={state.pensionMemory} />}
                             {state.irEaMemory && (
-                                <div id="apuracao-ir-ea" className="scroll-mt-20 space-y-3">
+                                <div className="space-y-3">
                                     <IrEaMemory memory={state.irEaMemory} />
                                     {update && (
                                         <IrEaContextSection

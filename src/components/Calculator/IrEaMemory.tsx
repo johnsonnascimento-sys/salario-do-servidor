@@ -6,7 +6,7 @@ export const IrEaMemory: React.FC<{ memory?: Memory }> = ({ memory }) => {
     const rows = buildIrEaAuditRows(memory);
     if (rows.length === 0) return null;
     return (
-        <details className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-800/40 p-4 space-y-3">
+        <details id="memoria-ir-ea" className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-800/40 p-4 space-y-3 scroll-mt-20">
             <summary className="cursor-pointer text-body-xs font-semibold text-neutral-800 dark:text-neutral-200 select-none">
                 Memória do IR-EA: apuração progressiva e deduções de RRA
             </summary>
