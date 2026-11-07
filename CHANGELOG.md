@@ -1,5 +1,10 @@
 # Changelog
 
+## Contextualização do Callout Didático do IR-EA por Tipo de Parcela — 07/11/2026
+- Adiciona a propriedade contextual `tipo?: 'horas_extras' | 'substituicao' | 'rubrica'` ao componente `IrEaCompetencias.tsx`.
+- Restringe a menção a "teto mensal de horas" exclusivamente ao card de Horas Extras (`OvertimeCard.tsx`).
+- Adapta a mensagem nos cards de Substituição de Função (`SubstitutionCard.tsx`) e Rubricas Manuais de Crédito (`ManualRubricasSection.tsx`) para textos próprios da natureza da parcela (período de substituição ou competência de origem da rubrica).
+
 ## Inclusão de Painel Didático sobre RRA no Módulo de Competências de IR-EA — 07/11/2026
 - Adiciona callout explicativo e didático (`Info`) dentro do componente `IrEaCompetencias.tsx` exibido ao marcar uma parcela como Exercício Anterior (EA).
 - Esclarece para o servidor público a regra de multiplicação das faixas de isenção pelo número de meses (RRA - Lei nº 7.713/88, art. 12-A), com exemplos numéricos claros (1 mês até R$ 2.259,20; 2 meses até R$ 4.518,40; 3 meses até R$ 6.777,60).

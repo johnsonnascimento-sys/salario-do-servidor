@@ -292,7 +292,14 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         </label>
                     </div>
 
-                    {entry.isEA && <IrEaCompetencias value={entry.competenciasEA} onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })} styles={styles} />}
+                    {entry.isEA && (
+                        <IrEaCompetencias
+                            tipo="horas_extras"
+                            value={entry.competenciasEA}
+                            onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
+                            styles={styles}
+                        />
+                    )}
 
                     {!usarSubstituicaoFuncao ? (
                         <div className="grid grid-cols-2 gap-4 mt-4">

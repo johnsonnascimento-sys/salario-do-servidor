@@ -5,10 +5,11 @@ interface Props {
     value?: string[];
     onChange: (value: string[]) => void;
     styles: any;
+    tipo?: 'horas_extras' | 'substituicao' | 'rubrica';
 }
 
 /** Collect original months without inferring them from the payment reference. */
-export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles }) => {
+export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles, tipo }) => {
     const scrollToIrEa = () => {
         if (typeof document === 'undefined') return;
         const target = document.getElementById('apuracao-ir-ea');
@@ -20,6 +21,14 @@ export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles
             }, 2000);
         }
     };
+
+    const emptyWarning = tipo === 'horas_extras'
+        ? 'Adicione o mês e ano em que as horas foram realizadas para calcular o imposto de anos anteriores.'
+        : tipo === 'substituicao'
+            ? 'Adicione o mês e ano em que a substituição ocorreu para calcular o imposto de anos anteriores.'
+            : tipo === 'rubrica'
+                ? 'Adicione o mês e ano de origem da parcela para calcular o imposto de anos anteriores.'
+                : 'Adicione o mês e ano em que as horas/serviços foram realizados para calcular o imposto de anos anteriores.';
 
     return (
         <fieldset className="space-y-3 rounded-2xl border border-neutral-200/90 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40 p-4">
@@ -44,7 +53,18 @@ export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles
                         Quanto mais meses você informar, menor será o imposto retido na fonte.
                     </p>
                     <p className="text-[11px] text-neutral-500 dark:text-neutral-400 pt-0.5">
-                        💡 <em>Você pode adicionar vários meses neste card ou criar um card separado para cada mês (o que também permite controlar o teto mensal de horas).</em>
+                        {tipo === 'horas_extras' && (
+                            <>💡 <em>Você pode adicionar vários meses neste card ou criar um card separado para cada mês (o que também permite controlar o teto mensal de horas).</em></>
+                        )}
+                        {tipo === 'substituicao' && (
+                            <>💡 <em>Você pode adicionar vários meses neste card ou criar um card separado para cada mês de substituição exercido.</em></>
+                        )}
+                        {tipo === 'rubrica' && (
+                            <>💡 <em>Você pode adicionar vários meses nesta rubrica ou lançar rubricas separadas para cada competência de origem.</em></>
+                        )}
+                        {!tipo && (
+                            <>💡 <em>Você pode adicionar vários meses nesta parcela ou criar lançamentos separados para cada período trabalhado.</em></>
+                        )}
                     </p>
                 </div>
             </div>
@@ -52,7 +72,7 @@ export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles
             {value.length === 0 && (
                 <div role="status" className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-body-xs text-amber-800 dark:text-amber-300">
                     <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span>Adicione o mês e ano em que as horas/serviços foram realizados para calcular o imposto de anos anteriores.</span>
+                    <span>{emptyWarning}</span>
                 </div>
             )}
             {value.length > 0 && (

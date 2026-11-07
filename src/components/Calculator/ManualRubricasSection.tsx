@@ -242,7 +242,14 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </label>
                     </div>
 
-                    {rubrica.isEA && <IrEaCompetencias value={rubrica.competenciasEA} onChange={competencias => updateRubrica(rubrica.id, 'competenciasEA', competencias)} styles={styles} />}
+                    {rubrica.isEA && (
+                        <IrEaCompetencias
+                            tipo="rubrica"
+                            value={rubrica.competenciasEA}
+                            onChange={competencias => updateRubrica(rubrica.id, 'competenciasEA', competencias)}
+                            styles={styles}
+                        />
+                    )}
                     {rubrica.isEA && rubrica.tipo === 'D' && <label className={styles.label}>Fundamento e referência documental da dedução EA
                         <input required className={styles.input} value={rubrica.fundamentoDeducaoEA ?? ''} onChange={event => updateRubrica(rubrica.id, 'fundamentoDeducaoEA', event.target.value)} />
                     </label>}
