@@ -18,7 +18,14 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
     const isDeduzirDeps = value.deduzirDependentes ?? true;
     const valorTotalDeps = dependentes * deducaoDependente;
     return <section className={`${styles.card} space-y-3`} aria-label="Apuração do IR-EA">
-        <h3 className={styles.sectionTitle}>Apuração do IR-EA</h3>
+        <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-body-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+                Apuração do IR-EA
+            </h3>
+            <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
+                Lei 7.713/88, art. 12-A • RRA
+            </span>
+        </div>
         <p className="text-body-xs">O mês de pagamento acompanha automaticamente o mês e ano da folha no cabeçalho. Informe em cada parcela EA apenas as competências originais.</p>
         {error?.includes('IR-EA') && <p role="alert" className="text-body-xs text-warning-700 dark:text-warning-300">Há dados de IR-EA que precisam de revisão. Confira o pagamento, as competências e os documentos informados. {error}</p>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

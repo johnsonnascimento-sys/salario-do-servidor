@@ -1,6 +1,7 @@
 # Changelog
 
 ## Dedução Automática de Dependentes no IR-EA e Simplificação da Usabilidade — 07/11/2026
+- Inclusão de badge normativo padronizado no cabeçalho do card de "Apuração do IR-EA" ("Lei 7.713/88, art. 12-A • RRA"), alinhado ao padrão visual dos demais cards da calculadora.
 - Integração direta dos dependentes informados no cabeçalho na apuração do IR-EA (RRA): quando o servidor informa dependentes, a dedução legal (R$ 189,59 por dependente) é calculada e aplicada automaticamente na base dos atrasados, sem exigir que o usuário abra seções avançadas ou calcule valores manualmente.
 - Controle reativo por checkbox transparente na seção de apuração do IR-EA ("Deduzir dependentes na base do IR-EA"), ativo por padrão quando há dependentes informados, com opção de desmarcar com um clique caso a fonte pagadora não tenha abatido dependentes na competência de origem.
 - Proteção do motor de cálculo contra bloqueios indevidos causados por itens de ajuste documental adicionados e deixados em branco no formulário.

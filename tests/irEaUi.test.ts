@@ -29,6 +29,7 @@ assert.equal(tree.root.findAllByType('input')[0].props.value, '2027-02');
 tree.unmount();
 
 tree = create(React.createElement(IrEaContextSection, { value: { mesPagamento: '2027-01' }, mesFolha: '2027-01', dependentes: 2, deducaoDependente: 189.59, onChange: value => { context = value; }, styles }));
+assert.ok(JSON.stringify(tree.toJSON()).includes('Lei 7.713/88, art. 12-A • RRA'), 'Norm badge is rendered in IR-EA card');
 assert.ok(JSON.stringify(tree.toJSON()).includes('Deduzir dependentes na base do IR-EA'));
 assert.ok(JSON.stringify(tree.toJSON()).includes('379,18'));
 const depCheckbox = tree.root.findAllByType('input').find(input => input.props.type === 'checkbox');
