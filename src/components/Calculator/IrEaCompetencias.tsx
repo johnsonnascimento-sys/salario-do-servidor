@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { ArrowDown, Plus, Trash2, AlertCircle, Info } from 'lucide-react';
 
 interface Props {
     value?: string[];
@@ -25,6 +25,30 @@ export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles
         <fieldset className="space-y-3 rounded-2xl border border-neutral-200/90 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40 p-4">
             <legend className={styles.label}>Meses em que o serviço foi prestado (Ano Anterior)</legend>
             <p className="text-body-xs text-neutral-600 dark:text-neutral-400">Informe em qual(is) mês(es) o serviço foi prestado ou a parcela foi gerada.</p>
+
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-primary-50/70 dark:bg-primary-950/30 border border-primary-200/80 dark:border-primary-800/50 text-body-xs text-primary-950 dark:text-primary-200">
+                <Info className="w-4 h-4 shrink-0 mt-0.5 text-primary-600 dark:text-primary-400" />
+                <div className="space-y-1.5 leading-relaxed">
+                    <p className="font-semibold text-primary-900 dark:text-primary-100">
+                        Por que informar os meses trabalhados? (RRA — Lei nº 7.713/88)
+                    </p>
+                    <p className="text-neutral-700 dark:text-neutral-300">
+                        Ao receber atrasados de anos anteriores, <strong>a faixa de isenção do Imposto de Renda é multiplicada pela quantidade de meses</strong> a que o serviço se refere:
+                    </p>
+                    <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-0.5 text-[11px] pl-1 font-mono">
+                        <li><strong>1 mês:</strong> isenção até R$ 2.259,20</li>
+                        <li><strong>2 meses:</strong> o limite dobra para <strong>R$ 4.518,40</strong></li>
+                        <li><strong>3 meses:</strong> sobe para <strong>R$ 6.777,60</strong> (e assim por diante)</li>
+                    </ul>
+                    <p className="text-neutral-700 dark:text-neutral-300">
+                        Quanto mais meses você informar, menor será o imposto retido na fonte.
+                    </p>
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 pt-0.5">
+                        💡 <em>Você pode adicionar vários meses neste card ou criar um card separado para cada mês (o que também permite controlar o teto mensal de horas).</em>
+                    </p>
+                </div>
+            </div>
+
             {value.length === 0 && (
                 <div role="status" className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-body-xs text-amber-800 dark:text-amber-300">
                     <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />

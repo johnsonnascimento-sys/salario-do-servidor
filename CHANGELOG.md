@@ -1,5 +1,10 @@
 # Changelog
 
+## Inclusão de Painel Didático sobre RRA no Módulo de Competências de IR-EA — 07/11/2026
+- Adiciona callout explicativo e didático (`Info`) dentro do componente `IrEaCompetencias.tsx` exibido ao marcar uma parcela como Exercício Anterior (EA).
+- Esclarece para o servidor público a regra de multiplicação das faixas de isenção pelo número de meses (RRA - Lei nº 7.713/88, art. 12-A), com exemplos numéricos claros (1 mês até R$ 2.259,20; 2 meses até R$ 4.518,40; 3 meses até R$ 6.777,60).
+- Orienta sobre a flexibilidade de cadastrar múltiplos meses no mesmo card ou segregar em cards individuais por mês (para fins de controle do teto mensal de horas).
+
 ## Correção da Seleção de "Outra Jornada Personalizada" no Card de Horas Extras — 07/11/2026
 - Corrige o comportamento onde a opção "Outra jornada personalizada" no seletor de Carga Horária Semanal retrocedia instantaneamente para o padrão anterior (35h na JMU ou 40h na JF) devido à inferência reversa baseada na jornada semanal em branco ou padrão.
 - Adiciona a propriedade explícita `jornadaPersonalizada?: boolean` ao modelo `OvertimeEntry` e à hidratação em `calculatorState.ts`.
