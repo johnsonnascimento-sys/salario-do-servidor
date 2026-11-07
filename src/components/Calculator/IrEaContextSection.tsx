@@ -17,7 +17,7 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
     const adjustments = value.ajustesBaseDocumentados ?? [];
     const isDeduzirDeps = value.deduzirDependentes ?? true;
     const valorTotalDeps = dependentes * deducaoDependente;
-    return <section className={`${styles.card} space-y-3`} aria-label="Apuração do IR-EA">
+    return <section id="apuracao-ir-ea" className={`${styles.card} space-y-3 scroll-mt-20`} aria-label="Apuração do IR-EA">
         <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-body-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
                 Apuração do IR-EA

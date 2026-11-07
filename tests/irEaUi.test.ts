@@ -14,6 +14,7 @@ const styles = {};
 let months: string[] = [];
 let context = {};
 let tree = create(React.createElement(IrEaCompetencias, { value: [], onChange: value => { months = value; }, styles }));
+assert.ok(JSON.stringify(tree.toJSON()).includes('Ver Apuração do IR-EA'));
 act(() => tree.root.findAllByType('button')[0].props.onClick());
 assert.deepEqual(months, [''], 'Add a blank original month without guessing the payment month');
 tree.update(React.createElement(IrEaCompetencias, { value: months, onChange: value => { months = value; }, styles }));
