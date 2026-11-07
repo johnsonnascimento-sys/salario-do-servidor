@@ -60,6 +60,10 @@ export interface CalculatedOvertimeEntry {
     heTotal: number;
     isEA: boolean;
     excluirIR: boolean;
+    divisor?: number;
+    valorHoraNormal?: number;
+    valorHora50?: number;
+    valorHora100?: number;
 }
 
 export interface CalculatedSubstitutionEntry {

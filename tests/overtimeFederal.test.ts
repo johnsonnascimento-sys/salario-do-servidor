@@ -243,4 +243,205 @@ test('Hora Extra JMU: Divisor 175 para jornada de 35h e teto de 30h (Resolução
     // HE 50% (10h) = 124,153097 * 1.5 * 10 = 1.862,30
     const res = await calculateOvertime(params);
     assert.equal(Math.round(res.heVal50 * 100) / 100, 1862.30);
+    assert.equal(res.entries[0].divisor, 175);
+    assert.equal(res.entries[0].valorHoraNormal, 124.15);
+});
+
+// =========================================================================
+// Teste 5: Divisor 150 para jornada de 30h semanais (Res. STM 374/2025, art. 7º, § 1º, II)
+// =========================================================================
+test('Hora Extra: Divisor 150 para jornada de 30h semanais (Res. STM 374/2025, art. 7º, § 1º, II)', async () => {
+    const configJMU = makeMockConfig(175);
+    configJMU.orgSlug = 'jmu';
+
+    const params = {
+        periodo: 0,
+        cargo: 'tecnico',
+        padrao: 'C13',
+        funcao: 'sem_funcao',
+        tabelaPSS: '2026',
+        tabelaIR: '2025_maio',
+        regimePrev: 'rpc',
+        recebeAbono: false,
+        gratEspecificaTipo: 'nenhuma',
+        aqTituloVR: 0,
+        aqTreinoVR: 0,
+        aqTituloPerc: 0,
+        aqTreinoPerc: 0,
+        agencyConfig: configJMU,
+        overtimeEntries: [
+            {
+                id: 'he-30h',
+                qtd50: 10,
+                qtd100: 5,
+                isEA: false,
+                excluirIR: false,
+                usarSubstituicaoFuncao: false,
+                divisor: 150,
+                jornadaSemanal: 30
+            }
+        ]
+    };
+
+    // Remuneração = 21.726,792
+    // Divisor 150: 21.726,792 / 150 = 144,84528
+    // HE 50% (10h) = 144,84528 * 1.5 * 10 = 2.172,6792 -> 2.172,68
+    // HE 100% (5h) = 144,84528 * 2.0 * 5 = 1.448,4528 -> 1.448,45
+    // Total = 3.621,13
+    const res = await calculateOvertime(params);
+    assert.equal(res.heVal50, 2172.68);
+    assert.equal(res.heVal100, 1448.45);
+    assert.equal(res.heTotal, 3621.13);
+    assert.equal(res.entries[0].divisor, 150);
+    assert.equal(res.entries[0].valorHoraNormal, 144.85);
+});
+
+// =========================================================================
+// Teste 6: Divisor 100 para jornada de 20h semanais (art. 7º, § 1º, III - médicos/especial)
+// =========================================================================
+test('Hora Extra: Divisor 100 para jornada de 20h semanais (Res. STM 374/2025, art. 7º, § 1º, III)', async () => {
+    const configJMU = makeMockConfig(175);
+    configJMU.orgSlug = 'jmu';
+
+    const params = {
+        periodo: 0,
+        cargo: 'tecnico',
+        padrao: 'C13',
+        funcao: 'sem_funcao',
+        tabelaPSS: '2026',
+        tabelaIR: '2025_maio',
+        regimePrev: 'rpc',
+        recebeAbono: false,
+        gratEspecificaTipo: 'nenhuma',
+        aqTituloVR: 0,
+        aqTreinoVR: 0,
+        aqTituloPerc: 0,
+        aqTreinoPerc: 0,
+        agencyConfig: configJMU,
+        overtimeEntries: [
+            {
+                id: 'he-20h',
+                qtd50: 10,
+                qtd100: 0,
+                isEA: false,
+                excluirIR: false,
+                usarSubstituicaoFuncao: false,
+                divisor: 100,
+                jornadaSemanal: 20
+            }
+        ]
+    };
+
+    // Divisor 100: 21.726,792 / 100 = 217,26792
+    // HE 50% (10h) = 217,26792 * 1.5 * 10 = 3.259,0188 -> 3.259,02
+    const res = await calculateOvertime(params);
+    assert.equal(res.heVal50, 3259.02);
+    assert.equal(res.entries[0].divisor, 100);
+    assert.equal(res.entries[0].valorHoraNormal, 217.27);
+});
+
+// =========================================================================
+// Teste 7: Divisor calculado pela fórmula (Jornada ÷ 6) × 30 (art. 7º, § 2º)
+// =========================================================================
+test('Hora Extra: Fórmula (Jornada ÷ 6) × 30 para jornada de 25h semanais (divisor 125)', async () => {
+    const configJF = makeMockConfig(200);
+
+    // Jornada 25h -> (25 / 6) * 30 = 125
+    const divisor25h = Math.round(((25 / 6) * 30) * 100) / 100;
+    assert.equal(divisor25h, 125);
+
+    const params = {
+        periodo: 0,
+        cargo: 'tecnico',
+        padrao: 'C13',
+        funcao: 'sem_funcao',
+        tabelaPSS: '2026',
+        tabelaIR: '2025_maio',
+        regimePrev: 'rpc',
+        recebeAbono: false,
+        gratEspecificaTipo: 'nenhuma',
+        aqTituloVR: 0,
+        aqTreinoVR: 0,
+        aqTituloPerc: 0,
+        aqTreinoPerc: 0,
+        agencyConfig: configJF,
+        overtimeEntries: [
+            {
+                id: 'he-25h',
+                qtd50: 10,
+                qtd100: 0,
+                isEA: false,
+                excluirIR: false,
+                usarSubstituicaoFuncao: false,
+                divisor: divisor25h,
+                jornadaSemanal: 25
+            }
+        ]
+    };
+
+    // Remuneração = 21.726,792
+    // Divisor 125: 21.726,792 / 125 = 173,814336
+    // HE 50% (10h) = 173,814336 * 1.5 * 10 = 2.607,21504 -> 2.607,22
+    const res = await calculateOvertime(params);
+    assert.equal(res.heVal50, 2607.22);
+    assert.equal(res.entries[0].divisor, 125);
+    assert.equal(res.entries[0].valorHoraNormal, 173.81);
+});
+
+// =========================================================================
+// Teste 8: Múltiplas instâncias com divisores distintos isolados (PROJECT_RULES 4.8)
+// =========================================================================
+test('Hora Extra: Isolamento de múltiplas instâncias com divisores distintos na mesma folha', async () => {
+    const configJMU = makeMockConfig(175);
+    configJMU.orgSlug = 'jmu';
+
+    const params = {
+        periodo: 0,
+        cargo: 'tecnico',
+        padrao: 'C13',
+        funcao: 'sem_funcao',
+        tabelaPSS: '2026',
+        tabelaIR: '2025_maio',
+        regimePrev: 'rpc',
+        recebeAbono: false,
+        gratEspecificaTipo: 'nenhuma',
+        aqTituloVR: 0,
+        aqTreinoVR: 0,
+        aqTituloPerc: 0,
+        aqTreinoPerc: 0,
+        agencyConfig: configJMU,
+        overtimeEntries: [
+            {
+                id: 'he-mes-anterior-30h',
+                qtd50: 10,
+                qtd100: 0,
+                isEA: true,
+                excluirIR: false,
+                usarSubstituicaoFuncao: false,
+                divisor: 150
+            },
+            {
+                id: 'he-mes-atual-35h',
+                qtd50: 10,
+                qtd100: 0,
+                isEA: false,
+                excluirIR: false,
+                usarSubstituicaoFuncao: false,
+                divisor: 175
+            }
+        ]
+    };
+
+    const res = await calculateOvertime(params);
+    assert.equal(res.entries.length, 2);
+    // Entrada 1: divisor 150 -> 2.172,68
+    assert.equal(res.entries[0].divisor, 150);
+    assert.equal(res.entries[0].heVal50, 2172.68);
+
+    // Entrada 2: divisor 175 -> 1.862,30
+    assert.equal(res.entries[1].divisor, 175);
+    assert.equal(res.entries[1].heVal50, 1862.30);
+
+    // Total consolidado
+    assert.equal(res.heVal50, 4034.98);
 });

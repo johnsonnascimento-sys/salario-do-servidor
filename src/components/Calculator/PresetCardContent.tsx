@@ -73,6 +73,8 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
             return <UnlinkedPresetEntryNotice />;
         }
 
+        const calculatedEntry = state.overtimeCalculatedEntries?.find(e => e.id === overtimeEntry.id);
+
         return (
             <OvertimeCard
                 entry={overtimeEntry}
@@ -81,6 +83,9 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
                 competenciaReferencia={competenciaReferencia}
                 styles={styles}
                 courtConfig={courtConfig}
+                gaactaAtivo={Boolean(state.gaactaAtivo)}
+                gaactaRecesso={Boolean(state.gaactaRecesso)}
+                calculatedEntry={calculatedEntry}
             />
         );
     }

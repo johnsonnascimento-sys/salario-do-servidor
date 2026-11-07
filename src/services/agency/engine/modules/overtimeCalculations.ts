@@ -25,6 +25,10 @@ export interface OvertimeResult {
         isEA: boolean;
         excluirIR: boolean;
         usarSubstituicaoFuncao: boolean;
+        divisor?: number;
+        valorHoraNormal?: number;
+        valorHora50?: number;
+        valorHora100?: number;
     }>;
 }
 
@@ -64,7 +68,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     }
 
     // Função auxiliar para calcular o valor da baseHE para uma função específica (a própria ou substituída)
-    const calcHEForFunction = (funcKey: string, q50: number, q100: number) => {
+    const calcHEForFunction = (funcKey: string, q50: number, q100: number, divisor: number) => {
         const paramFuncValor = isNoFunction(funcKey, config) ? 0 : (funcoes[funcKey] || 0);
         let baseBaseHE = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
             paramFuncValor + gratVal + (params.vpni_lei || 0) +
@@ -89,26 +93,32 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             }
         }
 
-        const paramValorHora = payrollRules.overtimeMonthHours > 0 ? baseBaseHE / payrollRules.overtimeMonthHours : 0;
+        const paramValorHora = divisor > 0 ? baseBaseHE / divisor : 0;
         return {
             v50: paramValorHora * 1.5 * q50,
-            v100: paramValorHora * 2.0 * q100
+            v100: paramValorHora * 2.0 * q100,
+            valorHora: paramValorHora
         };
     };
 
     const overtimeEntries = params.overtimeEntries || [];
+    const orgSlug = (config.orgSlug || '').toLowerCase();
+    const isJMU = orgSlug === 'jmu' || orgSlug === 'stm';
+    const fallbackDivisor = payrollRules.overtimeMonthHours > 0 ? payrollRules.overtimeMonthHours : (isJMU ? 175 : 200);
 
     if (overtimeEntries.length > 0) {
         const entries = overtimeEntries.map((entry, index) => {
             let heVal50 = 0;
             let heVal100 = 0;
 
+            const entryDivisor = entry.divisor && entry.divisor > 0 ? Number(entry.divisor) : fallbackDivisor;
+
             const qtd50Global = Math.max(0, Number(entry.qtd50 || 0));
             const qtd100Global = Math.max(0, Number(entry.qtd100 || 0));
             
             // Calcula as horas inseridas no escopo "global" do card usando a função titular
             if (qtd50Global > 0 || qtd100Global > 0) {
-                const res = calcHEForFunction(params.funcao, qtd50Global, qtd100Global);
+                const res = calcHEForFunction(params.funcao, qtd50Global, qtd100Global, entryDivisor);
                 heVal50 += res.v50;
                 heVal100 += res.v100;
             }
@@ -119,7 +129,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                     const h50 = Math.max(0, Number(horas.qtd50 || 0));
                     const h100 = Math.max(0, Number(horas.qtd100 || 0));
                     if (h50 > 0 || h100 > 0) {
-                        const res = calcHEForFunction(funcKey, h50, h100);
+                        const res = calcHEForFunction(funcKey, h50, h100, entryDivisor);
                         heVal50 += res.v50;
                         heVal100 += res.v100;
                     }
@@ -139,6 +149,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 heVal100 = 0;
             }
 
+            const unitRes = calcHEForFunction(params.funcao, 1, 0, entryDivisor);
+            const valorHoraNormal = roundCurrency(unitRes.valorHora);
+            const valorHora50 = roundCurrency(valorHoraNormal * 1.5);
+            const valorHora100 = roundCurrency(valorHoraNormal * 2.0);
+
             return {
                 id: entry.id || `he-${index}`,
                 heVal50,
@@ -146,7 +161,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 heTotal,
                 isEA: Boolean(entry.isEA),
                 excluirIR: Boolean(entry.excluirIR),
-                usarSubstituicaoFuncao: Boolean(entry.usarSubstituicaoFuncao)
+                usarSubstituicaoFuncao: Boolean(entry.usarSubstituicaoFuncao),
+                divisor: entryDivisor,
+                valorHoraNormal,
+                valorHora50,
+                valorHora100
             };
         });
 
@@ -158,10 +177,12 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     }
 
     // Calcula valor para o bloco legacy-he usando sua funcao titular
-    const legacyHE = calcHEForFunction(params.funcao, params.heQtd50 || 0, params.heQtd100 || 0);
+    const legacyDivisor = fallbackDivisor;
+    const legacyHE = calcHEForFunction(params.funcao, params.heQtd50 || 0, params.heQtd100 || 0, legacyDivisor);
     const heVal50 = roundCurrency(legacyHE.v50);
     const heVal100 = roundCurrency(legacyHE.v100);
     const heTotal = sumCurrency([heVal50, heVal100]);
+    const valorHoraNormal = roundCurrency(legacyHE.valorHora);
 
     return {
         heVal50,
@@ -175,7 +196,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 heTotal,
                 isEA: Boolean(params.heIsEA),
                 excluirIR: Boolean(params.heExcluirIR),
-                usarSubstituicaoFuncao: false
+                usarSubstituicaoFuncao: false,
+                divisor: legacyDivisor,
+                valorHoraNormal,
+                valorHora50: roundCurrency(valorHoraNormal * 1.5),
+                valorHora100: roundCurrency(valorHoraNormal * 2.0)
             }
         ]
     };

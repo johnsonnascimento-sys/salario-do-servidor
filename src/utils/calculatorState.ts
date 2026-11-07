@@ -193,14 +193,26 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         pensionRetroEntries: Array.isArray(merged.pensionRetroEntries) ? merged.pensionRetroEntries : [],
         rubricasExtras: Array.isArray(merged.rubricasExtras) ? merged.rubricasExtras : [],
         overtimeEntries: Array.isArray(merged.overtimeEntries)
-            ? merged.overtimeEntries.map((entry) => ({
-                ...entry,
-                id: entry?.id || createEntryId('he-entry'),
-                qtd50: Math.max(0, Number(entry?.qtd50 || 0)),
-                qtd100: Math.max(0, Number(entry?.qtd100 || 0)),
-                isEA: Boolean(entry?.isEA),
-                excluirIR: Boolean(entry?.excluirIR),
-            }))
+            ? merged.overtimeEntries.map((entry) => {
+                const nextEntry: OvertimeEntry = {
+                    ...entry,
+                    id: entry?.id || createEntryId('he-entry'),
+                    qtd50: Math.max(0, Number(entry?.qtd50 || 0)),
+                    qtd100: Math.max(0, Number(entry?.qtd100 || 0)),
+                    isEA: Boolean(entry?.isEA),
+                    excluirIR: Boolean(entry?.excluirIR),
+                };
+                if (entry?.divisor !== undefined) {
+                    nextEntry.divisor = Math.max(1, Number(entry.divisor) || 0);
+                }
+                if (entry?.jornadaSemanal !== undefined) {
+                    nextEntry.jornadaSemanal = Math.max(1, Number(entry.jornadaSemanal) || 0);
+                }
+                if (entry?.emRecesso !== undefined) {
+                    nextEntry.emRecesso = Boolean(entry.emRecesso);
+                }
+                return nextEntry;
+            })
             : [],
             substitutionEntries: Array.isArray(merged.substitutionEntries)
             ? merged.substitutionEntries.map((entry) => ({

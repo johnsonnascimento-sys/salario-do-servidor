@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 07/11/2026 04:18
+Atualizado em: 07/11/2026 05:08
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -121,6 +121,15 @@ Cada rubrica manual deve suportar:
 4. A redução do imposto introduzida para o ano-calendário de 2026 (Lei nº 9.250/1995, art. 3º-A incluído pela Lei nº 15.270/2025 c/c Anexo X da IN RFB nº 1.500/2014) incide sobre o montante consolidado de rendimentos tributáveis recebidos no mês do pagamento, sem multiplicação das faixas nominais do redutor por $NM$ nem divisão por média mensal.
 5. O imposto apurado de RRA é rateado entre as entradas em EA pelo método dos maiores restos (Hare-Niemeyer), preservando a exatidão em centavos. Descontos dedutíveis abatem a base sem diminuir o denominador dos créditos no rateio.
 6. Quando o servidor informar dependentes de IR no cabeçalho da folha, a dedução legal correspondente é vinculada e aplicada por padrão na apuração do IR-EA (RRA), com controle reativo por checkbox para permitir desmarcar caso a fonte pagadora não tenha abatido dependentes na origem, eliminando a exigência de cálculo manual ou lançamento burocrático de ajustes documentados para dependentes já cadastrados.
+
+### 4.10 Serviço Extraordinário (Horas Extras - Resolução STM nº 374/2025 e Resolução CJF nº 4/2008)
+
+1. O valor da hora extraordinária é apurado dividindo-se a remuneração mensal pelo divisor correspondente à jornada de trabalho semanal do servidor, excluídos o adicional de 1/3 de férias e a gratificação natalina (art. 7º da Resolução STM nº 374/2025 e art. 46 da Resolução CJF nº 4/2008).
+2. Divisores padrão: 175 para a jornada ordinária da JMU de 35h semanais (art. 7º, § 1º, I) e 200 para a jornada ordinária da JF de 40h semanais (art. 46, § 1º).
+3. Jornadas especiais: 30h semanais aplicam divisor 150 (art. 7º, § 1º, II) e 20h semanais aplicam divisor 100 (art. 7º, § 1º, III). Para jornadas diversas, aplica-se a fórmula legal $(\text{Jornada Semanal} \div 6) \times 30$ (art. 7º, § 2º).
+4. O divisor mensal é parametrizado e editável por instância (`OvertimeEntry.divisor`), garantindo isolamento entre cards e permitindo override direto pelo usuário.
+5. Em conformidade com o art. 6º, § 1º da Resolução STM nº 374/2025 (redação da Resolução STM nº 399/2026), no período de recesso forense / plantão o teto informativo da JMU eleva-se de 30 para 50 horas mensais.
+6. A memória de cálculo unitária deve informar os valores da Hora Normal, Hora Extra (+50%) e Hora Extra (+100%) no card de lançamento para conferência direta com o contracheque.
 
 ## 5. Admin e seguranca operacional
 

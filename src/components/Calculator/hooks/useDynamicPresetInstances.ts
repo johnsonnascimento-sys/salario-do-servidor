@@ -25,7 +25,8 @@ const createOvertimeEntry = (): OvertimeEntry => ({
     isEA: false,
     excluirIR: false,
     usarSubstituicaoFuncao: false,
-    competenciaRef: ''
+    competenciaRef: '',
+    emRecesso: false
 });
 
 const createSubstitutionEntry = (): SubstitutionEntry => ({

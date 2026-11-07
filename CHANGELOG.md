@@ -1,5 +1,14 @@
 # Changelog
 
+## Parametrização Dinâmica de Jornada e Divisor Mensal de Horas Extras — 07/11/2026
+- Adequação completa do módulo de Serviço Extraordinário ao art. 7º da Resolução STM nº 374/2025 (c/c Resolução STM nº 399/2026) e art. 46 da Resolução CJF nº 4/2008 (redação das Resoluções CJF nº 186/2012 e 973/2025).
+- Adiciona seletor inteligente de carga horária semanal nos cards de horas extras com atalhos legais para 35h (divisor 175 - padrão JMU), 40h (divisor 200 - padrão JF), 30h (divisor 150 - jornadas especiais/redução legal), 20h (divisor 100 - médicos e odontólogos) e jornada personalizada via fórmula matemática oficial: (Jornada Semanal ÷ 6) × 30.
+- Disponibiliza campo editável do divisor mensal por instância (`OvertimeEntry.divisor`), permitindo override numérico direto pelo usuário com isolamento estrito entre cards distintos na mesma folha.
+- Inclui checkbox para serviço prestado durante o recesso forense / plantão, elevando dinamicamente o teto mensal informativo da JMU de 30h para 50h (art. 6º, § 1º da Res. STM 374/2025).
+- Adiciona painel de Memória de Cálculo Unitária no card, exibindo em tempo real os valores apurados da Hora Normal, Hora Extra a 50% e Hora Extra a 100% para conferência direta com o contracheque.
+- Torna o badge normativo do card (`PresetInstanceCard`) reativo ao divisor da respectiva instância (ex.: "Res. STM Nº 374/2025 • Divisor 150").
+- Adiciona 4 novos testes unitários em `tests/overtimeFederal.test.ts` cobrindo divisor 150, divisor 100, fórmula proporcional e isolamento entre múltiplas instâncias na mesma folha.
+
 ## Neutralização dos Descontos Fantasmas e Unificação em Rubricas Manuais — 07/11/2026
 - Neutraliza definitivamente os campos legados `emprestimos`, `planoSaude` e `pensao` na hidratação de rascunhos (`hydrateCalculatorState`), impedindo que valores residuais salvos no `localStorage` por testes antigos ou simulações anteriores poluam o Detalhamento do contracheque como "descontos fantasmas".
 - Mantém a arquitetura limpa e unificada do sistema, onde todos os descontos facultativos ou avulsos (como planos de saúde, coparticipações, consignações e pensões) são gerenciados exclusivamente pelo card oficial de **Rubricas Manuais**.

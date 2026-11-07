@@ -199,6 +199,9 @@ export interface OvertimeEntry {
   competenciaRef?: string;
   valorBrutoManual?: number; // Para retrocompatibilidade/dados importados
   horasPorFuncao?: Record<string, { qtd50: number; qtd100: number }>;
+  divisor?: number;
+  jornadaSemanal?: number;
+  emRecesso?: boolean;
 }
 
 export interface SubstitutionEntry {

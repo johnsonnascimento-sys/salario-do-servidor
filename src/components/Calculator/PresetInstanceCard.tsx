@@ -30,11 +30,13 @@ interface PresetInstanceCardProps {
 const getPresetHeaderInfo = (
     presetId: PredefinedRubricId,
     courtConfig: CourtConfig,
-    fallbackLabel: string
+    fallbackLabel: string,
+    instance?: PresetInstance,
+    state?: CalculatorState
 ): { title: string; normBadge?: string } => {
     const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
     const isJMU = orgSlug === 'jmu' || orgSlug === 'stm';
-    const divisor = courtConfig?.payrollRules?.overtimeMonthHours || (isJMU ? 175 : 200);
+    const defaultDivisor = courtConfig?.payrollRules?.overtimeMonthHours || (isJMU ? 175 : 200);
 
     switch (presetId) {
         case 'gaacta':
@@ -42,11 +44,16 @@ const getPresetHeaderInfo = (
                 title: 'Gratificação por Atividades de Alta Complexidade',
                 normBadge: 'Res. STM Nº 397/2026 • 15%'
             };
-        case 'hora_extra':
+        case 'hora_extra': {
+            const entry = instance?.overtimeEntryId
+                ? state?.overtimeEntries?.find(e => e.id === instance.overtimeEntryId)
+                : state?.overtimeEntries?.[0];
+            const divisor = entry?.divisor && entry.divisor > 0 ? entry.divisor : defaultDivisor;
             return {
                 title: 'Serviço Extraordinário (HE)',
                 normBadge: isJMU ? `Res. STM Nº 374/2025 • Divisor ${divisor}` : `Res. CJF Nº 4/2008 • Divisor ${divisor}`
             };
+        }
         case 'ferias':
             return {
                 title: 'Férias (1/3 Constitucional)',
@@ -121,7 +128,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     courtConfig,
     lines
 }) => {
-    const headerInfo = getPresetHeaderInfo(instance.presetId, courtConfig, presetLabel);
+    const headerInfo = getPresetHeaderInfo(instance.presetId, courtConfig, presetLabel, instance, state);
 
     return (
         <div

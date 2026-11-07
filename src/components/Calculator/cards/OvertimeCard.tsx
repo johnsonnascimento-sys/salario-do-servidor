@@ -1,7 +1,8 @@
 import { IrEaCompetencias } from '../IrEaCompetencias';
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Clock, Calculator } from 'lucide-react';
 import { CourtConfig, OvertimeEntry } from '../../../types';
+import type { CalculatedOvertimeEntry } from '../../../types/irEa';
 
 interface OvertimeCardProps {
     entry: OvertimeEntry;
@@ -12,6 +13,7 @@ interface OvertimeCardProps {
     courtConfig?: CourtConfig;
     gaactaAtivo?: boolean;
     gaactaRecesso?: boolean;
+    calculatedEntry?: CalculatedOvertimeEntry;
 }
 
 export const OvertimeCard: React.FC<OvertimeCardProps> = ({
@@ -21,12 +23,17 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     styles,
     courtConfig,
     gaactaAtivo,
-    gaactaRecesso
+    gaactaRecesso,
+    calculatedEntry
 }) => {
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
 
     const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
     const isJMU = orgSlug === 'jmu' || orgSlug === 'stm';
+    const defaultDivisor = courtConfig?.payrollRules?.overtimeMonthHours || (isJMU ? 175 : 200);
+    const defaultJornada = isJMU ? 35 : 40;
+
+    const currentDivisor = entry.divisor && entry.divisor > 0 ? entry.divisor : defaultDivisor;
 
     const totalHoras: number = usarSubstituicaoFuncao && entry.horasPorFuncao
         ? Object.values(entry.horasPorFuncao as Record<string, { qtd50?: number; qtd100?: number }>).reduce(
@@ -35,8 +42,50 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
         )
         : (Number(entry.qtd50) || 0) + (Number(entry.qtd100) || 0);
 
-    const tetoHoras = isJMU ? 30 : 44;
+    const tetoHoras = isJMU ? (entry.emRecesso ? 50 : 30) : 44;
     const isExcedido = totalHoras > tetoHoras;
+
+    const getJornadaOption = (): string => {
+        if (entry.jornadaSemanal) {
+            if ([35, 40, 30, 20].includes(entry.jornadaSemanal)) {
+                return String(entry.jornadaSemanal);
+            }
+            return 'custom';
+        }
+        if (currentDivisor === 175) return '35';
+        if (currentDivisor === 200) return '40';
+        if (currentDivisor === 150) return '30';
+        if (currentDivisor === 100) return '20';
+        return 'custom';
+    };
+
+    const selectedOption = getJornadaOption();
+
+    const handleJornadaChange = (val: string) => {
+        if (val === '35') {
+            updateEntry(entry.id, { jornadaSemanal: 35, divisor: 175 });
+        } else if (val === '40') {
+            updateEntry(entry.id, { jornadaSemanal: 40, divisor: 200 });
+        } else if (val === '30') {
+            updateEntry(entry.id, { jornadaSemanal: 30, divisor: 150 });
+        } else if (val === '20') {
+            updateEntry(entry.id, { jornadaSemanal: 20, divisor: 100 });
+        } else if (val === 'custom') {
+            const j = entry.jornadaSemanal || defaultJornada;
+            const d = Math.round((j / 6) * 30 * 100) / 100;
+            updateEntry(entry.id, { jornadaSemanal: j, divisor: d });
+        }
+    };
+
+    const handleCustomJornadaChange = (hours: number) => {
+        const j = Math.max(1, hours);
+        const d = Math.round((j / 6) * 30 * 100) / 100;
+        updateEntry(entry.id, { jornadaSemanal: j, divisor: d });
+    };
+
+    const handleDivisorChange = (div: number) => {
+        updateEntry(entry.id, { divisor: div });
+    };
 
     return (
         <div className="space-y-4">
@@ -59,11 +108,128 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             <div className="space-y-0.5">
                                 <span className="font-bold text-body-xs block text-warning-900 dark:text-warning-200">Atenção ao limite regulamentar:</span>
                                 <p className="text-body-xs text-warning-800 dark:text-warning-300">
-                                    O total lançado ({totalHoras}h) excede o teto mensal de <strong>{tetoHoras} horas</strong> estabelecido {isJMU ? 'no art. 6º, caput da Resolução STM Nº 374/2025 (redação da Resolução STM nº 399/2026; limite de 50h no recesso forense)' : 'no art. 45, § 3º da Resolução CJF Nº 4/2008 (redação da Resolução CJF Nº 973/2025)'}. O cálculo é realizado integralmente para acomodar passivos e acertos retroativos.
+                                    {isJMU ? (
+                                        <>
+                                            O total lançado ({totalHoras}h) excede o teto mensal de <strong>{tetoHoras} horas</strong> estabelecido {entry.emRecesso ? 'no art. 6º, § 1º da Resolução STM Nº 374/2025 para período de recesso forense' : 'no art. 6º, caput da Resolução STM Nº 374/2025 (redação da Resolução STM nº 399/2026; limite de 50h no recesso forense)'}. O cálculo é realizado integralmente para acomodar passivos e acertos retroativos.
+                                        </>
+                                    ) : (
+                                        <>
+                                            O total lançado ({totalHoras}h) excede o teto mensal de <strong>44 horas</strong> estabelecido no art. 45, § 3º da Resolução CJF Nº 4/2008 (redação da Resolução CJF Nº 973/2025). O cálculo é realizado integralmente para acomodar passivos e acertos retroativos.
+                                        </>
+                                    )}
                                 </p>
                             </div>
                         </div>
                     )}
+
+                    {/* Bloco de Jornada e Divisor */}
+                    <div className="bg-white/80 dark:bg-neutral-800/80 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-secondary" />
+                                Jornada de Trabalho e Divisor Mensal
+                            </span>
+                            <span className="text-label text-neutral-400 font-normal">
+                                {isJMU ? 'Res. STM 374/2025, art. 7º: (Jornada ÷ 6) × 30' : 'Res. CJF 4/2008, art. 46: (Jornada ÷ 6) × 30'}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label className={styles.label}>Carga Horária Semanal</label>
+                                <select
+                                    className={styles.input}
+                                    value={selectedOption}
+                                    onChange={e => handleJornadaChange(e.target.value)}
+                                >
+                                    {isJMU ? (
+                                        <>
+                                            <option value="35">35h semanais (Divisor 175) — Padrão da JMU (art. 7º, § 1º, I)</option>
+                                            <option value="30">30h semanais (Divisor 150) — Jornada especial (art. 7º, § 1º, II)</option>
+                                            <option value="20">20h semanais (Divisor 100) — Jornada especial (art. 7º, § 1º, III)</option>
+                                            <option value="custom">Outra jornada personalizada (art. 7º, § 2º)...</option>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <option value="40">40h semanais (Divisor 200) — Padrão da JF (art. 46, § 1º)</option>
+                                            <option value="35">35h semanais (Divisor 175) — Jornada especial de 35h</option>
+                                            <option value="30">30h semanais (Divisor 150) — Jornada especial de 30h</option>
+                                            <option value="20">20h semanais (Divisor 100) — Médicos / Odontólogos (Lei 9.436/97)</option>
+                                            <option value="custom">Outra jornada personalizada...</option>
+                                        </>
+                                    )}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className={styles.label}>Divisor Mensal Efetivo</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    step="any"
+                                    className={styles.input}
+                                    value={currentDivisor}
+                                    onChange={e => handleDivisorChange(Math.max(1, Number(e.target.value) || 0))}
+                                    title="Divisor mensal correspondente à jornada para cálculo da hora normal"
+                                />
+                            </div>
+                        </div>
+
+                        {selectedOption === 'custom' && (
+                            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center gap-3 flex-wrap">
+                                <label className={`${styles.label} mb-0 shrink-0`}>Jornada semanal (h):</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="80"
+                                    step="0.5"
+                                    className={`${styles.input} max-w-[120px] py-1.5 h-9`}
+                                    value={entry.jornadaSemanal || ''}
+                                    placeholder="Ex: 25"
+                                    onChange={e => handleCustomJornadaChange(Number(e.target.value) || 0)}
+                                />
+                                <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                                    Fórmula: ({entry.jornadaSemanal || 0} ÷ 6) × 30 = <strong>{currentDivisor}</strong>
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Memória de Cálculo Unitária */}
+                    {calculatedEntry && calculatedEntry.valorHoraNormal !== undefined && calculatedEntry.valorHoraNormal > 0 && (
+                        <div className="p-3 bg-neutral-100/70 dark:bg-neutral-800/60 rounded-xl border border-neutral-200/80 dark:border-neutral-700/60 text-body-xs space-y-1.5">
+                            <div className="font-semibold text-neutral-700 dark:text-neutral-200 flex items-center justify-between">
+                                <span className="flex items-center gap-1.5">
+                                    <Calculator className="w-3.5 h-3.5 text-secondary" />
+                                    Memória de Cálculo Unitária
+                                </span>
+                                <span className="text-label text-neutral-500 dark:text-neutral-400 font-normal">
+                                    Divisor aplicado: <strong className="text-neutral-700 dark:text-neutral-200 font-mono">{calculatedEntry.divisor ?? currentDivisor}</strong>
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 pt-1 text-center sm:text-left">
+                                <div>
+                                    <span className="text-neutral-500 dark:text-neutral-400 block text-[11px]">Hora Normal</span>
+                                    <span className="font-semibold text-neutral-800 dark:text-neutral-100 font-mono">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedEntry.valorHoraNormal)}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-neutral-500 dark:text-neutral-400 block text-[11px]">Hora Extra (+50%)</span>
+                                    <span className="font-semibold text-secondary dark:text-secondary-300 font-mono">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedEntry.valorHora50 || calculatedEntry.valorHoraNormal * 1.5)}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-neutral-500 dark:text-neutral-400 block text-[11px]">Hora Extra (+100%)</span>
+                                    <span className="font-semibold text-secondary dark:text-secondary-300 font-mono">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedEntry.valorHora100 || calculatedEntry.valorHoraNormal * 2.0)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <label className={styles.checkboxLabel}>
                             <input
@@ -92,6 +258,17 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             />
                             <span>Excluir da base do IR</span>
                         </label>
+                        {isJMU && (
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={Boolean(entry.emRecesso)}
+                                    onChange={e => updateEntry(entry.id, { emRecesso: e.target.checked })}
+                                />
+                                <span>Prestado no recesso forense / plantão (teto de 50h - art. 6º, § 1º)</span>
+                            </label>
+                        )}
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
