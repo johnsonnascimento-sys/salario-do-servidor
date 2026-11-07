@@ -1,5 +1,3 @@
-import { toReferenceMonthIndex } from './referenceDateUtils';
-import { IrEaContextSection } from './IrEaContextSection';
 import React from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
@@ -303,16 +301,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 updateRubrica={updateRubrica}
                 toPositiveNumber={toPositiveNumber}
             />
-
-            {(state.overtimeEntries.some(entry => entry.isEA) || state.substitutionEntries.some(entry => entry.isEA) || state.rubricasExtras.some(entry => entry.isEA) || state.heIsEA || state.substIsEA) && <IrEaContextSection
-                value={state.irEaContext}
-                onChange={context => update('irEaContext', context)}
-                styles={styles}
-                error={calculationError}
-                mesFolha={toReferenceMonthIndex(state.mesRef) ? `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}` : undefined}
-                dependentes={Number(state.dependentes) || 0}
-                deducaoDependente={courtConfig?.values?.deducao_dep || 189.59}
-            />}
         </>
     );
 };

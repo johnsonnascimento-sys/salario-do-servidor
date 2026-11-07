@@ -1,14 +1,20 @@
 import { IrEaMemory } from './IrEaMemory';
+import { IrEaContextSection } from './IrEaContextSection';
+import { toReferenceMonthIndex } from './referenceDateUtils';
 import { PensionMemory } from './PensionMemory';
 import React from 'react';
 import { Receipt } from 'lucide-react';
-import { CalculatorState } from '../../types';
+import { CalculatorState, CourtConfig } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 import { groupPayslipRowsForDisplay, PayslipDisplayRow } from '../../utils/payslipRows';
 
 interface ResultsSummaryProps {
     state: CalculatorState;
     resultRows: Array<{ label: string; value: number; type: 'C' | 'D' }>;
+    update?: (key: keyof CalculatorState, value: any) => void;
+    calculationError?: string | null;
+    courtConfig?: CourtConfig;
+    styles?: any;
 }
 
 interface SummarySectionProps {
@@ -150,7 +156,7 @@ const DesktopSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tot
     </section>
 );
 
-export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRows }) => {
+export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRows, update, calculationError, courtConfig, styles }) => {
     const normalizeLabel = (label: string) =>
         label
             .normalize('NFD')
@@ -251,7 +257,22 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
                         </h4>
                         <div className="space-y-3">
                             {state.pensionMemory && <PensionMemory memory={state.pensionMemory} />}
-                            <IrEaMemory memory={state.irEaMemory} />
+                            {state.irEaMemory && (
+                                <div id="apuracao-ir-ea" className="scroll-mt-20 space-y-3">
+                                    <IrEaMemory memory={state.irEaMemory} />
+                                    {update && (
+                                        <IrEaContextSection
+                                            value={state.irEaContext}
+                                            onChange={context => update('irEaContext', context)}
+                                            styles={styles || {}}
+                                            error={calculationError}
+                                            mesFolha={toReferenceMonthIndex(state.mesRef) ? `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}` : undefined}
+                                            dependentes={Number(state.dependentes) || 0}
+                                            deducaoDependente={courtConfig?.values?.deducao_dep || 189.59}
+                                        />
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

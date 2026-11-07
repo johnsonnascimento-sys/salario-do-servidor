@@ -1,5 +1,12 @@
 # Changelog
 
+## Migração do Card de IR-EA para o Rodapé e Ajustes Avançados Colapsáveis — 07/11/2026
+- Elimina o card invasivo de "Apuração do IR-EA" do meio do formulário (`DynamicPayrollForm.tsx`), despoluindo a tela principal e deixando a apuração de atrasados (RRA) 100% fluida e automática a partir dos meses informados nas parcelas.
+- Reposiciona a seção de auditoria e ajustes avançados de IR-EA (`IrEaContextSection.tsx`) para o rodapé (`ResultsSummary.tsx`), integrada à "Memória do IR-EA" (`IrEaMemory.tsx`), sob a seção "Auditoria e Memória de Cálculo".
+- Transforma os campos de override (NM do demonstrativo, deduções documentadas e opção de dependentes) em um acordeão colapsado por padrão (`<details>`), que só é expandido se houver ajuste ativo ou se o usuário clicar para configurar.
+- Adiciona o botão de restauração rápida `↺ Voltar para contagem automática`, permitindo ao usuário desfazer overrides manuais de NM instantaneamente com um clique.
+- Mantém o fallback de recuperação em caso de erro na tela de simulação e preserva o smooth scroll do atalho "Ver Apuração do IR-EA ↓" apontando para a auditoria no rodapé.
+
 ## Contextualização do Callout Didático do IR-EA por Tipo de Parcela — 07/11/2026
 - Adiciona a propriedade contextual `tipo?: 'horas_extras' | 'substituicao' | 'rubrica'` ao componente `IrEaCompetencias.tsx`.
 - Restringe a menção a "teto mensal de horas" exclusivamente ao card de Horas Extras (`OvertimeCard.tsx`).

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
@@ -7,6 +7,8 @@ import { CalculatorHeader } from '../components/Calculator/CalculatorHeader';
 import { DynamicPayrollForm } from '../components/Calculator/DynamicPayrollForm';
 import { ObservationsSection } from '../components/Calculator/ObservationsSection';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
+import { IrEaContextSection } from '../components/Calculator/IrEaContextSection';
+import { toReferenceMonthIndex } from '../components/Calculator/referenceDateUtils';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
 import { MobileResultsBar } from '../components/Calculator/MobileResultsBar';
 import { FieldCalculator } from '../components/Calculator/FieldCalculator';
@@ -281,10 +283,27 @@ export default function Calculator() {
                     {calculationReady ? <ResultsSummary
                         state={effectiveState}
                         resultRows={resultRows}
+                        update={update}
+                        calculationError={calculationError}
+                        courtConfig={courtConfig}
+                        styles={styles}
                     /> : <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
                         {calculationError || 'Calculando os valores do holerite...'}
                     </p>}
+                    {!calculationReady && calculationError?.includes('IR-EA') && (
+                        <div id="apuracao-ir-ea" className="scroll-mt-20">
+                            <IrEaContextSection
+                                value={effectiveState.irEaContext}
+                                onChange={context => update('irEaContext', context)}
+                                styles={styles}
+                                error={calculationError}
+                                mesFolha={toReferenceMonthIndex(effectiveState.mesRef) ? `${effectiveState.anoRef}-${String(toReferenceMonthIndex(effectiveState.mesRef)).padStart(2, '0')}` : undefined}
+                                dependentes={Number(effectiveState.dependentes) || 0}
+                                deducaoDependente={courtConfig?.values?.deducao_dep || 189.59}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <ActionFooter
