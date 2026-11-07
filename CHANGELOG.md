@@ -1,5 +1,10 @@
 # Changelog
 
+## Padronização Visual da Seção de Competências Originais do IR-EA — 07/11/2026
+- Substitui o link textual sublinhado por um botão de ação estilizado com ícone `Plus` (`Adicionar competência original`), com cantos arredondados, borda suave e tipografia em harmonia com o restante do site.
+- Substitui o texto corrido sublinhado `Remover mês X` por um botão de ação compacto com ícone de lixeira (`Trash2`) e hover em tom de erro.
+- Transforma a mensagem de competências pendentes em um badge estruturado com ícone `AlertCircle`, eliminando qualquer elemento textual cru fora do design system.
+
 ## Integração da Memória de Cálculo Unitária ao Resumo Calculado da Hora Extra — 07/11/2026
 - Move as linhas da memória de cálculo unitária (Valor da Hora Normal com indicação do divisor ativo, Valor unitário da Hora +50% e +100%) para dentro do acordeão oficial de "Resumo calculado" (`PresetGrossSummary` via `presetGrossLines.ts`).
 - Remove o bloco avulso do interior do `OvertimeCard.tsx`, garantindo total consistência visual e arquitetural com os demais cards do produto.
