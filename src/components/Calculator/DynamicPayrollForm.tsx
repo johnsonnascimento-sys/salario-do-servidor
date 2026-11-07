@@ -11,6 +11,7 @@ import { ManualRubricasSection } from './ManualRubricasSection';
 import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
 import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
 import { DynamicPayrollTaxSection } from './DynamicPayrollTaxSection';
+import { DynamicPayrollOtherDeductionsSection } from './DynamicPayrollOtherDeductionsSection';
 import { PensionRetroForm } from './PensionRetroForm';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetControlsSection } from './PresetControlsSection';
@@ -235,6 +236,13 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     pensionContext={pensionContexts?.monthly ?? null}
                     selectionRequired={pensionSelection.incompatible}
                 />
+
+                <DynamicPayrollOtherDeductionsSection
+                    styles={styles}
+                    state={state}
+                    update={update}
+                />
+
                 <PensionRetroForm state={inputState ?? state} update={update} styles={styles} pssTableOptions={pssOptions}
                     pensionParams={pensionParams} pensionContexts={pensionContexts}
                     allowNormalization={!pensionSelection.incompatible} />

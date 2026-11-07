@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 07/11/2026 02:27
+Atualizado em: 07/11/2026 04:05
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -73,7 +73,8 @@ Cada rubrica manual deve suportar:
 
 1. Descontos devem ter estilo visual proprio (sem prefixo textual `(-)`).
 2. Campos numericos nao aceitam valor negativo.
-3. Em horas extras, nao exibir opcao de incidencia de PSS que nao se aplica.
+3. Descontos facultativos em folha (Plano de Saúde/Odonto, Consignações/Empréstimos e Pensão Alimentícia) devem ser exibidos de forma visível, transparente e editável no formulário dinâmico sob a seção "Outros descontos em folha", com badge somatório e ação rápida de zerar sem necessidade de limpar os demais dados da calculadora.
+4. Em horas extras, nao exibir opcao de incidencia de PSS que nao se aplica.
 
 ### 4.3 Gratificacao natalina (13o)
 

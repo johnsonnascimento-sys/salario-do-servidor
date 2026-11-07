@@ -1,5 +1,11 @@
 # Changelog
 
+## Disponibilização de Seção de Outros Descontos no Formulário Dinâmico — 07/11/2026
+- Adiciona o componente `DynamicPayrollOtherDeductionsSection` ao formulário dinâmico do holerite (`DynamicPayrollForm`), disponibilizando campos transparentes e editáveis para "Plano de Saúde / Odonto", "Consignações / Empréstimos" e "Pensão Alimentícia".
+- Resolve o problema de descontos "fantasmas" que apareciam no Detalhamento dos resultados após simulações anteriores ou restauração de rascunhos salvos no `localStorage` sem que o usuário encontrasse onde visualizar, alterar ou zerar os valores na interface.
+- Implementa badge do somatório total de outros descontos no cabeçalho do box e botão de ação rápida "Zerar" para limpar os três campos facultativos de uma vez sem reiniciar o preenchimento da folha.
+- Adiciona testes automatizados dedicados em `tests/otherDeductionsSection.test.ts` e `scripts/test-other-deductions.mjs` com 100% de aprovação.
+
 ## Preservação do Estado de Abertura do Resumo Calculado nos Cards — 07/11/2026
 - Corrige o recolhimento indesejado da seção "Resumo calculado" (`PresetGrossSummary`) dentro dos cards enquanto o usuário digita valores nos campos.
 - Implementa controle de estado reativo (`open={isOpen}`) e retenção das últimas linhas apuradas (`lastLinesRef`) durante os recálculos assíncronos do motor, impedindo que o componente desmonte (`return null`) e seja recriado fechado quando as entradas calculadas ficam transitoriamente vazias.
