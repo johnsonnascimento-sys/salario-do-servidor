@@ -1,5 +1,10 @@
 # Changelog
 
+## Simplificação de Linguagem e UX Writing nas Competências do IR-EA — 07/11/2026
+- Adequa os textos da seção de competências originais do IR-EA para linguagem acessível e compreensível ao servidor público leigo.
+- Substitui termos excessivamente burocráticos ("Competências originais do IR-EA", "Adicionar competência original", "competência X") por termos intuitivos e práticos ("Meses em que o serviço foi prestado (Ano Anterior)", "Adicionar mês trabalhado", "Mês trabalhado X").
+- Substitui mensagens técnicas por orientações claras, explicando de forma didática o benefício do cálculo por RRA (Lei nº 7.713/88) na apuração mensal para evitar retenção excessiva de imposto.
+
 ## Padronização Visual da Seção de Competências Originais do IR-EA — 07/11/2026
 - Substitui o link textual sublinhado por um botão de ação estilizado com ícone `Plus` (`Adicionar competência original`), com cantos arredondados, borda suave e tipografia em harmonia com o restante do site.
 - Substitui o texto corrido sublinhado `Remover mês X` por um botão de ação compacto com ícone de lixeira (`Trash2`) e hover em tom de erro.
