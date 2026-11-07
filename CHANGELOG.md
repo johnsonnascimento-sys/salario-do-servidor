@@ -1,5 +1,10 @@
 # Changelog
 
+## Inicialização Automática da Competência de EA ao Habilitar Opção — 07/11/2026
+- Inicializa automaticamente a competência com dezembro do ano anterior (`anoMaximoEa-12`) no exato momento em que o servidor clica em "Incluir na base do IR (Exercício Anterior - EA)" nos cards de Horas Extras, Substituição e Rubricas Manuais.
+- Elimina a mensagem de "Cálculo indisponível" decorrente de competências vazias imediatamente após habilitar EA, garantindo que o cálculo de RRA e o resumo líquido do card apareçam instantaneamente e sem atrito.
+- Preserva a flexibilidade de o servidor alterar o mês ou adicionar novas competências sem exigir preenchimento do zero.
+
 ## Blindagem de Usabilidade e Orientação Temporal nas Competências de IR-EA — 07/11/2026
 - Adiciona trava inteligente no seletor de competências originais (`IrEaCompetencias.tsx`), restringindo a data máxima (`max`) a dezembro do ano anterior ao pagamento (`anoMaximoEa-12`), orientando o servidor que o RRA é restrito a parcelas de anos anteriores.
 - Define sugestão automática inteligente ao clicar em "+ Adicionar mês trabalhado", pré-preenchendo dezembro do ano anterior (`anoMaximoEa-12`) em vez de abrir em branco ou induzir à seleção do mês corrente.

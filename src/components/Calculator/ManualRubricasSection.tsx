@@ -1,4 +1,4 @@
-import { IrEaCompetencias } from './IrEaCompetencias';
+import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 import React from 'react';
 import { DollarSign, Minus, Plus, Trash2 } from 'lucide-react';
 import { Rubrica, RubricaTaxDetail } from '../../types';
@@ -197,6 +197,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     updateRubrica(rubrica.id, 'isEA', checked);
                                     if (checked) {
                                         updateRubrica(rubrica.id, 'incideIR', false);
+                                        if (!rubrica.competenciasEA || rubrica.competenciasEA.length === 0) {
+                                            updateRubrica(rubrica.id, 'competenciasEA', [getDefaultEaCompetencia(competenciaReferencia)]);
+                                        }
                                     }
                                 }}
                             />

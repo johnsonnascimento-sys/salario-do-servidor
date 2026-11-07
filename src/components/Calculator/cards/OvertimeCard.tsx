@@ -1,4 +1,4 @@
-import { IrEaCompetencias } from '../IrEaCompetencias';
+import { IrEaCompetencias, getDefaultEaCompetencia } from '../IrEaCompetencias';
 import React from 'react';
 import { AlertTriangle, Clock } from 'lucide-react';
 import { CourtConfig, OvertimeEntry } from '../../../types';
@@ -243,7 +243,13 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                 checked={entry.isEA}
                                 onChange={e => {
                                     const checked = e.target.checked;
-                                    updateEntry(entry.id, { isEA: checked, excluirIR: checked ? false : entry.excluirIR });
+                                    updateEntry(entry.id, {
+                                        isEA: checked,
+                                        excluirIR: checked ? false : entry.excluirIR,
+                                        competenciasEA: checked && (!entry.competenciasEA || entry.competenciasEA.length === 0)
+                                            ? [getDefaultEaCompetencia(competenciaReferencia)]
+                                            : entry.competenciasEA
+                                    });
                                 }}
                             />
                             <span>Incluir na base do IR (Exercício Anterior - EA)</span>

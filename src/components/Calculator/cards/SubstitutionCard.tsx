@@ -1,4 +1,4 @@
-import { IrEaCompetencias } from '../IrEaCompetencias';
+import { IrEaCompetencias, getDefaultEaCompetencia } from '../IrEaCompetencias';
 import React from 'react';
 import { SubstitutionEntry } from '../../../types';
 
@@ -25,7 +25,16 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                                 type="checkbox"
                                 className={styles.checkbox}
                                 checked={entry.isEA}
-                                onChange={e => updateEntry(entry.id, { isEA: e.target.checked, excluirIR: e.target.checked ? false : entry.excluirIR })}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateEntry(entry.id, {
+                                        isEA: checked,
+                                        excluirIR: checked ? false : entry.excluirIR,
+                                        competenciasEA: checked && (!entry.competenciasEA || entry.competenciasEA.length === 0)
+                                            ? [getDefaultEaCompetencia(competenciaReferencia)]
+                                            : entry.competenciasEA
+                                    });
+                                }}
                             />
                             <span>Incluir na base do IR (Exercício Anterior - EA)</span>
                         </label>

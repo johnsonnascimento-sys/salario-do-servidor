@@ -10,6 +10,13 @@ interface Props {
     anoReferencia?: string | number;
 }
 
+export const getDefaultEaCompetencia = (competenciaReferencia?: string | number): string => {
+    const anoPagamentoStr = String(competenciaReferencia || '').slice(0, 4);
+    const anoPagamento = Number(anoPagamentoStr) || 2026;
+    const anoMaximoEa = anoPagamento > 2000 ? anoPagamento - 1 : 2025;
+    return `${anoMaximoEa}-12`;
+};
+
 /** Collect original months without inferring them from the payment reference. */
 export const IrEaCompetencias: React.FC<Props> = ({
     value = [],

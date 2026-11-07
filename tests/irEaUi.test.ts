@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import { act, create } from 'react-test-renderer';
 import { INITIAL_STATE, type CalculatorState, type CourtConfig } from '../src/types';
-import { IrEaCompetencias } from '../src/components/Calculator/IrEaCompetencias';
+import { IrEaCompetencias, getDefaultEaCompetencia } from '../src/components/Calculator/IrEaCompetencias';
 import { IrEaContextSection } from '../src/components/Calculator/IrEaContextSection';
 import { ManualRubricasSection } from '../src/components/Calculator/ManualRubricasSection';
 import { buildPresetGrossLines } from '../src/components/Calculator/presetGrossLines';
@@ -37,6 +37,8 @@ assert.ok(JSON.stringify(eaTree.toJSON()).includes('tributado na folha corrente'
 act(() => eaTree.root.findAllByType('button')[1].props.onClick());
 assert.equal(eaMonths[eaMonths.length - 1], '2025-12', 'Suggests December of prior year when adding');
 eaTree.unmount();
+assert.equal(getDefaultEaCompetencia('2026-11'), '2025-12', 'Calculates December of previous year as default competence');
+assert.equal(getDefaultEaCompetencia('2027-01'), '2026-12', 'Calculates 2026-12 for 2027 payroll');
 
 tree = create(React.createElement(IrEaContextSection, { value: { mesPagamento: '2026-10' }, mesFolha: '2027-01', onChange: value => { context = value; }, styles }));
 const contextInputs = tree.root.findAllByType('input');
