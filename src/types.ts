@@ -201,6 +201,7 @@ export interface OvertimeEntry {
   horasPorFuncao?: Record<string, { qtd50: number; qtd100: number }>;
   divisor?: number;
   jornadaSemanal?: number;
+  jornadaPersonalizada?: boolean;
   emRecesso?: boolean;
 }
 

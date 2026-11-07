@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import React from 'react';
+import { act, create } from 'react-test-renderer';
 import { calculateOvertime } from '../src/services/agency/engine/modules/overtimeCalculations';
 import { buildPresetGrossLines } from '../src/components/Calculator/presetGrossLines';
+import { OvertimeCard } from '../src/components/Calculator/cards/OvertimeCard';
 import { configService } from '../src/services/config/ConfigService';
 import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
 import type { CourtConfig } from '../src/types';
@@ -490,4 +493,90 @@ test('PresetGrossSummary: Memória de cálculo unitária incorporada ao resumo c
     assert.equal(lines.find(l => l.label === 'Valor unitário da Hora (+50%)')?.value, 186.23);
     assert.equal(lines.find(l => l.label === 'Valor unitário da Hora (+100%)')?.value, 248.30);
     assert.equal(lines.find(l => l.label === 'Total hora extra Bruto')?.value, 1862.30);
+});
+
+// =========================================================================
+// Teste 10: Seleção e persistência do modo "Outra jornada personalizada"
+// =========================================================================
+test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo custom, exibe input e calcula divisor', () => {
+    let currentEntry: any = {
+        id: 'he-test',
+        qtd50: 10,
+        qtd100: 0,
+        isEA: false,
+        excluirIR: false,
+        usarSubstituicaoFuncao: false
+    };
+
+    const updateEntry = (id: string, patch: any) => {
+        currentEntry = { ...currentEntry, ...patch };
+    };
+
+    const styles = { label: 'label', input: 'input', checkbox: 'cb', checkboxLabel: 'cbl' };
+    const courtConfig = { orgSlug: 'jmu' } as CourtConfig;
+
+    let tree = create(React.createElement(OvertimeCard, {
+        entry: currentEntry,
+        updateEntry,
+        functionKeys: [],
+        competenciaReferencia: '2026-11',
+        styles,
+        courtConfig
+    }));
+
+    // 1. Inicialmente no padrão JMU (35h / divisor 175)
+    let select = tree.root.findByType('select');
+    assert.equal(select.props.value, '35');
+    assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), false);
+
+    // 2. Usuário seleciona "Outra jornada personalizada"
+    act(() => {
+        select.props.onChange({ target: { value: 'custom' } });
+    });
+    assert.equal(currentEntry.jornadaPersonalizada, true);
+
+    // Re-renderiza com o estado atualizado
+    tree.update(React.createElement(OvertimeCard, {
+        entry: currentEntry,
+        updateEntry,
+        functionKeys: [],
+        competenciaReferencia: '2026-11',
+        styles,
+        courtConfig
+    }));
+
+    select = tree.root.findByType('select');
+    assert.equal(select.props.value, 'custom', 'Select não deve retroceder para 35');
+    assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), true, 'Painel customizado deve ser exibido');
+
+    // 3. Usuário digita jornada semanal de 25h
+    const customHoursInput = tree.root.findAllByType('input').find(i => i.props.placeholder === 'Ex: 25');
+    assert.ok(customHoursInput);
+    act(() => {
+        customHoursInput.props.onChange({ target: { value: '25' } });
+    });
+    assert.equal(currentEntry.jornadaSemanal, 25);
+    assert.equal(currentEntry.divisor, 125, 'Divisor calculado por (25 ÷ 6) × 30 deve ser 125');
+
+    // 4. Usuário alterna de volta para jornada de 30h padrão
+    act(() => {
+        select.props.onChange({ target: { value: '30' } });
+    });
+    assert.equal(currentEntry.jornadaPersonalizada, false);
+    assert.equal(currentEntry.jornadaSemanal, 30);
+    assert.equal(currentEntry.divisor, 150);
+
+    tree.update(React.createElement(OvertimeCard, {
+        entry: currentEntry,
+        updateEntry,
+        functionKeys: [],
+        competenciaReferencia: '2026-11',
+        styles,
+        courtConfig
+    }));
+    select = tree.root.findByType('select');
+    assert.equal(select.props.value, '30');
+    assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), false);
+
+    tree.unmount();
 });

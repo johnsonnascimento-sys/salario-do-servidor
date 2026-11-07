@@ -42,46 +42,87 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     const tetoHoras = isJMU ? (entry.emRecesso ? 50 : 30) : 44;
     const isExcedido = totalHoras > tetoHoras;
 
+    const isStandardPreset = (hours?: number, div?: number): string | null => {
+        if (isJMU) {
+            if (hours === 35 && div === 175) return '35';
+            if (hours === 30 && div === 150) return '30';
+            if (hours === 20 && div === 100) return '20';
+        } else {
+            if (hours === 40 && div === 200) return '40';
+            if (hours === 35 && div === 175) return '35';
+            if (hours === 30 && div === 150) return '30';
+            if (hours === 20 && div === 100) return '20';
+        }
+        return null;
+    };
+
     const getJornadaOption = (): string => {
-        if (entry.jornadaSemanal) {
-            if ([35, 40, 30, 20].includes(entry.jornadaSemanal)) {
-                return String(entry.jornadaSemanal);
-            }
+        if (entry.jornadaPersonalizada === true) {
             return 'custom';
         }
-        if (currentDivisor === 175) return '35';
-        if (currentDivisor === 200) return '40';
-        if (currentDivisor === 150) return '30';
-        if (currentDivisor === 100) return '20';
-        return 'custom';
+        if (entry.jornadaPersonalizada === false) {
+            const standard = isStandardPreset(entry.jornadaSemanal, currentDivisor);
+            if (standard) return standard;
+            return isJMU ? '35' : '40';
+        }
+        // Fallback para entradas sem a flag explícita (retrocompatibilidade)
+        if (entry.jornadaSemanal !== undefined) {
+            const standard = isStandardPreset(entry.jornadaSemanal, currentDivisor);
+            if (standard) return standard;
+            return 'custom';
+        }
+        if (entry.divisor !== undefined) {
+            const standard = isStandardPreset(defaultJornada, entry.divisor);
+            if (standard) return standard;
+            return 'custom';
+        }
+        return isJMU ? '35' : '40';
     };
 
     const selectedOption = getJornadaOption();
 
     const handleJornadaChange = (val: string) => {
         if (val === '35') {
-            updateEntry(entry.id, { jornadaSemanal: 35, divisor: 175 });
+            updateEntry(entry.id, { jornadaPersonalizada: false, jornadaSemanal: 35, divisor: 175 });
         } else if (val === '40') {
-            updateEntry(entry.id, { jornadaSemanal: 40, divisor: 200 });
+            updateEntry(entry.id, { jornadaPersonalizada: false, jornadaSemanal: 40, divisor: 200 });
         } else if (val === '30') {
-            updateEntry(entry.id, { jornadaSemanal: 30, divisor: 150 });
+            updateEntry(entry.id, { jornadaPersonalizada: false, jornadaSemanal: 30, divisor: 150 });
         } else if (val === '20') {
-            updateEntry(entry.id, { jornadaSemanal: 20, divisor: 100 });
+            updateEntry(entry.id, { jornadaPersonalizada: false, jornadaSemanal: 20, divisor: 100 });
         } else if (val === 'custom') {
             const j = entry.jornadaSemanal || defaultJornada;
-            const d = Math.round((j / 6) * 30 * 100) / 100;
-            updateEntry(entry.id, { jornadaSemanal: j, divisor: d });
+            const d = entry.divisor || Math.round((j / 6) * 30 * 100) / 100;
+            updateEntry(entry.id, { jornadaPersonalizada: true, jornadaSemanal: j, divisor: d });
         }
     };
 
-    const handleCustomJornadaChange = (hours: number) => {
-        const j = Math.max(1, hours);
-        const d = Math.round((j / 6) * 30 * 100) / 100;
-        updateEntry(entry.id, { jornadaSemanal: j, divisor: d });
+    const handleCustomJornadaChange = (valStr: string) => {
+        if (valStr === '') {
+            updateEntry(entry.id, { jornadaPersonalizada: true, jornadaSemanal: undefined });
+            return;
+        }
+        const j = Number(valStr);
+        if (isNaN(j) || j < 0) return;
+        const d = j > 0 ? Math.round((j / 6) * 30 * 100) / 100 : 0;
+        updateEntry(entry.id, {
+            jornadaPersonalizada: true,
+            jornadaSemanal: j,
+            divisor: d > 0 ? d : undefined
+        });
     };
 
-    const handleDivisorChange = (div: number) => {
-        updateEntry(entry.id, { divisor: div });
+    const handleDivisorChange = (raw: string) => {
+        if (raw === '') {
+            updateEntry(entry.id, { divisor: undefined, jornadaPersonalizada: true });
+            return;
+        }
+        const div = Number(raw);
+        if (isNaN(div) || div < 0) return;
+        updateEntry(entry.id, {
+            divisor: div > 0 ? div : undefined,
+            jornadaPersonalizada: true
+        });
     };
 
     return (
@@ -165,8 +206,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                     min="1"
                                     step="any"
                                     className={styles.input}
-                                    value={currentDivisor}
-                                    onChange={e => handleDivisorChange(Math.max(1, Number(e.target.value) || 0))}
+                                    value={entry.divisor !== undefined ? entry.divisor : (entry.jornadaPersonalizada ? '' : defaultDivisor)}
+                                    placeholder={String(defaultDivisor)}
+                                    onChange={e => handleDivisorChange(e.target.value)}
                                     title="Divisor mensal correspondente à jornada para cálculo da hora normal"
                                 />
                             </div>
@@ -181,12 +223,12 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                     max="80"
                                     step="0.5"
                                     className={`${styles.input} max-w-[120px] py-1.5 h-9`}
-                                    value={entry.jornadaSemanal || ''}
+                                    value={entry.jornadaSemanal ?? ''}
                                     placeholder="Ex: 25"
-                                    onChange={e => handleCustomJornadaChange(Number(e.target.value) || 0)}
+                                    onChange={e => handleCustomJornadaChange(e.target.value)}
                                 />
                                 <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                                    Fórmula: ({entry.jornadaSemanal || 0} ÷ 6) × 30 = <strong>{currentDivisor}</strong>
+                                    Fórmula: ({entry.jornadaSemanal ?? 0} ÷ 6) × 30 = <strong>{currentDivisor}</strong>
                                 </span>
                             </div>
                         )}

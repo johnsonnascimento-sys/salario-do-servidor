@@ -1,5 +1,12 @@
 # Changelog
 
+## Correção da Seleção de "Outra Jornada Personalizada" no Card de Horas Extras — 07/11/2026
+- Corrige o comportamento onde a opção "Outra jornada personalizada" no seletor de Carga Horária Semanal retrocedia instantaneamente para o padrão anterior (35h na JMU ou 40h na JF) devido à inferência reversa baseada na jornada semanal em branco ou padrão.
+- Adiciona a propriedade explícita `jornadaPersonalizada?: boolean` ao modelo `OvertimeEntry` e à hidratação em `calculatorState.ts`.
+- Garante a abertura e estabilidade imediata do painel de configuração personalizada com o campo "Jornada semanal (h):" e a memória da fórmula legal `(Jornada ÷ 6) × 30`.
+- Melhora a usabilidade permitindo apagar e redigitar valores nos campos de jornada semanal e divisor sem travar no valor mínimo de 1.
+- Adiciona teste automatizado em `tests/overtimeFederal.test.ts` validando a retenção do modo personalizado, cálculo do divisor para 25h (divisor 125) e reversão para jornada padrão.
+
 ## Simplificação de Linguagem e UX Writing nas Competências do IR-EA — 07/11/2026
 - Adequa os textos da seção de competências originais do IR-EA para linguagem acessível e compreensível ao servidor público leigo.
 - Substitui termos excessivamente burocráticos ("Competências originais do IR-EA", "Adicionar competência original", "competência X") por termos intuitivos e práticos ("Meses em que o serviço foi prestado (Ano Anterior)", "Adicionar mês trabalhado", "Mês trabalhado X").

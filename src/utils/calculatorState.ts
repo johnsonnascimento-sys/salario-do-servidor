@@ -208,6 +208,9 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
                 if (entry?.jornadaSemanal !== undefined) {
                     nextEntry.jornadaSemanal = Math.max(1, Number(entry.jornadaSemanal) || 0);
                 }
+                if (entry?.jornadaPersonalizada !== undefined) {
+                    nextEntry.jornadaPersonalizada = Boolean(entry.jornadaPersonalizada);
+                }
                 if (entry?.emRecesso !== undefined) {
                     nextEntry.emRecesso = Boolean(entry.emRecesso);
                 }
