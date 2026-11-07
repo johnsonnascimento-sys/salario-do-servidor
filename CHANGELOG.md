@@ -1,5 +1,9 @@
 # Changelog
 
+## Padronização e Reposicionamento das Memórias de Cálculo no Detalhamento — 07/11/2026
+- Padronização visual completa da Memória Previdenciária (`PensionMemory`) e da Memória do IR-EA (`IrEaMemory`) com classes de tipografia do design system (`text-body-xs font-semibold`, `font-mono font-medium tabular-nums`, container neutro `bg-neutral-50/60 dark:bg-neutral-800/40` com bordas suaves e descrição explicativa de suporte).
+- Reposicionamento das memórias de cálculo do topo do Detalhamento para o rodapé (abaixo das tabelas do Holerite e de Diárias), sob a seção agrupada "Auditoria e Memória de Cálculo", garantindo leitura prioritária e direta do contracheque sem poluição visual no topo da tabela.
+
 ## Dedução Automática de Dependentes no IR-EA e Simplificação da Usabilidade — 07/11/2026
 - Inclusão de atalho contextual e explicativo ("Ver Apuração do IR-EA ↓") dentro de cada card onde uma parcela de Exercício Anterior (EA) for marcada, com rolagem suave (smooth scroll) e realce visual temporário no card de apuração consolidada.
 - Reposicionamento do card "Apuração do IR-EA" para após as "Rubricas Manuais", imediatamente antes do Detalhamento da folha e observações, garantindo uma hierarquia visual limpa e impedindo que o card se perca entre múltiplos cards de parcelas.

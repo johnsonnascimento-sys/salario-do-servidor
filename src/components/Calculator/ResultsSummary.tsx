@@ -210,8 +210,6 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
             </div>
 
             <div className="p-4 sm:p-6 space-y-6">
-                {state.pensionMemory && <PensionMemory memory={state.pensionMemory} />}
-                <IrEaMemory memory={state.irEaMemory} />
                 <div className="sm:hidden">
                     <MobileSummarySection
                         title="Holerite (sem diárias)"
@@ -244,6 +242,18 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
                             />
                         </div>
                     </>
+                )}
+
+                {(state.pensionMemory || (state.irEaMemory && state.irEaMemory.status === 'ready')) && (
+                    <div className="pt-6 border-t border-neutral-200 dark:border-neutral-700 space-y-4">
+                        <h4 className="text-body-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                            Auditoria e Memória de Cálculo
+                        </h4>
+                        <div className="space-y-3">
+                            {state.pensionMemory && <PensionMemory memory={state.pensionMemory} />}
+                            <IrEaMemory memory={state.irEaMemory} />
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
