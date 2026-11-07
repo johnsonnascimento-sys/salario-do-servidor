@@ -153,7 +153,12 @@ export const buildPresetGrossLines = ({
             const heIr = entry.excluirIR ? 0 : entry.isEA
                 ? (state.irEaEntryTax?.[`he:${entry.id}`] ?? 0)
                 : roundCurrency(mensalBase > 0 ? (state.heIrMensal || 0) * heTotalBruto / mensalBase : 0);
-            const irLabel = entry.isEA ? 'Desconto IR-EA (Hora extra)' : 'Desconto IR (Hora extra)';
+            const isCurrentYearEa = state.irEaCurrentYearKeys?.includes(`he:${entry.id}`);
+            const irLabel = entry.isEA
+                ? 'Desconto IR-EA (Hora extra)'
+                : isCurrentYearEa
+                    ? 'Desconto IR mensal (mesmo ano da folha — sem RRA)'
+                    : 'Desconto IR (Hora extra)';
             if (Math.abs(roundCurrency(he50Bruto + he100Bruto) - heTotalBruto) > 0.001) {
                 return [
                     { label: 'Valor bruto manual/importado', value: heTotalBruto },
@@ -197,9 +202,15 @@ export const buildPresetGrossLines = ({
                 ? (state.irEaEntryTax?.[`subst:${entry.id}`] ?? 0)
                 : roundCurrency(mensalBase > 0 ? (state.substIrMensal || 0) * entry.total / mensalBase : 0);
             const pss = roundCurrency(entry.pssIsEA && pssBase > 0 ? (state.substPss || 0) * entry.total / pssBase : 0);
+            const isCurrentYearEa = state.irEaCurrentYearKeys?.includes(`subst:${entry.id}`);
+            const irLabel = entry.isEA
+                ? 'Desconto IR-EA (Substituição)'
+                : isCurrentYearEa
+                    ? 'Desconto IR mensal (mesmo ano da folha — sem RRA)'
+                    : 'Desconto IR (Substituição)';
             return [
                 { label: 'Total substituição Bruto', value: entry.total },
-                { label: entry.isEA ? 'Desconto IR-EA (Substituição)' : 'Desconto IR (Substituição)', value: ir, isDiscount: true },
+                { label: irLabel, value: ir, isDiscount: true },
                 { label: 'Desconto PSS (Substituição)', value: pss, isDiscount: true },
                 { label: 'Total substituição Líquido', value: roundCurrency(Math.max(0, entry.total - ir - pss)) },
             ];

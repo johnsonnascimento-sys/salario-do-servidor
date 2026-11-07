@@ -1,15 +1,24 @@
 import React from 'react';
-import { ArrowDown, Plus, Trash2, AlertCircle, Info } from 'lucide-react';
+import { ArrowDown, Plus, Trash2, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 
 interface Props {
     value?: string[];
     onChange: (value: string[]) => void;
     styles: any;
     tipo?: 'horas_extras' | 'substituicao' | 'rubrica';
+    competenciaReferencia?: string;
+    anoReferencia?: string | number;
 }
 
 /** Collect original months without inferring them from the payment reference. */
-export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles, tipo }) => {
+export const IrEaCompetencias: React.FC<Props> = ({
+    value = [],
+    onChange,
+    styles,
+    tipo,
+    competenciaReferencia,
+    anoReferencia
+}) => {
     const scrollToIrEa = () => {
         if (typeof document === 'undefined') return;
         const target = document.getElementById('apuracao-ir-ea');
@@ -22,18 +31,33 @@ export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles
         }
     };
 
+    const anoPagamentoStr = String(anoReferencia || competenciaReferencia || '').slice(0, 4);
+    const anoPagamento = Number(anoPagamentoStr) || 2026;
+    const anoMaximoEa = anoPagamento > 2000 ? anoPagamento - 1 : 2025;
+    const maxCompetenciaEa = `${anoMaximoEa}-12`;
+
+    const isMesAnoCorrenteOuPosterior = (monthStr: string) => {
+        if (!monthStr || monthStr.length < 4) return false;
+        const anoMes = Number(monthStr.slice(0, 4));
+        return Number.isFinite(anoMes) && anoMes >= anoPagamento;
+    };
+
     const emptyWarning = tipo === 'horas_extras'
-        ? 'Adicione o mês e ano em que as horas foram realizadas para calcular o imposto de anos anteriores.'
+        ? `Adicione o mês e ano em que as horas foram realizadas (até dez/${anoMaximoEa}) para calcular o imposto de anos anteriores.`
         : tipo === 'substituicao'
-            ? 'Adicione o mês e ano em que a substituição ocorreu para calcular o imposto de anos anteriores.'
+            ? `Adicione o mês e ano em que a substituição ocorreu (até dez/${anoMaximoEa}) para calcular o imposto de anos anteriores.`
             : tipo === 'rubrica'
-                ? 'Adicione o mês e ano de origem da parcela para calcular o imposto de anos anteriores.'
-                : 'Adicione o mês e ano em que as horas/serviços foram realizados para calcular o imposto de anos anteriores.';
+                ? `Adicione o mês e ano de origem da parcela (até dez/${anoMaximoEa}) para calcular o imposto de anos anteriores.`
+                : `Adicione o mês e ano em que as horas/serviços foram realizados (até dez/${anoMaximoEa}) para calcular o imposto de anos anteriores.`;
 
     return (
         <fieldset className="space-y-3 rounded-2xl border border-neutral-200/90 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40 p-4">
-            <legend className={styles.label}>Meses em que o serviço foi prestado (Ano Anterior)</legend>
-            <p className="text-body-xs text-neutral-600 dark:text-neutral-400">Informe em qual(is) mês(es) o serviço foi prestado ou a parcela foi gerada.</p>
+            <legend className={styles.label}>
+                Meses em que o serviço foi prestado (Ano Anterior{anoPagamento ? ` — até dez/${anoMaximoEa}` : ''})
+            </legend>
+            <p className="text-body-xs text-neutral-600 dark:text-neutral-400">
+                Informe em qual(is) mês(es) de anos anteriores o serviço foi prestado para usufruir da tabela especial de RRA.
+            </p>
 
             <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-primary-50/70 dark:bg-primary-950/30 border border-primary-200/80 dark:border-primary-800/50 text-body-xs text-primary-950 dark:text-primary-200">
                 <Info className="w-4 h-4 shrink-0 mt-0.5 text-primary-600 dark:text-primary-400" />
@@ -85,36 +109,61 @@ export const IrEaCompetencias: React.FC<Props> = ({ value = [], onChange, styles
                 </div>
             )}
             {value.length > 0 && (
-                <div className="space-y-2">
-                    {value.map((month, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                            <label className="flex-1">
-                                <span className="sr-only">Mês trabalhado {index + 1}</span>
-                                <input
-                                    type="month"
-                                    className={styles.input}
-                                    value={month}
-                                    required
-                                    onChange={event => onChange(value.map((item, i) => i === index ? event.target.value : item))}
-                                />
-                            </label>
-                            <button
-                                type="button"
-                                title={`Remover mês ${index + 1}`}
-                                aria-label={`Remover mês ${index + 1}`}
-                                onClick={() => onChange(value.filter((_, i) => i !== index))}
-                                className="p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-error-300 dark:hover:border-error-700 bg-white dark:bg-neutral-800 hover:bg-error-50 dark:hover:bg-error-950/40 text-neutral-400 hover:text-error-600 dark:hover:text-error-400 transition-all shrink-0 cursor-pointer shadow-xs"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </div>
-                    ))}
+                <div className="space-y-3">
+                    {value.map((month, index) => {
+                        const isAnoCorrente = isMesAnoCorrenteOuPosterior(month);
+                        return (
+                            <div key={index} className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                    <label className="flex-1">
+                                        <span className="sr-only">Mês trabalhado {index + 1}</span>
+                                        <input
+                                            type="month"
+                                            className={`${styles.input} ${isAnoCorrente ? 'border-amber-400 dark:border-amber-600 focus:ring-amber-500' : ''}`}
+                                            value={month}
+                                            max={maxCompetenciaEa}
+                                            required
+                                            onChange={event => onChange(value.map((item, i) => i === index ? event.target.value : item))}
+                                        />
+                                    </label>
+                                    <button
+                                        type="button"
+                                        title={`Remover mês ${index + 1}`}
+                                        aria-label={`Remover mês ${index + 1}`}
+                                        onClick={() => onChange(value.filter((_, i) => i !== index))}
+                                        className="p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-error-300 dark:hover:border-error-700 bg-white dark:bg-neutral-800 hover:bg-error-50 dark:hover:bg-error-950/40 text-neutral-400 hover:text-error-600 dark:hover:text-error-400 transition-all shrink-0 cursor-pointer shadow-xs"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                {isAnoCorrente && (
+                                    <div
+                                        role="alert"
+                                        className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-body-xs text-amber-900 dark:text-amber-200 animate-fadeIn"
+                                    >
+                                        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                                        <div className="space-y-1 leading-relaxed">
+                                            <p className="font-semibold text-amber-950 dark:text-amber-100">
+                                                Atenção: competência de {month.slice(0, 4)} pertence ao mesmo ano do contracheque ({anoPagamento})
+                                            </p>
+                                            <p className="text-[11px] text-amber-800 dark:text-amber-300">
+                                                Pela Lei nº 7.713/88 (art. 12-A), a apuração por RRA (faixas de isenção multiplicadas) só é permitida para serviços prestados em <strong>anos anteriores (até dez/{anoMaximoEa})</strong>. Como este mês é de {month.slice(0, 4)}, ele será somado à remuneração mensal normal e <strong>tributado na folha corrente</strong> do mês.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
             <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
                 <button
                     type="button"
-                    onClick={() => onChange([...value, ''])}
+                    onClick={() => {
+                        const defaultMonth = (competenciaReferencia || anoReferencia) ? maxCompetenciaEa : '';
+                        onChange([...value, defaultMonth]);
+                    }}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-secondary/30 bg-secondary/5 text-secondary hover:bg-secondary/15 transition-all text-body-xs font-bold uppercase tracking-wider shadow-xs cursor-pointer"
                 >
                     <Plus className="w-4 h-4" />

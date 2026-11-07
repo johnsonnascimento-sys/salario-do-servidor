@@ -18,6 +18,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     entry,
     updateEntry,
     functionKeys,
+    competenciaReferencia,
     styles,
     courtConfig,
     gaactaAtivo,
@@ -298,6 +299,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             value={entry.competenciasEA}
                             onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
                             styles={styles}
+                            competenciaReferencia={competenciaReferencia}
                         />
                     )}
 

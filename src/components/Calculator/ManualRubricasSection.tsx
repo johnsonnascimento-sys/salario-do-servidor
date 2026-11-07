@@ -14,6 +14,7 @@ interface ManualRubricasSectionProps {
     rubricasTax?: Record<string, RubricaTaxDetail>;
     irEaEntryTax?: Record<string, number>;
     irEaCurrentYearKeys?: string[];
+    competenciaReferencia?: string;
     addRubrica: (tipo?: Rubrica['tipo']) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
@@ -28,6 +29,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     rubricasTax,
     irEaEntryTax,
     irEaCurrentYearKeys,
+    competenciaReferencia,
     addRubrica,
     removeRubrica,
     updateRubrica,
@@ -248,6 +250,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             value={rubrica.competenciasEA}
                             onChange={competencias => updateRubrica(rubrica.id, 'competenciasEA', competencias)}
                             styles={styles}
+                            competenciaReferencia={competenciaReferencia}
                         />
                     )}
                     {rubrica.isEA && rubrica.tipo === 'D' && <label className={styles.label}>Fundamento e referência documental da dedução EA

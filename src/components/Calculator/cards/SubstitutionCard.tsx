@@ -10,7 +10,7 @@ interface SubstitutionCardProps {
     styles: any;
 }
 
-export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, styles }) => {
+export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, competenciaReferencia, styles }) => {
     const updateDays = (key: string, days: number) => {
         updateEntry(entry.id, { dias: { ...entry.dias, [key]: days } });
     };
@@ -55,6 +55,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                             value={entry.competenciasEA}
                             onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
                             styles={styles}
+                            competenciaReferencia={competenciaReferencia}
                         />
                     )}
 

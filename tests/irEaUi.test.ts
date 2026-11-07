@@ -21,6 +21,23 @@ tree.update(React.createElement(IrEaCompetencias, { value: months, onChange: val
 act(() => tree.root.findByType('input').props.onChange({ target: { value: '2024-01' } }));
 assert.deepEqual(months, ['2024-01']);
 tree.unmount();
+
+// Test smart boundary and warning for current year
+let eaMonths: string[] = [];
+const eaTree = create(React.createElement(IrEaCompetencias, {
+    value: ['2026-05'],
+    competenciaReferencia: '2026-11',
+    onChange: val => { eaMonths = val; },
+    styles
+}));
+const monthInput = eaTree.root.findByType('input');
+assert.equal(monthInput.props.max, '2025-12', 'Max input restricts to prior year');
+assert.ok(JSON.stringify(eaTree.toJSON()).includes('Atenção: competência de'), 'Displays warning for current year');
+assert.ok(JSON.stringify(eaTree.toJSON()).includes('tributado na folha corrente'), 'Explains monthly taxation');
+act(() => eaTree.root.findAllByType('button')[1].props.onClick());
+assert.equal(eaMonths[eaMonths.length - 1], '2025-12', 'Suggests December of prior year when adding');
+eaTree.unmount();
+
 tree = create(React.createElement(IrEaContextSection, { value: { mesPagamento: '2026-10' }, mesFolha: '2027-01', onChange: value => { context = value; }, styles }));
 const contextInputs = tree.root.findAllByType('input');
 assert.equal(contextInputs[0].props.value, '2027-01', 'Payment display follows the payroll header, ignoring stale saved context');
@@ -66,6 +83,14 @@ const importedLines = buildPresetGrossLines({ ...common, state: imported, instan
 assert.equal(importedLines.find(row => row.label === 'Valor bruto manual/importado')?.value, 9291.22);
 assert.equal(importedLines.some(row => row.label.includes('50%') || row.label.includes('100%')), false, 'Imported amount does not invent a split by hours');
 assert.equal(importedLines.find(row => row.label === 'Total hora extra Líquido')?.value, 9278.88);
+const currentYearHeState = {
+    ...state,
+    irEaCurrentYearKeys: ['he:h'],
+    overtimeCalculatedEntries: [{ id: 'h', heVal50: 600, heVal100: 400, heTotal: 1000, isEA: false, excluirIR: false }],
+    heIrMensal: 275
+};
+const currentYearHeLines = buildPresetGrossLines({ ...common, state: currentYearHeState, instance: { key: 'h', presetId: 'hora_extra', overtimeEntryId: 'h' } });
+assert.ok(currentYearHeLines.some(row => row.label === 'Desconto IR mensal (mesmo ano da folha — sem RRA)'), 'Identifies current-year overtime reclassified to monthly payroll');
 const substLines = buildPresetGrossLines({ ...common, instance: { key: 's', presetId: 'substituicao', substitutionEntryId: 's' } });
 assert.equal(substLines.find(row => row.label === 'Total substituição Bruto')?.value, 5000, 'Explicit EA gross stays in the summary');
 assert.equal(substLines.find(row => row.label.startsWith('Desconto IR-EA'))?.value, 56.78);

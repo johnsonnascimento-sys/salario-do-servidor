@@ -1,5 +1,12 @@
 # Changelog
 
+## Blindagem de Usabilidade e Orientação Temporal nas Competências de IR-EA — 07/11/2026
+- Adiciona trava inteligente no seletor de competências originais (`IrEaCompetencias.tsx`), restringindo a data máxima (`max`) a dezembro do ano anterior ao pagamento (`anoMaximoEa-12`), orientando o servidor que o RRA é restrito a parcelas de anos anteriores.
+- Define sugestão automática inteligente ao clicar em "+ Adicionar mês trabalhado", pré-preenchendo dezembro do ano anterior (`anoMaximoEa-12`) em vez de abrir em branco ou induzir à seleção do mês corrente.
+- Inclui alerta visual reativo imediato no card caso uma competência do ano corrente seja informada, esclarecendo com base no art. 12-A da Lei nº 7.713/88 que parcelas do mesmo exercício financeiro integram a remuneração mensal normal e são tributadas pela folha corrente.
+- Aprimora a legenda e o rótulo de desconto no resumo calculado (`presetGrossLines.ts`), identificando explicitamente quando uma parcela marcada com EA é tributada na base mensal por pertencer ao mesmo ano do holerite (`Desconto IR mensal (mesmo ano da folha — sem RRA)`).
+- Conecta a passagem da `competenciaReferencia` através de `OvertimeCard`, `SubstitutionCard` e `ManualRubricasSection`, garantindo coerência temporal em todos os módulos.
+
 ## Atualização do Texto Didático de RRA nas Competências de EA — 07/11/2026
 - Atualiza a redação explicativa do callout de RRA (`IrEaCompetencias.tsx`) com texto detalhado sobre a retenção de valores acumulados e a diluição das alíquotas de imposto.
 - Apresenta as faixas de isenção de 2026 proporcionais aos meses informados (1 mês: até R$ 2.428,80; 2 meses: até R$ 4.857,60; 3 meses: até R$ 7.286,40).

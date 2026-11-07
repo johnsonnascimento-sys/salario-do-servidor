@@ -293,6 +293,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 rubricasTax={state.rubricasTax}
                 irEaEntryTax={state.irEaEntryTax}
                 irEaCurrentYearKeys={state.irEaCurrentYearKeys}
+                competenciaReferencia={competenciaReferencia}
                 totalCreditos={totalCreditos}
                 totalDescontos={totalDescontos}
                 styles={styles}

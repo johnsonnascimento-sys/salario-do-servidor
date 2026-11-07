@@ -1,5 +1,5 @@
 import { CALCULATOR_DRAFT_STORAGE_KEY } from '../constants/storage';
-import { CalculatorState, CalculatedPayrollState, INITIAL_STATE } from '../types';
+import { CalculatorState, CalculatedPayrollState, INITIAL_STATE, OvertimeEntry } from '../types';
 import type { PayslipResultRow } from '../types/user';
 
 /** Freeze legacy historical fallbacks before a deliberate change to the monthly selection. */
