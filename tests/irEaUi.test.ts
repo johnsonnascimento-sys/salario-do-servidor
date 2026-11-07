@@ -63,9 +63,10 @@ assert.equal(grouped[0].details?.find(row => row.label === 'CRÉDITO MANUAL EA')
 tree = create(React.createElement(ManualRubricasSection, { rubricas: state.rubricasExtras, rubricasTax: state.rubricasTax, irEaEntryTax: state.irEaEntryTax, styles, totalCreditos: 2000, totalDescontos: 0, addRubrica() {}, removeRubrica() {}, updateRubrica() {}, toPositiveNumber: Number }));
 assert.ok(JSON.stringify(tree.toJSON()).includes('Desconto IR-EA (Crédito manual EA)'));
 tree.unmount();
-const currentYearState = { ...state, irEaCurrentYearKeys: ['rubrica:r'], irEaEntryTax: {}, rubricasTax: { r: { ir: 42, pss: 0, funpresp: 0, liquido: 1958 } } };
+const currentYearState = { ...state, irEaCurrentYearKeys: ['rubrica:r'], irEaEntryTax: {}, rubricasTax: { r: { ir: 42, irMarginal: 55, pss: 0, funpresp: 0, liquido: 1958 } } };
 tree = create(React.createElement(ManualRubricasSection, { rubricas: currentYearState.rubricasExtras, rubricasTax: currentYearState.rubricasTax, irEaEntryTax: currentYearState.irEaEntryTax, irEaCurrentYearKeys: currentYearState.irEaCurrentYearKeys, styles, totalCreditos: 2000, totalDescontos: 0, addRubrica() {}, removeRubrica() {}, updateRubrica() {}, toPositiveNumber: Number }));
 assert.ok(JSON.stringify(tree.toJSON()).includes('Desconto IR (Crédito manual EA)'), 'Current-year EA follows the official monthly classification');
+assert.ok(JSON.stringify(tree.toJSON()).includes('Acréscimo efetivo no IR da folha (Crédito manual EA)'), 'Identifies monthly marginal IR impact');
 assert.ok(!JSON.stringify(tree.toJSON()).includes('Desconto IR-EA (Crédito manual EA)'));
 tree.unmount();
 const pendingState = { ...state, rubricasTax: {} };

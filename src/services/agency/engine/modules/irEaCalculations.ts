@@ -83,7 +83,7 @@ export function calculateIrEa(
     if ((metadata.rra.reductionApplicable && !reductionRule) || reductionRule?.status === 'pending') {
         fail('a aplicabilidade da redução do IR ao RRA está pendente de verificação normativa.');
     }
-    if (reductionRule && !reductionRule.verifiedMonths?.includes(meses)) {
+    if (reductionRule && reductionRule.verifiedMonths && !reductionRule.verifiedMonths.includes(meses)) {
         fail('a redução do IR ainda não foi verificada para este número de meses de RRA.');
     }
     const adjustments = context?.ajustesBaseDocumentados || [];
@@ -113,6 +113,7 @@ export function calculateIrEa(
     const avisos = ['O rateio por entrada é informativo; o imposto é apurado sobre a base conjunta de RRA.'];
     if (adjustments.length) avisos.push('A base contém ajustes documentados de conferência; não representam deduções automáticas.');
     if (classified.current.length) avisos.push('Rendimentos do próprio ano foram encaminhados à base mensal.');
+    if (reductionRule && reducao > 0) avisos.push('A redução do imposto (Anexo X da IN RFB 1.500/2014) foi aplicada sobre o montante tributável pago no mês.');
     return { tax: imposto, entryTax: allocateIrEaCents(imposto, prior), memory: {
         status: 'ready', mesPagamento, competencias, meses, tabela, baseBruta, deducoes,
         baseCalculo, impostoAntesReducao, reducao, imposto, ajustesBaseDocumentados: adjustments, avisos
