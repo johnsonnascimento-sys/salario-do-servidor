@@ -1,5 +1,10 @@
 # Changelog
 
+## Sincronização do pagamento do IR-EA com o cabeçalho — 06/11/2026
+- O adaptador deriva o mês de pagamento do mês/ano da folha em cada cálculo, preservando competências originais, NM e documentos. Elimina a data separada desatualizada ao projetar holerites futuros ou reabrir rascunhos.
+- O campo do pagamento passa a ser informativo e acompanha o cabeçalho automaticamente. O motor mantém a validação de consistência para chamadas diretas. Sem alterações em alíquotas ou configuração do banco.
+- Regressão do caso janeiro/2027 com EA de novembro/2026 e contexto antigo outubro/2026; cobertura de atualização do mês, restauração e preservação do snapshot.
+
 ## Correção auditada do IR-EA, competências e memória de cálculo — 06/11/2026
 - Corrige a seleção dos limites das faixas, exige tabela vigente e contexto documental, e remove o fallback silencioso para a alíquota máxima no IR-EA.
 - Vincula HE, substituição e rubricas manuais às competências de origem e ao mês de pagamento. Conta meses distintos dos créditos, permite NM documental e encaminha rendimentos do próprio ano ao IR mensal.

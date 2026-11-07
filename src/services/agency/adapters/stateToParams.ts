@@ -13,11 +13,13 @@ export function mapStateToAgencyParams(
     orgSlug: string = 'jmu',
     agencyConfig?: CourtConfig
 ): IAgencyCalculationParams {
+    const competencia = `${state.anoRef}-${String(['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'].indexOf(state.mesRef.toUpperCase()) + 1).padStart(2, '0')}`;
     return {
         // Base (ICalculationParams)
         grossSalary: 0, // Ignorado pelo JMU (calcula de cargo/padrao)
         dependents: state.dependentes,
-        irEaContext: state.irEaContext,
+        // The header is the receipt month for this single-payroll simulation.
+        irEaContext: { ...state.irEaContext, mesPagamento: competencia },
         discounts: state.emprestimos + state.planoSaude + state.pensao,
         otherDeductions: 0,
         rubricasExtras: state.rubricasExtras,
@@ -65,7 +67,7 @@ export function mapStateToAgencyParams(
         funprespFaculValor: state.funprespFaculValor,
         funprespFaculForma: state.funprespFaculForma,
         pensionRetroEntries: state.pensionRetroEntries,
-        competencia: `${state.anoRef}-${String(['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'].indexOf(state.mesRef.toUpperCase()) + 1).padStart(2, '0')}`,
+        competencia,
 
         // Benefícios
         auxAlimentacao: state.auxAlimentacao,

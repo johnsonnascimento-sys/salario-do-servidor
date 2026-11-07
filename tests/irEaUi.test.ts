@@ -20,11 +20,13 @@ tree.update(React.createElement(IrEaCompetencias, { value: months, onChange: val
 act(() => tree.root.findByType('input').props.onChange({ target: { value: '2024-01' } }));
 assert.deepEqual(months, ['2024-01']);
 tree.unmount();
-tree = create(React.createElement(IrEaContextSection, { value: {}, onChange: value => { context = value; }, styles }));
+tree = create(React.createElement(IrEaContextSection, { value: { mesPagamento: '2026-10' }, mesFolha: '2027-01', onChange: value => { context = value; }, styles }));
 const contextInputs = tree.root.findAllByType('input');
-assert.equal(contextInputs[0].props.value, '', 'Payment month must be explicit');
-act(() => contextInputs[0].props.onChange({ target: { value: '2026-11' } }));
-assert.deepEqual(context, { mesPagamento: '2026-11' });
+assert.equal(contextInputs[0].props.value, '2027-01', 'Payment display follows the payroll header, ignoring stale saved context');
+assert.equal(contextInputs[0].props.readOnly, true, 'Payment is collected once, in the header');
+tree.update(React.createElement(IrEaContextSection, { value: { mesPagamento: '2026-10' }, mesFolha: '2027-02', onChange: value => { context = value; }, styles }));
+assert.equal(tree.root.findAllByType('input')[0].props.value, '2027-02');
+
 tree.unmount();
 
 const state: CalculatorState = { ...INITIAL_STATE,
