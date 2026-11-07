@@ -166,6 +166,7 @@ export interface CourtConfig {
 
 export interface RubricaTaxDetail {
   ir: number;
+  irMarginal?: number;
   pss: number;
   funpresp: number;
   totalDescontos: number;

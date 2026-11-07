@@ -57,6 +57,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
             if (ir > 0) {
                 const irLabel = isRra ? `Desconto IR-EA (${label})` : `Desconto IR (${label})`;
                 lines.push({ label: irLabel, value: ir, isDiscount: true });
+                if (!isRra && tax.irMarginal !== undefined && Math.abs(tax.irMarginal - ir) > 0.001) {
+                    lines.push({ label: `Acréscimo efetivo no IR da folha (${label})`, value: tax.irMarginal, isDiscount: false });
+                }
             }
             if (tax.pss > 0) {
                 const pssLabel = rubrica.pssCompetenciaSeparada ? `Desconto PSS-EA (${label})` : `Desconto PSS (${label})`;

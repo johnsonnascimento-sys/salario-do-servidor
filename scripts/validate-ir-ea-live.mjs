@@ -15,7 +15,7 @@ try {
     const engine = new AgencyCalculationEngine();
     let candidate;
     if (process.argv.includes('--candidate')) {
-        candidate = JSON.parse(readFileSync('supabase/migrations/20261106_version_ir_ea_tables.sql', 'utf8').match(/\$json\$([\s\S]*?)\$json\$::jsonb/)[1]);
+        candidate = JSON.parse(readFileSync('supabase/migrations/20261107_expand_ir_ea_rra_reduction.sql', 'utf8').match(/\$json\$([\s\S]*?)\$json\$::jsonb/)[1]);
     }
     for (const org of ['cjf', 'jmu']) {
         const effective = await configService.getEffectiveConfig(org);
@@ -37,7 +37,8 @@ try {
         const mapSum = Object.values(result.breakdown.irEaEntryTax).reduce((sum, value) => sum + value, 0);
         assert.equal(Math.round(mapSum * 100), Math.round(result.breakdown.irEA * 100));
         await assert.rejects(engine.calculateTotal(params({ ...state, overtimeEntries: state.overtimeEntries.map(entry => ({ ...entry, competenciasEA: [] })) }, org, config)), /IR-EA.*competências/);
-        await assert.rejects(engine.calculateTotal(params({ ...state, overtimeEntries: state.overtimeEntries.map(entry => ({ ...entry, competenciasEA: ['2025-11', '2025-12'] })) }, org, config)), /IR-EA.*meses/);
+        const multi = await engine.calculateTotal(params({ ...state, overtimeEntries: state.overtimeEntries.map(entry => ({ ...entry, competenciasEA: ['2025-11', '2025-12'] })) }, org, config));
+        assert.equal(multi.breakdown.irEaMemory.meses, 2);
         // The same low gross paid in May/2025 has progressive tax, without the 2026 reducer.
         const historical = await engine.calculateTotal(params({ ...state, anoRef: '2025', mesRef: 'MAIO', tabelaIR: '2025_maio',
             irEaContext: { mesPagamento: '2025-05' }, overtimeEntries: [{ id: 'release-historical', qtd50: 0, qtd100: 0,

@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 05/11/2026 18:13
+Atualizado em: 07/11/2026 00:18
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -67,6 +67,7 @@ Cada rubrica manual deve suportar:
 6. Incidencia em PSS
 7. Incidencia em PSS (EA)
 8. Resumo calculado (`PresetGrossSummary`) com detalhamento de Bruto, deduções aplicadas (IR, PSS, Funpresp) e Líquido individual da rubrica.
+9. No resumo individual da rubrica de crédito com incidência em IR mensal, o desconto exibido reflete o rateio proporcional do imposto total; quando a inclusão da rubrica acarretar acréscimo marginal distinto por faixas/alíquotas efetivas, exibir informativamente o acréscimo efetivo na folha sem descontar ambos do valor líquido individual.
 
 ### 4.2 Descontos e entradas
 
@@ -111,6 +112,14 @@ Cada rubrica manual deve suportar:
 1. Cards pre-definidos devem informar ao usuario quando uma rubrica pode ser adicionada mais de uma vez.
 2. Quando uma rubrica permitir repeticao (ex.: Hora Extra), cada instancia deve manter configuracoes e calculos isolados.
 3. No detalhamento final, rubricas repetidas devem ser apresentadas sem consolidar incidencias distintas de forma ambigua.
+
+### 4.9 Imposto de Renda de Exercícios Anteriores (IR-EA / RRA)
+
+1. Apuração progressiva acumulada por competências distintas conforme o art. 12-A da Lei nº 7.713/1988 e Instrução Normativa RFB nº 1.500/2014.
+2. O número de meses ($NM$) corresponde à quantidade de competências distintas informadas entre todos os créditos em EA da folha; competências repetidas entre rubricas distintas decorrem do mesmo período e não duplicam $NM$. Informação documental explícita de $NM$ prevalece.
+3. A tabela progressiva mensal tem suas faixas e deduções escalonadas pela multiplicação direta por $NM$.
+4. A redução do imposto introduzida para o ano-calendário de 2026 (Lei nº 9.250/1995, art. 3º-A incluído pela Lei nº 15.270/2025 c/c Anexo X da IN RFB nº 1.500/2014) incide sobre o montante consolidado de rendimentos tributáveis recebidos no mês do pagamento, sem multiplicação das faixas nominais do redutor por $NM$ nem divisão por média mensal.
+5. O imposto apurado de RRA é rateado entre as entradas em EA pelo método dos maiores restos (Hare-Niemeyer), preservando a exatidão em centavos. Descontos dedutíveis abatem a base sem diminuir o denominador dos créditos no rateio.
 
 ## 5. Admin e seguranca operacional
 

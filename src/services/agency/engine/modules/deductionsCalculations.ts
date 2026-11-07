@@ -295,9 +295,19 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
                 liquido: 0
             };
         } else {
-            const ir = r.isEA && !currentEaKeys.has(`rubrica:${r.id}`)
-                ? (eaResult.entryTax[`rubrica:${r.id}`] || 0)
-                : ((r.incideIR || currentEaKeys.has(`rubrica:${r.id}`)) ? Math.round(valor * irEffectiveRate * 100) / 100 : 0);
+            const isRra = r.isEA && !currentEaKeys.has(`rubrica:${r.id}`);
+            let ir = 0;
+            let irMarginal: number | undefined;
+
+            if (isRra) {
+                ir = eaResult.entryTax[`rubrica:${r.id}`] || 0;
+            } else if (r.incideIR || currentEaKeys.has(`rubrica:${r.id}`)) {
+                ir = Math.round(valor * irEffectiveRate * 100) / 100;
+                const baseSemRubrica = Math.max(0, baseIR - valor);
+                const irSemRubrica = calculateIrrf(baseSemRubrica, payrollRules.irrfTopRate, deductionVal);
+                irMarginal = Math.max(0, Math.round((irMensal - irSemRubrica) * 100) / 100);
+            }
+
             const pss = (r.incidePSS || r.pssCompetenciaSeparada)
                 ? Math.round(valor * pssEffectiveRate * 100) / 100
                 : 0;
@@ -308,6 +318,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
             const liquido = Math.max(0, Math.round((valor - totalDesc) * 100) / 100);
             rubricasTax[r.id] = {
                 ir,
+                ...(irMarginal !== undefined ? { irMarginal } : {}),
                 pss,
                 funpresp,
                 totalDescontos: totalDesc,

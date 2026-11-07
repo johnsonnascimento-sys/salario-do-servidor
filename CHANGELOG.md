@@ -1,5 +1,12 @@
 # Changelog
 
+## Expansão do IR-EA/RRA para múltiplas competências e distinção do impacto marginal — 07/11/2026
+- Desbloqueia a apuração progressiva de IR-EA / RRA para qualquer número de meses ($NM \ge 1$), permitindo simulações com competências distintas (ex.: outubro e novembro) em horas extras, substituições e rubricas manuais.
+- Aplica a redução tributária de 2026 (Lei nº 15.270/2025 e Anexo X da IN RFB nº 1.500/2014) sobre o montante tributável acumulado recebido no mês, conforme a fundamentação oficial estrita, sem multiplicação ou divisão indevida dos limites de R$ 5.000,00 e R$ 7.350,00 pelo número de meses.
+- Migração administrativa versionada `20261107_expand_ir_ea_rra_reduction.sql` encerrando a vigência da regra temporária anterior (`2026-11-06`) e instituindo a revisão ativa `ir-ea-20261107-v1` com `valid_to = NULL`, preservando integralmente o histórico de migrações aplicadas.
+- Diferencia o rateio proporcional do acréscimo efetivo na folha no card de rubricas manuais de crédito com IR mensal: o resumo calculado passa a exibir o desconto proporcional rateado no líquido e uma linha informativa de acréscimo efetivo na folha quando houver diferença marginal, sem dupla dedução.
+- Cobertura completa de testes automatizados com 100% de aprovação (reprodução CJF jan/2027 com nov/nov e nov/out, $NM$ documental, acréscimo marginal, integridade das migrações e TypeScript).
+
 ## Sincronização do pagamento do IR-EA com o cabeçalho — 06/11/2026
 - O adaptador deriva o mês de pagamento do mês/ano da folha em cada cálculo, preservando competências originais, NM e documentos. Elimina a data separada desatualizada ao projetar holerites futuros ou reabrir rascunhos.
 - O campo do pagamento passa a ser informativo e acompanha o cabeçalho automaticamente. O motor mantém a validação de consistência para chamadas diretas. Sem alterações em alíquotas ou configuração do banco.

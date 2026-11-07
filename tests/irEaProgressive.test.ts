@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { calculateIrrfProgressive, IrrfBracket } from '../src/core/calculations/taxUtils';
 import { calculateOvertime } from '../src/services/agency/engine/modules/overtimeCalculations';
@@ -7,6 +8,7 @@ import { calculateSubstitution } from '../src/services/agency/engine/modules/sub
 import { allocateIrEaCents, classifyIrEaSources, calculateIrEa } from '../src/services/agency/engine/modules/irEaCalculations';
 import { calculateDeductions } from '../src/services/agency/engine/modules/deductionsCalculations';
 import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToParams';
+import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
 import { INITIAL_STATE, CourtConfig, CalculatorState } from '../src/types';
 
 // Brackets oficiais da tabela do IR (vigência 2024 / 2025)
@@ -164,7 +166,7 @@ test('EA incompleto bloqueia e semEA não exige contexto ou tabelaRRA', async ()
     await assert.rejects(() => calculateDeductions(0, missing), /vigência/);
 });
 
-test('2026: vigente + redução verificadaNM1, múltiplos meses permanecem pendentes', () => {
+test('2026: vigente + redução verificada para múltiplos meses e suporte a NM>=1', () => {
     const brackets2026 = [{ min: 0, max: 2428.8, rate: 0, deduction: 0 },
         { min: 2428.81, max: 2826.65, rate: .075, deduction: 182.16 },
         { min: 2826.66, max: 3751.05, rate: .15, deduction: 394.16 },
@@ -172,7 +174,7 @@ test('2026: vigente + redução verificadaNM1, múltiplos meses permanecem pende
         { min: 4664.69, max: Infinity, rate: .275, deduction: 908.73 }];
     const config = { ...mockConfig, historico_ir_brackets: { y2026: brackets2026 }, historico_ir_metadata: { y2026: {
         validFrom: '2026-01-01', reference: 'RFB tabela2026', rra: { deductDependents: false, deductComplementaryPension: false,
-            reductionApplicable: true, reduction: { status: 'verified', mode: 'total', verifiedMonths: [1], exemptIncome: 5000,
+            reductionApplicable: true, reduction: { status: 'verified', mode: 'total', exemptIncome: 5000,
                 partialIncome: 7350, maxReduction: 312.89, intercept: 978.62, slope: .133145, reference: 'INRFB1500 art37 / AnexoX' } }
     } } } as CourtConfig;
     const context = { mesPagamento: '2026-01' };
@@ -181,6 +183,13 @@ test('2026: vigente + redução verificadaNM1, múltiplos meses permanecem pende
     assert.equal(calculateIrEa(classified, config, context, deductions).tax, 0);
     classified.prior[0].value = 3500;
     assert.equal(calculateIrEa(classified, config, context, deductions).tax, 0);
+    // Verified across multi-month RRA:
+    const multiMonth = calculateIrEa(classified, config, { ...context, mesesRraInformados: 2, referenciaMeses: 'Documento' }, deductions);
+    assert.equal(multiMonth.memory?.meses, 2);
+    assert.equal(multiMonth.tax, 0);
+
+    // Explicit restriction in configuration is still respected:
+    config.historico_ir_metadata!.y2026.rra.reduction!.verifiedMonths = [1];
     assert.throws(() => calculateIrEa(classified, config, { ...context, mesesRraInformados: 2, referenciaMeses: 'Documento' }, deductions), /não foi verificada/);
     config.historico_ir_metadata!.y2026.rra.reduction!.status = 'pending';
     assert.throws(() => calculateIrEa(classified, config, context, deductions), /pendente/);
@@ -241,4 +250,111 @@ test('mês de pagamento segue cabeçalho futuro e preserva competências e docum
     const legacy = mapStateToAgencyParams({ ...state, irEaContext: undefined }, 'cjf', config);
     assert.equal(legacy.irEaContext?.mesPagamento, '2027-01');
     assert.equal(JSON.stringify(state), before, 'Adapter must preserve the saved snapshot');
+});
+
+test('reprodução CJF janeiro/2027: outubro e novembro calculam RRA NM=2 com redução sobre montante e rateio exato', async () => {
+    const migration = readFileSync('supabase/migrations/20261107_expand_ir_ea_rra_reduction.sql', 'utf8');
+    const reviewed = JSON.parse(migration.match(/\$json\$([\s\S]*?)\$json\$::jsonb/)![1]);
+    const courtConfig = mapEffectiveConfigToCourtConfig({
+        org_slug: 'cjf', org_name: 'CJF', power_name: 'PJU',
+        career_catalog: { cargo_labels: { tecnico: 'Técnico Judiciário' }, no_function_code: '0' },
+        payroll_rules: { gaj_rate: 1.4, specific_gratification_rate: 0.35, overtime_month_hours: 175,
+            irrf_top_rate: 0.275, month_day_divisor: 30, vr_rate_on_cj1: 0.05, transport_workdays: 22,
+            transport_discount_rate: 0.06 },
+        dependent_deduction: 189.59,
+        salary_bases: { tecnico: { C13: 5663.47 }, funcoes: { cj1: 10000 } },
+        ir_deduction: reviewed,
+        pss_tables: {
+            '2026': { ceiling: 8157.41, rates: [
+                { min: 0, max: 1518.00, rate: 0.075 }, { min: 1518.01, max: 2793.88, rate: 0.090 },
+                { min: 2793.89, max: 4190.83, rate: 0.120 }, { min: 4190.84, max: 8157.41, rate: 0.140 }
+            ] }
+        }
+    } as any);
+
+    const baseState: CalculatorState = {
+        ...INITIAL_STATE, cargo: 'tecnico', padrao: 'C13', funcao: 'cj1',
+        aqTitulo: '1', aqTreino: '0.6', mesRef: 'JANEIRO', anoRef: '2027',
+        tabelaIR: '2026_jan', tabelaPSS: '2026',
+        overtimeEntries: [{ id: 'he1', qtd50: 30, qtd100: 0, isEA: true, excluirIR: false, competenciasEA: ['2026-11'] }]
+    };
+
+    // Cenário 1: Novembro repetido resulta em NM=1
+    const stateNm1: CalculatorState = {
+        ...baseState,
+        rubricasExtras: [{ id: 'rub1', descricao: 'teste', tipo: 'C', valor: 500, isEA: true, incideIR: false, incidePSS: false, competenciasEA: ['2026-11'] }]
+    };
+    const paramsNm1 = mapStateToAgencyParams(stateNm1, 'cjf', courtConfig);
+    const resultNm1 = await calculateDeductions(0, paramsNm1);
+    assert.equal(resultNm1.irEaMemory?.meses, 1);
+    assert.equal(resultNm1.irEA, 792.78);
+    assert.equal(resultNm1.irEaMemory?.impostoAntesReducao, 897.09);
+    assert.equal(resultNm1.irEaMemory?.reducao, 104.31);
+    assert.equal(Math.round((resultNm1.overtimeIrEA + resultNm1.rubricasTax.rub1.ir) * 100), 79278);
+
+    // Cenário 2: Outubro e Novembro resultam em NM=2
+    const stateNm2: CalculatorState = {
+        ...baseState,
+        rubricasExtras: [{ id: 'rub1', descricao: 'teste', tipo: 'C', valor: 500, isEA: true, incideIR: false, incidePSS: false, competenciasEA: ['2026-10'] }]
+    };
+    const paramsNm2 = mapStateToAgencyParams(stateNm2, 'cjf', courtConfig);
+    const resultNm2 = await calculateDeductions(0, paramsNm2);
+    assert.equal(resultNm2.irEaMemory?.meses, 2);
+    assert.deepEqual(resultNm2.irEaMemory?.competencias, ['2026-10', '2026-11']);
+    assert.equal(resultNm2.irEaMemory?.impostoAntesReducao, 196.67);
+    assert.equal(resultNm2.irEaMemory?.reducao, 104.31);
+    assert.equal(resultNm2.irEA, 92.36);
+    assert.equal(resultNm2.overtimeIrEA, 85.33);
+    assert.equal(resultNm2.rubricasTax.rub1.ir, 7.03);
+    assert.equal(Math.round((resultNm2.overtimeIrEA + resultNm2.rubricasTax.rub1.ir) * 100), 9236);
+});
+
+test('revisão de inconsistência: crédito manual mensal distingue rateio proporcional de acréscimo efetivo na folha', async () => {
+    const migration = readFileSync('supabase/migrations/20261107_expand_ir_ea_rra_reduction.sql', 'utf8');
+    const reviewed = JSON.parse(migration.match(/\$json\$([\s\S]*?)\$json\$::jsonb/)![1]);
+    const courtConfig = mapEffectiveConfigToCourtConfig({
+        org_slug: 'cjf', org_name: 'CJF', power_name: 'PJU',
+        career_catalog: { cargo_labels: { tecnico: 'Técnico Judiciário' }, no_function_code: '0' },
+        payroll_rules: { gaj_rate: 1.4, specific_gratification_rate: 0.35, overtime_month_hours: 175,
+            irrf_top_rate: 0.275, month_day_divisor: 30, vr_rate_on_cj1: 0.05, transport_workdays: 22,
+            transport_discount_rate: 0.06 },
+        dependent_deduction: 189.59,
+        salary_bases: { tecnico: { C13: 5663.47 }, funcoes: { cj1: 10000 } },
+        ir_deduction: reviewed,
+        pss_tables: {
+            '2026': { ceiling: 8157.41, rates: [
+                { min: 0, max: 1518.00, rate: 0.075 }, { min: 1518.01, max: 2793.88, rate: 0.090 },
+                { min: 2793.89, max: 4190.83, rate: 0.120 }, { min: 4190.84, max: 8157.41, rate: 0.140 }
+            ] }
+        }
+    } as any);
+
+    const stateBase: CalculatorState = {
+        ...INITIAL_STATE, cargo: 'tecnico', padrao: 'C13', funcao: 'cj1',
+        aqTitulo: '1', aqTreino: '0.6', mesRef: 'JANEIRO', anoRef: '2027',
+        tabelaIR: '2026_jan', tabelaPSS: '2026',
+        overtimeEntries: [{ id: 'he1', qtd50: 30, qtd100: 0, isEA: true, excluirIR: false, competenciasEA: ['2026-11'] }]
+    };
+    const paramsBase = mapStateToAgencyParams(stateBase, 'cjf', courtConfig);
+    const resultBase = await calculateDeductions(0, paramsBase);
+
+    // Adiciona crédito manual "teste" de R$ 500 no IR mensal
+    const stateComTeste: CalculatorState = {
+        ...stateBase,
+        rubricasExtras: [{ id: 'rub1', descricao: 'teste', tipo: 'C', valor: 500, isEA: false, incideIR: true, incidePSS: false }]
+    };
+    const paramsComTeste = mapStateToAgencyParams(stateComTeste, 'cjf', courtConfig);
+    const resultComTeste = await calculateDeductions(0, paramsComTeste);
+
+    // O IR mensal total da folha aumentou exatamente R$ 137,50 (500 * 27,5%):
+    const acrescimoFolha = Math.round((resultComTeste.irrf - resultBase.irrf) * 100) / 100;
+    assert.equal(acrescimoFolha, 137.50);
+
+    // O detalhamento da rubrica registra o rateio médio informativo e o acréscimo efetivo:
+    const detail = resultComTeste.rubricasTax.rub1;
+    assert.equal(detail.ir, 117.87); // rateio médio proporcional
+    assert.equal(detail.irMarginal, 137.50); // acréscimo efetivo na folha
+    // O líquido da rubrica desconta apenas o rateio informativo sem duplicidade (500 - 117.87 = 382.13):
+    assert.equal(detail.liquido, 382.13);
+    assert.equal(detail.totalDescontos, 117.87);
 });
