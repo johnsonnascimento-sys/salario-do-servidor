@@ -1,4 +1,3 @@
-
 /**
  * Core calculation logic for Taxes (IRRF) and Social Security (PSS/INSS).
  * Designed to be pure functions independent of React state.
@@ -68,17 +67,31 @@ export const calculateIrrf = (base: number, rate: number, deduction: number): nu
 
 /**
  * Calculates IRRF based on progressive bracket rules loaded from configuration.
+ * Supports RRA (Rendimentos Recebidos Acumuladamente - Art. 12-A da Lei 7.713/1988)
+ * by scaling brackets and deductions by the number of months (mesesRra).
  * 
  * @param baseCalculo - The monetary base value.
  * @param brackets - Progressive IR bracket list.
+ * @param mesesRra - Number of months for RRA (defaults to 1).
  * @returns The calculated tax value.
  */
-export const calculateIrrfProgressive = (baseCalculo: number, brackets: IrrfBracket[]): number => {
-    if (!Array.isArray(brackets) || brackets.length === 0) return 0;
+export const calculateIrrfProgressive = (
+    baseCalculo: number,
+    brackets: IrrfBracket[],
+    mesesRra: number = 1
+): number => {
+    if (!Array.isArray(brackets) || brackets.length === 0 || baseCalculo <= 0) return 0;
+    const nm = Math.max(1, mesesRra);
     const sorted = [...brackets].sort((a, b) => a.min - b.min);
-    const faixa = sorted.find((item) => baseCalculo > item.min && baseCalculo <= item.max) || sorted[sorted.length - 1];
-    const imposto = (baseCalculo * faixa.rate) - faixa.deduction;
-    return imposto > 0 ? imposto : 0;
+    const faixa = sorted.find((item) => {
+        const minVal = item.min * nm;
+        const maxVal = item.max === Infinity ? Infinity : item.max * nm;
+        return baseCalculo > minVal && baseCalculo <= maxVal;
+    }) || sorted[sorted.length - 1];
+
+    const deductionTotal = faixa.deduction * nm;
+    const imposto = (baseCalculo * faixa.rate) - deductionTotal;
+    return imposto > 0 ? Math.round(imposto * 100) / 100 : 0;
 };
 
 /**

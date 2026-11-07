@@ -1,5 +1,15 @@
 # Changelog
 
+## Apuração Progressiva Oficial do IR de Exercícios Anteriores (RRA) e Reconciliação dos Cards — 06/11/2026
+- Adota a apuração estritamente progressiva de Imposto de Renda sobre Exercícios Anteriores (IR-EA / RRA - art. 12-A da Lei nº 7.713/1988) no motor de deduções (`deductionsCalculations.ts`), substituindo a aplicação simplificada da alíquota fixa máxima (27,5%) por `calculateIrrfProgressive` alimentada data-driven por `historico_ir_brackets`.
+- Suporte a multiplicador de meses ($NM$) no cálculo do RRA em `taxUtils.ts`, escalonando faixas e deduções conforme o período acumulado.
+- Reconciliação proporcional do `irEA` consolidado entre múltiplos cards ativos em EA (Horas Extras, Substituição e Rubricas Manuais), garantindo que a soma dos descontos exibidos nos cards (`PresetGrossSummary`) coincida exatamente ao centavo com a folha de pagamento.
+- Suporte a `fallbackManual` nos módulos de Hora Extra e Substituição para preservar valores importados ou manuais em instâncias preexistentes e testes.
+- Validação e reconciliação com 100% de precisão dos dois holerites reais da JMU:
+  - Fev/2025: HE-EA de R$ 9.291,22 com 2 dependentes gerando IR-EA de R$ 1.554,81 exato.
+  - Jan/2026: HE-EA de R$ 942,87 com 2 dependentes gerando IR-EA de R$ 0,00 (isenção na 1ª faixa).
+  - Casos intermediários (faixas de 7,5% e 15%) e múltiplos cards em EA testados com suite de regressão dedicada (`tests/irEaProgressive.test.ts` e `scripts/test-ir-ea-progressive.mjs`).
+
 ## Restauração do card de diárias e verificação de exportações — 06/11/2026
 - Corrige a detecção de viagens preenchidas por datas e de trechos de transporte ao restaurar o rascunho ou abrir um holerite salvo: o card volta a exibir os dados que compõem o resultado.
 - Ao remover diárias, limpa também os trechos de transporte para impedir adicional residual no cálculo.

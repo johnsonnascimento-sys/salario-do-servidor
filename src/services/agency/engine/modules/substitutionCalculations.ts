@@ -1,8 +1,9 @@
-﻿/**
- * Calculos de Substituicao de Funcao - JMU
+/**
+ * Calculos de Substituicao - JMU
  * 
  * Responsavel por calcular:
- * - Substituicao de funcao (diferenca proporcional aos dias)
+ * - Substituicao de funcao
+ * - Total de substituicao
  */
 
 import { CourtConfig } from '../../../../types';
@@ -34,19 +35,11 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
 export async function calculateSubstitution(params: IAgencyCalculationParams): Promise<SubstitutionResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { funcoes, salario } = await getDataForPeriod(params.periodo, config);
-    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
-    const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
+    const { funcoes } = await getDataForPeriod(params.periodo, config);
 
-    let gratVal = 0;
-    if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * payrollRules.specificGratificationRate;
-    }
-
-    // Base de abatimento = Funcao atual + Gratificacao
-    const baseAbatimento = funcaoValor + gratVal;
-
+    const baseAbatimento = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
     const substitutionEntries = params.substitutionEntries || [];
+
     if (substitutionEntries.length > 0) {
         const entries = substitutionEntries.map((entry, index) => {
             let entryTotal = 0;
@@ -58,6 +51,11 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                         entryTotal += ((valDestino - baseAbatimento) / payrollRules.monthDayDivisor) * safeDays;
                     }
                 }
+            }
+
+            const fallbackManual = Number((entry as any).valorBrutoManual || (entry as any).total || 0);
+            if (entryTotal === 0 && fallbackManual > 0) {
+                entryTotal = fallbackManual;
             }
 
             return {
@@ -86,6 +84,11 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
         }
     }
 
+    const fallbackLegacy = Number((params as any).substTotal || 0);
+    if (legacyTotal === 0 && fallbackLegacy > 0) {
+        legacyTotal = fallbackLegacy;
+    }
+
     const total = Math.round(legacyTotal * 100) / 100;
     return {
         total,
@@ -94,7 +97,7 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                 id: 'legacy-subst',
                 total,
                 isEA: Boolean(params.substIsEA),
-                excluirIR: false,
+                excluirIR: Boolean(params.substExcluirIR),
                 pssIsEA: Boolean(params.substPssIsEA)
             }
         ]

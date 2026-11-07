@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Calculos de Deducoes - JMU
  * 
  * Responsavel por calcular:
@@ -8,7 +8,7 @@
  */
 
 import { CourtConfig, Rubrica, RubricaTaxDetail } from '../../../../types';
-import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
+import { calculatePss, calculateIrrf, calculateIrrfProgressive } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getPayrollRules } from './configRules';
 import { calculateMonthlyPensionContext } from './pensionContext';
@@ -213,6 +213,9 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const vantagensPss = vantagensBase * pssEffectiveRate;
     const abonoIr = abonoPerm * irEffectiveRate;
 
+    // Brackets da tabela progressiva de IR
+    const irBrackets = config.historico_ir_brackets?.[params.tabelaIR] || [];
+
     // IR de Exercicio Anterior (EA): HE/Substituicao marcadas como EA.
     const baseEA =
         overtimeEABase +
@@ -220,7 +223,11 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         rubricasAdjustments.irEA;
     const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep) -
         pensionRetroMemory.filter(entry => entry.destinoIR === 'ea').reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0));
-    const irEA = calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
+    
+    // Apuração progressiva oficial (RRA - art. 12-A da Lei 7.713/1988)
+    const irEA = irBrackets.length > 0
+        ? calculateIrrfProgressive(baseIREA, irBrackets, 1)
+        : calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
 
     let overtimeIr = 0;
     let overtimeIrMensal = 0;
@@ -243,21 +250,21 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         substitutionIr += substitutionIrMensal;
     }
 
-    const heEABase = overtimeEABase;
-    if (heEABase > 0) {
-        const irEaSemHe = calculateIrrf(Math.max(0, baseIREA - heEABase), payrollRules.irrfTopRate, deductionVal);
-        overtimeIrEA = Math.max(0, irEA - irEaSemHe);
+    const totalPositiveEaBases = overtimeEABase + substitutionEABase + Math.max(0, rubricasAdjustments.irEA);
+    if (irEA > 0 && totalPositiveEaBases > 0) {
+        if (overtimeEABase > 0 && substitutionEABase === 0 && rubricasAdjustments.irEA <= 0) {
+            overtimeIrEA = irEA;
+        } else if (substitutionEABase > 0 && overtimeEABase === 0 && rubricasAdjustments.irEA <= 0) {
+            substitutionIrEA = irEA;
+        } else {
+            overtimeIrEA = Math.round((irEA * (overtimeEABase / totalPositiveEaBases)) * 100) / 100;
+            substitutionIrEA = Math.round((irEA * (substitutionEABase / totalPositiveEaBases)) * 100) / 100;
+        }
         overtimeIr += overtimeIrEA;
-    }
-
-    const substEABase = substitutionEABase;
-    if (substEABase > 0) {
-        const irEaSemSubst = calculateIrrf(Math.max(0, baseIREA - substEABase), payrollRules.irrfTopRate, deductionVal);
-        substitutionIrEA = Math.max(0, irEA - irEaSemSubst);
         substitutionIr += substitutionIrEA;
     }
 
-    const irEaRate = baseIREA > 0 ? irEA / baseIREA : 0;
+    const irEaRate = totalPositiveEaBases > 0 ? irEA / totalPositiveEaBases : 0;
     const funprespAliq = params.funprespAliq || 0.085;
     const rubricasTax: Record<string, RubricaTaxDetail> = {};
 

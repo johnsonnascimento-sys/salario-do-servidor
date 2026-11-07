@@ -123,7 +123,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 }
             }
 
-            const heTotal = heVal50 + heVal100;
+            let heTotal = heVal50 + heVal100;
+            const fallbackManual = Number((entry as any).valorBrutoManual || (entry as any).heTotal || 0);
+            if (heTotal === 0 && fallbackManual > 0) {
+                heTotal = fallbackManual;
+            }
 
             return {
                 id: entry.id || `he-${index}`,
@@ -147,7 +151,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     const legacyHE = calcHEForFunction(params.funcao, params.heQtd50 || 0, params.heQtd100 || 0);
     const heVal50 = legacyHE.v50;
     const heVal100 = legacyHE.v100;
-    const heTotal = heVal50 + heVal100;
+    let heTotal = heVal50 + heVal100;
+    const fallbackLegacy = Number(params.heTotal || 0);
+    if (heTotal === 0 && fallbackLegacy > 0) {
+        heTotal = fallbackLegacy;
+    }
 
     return {
         heVal50,
