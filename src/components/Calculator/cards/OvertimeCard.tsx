@@ -1,8 +1,7 @@
 import { IrEaCompetencias } from '../IrEaCompetencias';
 import React from 'react';
-import { AlertTriangle, Clock, Calculator } from 'lucide-react';
+import { AlertTriangle, Clock } from 'lucide-react';
 import { CourtConfig, OvertimeEntry } from '../../../types';
-import type { CalculatedOvertimeEntry } from '../../../types/irEa';
 
 interface OvertimeCardProps {
     entry: OvertimeEntry;
@@ -13,7 +12,6 @@ interface OvertimeCardProps {
     courtConfig?: CourtConfig;
     gaactaAtivo?: boolean;
     gaactaRecesso?: boolean;
-    calculatedEntry?: CalculatedOvertimeEntry;
 }
 
 export const OvertimeCard: React.FC<OvertimeCardProps> = ({
@@ -23,8 +21,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     styles,
     courtConfig,
     gaactaAtivo,
-    gaactaRecesso,
-    calculatedEntry
+    gaactaRecesso
 }) => {
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
 
@@ -194,41 +191,6 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             </div>
                         )}
                     </div>
-
-                    {/* Memória de Cálculo Unitária */}
-                    {calculatedEntry && calculatedEntry.valorHoraNormal !== undefined && calculatedEntry.valorHoraNormal > 0 && (
-                        <div className="p-3 bg-neutral-100/70 dark:bg-neutral-800/60 rounded-xl border border-neutral-200/80 dark:border-neutral-700/60 text-body-xs space-y-1.5">
-                            <div className="font-semibold text-neutral-700 dark:text-neutral-200 flex items-center justify-between">
-                                <span className="flex items-center gap-1.5">
-                                    <Calculator className="w-3.5 h-3.5 text-secondary" />
-                                    Memória de Cálculo Unitária
-                                </span>
-                                <span className="text-label text-neutral-500 dark:text-neutral-400 font-normal">
-                                    Divisor aplicado: <strong className="text-neutral-700 dark:text-neutral-200 font-mono">{calculatedEntry.divisor ?? currentDivisor}</strong>
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 pt-1 text-center sm:text-left">
-                                <div>
-                                    <span className="text-neutral-500 dark:text-neutral-400 block text-[11px]">Hora Normal</span>
-                                    <span className="font-semibold text-neutral-800 dark:text-neutral-100 font-mono">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedEntry.valorHoraNormal)}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-neutral-500 dark:text-neutral-400 block text-[11px]">Hora Extra (+50%)</span>
-                                    <span className="font-semibold text-secondary dark:text-secondary-300 font-mono">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedEntry.valorHora50 || calculatedEntry.valorHoraNormal * 1.5)}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-neutral-500 dark:text-neutral-400 block text-[11px]">Hora Extra (+100%)</span>
-                                    <span className="font-semibold text-secondary dark:text-secondary-300 font-mono">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calculatedEntry.valorHora100 || calculatedEntry.valorHoraNormal * 2.0)}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <label className={styles.checkboxLabel}>

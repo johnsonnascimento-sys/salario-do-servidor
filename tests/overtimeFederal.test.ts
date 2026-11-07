@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { calculateOvertime } from '../src/services/agency/engine/modules/overtimeCalculations';
+import { buildPresetGrossLines } from '../src/components/Calculator/presetGrossLines';
 import { configService } from '../src/services/config/ConfigService';
 import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
 import type { CourtConfig } from '../src/types';
@@ -444,4 +445,49 @@ test('Hora Extra: Isolamento de múltiplas instâncias com divisores distintos n
 
     // Total consolidado
     assert.equal(res.heVal50, 4034.98);
+});
+
+// =========================================================================
+// Teste 9: Memória de cálculo unitária incorporada ao resumo calculado
+// =========================================================================
+test('PresetGrossSummary: Memória de cálculo unitária incorporada ao resumo calculado da hora extra', async () => {
+    const configJMU = makeMockConfig(175);
+    configJMU.orgSlug = 'jmu';
+
+    const calculatedEntries = [
+        {
+            id: 'he-1',
+            heVal50: 1862.30,
+            heVal100: 0,
+            heTotal: 1862.30,
+            isEA: false,
+            excluirIR: false,
+            divisor: 175,
+            valorHoraNormal: 124.15,
+            valorHora50: 186.23,
+            valorHora100: 248.30
+        }
+    ];
+
+    const state = {
+        overtimeCalculatedEntries: calculatedEntries,
+        overtimeEntries: [{ id: 'he-1', qtd50: 10, qtd100: 0, isEA: false, excluirIR: false, divisor: 175 }]
+    } as any;
+
+    const lines = buildPresetGrossLines({
+        instance: { key: 'preset-he-1', presetId: 'hora_extra', overtimeEntryId: 'he-1' },
+        state,
+        courtConfig: configJMU,
+        currentTables: { funcoes: {} },
+        isNovoAQ: true,
+        noFunctionCode: '',
+        currentFunctionValue: 0,
+        gratificacaoEspecificaCalculada: 0
+    });
+
+    // Confere se as linhas unitárias foram incorporadas no topo do resumo calculado
+    assert.equal(lines.find(l => l.label === 'Valor da Hora Normal (divisor 175)')?.value, 124.15);
+    assert.equal(lines.find(l => l.label === 'Valor unitário da Hora (+50%)')?.value, 186.23);
+    assert.equal(lines.find(l => l.label === 'Valor unitário da Hora (+100%)')?.value, 248.30);
+    assert.equal(lines.find(l => l.label === 'Total hora extra Bruto')?.value, 1862.30);
 });

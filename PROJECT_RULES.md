@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 07/11/2026 05:08
+Atualizado em: 07/11/2026 05:23
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -129,7 +129,7 @@ Cada rubrica manual deve suportar:
 3. Jornadas especiais: 30h semanais aplicam divisor 150 (art. 7º, § 1º, II) e 20h semanais aplicam divisor 100 (art. 7º, § 1º, III). Para jornadas diversas, aplica-se a fórmula legal $(\text{Jornada Semanal} \div 6) \times 30$ (art. 7º, § 2º).
 4. O divisor mensal é parametrizado e editável por instância (`OvertimeEntry.divisor`), garantindo isolamento entre cards e permitindo override direto pelo usuário.
 5. Em conformidade com o art. 6º, § 1º da Resolução STM nº 374/2025 (redação da Resolução STM nº 399/2026), no período de recesso forense / plantão o teto informativo da JMU eleva-se de 30 para 50 horas mensais.
-6. A memória de cálculo unitária deve informar os valores da Hora Normal, Hora Extra (+50%) e Hora Extra (+100%) no card de lançamento para conferência direta com o contracheque.
+6. A memória de cálculo unitária informa os valores da Hora Normal (com identificação do divisor aplicado), Hora Extra (+50%) e Hora Extra (+100%) integrada organicamente ao Resumo Calculado (`PresetGrossSummary`) do card de Serviço Extraordinário, preservando o padrão visual e a consistência arquitetural do sistema.
 
 ## 5. Admin e seguranca operacional
 

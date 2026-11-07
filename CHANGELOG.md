@@ -1,5 +1,10 @@
 # Changelog
 
+## Integração da Memória de Cálculo Unitária ao Resumo Calculado da Hora Extra — 07/11/2026
+- Move as linhas da memória de cálculo unitária (Valor da Hora Normal com indicação do divisor ativo, Valor unitário da Hora +50% e +100%) para dentro do acordeão oficial de "Resumo calculado" (`PresetGrossSummary` via `presetGrossLines.ts`).
+- Remove o bloco avulso do interior do `OvertimeCard.tsx`, garantindo total consistência visual e arquitetural com os demais cards do produto.
+- Adiciona teste de integração em `tests/overtimeFederal.test.ts` assegurando a presença das linhas unitárias e a fidelidade dos valores no resumo calculado.
+
 ## Parametrização Dinâmica de Jornada e Divisor Mensal de Horas Extras — 07/11/2026
 - Adequação completa do módulo de Serviço Extraordinário ao art. 7º da Resolução STM nº 374/2025 (c/c Resolução STM nº 399/2026) e art. 46 da Resolução CJF nº 4/2008 (redação das Resoluções CJF nº 186/2012 e 973/2025).
 - Adiciona seletor inteligente de carga horária semanal nos cards de horas extras com atalhos legais para 35h (divisor 175 - padrão JMU), 40h (divisor 200 - padrão JF), 30h (divisor 150 - jornadas especiais/redução legal), 20h (divisor 100 - médicos e odontólogos) e jornada personalizada via fórmula matemática oficial: (Jornada Semanal ÷ 6) × 30.

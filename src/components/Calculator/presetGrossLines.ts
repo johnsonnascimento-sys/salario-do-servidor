@@ -144,6 +144,11 @@ export const buildPresetGrossLines = ({
             const he50Bruto = entry.heVal50;
             const he100Bruto = entry.heVal100;
             const heTotalBruto = entry.heTotal;
+            const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
+            const isJMU = orgSlug === 'jmu' || orgSlug === 'stm';
+            const defaultDivisor = courtConfig?.payrollRules?.overtimeMonthHours || (isJMU ? 175 : 200);
+            const divisor = entry.divisor && entry.divisor > 0 ? entry.divisor : defaultDivisor;
+
             const mensalBase = entries.filter(item => !item.isEA && !item.excluirIR).reduce((sum, item) => sum + item.heTotal, 0);
             const heIr = entry.excluirIR ? 0 : entry.isEA
                 ? (state.irEaEntryTax?.[`he:${entry.id}`] ?? 0)
@@ -156,8 +161,22 @@ export const buildPresetGrossLines = ({
                     { label: 'Total hora extra Líquido', value: roundCurrency(Math.max(0, heTotalBruto - heIr)) },
                 ];
             }
+
+            const unitLines: PresetGrossLine[] = [];
+            if (entry.valorHoraNormal !== undefined && entry.valorHoraNormal > 0) {
+                const vNormal = entry.valorHoraNormal;
+                const v50 = entry.valorHora50 || roundCurrency(vNormal * 1.5);
+                const v100 = entry.valorHora100 || roundCurrency(vNormal * 2.0);
+                unitLines.push(
+                    { label: `Valor da Hora Normal (divisor ${divisor})`, value: vNormal },
+                    { label: 'Valor unitário da Hora (+50%)', value: v50 },
+                    { label: 'Valor unitário da Hora (+100%)', value: v100 }
+                );
+            }
+
             const desconto50 = roundCurrency(heTotalBruto > 0 ? heIr * he50Bruto / heTotalBruto : 0);
             return [
+                ...unitLines,
                 { label: 'Hora extra 50% Bruto', value: he50Bruto },
                 { label: 'Hora extra 100% Bruto', value: he100Bruto },
                 { label: irLabel, value: heIr, isDiscount: true },
