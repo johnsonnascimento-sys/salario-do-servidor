@@ -1,7 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Calculator } from 'lucide-react';
-
-const KEYBOARD_KEYS = ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '(', ')', '+'];
 
 const isEligibleInput = (element: EventTarget | null): element is HTMLInputElement => {
     if (!(element instanceof HTMLInputElement)) {
@@ -70,10 +68,15 @@ const tokenizeExpression = (expression: string): ExpressionToken[] | null => {
     return tokens;
 };
 
-const evaluateExpression = (expression: string): number | null => {
-    const normalized = expression.replace(/\s+/g, '').replace(/,/g, '.');
+export const evaluateExpression = (expression: string): number | null => {
+    let normalized = expression.replace(/\s+/g, '').replace(/×/g, '*').replace(/÷/g, '/');
     if (!normalized) {
         return null;
+    }
+
+    if (normalized.includes(',')) {
+        normalized = normalized.replace(/\.(\d{3})(?=[.,+\-*/()]|$)/g, '$1');
+        normalized = normalized.replace(/,/g, '.');
     }
 
     if (!/^[0-9+\-*/().]+$/.test(normalized)) {
@@ -176,20 +179,78 @@ const evaluateExpression = (expression: string): number | null => {
     return Math.round(rawResult * 100) / 100;
 };
 
-const parseInputValue = (value: string): number | null => {
-    const normalized = value.replace(/\./g, '').replace(',', '.').trim();
-    if (!normalized) {
+export const parseInputValue = (value: string, isNumberType: boolean = false): number | null => {
+    const trimmed = value.trim();
+    if (!trimmed) {
         return null;
     }
-    const parsed = Number(normalized);
+
+    if (isNumberType) {
+        const parsed = Number(trimmed);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    if (trimmed.includes(',')) {
+        const normalized = trimmed.replace(/\./g, '').replace(',', '.');
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    const dotCount = (trimmed.match(/\./g) || []).length;
+    if (dotCount > 1) {
+        const normalized = trimmed.replace(/\./g, '');
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    const parsed = Number(trimmed);
     return Number.isFinite(parsed) ? parsed : null;
 };
 
-const formatResult = (value: number) => {
+export const formatDisplayResult = (value: number): string => {
+    if (!Number.isFinite(value)) return '';
     if (Number.isInteger(value)) {
         return value.toString();
     }
-    return value.toFixed(2);
+    const rounded = Math.round(value * 100) / 100;
+    return rounded.toFixed(2).replace('.', ',');
+};
+
+export const formatValueForInput = (value: number, input: HTMLInputElement): string => {
+    if (input.type === 'number') {
+        if (input.step === '1') {
+            return Math.round(value).toString();
+        }
+        if (Number.isInteger(value)) {
+            return value.toString();
+        }
+        const rounded = Math.round(value * 100) / 100;
+        return rounded.toFixed(2);
+    }
+
+    return value.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+};
+
+export const setNativeInputValue = (element: HTMLInputElement, value: string) => {
+    const prototype = window.HTMLInputElement.prototype;
+    const nativeSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+
+    const tracker = (element as any)._valueTracker;
+    if (tracker) {
+        tracker.setValue(value === '' ? '__force_update__' : '');
+    }
+
+    if (nativeSetter) {
+        nativeSetter.call(element, value);
+    } else {
+        element.value = value;
+    }
+
+    element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
 };
 
 const getAnchorPosition = (input: HTMLInputElement) => {
@@ -228,6 +289,8 @@ export const FieldCalculator: React.FC = () => {
     const [viewportTick, setViewportTick] = useState(0);
     const [calculatorButtonElement, setCalculatorButtonElement] = useState<HTMLDivElement | null>(null);
     const [calculatorPanelElement, setCalculatorPanelElement] = useState<HTMLDivElement | null>(null);
+
+    const lastTargetRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         const onFocusIn = (event: FocusEvent) => {
@@ -349,13 +412,17 @@ export const FieldCalculator: React.FC = () => {
 
     useEffect(() => {
         if (!isOpen || !targetInput) {
+            lastTargetRef.current = null;
             return;
         }
 
-        const initialResult = parseInputValue(targetInput.value);
-        setExpression(initialResult !== null ? formatResult(initialResult) : '');
-        setLastResult(initialResult);
-        setHasError(false);
+        if (lastTargetRef.current !== targetInput) {
+            lastTargetRef.current = targetInput;
+            const initialResult = parseInputValue(targetInput.value, targetInput.type === 'number');
+            setExpression(initialResult !== null ? formatDisplayResult(initialResult) : '');
+            setLastResult(initialResult);
+            setHasError(false);
+        }
     }, [isOpen, targetInput]);
 
     const openCalculator = () => {
@@ -363,15 +430,29 @@ export const FieldCalculator: React.FC = () => {
             return;
         }
 
-        const initialResult = parseInputValue(targetInput.value);
-        setExpression(initialResult !== null ? formatResult(initialResult) : '');
+        const initialResult = parseInputValue(targetInput.value, targetInput.type === 'number');
+        lastTargetRef.current = targetInput;
+        setExpression(initialResult !== null ? formatDisplayResult(initialResult) : '');
         setLastResult(initialResult);
         setHasError(false);
         setIsOpen(true);
     };
 
     const appendToken = (token: string) => {
-        setExpression(prev => `${prev}${token}`);
+        setExpression(prev => {
+            if (token === ',') {
+                if (prev === '' || ['+', '-', '*', '/', '(', '×', '÷'].includes(prev.slice(-1))) {
+                    return `${prev}0,`;
+                }
+                if (prev.endsWith(',') || prev.endsWith('.')) {
+                    return prev;
+                }
+            }
+            if (['+', '-', '*', '/', '×', '÷'].includes(token) && ['+', '-', '*', '/', '×', '÷'].includes(prev.slice(-1))) {
+                return `${prev.slice(0, -1)}${token}`;
+            }
+            return `${prev}${token}`;
+        });
         setHasError(false);
     };
 
@@ -383,23 +464,28 @@ export const FieldCalculator: React.FC = () => {
         }
         setHasError(false);
         setLastResult(result);
-        setExpression(formatResult(result));
+        setExpression(formatDisplayResult(result));
         return result;
     };
 
     const applyResult = () => {
-        if (!targetInput) {
+        if (!targetInput || !document.body.contains(targetInput)) {
             return;
         }
 
-        const resolved = lastResult ?? runCalculation();
+        const calculated = evaluateExpression(expression);
+        const resolved = calculated !== null ? calculated : lastResult;
         if (resolved === null) {
+            setHasError(true);
             return;
         }
 
-        targetInput.value = formatResult(resolved);
-        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
-        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+        setHasError(false);
+        setLastResult(resolved);
+        setExpression(formatDisplayResult(resolved));
+
+        const formatted = formatValueForInput(resolved, targetInput);
+        setNativeInputValue(targetInput, formatted);
         targetInput.focus();
         setIsOpen(false);
     };
@@ -424,7 +510,7 @@ export const FieldCalculator: React.FC = () => {
                             setIsOpen(false);
                         }
                     }}
-                    className="rounded-full bg-secondary p-2.5 text-white shadow-lg hover:bg-secondary-700"
+                    className="rounded-full bg-secondary p-2.5 text-white shadow-lg hover:bg-secondary-700 transition-colors"
                     aria-label={isOpen ? 'Ocultar calculadora' : 'Mostrar calculadora'}
                     title={isOpen ? 'Ocultar calculadora' : 'Mostrar calculadora'}
                 >
@@ -445,7 +531,7 @@ export const FieldCalculator: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            className="rounded-md px-2 py-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            className="rounded-md px-2 py-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                             aria-label="Fechar calculadora"
                         >
                             x
@@ -459,27 +545,38 @@ export const FieldCalculator: React.FC = () => {
                             setExpression(e.target.value);
                             setHasError(false);
                         }}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                runCalculation();
+                            }
+                        }}
                         className="mb-3 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 font-mono text-body text-neutral-700 outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
-                        placeholder="Digite a conta"
+                        placeholder="Digite a conta (ex: 1500,50 + 200)"
                     />
 
                     {hasError && (
                         <p className="mb-2 text-body-xs text-error-600">
-                            Expressão inválida. Use apenas números e + - * /
+                            Expressão inválida. Use apenas números e operações (+ - * /)
                         </p>
                     )}
 
                     <div className="grid grid-cols-4 gap-2">
-                        {KEYBOARD_KEYS.map(key => (
-                            <button
-                                key={key}
-                                type="button"
-                                onClick={() => appendToken(key)}
-                                className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
-                            >
-                                {key}
-                            </button>
-                        ))}
+                        {/* Linha 1: Parênteses e Ações de Limpeza */}
+                        <button
+                            type="button"
+                            onClick={() => appendToken('(')}
+                            className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                            (
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => appendToken(')')}
+                            className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                            )
+                        </button>
                         <button
                             type="button"
                             onClick={() => {
@@ -487,7 +584,7 @@ export const FieldCalculator: React.FC = () => {
                                 setLastResult(null);
                                 setHasError(false);
                             }}
-                            className="col-span-2 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body-xs font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+                            className="rounded-lg border border-neutral-200 bg-neutral-100 px-2 py-2 text-body-xs font-bold text-neutral-600 hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 transition-colors"
                         >
                             Limpar
                         </button>
@@ -497,23 +594,109 @@ export const FieldCalculator: React.FC = () => {
                                 setExpression(prev => prev.slice(0, -1));
                                 setHasError(false);
                             }}
-                            className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body-xs font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+                            className="rounded-lg border border-neutral-200 bg-neutral-100 px-2 py-2 text-body-xs font-bold text-neutral-600 hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 transition-colors"
                         >
                             Apagar
+                        </button>
+
+                        {/* Linha 2: 7, 8, 9, ÷ */}
+                        {['7', '8', '9'].map(digit => (
+                            <button
+                                key={digit}
+                                type="button"
+                                onClick={() => appendToken(digit)}
+                                className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                {digit}
+                            </button>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => appendToken('/')}
+                            className="rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-2 text-body font-bold text-neutral-800 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600 transition-colors"
+                            aria-label="Dividir"
+                        >
+                            ÷
+                        </button>
+
+                        {/* Linha 3: 4, 5, 6, × */}
+                        {['4', '5', '6'].map(digit => (
+                            <button
+                                key={digit}
+                                type="button"
+                                onClick={() => appendToken(digit)}
+                                className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                {digit}
+                            </button>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => appendToken('*')}
+                            className="rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-2 text-body font-bold text-neutral-800 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600 transition-colors"
+                            aria-label="Multiplicar"
+                        >
+                            ×
+                        </button>
+
+                        {/* Linha 4: 1, 2, 3, − */}
+                        {['1', '2', '3'].map(digit => (
+                            <button
+                                key={digit}
+                                type="button"
+                                onClick={() => appendToken(digit)}
+                                className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                {digit}
+                            </button>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => appendToken('-')}
+                            className="rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-2 text-body font-bold text-neutral-800 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600 transition-colors"
+                            aria-label="Subtrair"
+                        >
+                            −
+                        </button>
+
+                        {/* Linha 5: 0, ,, =, + */}
+                        <button
+                            type="button"
+                            onClick={() => appendToken('0')}
+                            className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                            0
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => appendToken(',')}
+                            className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-2 text-body font-bold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            aria-label="Vírgula decimal"
+                        >
+                            ,
                         </button>
                         <button
                             type="button"
                             onClick={runCalculation}
-                            className="rounded-lg border border-secondary/30 bg-secondary/10 px-2 py-2 text-body font-bold text-secondary hover:bg-secondary/20"
+                            className="rounded-lg border border-secondary/40 bg-secondary/15 px-2 py-2 text-body font-bold text-secondary hover:bg-secondary/25 dark:bg-secondary/20 dark:text-secondary-300 transition-colors"
+                            aria-label="Calcular resultado"
                         >
                             =
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => appendToken('+')}
+                            className="rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-2 text-body font-bold text-neutral-800 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600 transition-colors"
+                            aria-label="Somar"
+                        >
+                            +
                         </button>
                     </div>
 
                     <button
                         type="button"
                         onClick={applyResult}
-                        className="mt-3 w-full rounded-xl bg-primary px-4 py-2 text-body-xs font-bold uppercase tracking-wide text-white hover:bg-primary-700"
+                        className="mt-3 w-full rounded-xl bg-primary px-4 py-2.5 text-body-xs font-bold uppercase tracking-wide text-white hover:bg-primary-700 shadow-sm transition-colors"
                     >
                         Colar resultado no campo
                     </button>

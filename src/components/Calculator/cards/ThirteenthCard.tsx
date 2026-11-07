@@ -62,6 +62,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                         <input
                             type="text"
                             className={styles.input}
+                            data-calculator="true"
                             value={state.adiant13Venc ? state.adiant13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
                             onChange={e => update('adiant13Venc', parseCurrencyInput(e.target.value))}
                             placeholder="0,00"
@@ -88,6 +89,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                         <input
                             type="text"
                             className={styles.input}
+                            data-calculator="true"
                             value={state.adiant13FC ? state.adiant13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
                             onChange={e => update('adiant13FC', parseCurrencyInput(e.target.value))}
                             placeholder="0,00"
@@ -114,6 +116,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                         <input
                             type="text"
                             className={styles.input}
+                            data-calculator="true"
                             value={state.segunda13Venc ? state.segunda13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
                             onChange={e => update('segunda13Venc', parseCurrencyInput(e.target.value))}
                             placeholder="0,00"
@@ -144,6 +147,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                         <input
                             type="text"
                             className={styles.input}
+                            data-calculator="true"
                             value={state.segunda13FC ? state.segunda13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
                             onChange={e => update('segunda13FC', parseCurrencyInput(e.target.value))}
                             placeholder="0,00"
