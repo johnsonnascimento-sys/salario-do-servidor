@@ -44,8 +44,9 @@ export function classifyIrEaSources(sources: IrEaSource[], context?: IrEaContext
         if (!Number.isFinite(source.value)) fail('valor de rendimento inválido.');
         if (source.value < 0 && !source.deductionReference?.trim()) fail('informe o fundamento do desconto manual de EA.');
         if (!Array.isArray(source.competencias)) fail('informe competências válidas para cada rendimento de EA.');
-        const months = [...new Set(source.competencias)];
-        if (!months.length || months.some(month => typeof month !== 'string' || !monthPattern.test(month))) fail('informe competências válidas para cada rendimento de EA.');
+        const rawMonths = (source.competencias || []).filter(month => typeof month === 'string' && month.trim().length > 0);
+        const months = [...new Set(rawMonths)].sort();
+        if (!months.length || months.some(month => !monthPattern.test(month))) fail('informe competências válidas para cada rendimento de EA.');
         if (months.some(month => month > payment)) fail('competência posterior ao pagamento.');
         const old = months.some(month => month.slice(0, 4) < year);
         const same = months.some(month => month.slice(0, 4) === year);

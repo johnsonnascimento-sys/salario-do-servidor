@@ -1,5 +1,11 @@
 # Changelog
 
+## Auto-Ordenação Cronológica e Dinamismo Temporal nas Competências de EA — 07/11/2026
+- Implementa auto-ordenação cronológica automática das competências originais de EA (`IrEaCompetencias.tsx` e `irEaCalculations.ts`), permitindo ao servidor inserir meses em qualquer ordem sem exigência de ordenação prévia nem travamento da calculadora.
+- Cria função inteligente de cascata temporal (`getPreviousMonth`): ao adicionar um novo mês trabalhado em um card com competências já existentes, sugere automaticamente o mês imediatamente anterior à menor competência (ex.: tendo `11/2025`, sugere `10/2025`; tendo `01/2025`, sugere `12/2024`).
+- Adiciona o extrator universal de ano (`extractYearFromRef`), corrigindo o parsing quando a competência do holerite é fornecida em formato MM/AAAA (como `11/2026`, `01/2027` ou `05/2028`), garantindo que o teto dinâmico `max` e o auto-preenchimento reflitam com precisão o ano da folha (dezembro do ano anterior correspondente).
+- Confere resiliência ao motor de cálculo contra campos transitórios vazios durante a digitação de meses, eliminando erros indevidos de tela.
+
 ## Inicialização Automática da Competência de EA ao Habilitar Opção — 07/11/2026
 - Inicializa automaticamente a competência com dezembro do ano anterior (`anoMaximoEa-12`) no exato momento em que o servidor clica em "Incluir na base do IR (Exercício Anterior - EA)" nos cards de Horas Extras, Substituição e Rubricas Manuais.
 - Elimina a mensagem de "Cálculo indisponível" decorrente de competências vazias imediatamente após habilitar EA, garantindo que o cálculo de RRA e o resumo líquido do card apareçam instantaneamente e sem atrito.

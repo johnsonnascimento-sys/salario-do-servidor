@@ -35,10 +35,36 @@ assert.equal(monthInput.props.max, '2025-12', 'Max input restricts to prior year
 assert.ok(JSON.stringify(eaTree.toJSON()).includes('Atenção: competência de'), 'Displays warning for current year');
 assert.ok(JSON.stringify(eaTree.toJSON()).includes('tributado na folha corrente'), 'Explains monthly taxation');
 act(() => eaTree.root.findAllByType('button')[1].props.onClick());
-assert.equal(eaMonths[eaMonths.length - 1], '2025-12', 'Suggests December of prior year when adding');
+assert.ok(eaMonths.includes('2025-12'), 'Suggests December of prior year when adding');
 eaTree.unmount();
-assert.equal(getDefaultEaCompetencia('2026-11'), '2025-12', 'Calculates December of previous year as default competence');
-assert.equal(getDefaultEaCompetencia('2027-01'), '2026-12', 'Calculates 2026-12 for 2027 payroll');
+assert.equal(getDefaultEaCompetencia('11/2026'), '2025-12', 'Calculates 2025-12 for 11/2026 format');
+assert.equal(getDefaultEaCompetencia('01/2027'), '2026-12', 'Calculates 2026-12 for 2027 payroll');
+assert.equal(getDefaultEaCompetencia('05/2028'), '2027-12', 'Calculates 2027-12 for 2028 payroll');
+assert.equal(getDefaultEaCompetencia('11/2025'), '2024-12', 'Calculates 2024-12 for 2025 payroll');
+assert.equal(getDefaultEaCompetencia('', 2027), '2026-12', 'Calculates 2026-12 when anoReferencia is number 2027');
+
+// Test auto-cascade of prior month and automatic chronological sorting
+let cascadeMonths: string[] = [];
+const cascadeTree = create(React.createElement(IrEaCompetencias, {
+    value: ['2025-11'],
+    competenciaReferencia: '11/2026',
+    onChange: val => { cascadeMonths = val; },
+    styles
+}));
+// Click "+ Adicionar mês trabalhado"
+act(() => cascadeTree.root.findAllByType('button')[1].props.onClick());
+assert.deepEqual(cascadeMonths, ['2025-10', '2025-11'], 'Automatically cascaded previous month and sorted chronologically');
+
+// Test re-sorting when user modifies an input out of order
+cascadeTree.update(React.createElement(IrEaCompetencias, {
+    value: ['2025-11', '2025-08'],
+    competenciaReferencia: '11/2026',
+    onChange: val => { cascadeMonths = val; },
+    styles
+}));
+act(() => cascadeTree.root.findAllByType('input')[0].props.onChange({ target: { value: '2025-11' } }));
+assert.deepEqual(cascadeMonths, ['2025-08', '2025-11'], 'Automatically sorted months chronologically on change');
+cascadeTree.unmount();
 
 tree = create(React.createElement(IrEaContextSection, { value: { mesPagamento: '2026-10' }, mesFolha: '2027-01', onChange: value => { context = value; }, styles }));
 const contextInputs = tree.root.findAllByType('input');

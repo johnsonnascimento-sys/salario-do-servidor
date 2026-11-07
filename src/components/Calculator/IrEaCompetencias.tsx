@@ -10,11 +10,35 @@ interface Props {
     anoReferencia?: string | number;
 }
 
-export const getDefaultEaCompetencia = (competenciaReferencia?: string | number): string => {
-    const anoPagamentoStr = String(competenciaReferencia || '').slice(0, 4);
-    const anoPagamento = Number(anoPagamentoStr) || 2026;
+export const extractYearFromRef = (ref?: string | number): number => {
+    if (!ref) return 2026;
+    const str = String(ref).trim();
+    const match = str.match(/\b(19\d\d|20\d\d)\b/);
+    if (match) return Number(match[1]);
+    const digits = str.match(/\d{4}/);
+    if (digits) return Number(digits[0]);
+    const num = Number(str);
+    if (Number.isFinite(num) && num > 1900 && num < 2100) return num;
+    return 2026;
+};
+
+export const getDefaultEaCompetencia = (competenciaReferencia?: string | number, anoReferencia?: string | number): string => {
+    const anoPagamento = extractYearFromRef(anoReferencia || competenciaReferencia);
     const anoMaximoEa = anoPagamento > 2000 ? anoPagamento - 1 : 2025;
     return `${anoMaximoEa}-12`;
+};
+
+export const getPreviousMonth = (monthStr: string): string => {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthStr)) return monthStr;
+    const [yearStr, mStr] = monthStr.split('-');
+    let year = Number(yearStr);
+    let month = Number(mStr);
+    month -= 1;
+    if (month < 1) {
+        month = 12;
+        year -= 1;
+    }
+    return `${year}-${String(month).padStart(2, '0')}`;
 };
 
 /** Collect original months without inferring them from the payment reference. */
@@ -38,10 +62,40 @@ export const IrEaCompetencias: React.FC<Props> = ({
         }
     };
 
-    const anoPagamentoStr = String(anoReferencia || competenciaReferencia || '').slice(0, 4);
-    const anoPagamento = Number(anoPagamentoStr) || 2026;
+    const anoPagamento = extractYearFromRef(anoReferencia || competenciaReferencia);
     const anoMaximoEa = anoPagamento > 2000 ? anoPagamento - 1 : 2025;
     const maxCompetenciaEa = `${anoMaximoEa}-12`;
+
+    const handleMonthChange = (index: number, newMonth: string) => {
+        const updated = value.map((item, i) => (i === index ? newMonth : item));
+        const allComplete = updated.every(m => /^\d{4}-(0[1-9]|1[0-2])$/.test(m));
+        if (allComplete) {
+            const sorted = [...new Set(updated)].sort();
+            onChange(sorted);
+        } else {
+            onChange(updated);
+        }
+    };
+
+    const handleAddMonth = () => {
+        if (!competenciaReferencia && !anoReferencia) {
+            onChange([...value, '']);
+            return;
+        }
+        const validPriorMonths = value
+            .filter(m => /^\d{4}-(0[1-9]|1[0-2])$/.test(m) && Number(m.slice(0, 4)) < anoPagamento)
+            .sort();
+        let nextMonth: string;
+        if (validPriorMonths.length === 0) {
+            nextMonth = maxCompetenciaEa;
+        } else {
+            const earliest = validPriorMonths[0];
+            nextMonth = getPreviousMonth(earliest);
+        }
+        const updated = [...value, nextMonth];
+        const sorted = [...new Set(updated.filter(Boolean))].sort();
+        onChange(sorted);
+    };
 
     const isMesAnoCorrenteOuPosterior = (monthStr: string) => {
         if (!monthStr || monthStr.length < 4) return false;
@@ -130,7 +184,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                                             value={month}
                                             max={maxCompetenciaEa}
                                             required
-                                            onChange={event => onChange(value.map((item, i) => i === index ? event.target.value : item))}
+                                            onChange={event => handleMonthChange(index, event.target.value)}
                                         />
                                     </label>
                                     <button
@@ -167,10 +221,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
             <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
                 <button
                     type="button"
-                    onClick={() => {
-                        const defaultMonth = (competenciaReferencia || anoReferencia) ? maxCompetenciaEa : '';
-                        onChange([...value, defaultMonth]);
-                    }}
+                    onClick={handleAddMonth}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-secondary/30 bg-secondary/5 text-secondary hover:bg-secondary/15 transition-all text-body-xs font-bold uppercase tracking-wider shadow-xs cursor-pointer"
                 >
                     <Plus className="w-4 h-4" />
