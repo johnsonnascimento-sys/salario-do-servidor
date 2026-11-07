@@ -80,17 +80,35 @@ export const calculateIrrfProgressive = (
     brackets: IrrfBracket[],
     mesesRra: number = 1
 ): number => {
-    if (!Array.isArray(brackets) || brackets.length === 0 || baseCalculo <= 0) return 0;
-    const nm = Math.max(1, mesesRra);
+    if (!Number.isFinite(baseCalculo) || !Number.isFinite(mesesRra) || mesesRra <= 0) {
+        throw new Error('IR-EA: base e número de meses devem ser válidos.');
+    }
+    if (!Array.isArray(brackets) || brackets.length === 0) {
+        throw new Error('IR-EA: tabela progressiva ausente.');
+    }
+    const nm = mesesRra;
     const sorted = [...brackets].sort((a, b) => a.min - b.min);
-    const faixa = sorted.find((item) => {
-        const minVal = item.min * nm;
-        const maxVal = item.max === Infinity ? Infinity : item.max * nm;
-        return baseCalculo > minVal && baseCalculo <= maxVal;
-    }) || sorted[sorted.length - 1];
+    sorted.forEach((item, index) => {
+        const previous = sorted[index - 1];
+        if (!Number.isFinite(item.min) || item.min < 0 ||
+            !(Number.isFinite(item.max) || item.max === Infinity) || item.max < item.min ||
+            !Number.isFinite(item.rate) || item.rate < 0 || item.rate > 1 ||
+            !Number.isFinite(item.deduction) || item.deduction < 0 ||
+            (index === 0 && item.min !== 0) ||
+            (previous && (item.min < previous.max || item.min - previous.max > 0.010001)) ||
+            (item.max === Infinity && index !== sorted.length - 1)) {
+            throw new Error('IR-EA: tabela progressiva inválida ou com lacunas.');
+        }
+    });
+    if (sorted[sorted.length - 1].max !== Infinity) throw new Error('IR-EA: tabela progressiva sem faixa final.');
+    if (baseCalculo <= 0) return 0;
+    const base = Math.round(baseCalculo * 100) / 100;
+    // Select by the inclusive upper bound: cent-based lower bounds otherwise leave
+    // gaps (and multiplying those gaps by NM makes them larger).
+    const faixa = sorted.find(item => base <= item.max * nm)!;
 
     const deductionTotal = faixa.deduction * nm;
-    const imposto = (baseCalculo * faixa.rate) - deductionTotal;
+    const imposto = (base * faixa.rate) - deductionTotal;
     return imposto > 0 ? Math.round(imposto * 100) / 100 : 0;
 };
 

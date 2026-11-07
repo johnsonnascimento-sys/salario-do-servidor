@@ -35,9 +35,10 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
 export async function calculateSubstitution(params: IAgencyCalculationParams): Promise<SubstitutionResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
-    const { funcoes } = await getDataForPeriod(params.periodo, config);
-
-    const baseAbatimento = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+    const { funcoes, salario } = await getDataForPeriod(params.periodo, config);
+    const gratification = params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas'
+        ? (salario[params.cargo]?.[params.padrao] || 0) * payrollRules.specificGratificationRate : 0;
+    const baseAbatimento = (isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0)) + gratification;
     const substitutionEntries = params.substitutionEntries || [];
 
     if (substitutionEntries.length > 0) {
@@ -53,9 +54,11 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                 }
             }
 
-            const fallbackManual = Number((entry as any).valorBrutoManual || (entry as any).total || 0);
-            if (entryTotal === 0 && fallbackManual > 0) {
-                entryTotal = fallbackManual;
+            if (entry.valorBrutoManual !== undefined) {
+                if (!Number.isFinite(entry.valorBrutoManual) || entry.valorBrutoManual < 0) {
+                    throw new Error('IR-EA: valor bruto manual de substituição inválido.');
+                }
+                entryTotal = entry.valorBrutoManual;
             }
 
             return {
@@ -82,11 +85,6 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                 }
             }
         }
-    }
-
-    const fallbackLegacy = Number((params as any).substTotal || 0);
-    if (legacyTotal === 0 && fallbackLegacy > 0) {
-        legacyTotal = fallbackLegacy;
     }
 
     const total = Math.round(legacyTotal * 100) / 100;

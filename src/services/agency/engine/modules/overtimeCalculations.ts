@@ -35,6 +35,9 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     return params.agencyConfig;
 };
 
+const roundCurrency = (value: number) => Math.round(value * 100) / 100;
+const sumCurrency = (values: number[]) => values.reduce((cents, value) => cents + Math.round(value * 100), 0) / 100;
+
 /**
  * Calcula Hora Extra (50% e 100%)
  */
@@ -123,10 +126,17 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 }
             }
 
-            let heTotal = heVal50 + heVal100;
-            const fallbackManual = Number((entry as any).valorBrutoManual || (entry as any).heTotal || 0);
-            if (heTotal === 0 && fallbackManual > 0) {
-                heTotal = fallbackManual;
+            heVal50 = roundCurrency(heVal50);
+            heVal100 = roundCurrency(heVal100);
+            let heTotal = sumCurrency([heVal50, heVal100]);
+            if (entry.valorBrutoManual !== undefined) {
+                if (!Number.isFinite(entry.valorBrutoManual) || entry.valorBrutoManual < 0) {
+                    throw new Error('IR-EA: valor bruto manual de hora extra inválido.');
+                }
+                heTotal = roundCurrency(entry.valorBrutoManual);
+                // An explicitly supplied gross has no inferred 50%/100% split.
+                heVal50 = 0;
+                heVal100 = 0;
             }
 
             return {
@@ -140,22 +150,18 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             };
         });
 
-        const heVal50 = entries.reduce((acc, item) => acc + item.heVal50, 0);
-        const heVal100 = entries.reduce((acc, item) => acc + item.heVal100, 0);
-        const heTotal = entries.reduce((acc, item) => acc + item.heTotal, 0);
+        const heVal50 = sumCurrency(entries.map(item => item.heVal50));
+        const heVal100 = sumCurrency(entries.map(item => item.heVal100));
+        const heTotal = sumCurrency(entries.map(item => item.heTotal));
 
         return { heVal50, heVal100, heTotal, entries };
     }
 
     // Calcula valor para o bloco legacy-he usando sua funcao titular
     const legacyHE = calcHEForFunction(params.funcao, params.heQtd50 || 0, params.heQtd100 || 0);
-    const heVal50 = legacyHE.v50;
-    const heVal100 = legacyHE.v100;
-    let heTotal = heVal50 + heVal100;
-    const fallbackLegacy = Number(params.heTotal || 0);
-    if (heTotal === 0 && fallbackLegacy > 0) {
-        heTotal = fallbackLegacy;
-    }
+    const heVal50 = roundCurrency(legacyHE.v50);
+    const heVal100 = roundCurrency(legacyHE.v100);
+    const heTotal = sumCurrency([heVal50, heVal100]);
 
     return {
         heVal50,

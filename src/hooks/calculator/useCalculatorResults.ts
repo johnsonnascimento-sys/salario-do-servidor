@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalculatorState, CalculatedPayrollState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
+import { CalculatorState, CalculatedPayrollState, CourtConfig } from '../../types';
 import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
@@ -43,7 +43,7 @@ export const useCalculatorResults = (
         state.pssSobreFC, state.incidirPSSGrat,
         state.auxAlimentacao, state.auxPreEscolarQtd, state.cotaPreEscolar, state.auxTransporteGasto,
         state.emprestimos, state.planoSaude, state.pensao,
-        state.rubricasExtras,
+        state.rubricasExtras, state.irEaContext,
         state.tipoCalculo, state.manualFerias, state.ferias1_3, state.feriasAntecipadas,
         state.feriasDesc, state.feriasDescManual,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
@@ -122,6 +122,11 @@ export const useCalculatorResults = (
                     pensionMemory: result.pensionMemory,
                     irMensal: bd.irrf || 0,
                     irEA: bd.irEA || 0,
+                    irEaMemory: bd.irEaMemory,
+                    irEaEntryTax: bd.irEaEntryTax,
+                    irEaCurrentYearKeys: bd.irEaCurrentYearKeys,
+                    overtimeCalculatedEntries: bd.overtimeCalculatedEntries,
+                    substitutionCalculatedEntries: bd.substitutionCalculatedEntries,
                     aqIr: bd.aqIr || 0,
                     aqPss: bd.aqPss || 0,
                     gratIr: bd.gratIr || 0,
@@ -234,111 +239,16 @@ export const useCalculatorResults = (
             rows.push({ label: `${labelTipo} - ${effectiveState.funcao.toUpperCase()}`, value: valorFC, type: 'C' });
         }
 
-        const substitutionEntries: SubstitutionEntry[] = effectiveState.substitutionEntries.length > 0
-            ? effectiveState.substitutionEntries
-            : [{
-                id: 'legacy-subst',
-                dias: effectiveState.substDias || {},
-                isEA: effectiveState.substIsEA,
-                excluirIR: false,
-                pssIsEA: effectiveState.substPssIsEA
-            }];
-
-        const monthDayDivisor = courtConfig.payrollRules?.monthDayDivisor || 30;
-        const baseVencimento = currentTables?.salario?.[effectiveState.cargo]?.[effectiveState.padrao] || 0;
-        let gratVal = 0;
-        if (effectiveState.gratEspecificaTipo === 'gae' || effectiveState.gratEspecificaTipo === 'gas') {
-            gratVal = baseVencimento * (courtConfig.payrollRules?.specificGratificationRate || 0);
+        for (const entry of effectiveState.substitutionCalculatedEntries ?? []) {
+            if (entry.total <= 0) continue;
+            const label = entry.excluirIR ? 'EXCLUÍDO IR' : entry.isEA ? 'IR EA' : 'IR MENSAL';
+            rows.push({ label: `SUBSTITUIÇÃO DE FUNÇÃO (${label})`, value: entry.total, type: 'C' });
         }
-        const currentFuncVal = (effectiveState.funcao && effectiveState.funcao !== noFunctionCode && currentTables?.funcoes?.[effectiveState.funcao]) || 0;
-        const baseAbatimento = currentFuncVal + gratVal;
-
-        const calcEntryValue = (entry: SubstitutionEntry): number => {
-            let entryTotal = 0;
-            for (const [funcKey, days] of Object.entries(entry.dias || {})) {
-                const safeDays = Math.max(0, Number(days || 0));
-                const destVal = currentTables?.funcoes?.[funcKey] || 0;
-                if (safeDays > 0 && destVal > baseAbatimento && monthDayDivisor > 0) {
-                    entryTotal += ((destVal - baseAbatimento) / monthDayDivisor) * safeDays;
-                }
-            }
-            return Math.round(entryTotal * 100) / 100;
-        };
-
-        let substitutionMensalTotal = 0;
-        let substitutionEaTotal = 0;
-        let substitutionExcluidoTotal = 0;
-
-        for (const entry of substitutionEntries) {
-            const val = calcEntryValue(entry);
-            if (entry.excluirIR) {
-                substitutionExcluidoTotal += val;
-            } else if (entry.isEA) {
-                substitutionEaTotal += val;
-            } else {
-                substitutionMensalTotal += val;
-            }
+        for (const entry of effectiveState.overtimeCalculatedEntries ?? []) {
+            if (entry.heTotal <= 0) continue;
+            const label = entry.excluirIR ? 'EXCLUÍDO IR' : entry.isEA ? 'IR EA' : 'IR MENSAL';
+            rows.push({ label: `SERVIÇO EXTRAORDINÁRIO (${label})`, value: entry.heTotal, type: 'C' });
         }
-
-        const calculatedSum = substitutionMensalTotal + substitutionEaTotal + substitutionExcluidoTotal;
-        const substitutionTotal = Math.max(0, effectiveState.substTotal || 0);
-        if (calculatedSum === 0 && substitutionTotal > 0) {
-            if (effectiveState.substIsEA) {
-                substitutionEaTotal = substitutionTotal;
-            } else {
-                substitutionMensalTotal = substitutionTotal;
-            }
-        }
-
-        if (substitutionMensalTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR MENSAL)', value: roundCurrency(substitutionMensalTotal), type: 'C' });
-        if (substitutionEaTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (IR EA)', value: roundCurrency(substitutionEaTotal), type: 'C' });
-        if (substitutionExcluidoTotal > 0) rows.push({ label: 'SUBSTITUIÇÃO DE FUNÇÃO (EXCLUÍDO IR)', value: roundCurrency(substitutionExcluidoTotal), type: 'C' });
-
-        const overtimeEntries: OvertimeEntry[] = effectiveState.overtimeEntries.length > 0
-            ? effectiveState.overtimeEntries
-            : [{
-                id: 'legacy-he',
-                qtd50: effectiveState.heQtd50 || 0,
-                qtd100: effectiveState.heQtd100 || 0,
-                isEA: effectiveState.heIsEA,
-                excluirIR: effectiveState.heExcluirIR,
-                usarSubstituicaoFuncao: false
-            }];
-        const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 200;
-        const baseOvertime = effectiveState.vencimento + effectiveState.gaj + effectiveState.aqTituloValor + effectiveState.aqTreinoValor +
-            effectiveState.gratEspecificaValor + effectiveState.vpni_lei + effectiveState.vpni_decisao + effectiveState.ats + effectiveState.abonoPermanencia;
-        const calcEntryOvertimeTotal = (entry: OvertimeEntry) => {
-            const resolveFuncValue = (funcKey?: string) => {
-                if (!funcKey || funcKey === noFunctionCode || !currentTables) return 0;
-                return currentTables.funcoes[funcKey] || 0;
-            };
-            const calcSegment = (funcKey: string | undefined, qtd50: number, qtd100: number) => {
-                const valorHora = overtimeDivisor > 0 ? (baseOvertime + resolveFuncValue(funcKey)) / overtimeDivisor : 0;
-                return (valorHora * 1.5 * Math.max(0, qtd50 || 0)) + (valorHora * 2 * Math.max(0, qtd100 || 0));
-            };
-
-            let total = calcSegment(effectiveState.funcao, entry.qtd50 || 0, entry.qtd100 || 0);
-            if (entry.usarSubstituicaoFuncao && entry.horasPorFuncao) {
-                total += Object.entries(entry.horasPorFuncao as Record<string, { qtd50: number; qtd100: number }>).reduce((acc, [funcKey, horas]) => (
-                    acc + calcSegment(funcKey, Number(horas?.qtd50 || 0), Number(horas?.qtd100 || 0))
-                ), 0);
-            }
-            return total;
-        };
-
-        const heMensalTotal = overtimeEntries
-            .filter(entry => !entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + calcEntryOvertimeTotal(entry), 0);
-        const heEaTotal = overtimeEntries
-            .filter(entry => entry.isEA && !entry.excluirIR)
-            .reduce((acc, entry) => acc + calcEntryOvertimeTotal(entry), 0);
-        const heExcluidoTotal = overtimeEntries
-            .filter(entry => entry.excluirIR)
-            .reduce((acc, entry) => acc + calcEntryOvertimeTotal(entry), 0);
-
-        if (heMensalTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR MENSAL)', value: heMensalTotal, type: 'C' });
-        if (heEaTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (IR EA)', value: heEaTotal, type: 'C' });
-        if (heExcluidoTotal > 0) rows.push({ label: 'SERVIÇO EXTRAORDINÁRIO (EXCLUÍDO IR)', value: heExcluidoTotal, type: 'C' });
 
         if (effectiveState.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: effectiveState.vpni_lei, type: 'C' });
         if (effectiveState.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: effectiveState.vpni_decisao, type: 'C' });
@@ -387,35 +297,10 @@ export const useCalculatorResults = (
         if (heIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (HORA EXTRA)', value: heIrEA, type: 'D' });
         if (substIrEA > 0) rows.push({ label: 'IMPOSTO DE RENDA-EA (SUBSTITUIÇÃO)', value: substIrEA, type: 'D' });
 
-        const irEaTotal = Math.max(0, effectiveState.irEA || 0);
-        const irEaRestanteParaRubricas = Math.max(0, irEaTotal - heIrEA - substIrEA);
-        const rubricasManuaisEA = effectiveState.rubricasExtras
-            .filter(r => r.isEA && Number(r.valor) > 0)
-            .map((r, index) => ({
-                id: r.id,
-                descricao: (r.descricao || '').trim() || `RUBRICA MANUAL ${index + 1}`,
-                base: r.tipo === 'D' ? -Number(r.valor) : Number(r.valor)
-            }))
-            .filter(r => r.base > 0);
-
-        const totalBaseRubricasEA = rubricasManuaisEA.reduce((acc, item) => acc + item.base, 0);
-        if (irEaRestanteParaRubricas > 0 && totalBaseRubricasEA > 0) {
-            let alocado = 0;
-            rubricasManuaisEA.forEach((item, index) => {
-                const isLast = index === rubricasManuaisEA.length - 1;
-                const valor = isLast
-                    ? Math.max(0, Math.round((irEaRestanteParaRubricas - alocado) * 100) / 100)
-                    : Math.max(0, Math.round((irEaRestanteParaRubricas * (item.base / totalBaseRubricasEA)) * 100) / 100);
-                alocado += valor;
-                if (valor > 0) {
-                    rows.push({
-                        label: `IMPOSTO DE RENDA-EA (${item.descricao.toUpperCase()})`,
-                        value: valor,
-                        type: 'D'
-                    });
-                }
-            });
-        }
+        effectiveState.rubricasExtras.filter(r => r.tipo === 'C' && r.isEA && !effectiveState.irEaCurrentYearKeys?.includes(`rubrica:${r.id}`)).forEach((rubrica, index) => {
+            const value = effectiveState.irEaEntryTax?.[`rubrica:${rubrica.id}`] ?? 0;
+            if (value > 0) rows.push({ label: `IMPOSTO DE RENDA-EA (${(rubrica.descricao.trim() || `RUBRICA MANUAL ${index + 1}`).toUpperCase()})`, value, type: 'D' });
+        });
 
         if (effectiveState.irFerias > 0) rows.push({ label: 'IMPOSTO DE RENDA (FÉRIAS)', value: effectiveState.irFerias, type: 'D' });
         if (effectiveState.feriasDesc && effectiveState.feriasDesc > 0) rows.push({ label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', value: effectiveState.feriasDesc, type: 'D' });
@@ -457,7 +342,7 @@ export const useCalculatorResults = (
             const descricaoBase = r.descricao.trim() || `${r.tipo === 'C' ? 'CREDITO' : 'DESCONTO'} MANUAL ${index + 1}`;
             const bases: string[] = [];
             if (r.incideIR) bases.push('BASE IR');
-            if (r.isEA) bases.push('BASE IR (EA)');
+            if (r.isEA) bases.push(effectiveState.irEaCurrentYearKeys?.includes(`rubrica:${r.id}`) ? 'BASE IR' : 'BASE IR (EA)');
             if (r.incidePSS) bases.push('BASE PSS');
             if (r.pssCompetenciaSeparada) bases.push('BASE PSS (EA)');
             if (r.incideFunpresp) bases.push('BASE FUNPRESP');

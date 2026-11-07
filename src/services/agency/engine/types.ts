@@ -1,3 +1,4 @@
+import type { IrEaContext } from '../../../types/irEa';
 /**
  * Interface de Parametros de Calculo da Agencia
  *
@@ -9,6 +10,9 @@ import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../..
 import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
+    irEaContext?: IrEaContext;
+    heCompetenciasEA?: string[];
+    substCompetenciasEA?: string[];
     orgSlug: string; // Agency slug (pju, jmu, stm) for fetching correct config
     agencyConfig?: CourtConfig;
     periodo: number;

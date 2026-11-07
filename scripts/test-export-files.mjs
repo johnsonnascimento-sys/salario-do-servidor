@@ -19,7 +19,11 @@ try {
     const { INITIAL_STATE } = await server.ssrLoadModule('/src/types.ts');
     const { exportToPDF, exportToExcel } = await server.ssrLoadModule('/src/services/exportService.ts');
     const state = { ...INITIAL_STATE, nome: 'VALIDACAO DE EXPORTACAO', mesRef: 'NOVEMBRO', anoRef: 2026,
-        totalBruto: 1350, totalDescontos: 125, liquido: 1225 };
+        totalBruto: 1350, totalDescontos: 125, liquido: 1225,
+        irEaMemory: { status: 'ready', mesPagamento: '2026-11', competencias: ['2024-01', '2024-02'], meses: 2,
+            tabela: 'Tabela documentada', baseBruta: 10000, deducoes: 1000, baseCalculo: 9000,
+            impostoAntesReducao: 125, reducao: 0, imposto: 125,
+            ajustesBaseDocumentados: [{ valor: 1000, descricao: 'Despesa documentada', fundamento: 'Documento EA 123' }], avisos: [] } };
     const rows = [
         { type: 'C', label: 'CREDITO TESTE', value: 1100 },
         { type: 'D', label: 'DESCONTO TESTE', value: 100 },
@@ -40,9 +44,15 @@ try {
         'RESTITUICAO AUX. ALIM.', 'VALIDACAO DE EXPORTACAO', '1.225,00']) {
         assert(pdfContent.includes(content), `PDF missing ${content}`);
     }
+    assert(pdfContent.includes('2024-01, 2024-02'), 'PDF preserves original EA months');
+    assert(pdfContent.includes('Documento EA 123'), 'PDF preserves documented deduction');
     assert(pdfContent.includes('%%EOF'), 'PDF must have a complete trailer.');
     const excelBytes = new Uint8Array(await excel.blob.arrayBuffer());
     const workbook = XLSX.read(excelBytes, { type: 'array' });
+    assert(workbook.SheetNames.includes('Memória IR-EA'));
+    const memoryCells = XLSX.utils.sheet_to_json(workbook.Sheets['Memória IR-EA'], { header: 1 });
+    assert(memoryCells.some(row => row[0] === 'Número de meses (NM)' && row[1] === '2'));
+    assert(memoryCells.some(row => row[1]?.includes?.('Documento EA 123')));
     const cells = XLSX.utils.sheet_to_json(workbook.Sheets.Holerite, { header: 1 });
     assert(cells.some(row => row[1] === 'CREDITO TESTE' && row[2] === 1100));
     assert(cells.some(row => row[1] === 'DESCONTO TESTE' && row[3] === 100));

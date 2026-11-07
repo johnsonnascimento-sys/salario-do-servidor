@@ -171,10 +171,22 @@ const buildIrrfDetails = (
     | 'rubricasExtras'
     | 'irMensal'
     | 'irEA'
+    | 'irEaEntryTax'
+    | 'irEaCurrentYearKeys'
+    | 'overtimeCalculatedEntries'
+    | 'substitutionCalculatedEntries'
   >,
   isEa = false
 ): Array<{ label: string; value: number; type: 'D' }> => {
   if (!state) return [];
+  if (isEa) {
+    const items = [
+      ...(state.overtimeCalculatedEntries ?? []).filter(entry => entry.isEA && !entry.excluirIR).map((entry, index) => toRow(`HORA EXTRA (IR EA) #${index + 1}`, state.irEaEntryTax?.[`he:${entry.id}`] ?? 0)),
+      ...(state.substitutionCalculatedEntries ?? []).filter(entry => entry.isEA && !entry.excluirIR).map((entry, index) => toRow(`SUBSTITUIÇÃO (IR EA) #${index + 1}`, state.irEaEntryTax?.[`subst:${entry.id}`] ?? 0)),
+      ...(state.rubricasExtras ?? []).filter(entry => entry.tipo === 'C' && entry.isEA && !state.irEaCurrentYearKeys?.includes(`rubrica:${entry.id}`)).map((entry, index) => toRow(rubricaLabel(entry, index), state.irEaEntryTax?.[`rubrica:${entry.id}`] ?? 0)),
+    ];
+    return items.filter((row): row is NonNullable<typeof row> => Boolean(row));
+  }
 
   const functionRow = findCreditRow(rows, (row) =>
     normalizeLabel(row.label).includes('FUNCAOCOMISSIONADA') ||
@@ -194,31 +206,11 @@ const buildIrrfDetails = (
     rows,
     (row) => normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && !normalizeLabel(row.label).includes('IREA')
   );
-  const heEaRow = findCreditRow(
-    rows,
-    (row) => normalizeLabel(row.label).includes('SERVICOEXTRAORDINARIO') && normalizeLabel(row.label).includes('IREA')
-  );
   const substMonthlyRow = findCreditRow(
     rows,
     (row) => normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && !normalizeLabel(row.label).includes('IREA')
   );
-  const substEaRow = findCreditRow(
-    rows,
-    (row) => normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && normalizeLabel(row.label).includes('IREA')
-  );
-
-  const items = isEa
-    ? [
-        { label: 'HORA EXTRA (IR EA)', base: heEaRow?.value || 0 },
-        { label: 'SUBSTITUIÇÃO (IR EA)', base: substEaRow?.value || 0 },
-        ...(state.rubricasExtras || [])
-          .filter((rubrica) => rubrica.incideIR && rubrica.isEA && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
-          .map((rubrica, index) => ({
-            label: rubricaLabel(rubrica, index),
-            base: rubrica.valor,
-          })),
-      ]
-    : [
+  const items = [
         { label: 'VENCIMENTO-ATIVO EC', base: state.vencimento || 0 },
         { label: 'GRAT. ATIV. JUD. (GAJ)', base: state.gaj || 0 },
         { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
@@ -235,14 +227,14 @@ const buildIrrfDetails = (
         { label: 'HORA EXTRA (IR MENSAL)', base: heMonthlyRow?.value || 0 },
         { label: 'SUBSTITUIÇÃO (IR MENSAL)', base: substMonthlyRow?.value || 0 },
         ...(state.rubricasExtras || [])
-          .filter((rubrica) => rubrica.incideIR && !rubrica.isEA && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
+          .filter((rubrica) => (rubrica.incideIR && !rubrica.isEA || state.irEaCurrentYearKeys?.includes(`rubrica:${rubrica.id}`)) && Number(rubrica.valor) > 0 && rubrica.tipo !== 'D')
           .map((rubrica, index) => ({
             label: rubricaLabel(rubrica, index),
             base: rubrica.valor,
           })),
       ];
 
-  return allocateDetailRows(isEa ? (state.irEA || 0) : (state.irMensal || 0), items);
+  return allocateDetailRows(state.irMensal || 0, items);
 };
 
 const buildPssEaDetails = (
@@ -310,6 +302,10 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
     | 'substPssIsEA'
     | 'irMensal'
     | 'irEA'
+    | 'irEaEntryTax'
+    | 'irEaCurrentYearKeys'
+    | 'overtimeCalculatedEntries'
+    | 'substitutionCalculatedEntries'
     | 'pssMensal'
     | 'pssEA'
     | 'pss13'

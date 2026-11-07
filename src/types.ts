@@ -1,3 +1,4 @@
+import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry, CalculatedSubstitutionEntry } from './types/irEa';
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 export interface SalaryTable {
   [cargo: string]: {
@@ -144,6 +145,7 @@ export interface CourtConfig {
   historico_pss: Record<string, TaxTable>;
   historico_ir: Record<string, number>;
   historico_ir_brackets: Record<string, IRBracket[]>;
+  historico_ir_metadata?: Record<string, IrTableMetadata>;
   values: {
     food_allowance?: number;
     pre_school?: number;
@@ -171,6 +173,8 @@ export interface RubricaTaxDetail {
 }
 
 export interface Rubrica {
+  competenciasEA?: string[];
+  fundamentoDeducaoEA?: string;
   id: string;
   descricao: string;
   valor: number;
@@ -184,6 +188,7 @@ export interface Rubrica {
 }
 
 export interface OvertimeEntry {
+  competenciasEA?: string[];
   id: string;
   qtd50: number;
   qtd100: number;
@@ -196,6 +201,8 @@ export interface OvertimeEntry {
 }
 
 export interface SubstitutionEntry {
+  competenciasEA?: string[];
+  valorBrutoManual?: number;
   id: string;
   dias: Record<string, number>;
   isEA: boolean;
@@ -204,6 +211,12 @@ export interface SubstitutionEntry {
 }
 
 export interface CalculatorState {
+  irEaContext?: IrEaContext;
+  irEaMemory?: IrEaMemory;
+  irEaEntryTax?: Record<string, number>;
+  irEaCurrentYearKeys?: string[];
+  overtimeCalculatedEntries?: CalculatedOvertimeEntry[];
+  substitutionCalculatedEntries?: CalculatedSubstitutionEntry[];
   // Rubricas Dinâmicas
   rubricasExtras: Rubrica[];
   overtimeEntries: OvertimeEntry[];
@@ -438,6 +451,11 @@ export type CalculatedPayrollState = Pick<
   | 'valFunprespNormal'
   | 'valFunprespFacultativa'
   | 'pensionMemory'
+  | 'irEaMemory'
+  | 'irEaEntryTax'
+  | 'irEaCurrentYearKeys'
+  | 'overtimeCalculatedEntries'
+  | 'substitutionCalculatedEntries'
   | 'irMensal'
   | 'irEA'
   | 'aqIr'
@@ -493,6 +511,12 @@ export type CalculatedPayrollState = Pick<
 >;
 
 export const INITIAL_STATE: CalculatorState = {
+  irEaContext: {},
+  irEaMemory: undefined,
+  irEaEntryTax: {},
+  irEaCurrentYearKeys: [],
+  overtimeCalculatedEntries: [],
+  substitutionCalculatedEntries: [],
   rubricasExtras: [],
   overtimeEntries: [],
   substitutionEntries: [],

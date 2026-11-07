@@ -1,5 +1,16 @@
 # Changelog
 
+## Correção auditada do IR-EA, competências e memória de cálculo — 06/11/2026
+- Corrige a seleção dos limites das faixas, exige tabela vigente e contexto documental, e remove o fallback silencioso para a alíquota máxima no IR-EA.
+- Vincula HE, substituição e rubricas manuais às competências de origem e ao mês de pagamento. Conta meses distintos dos créditos, permite NM documental e encaminha rendimentos do próprio ano ao IR mensal.
+- Restaura o abatimento de GAE/GAS na substituição e remove a reutilização implícita de resultados antigos como entradas manuais.
+- Rateia o imposto conjunto em centavos por entrada, pelo método dos maiores restos; descontos dedutíveis reduzem a base sem diminuir o denominador dos créditos.
+- Acrescenta memória única para cards, holerite e exportações. Holerites salvos preservam o snapshot; recálculo de EA sem competências exige conferência.
+- Versiona a configuração global de IR de 2024/2025/2026, preservando o JSON anterior e as regras específicas dos órgãos. Deduções de dependentes e previdência complementar não são transportadas automaticamente para RRA.
+- Aplica o redutor de 2026 ao RRA com NM=1; combinações sem validação normativa suficiente ficam pendentes. Fontes e alcance estão na migração administrativa versionada.
+- Retifica o alcance da entrada anterior: a coincidência com o holerite de fevereiro/2025 depende de um ajuste documental explícito de base; não comprova dedução universal por dependentes. Os novos testes distinguem imposto observado de apuração normativa.
+- Inclui verificação administrativa com TLS validado, ensaio transacional com rollback, preservação do histórico e teste de idempotência antes da aplicação.
+
 ## Apuração Progressiva Oficial do IR de Exercícios Anteriores (RRA) e Reconciliação dos Cards — 06/11/2026
 - Adota a apuração estritamente progressiva de Imposto de Renda sobre Exercícios Anteriores (IR-EA / RRA - art. 12-A da Lei nº 7.713/1988) no motor de deduções (`deductionsCalculations.ts`), substituindo a aplicação simplificada da alíquota fixa máxima (27,5%) por `calculateIrrfProgressive` alimentada data-driven por `historico_ir_brackets`.
 - Suporte a multiplicador de meses ($NM$) no cálculo do RRA em `taxUtils.ts`, escalonando faixas e deduções conforme o período acumulado.

@@ -17,6 +17,7 @@ export function mapStateToAgencyParams(
         // Base (ICalculationParams)
         grossSalary: 0, // Ignorado pelo JMU (calcula de cargo/padrao)
         dependents: state.dependentes,
+        irEaContext: state.irEaContext,
         discounts: state.emprestimos + state.planoSaude + state.pensao,
         otherDeductions: 0,
         rubricasExtras: state.rubricasExtras,
