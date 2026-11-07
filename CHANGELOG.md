@@ -1,5 +1,10 @@
 # Changelog
 
+## Preservação do Estado de Abertura do Resumo Calculado nos Cards — 07/11/2026
+- Corrige o recolhimento indesejado da seção "Resumo calculado" (`PresetGrossSummary`) dentro dos cards enquanto o usuário digita valores nos campos.
+- Implementa controle de estado reativo (`open={isOpen}`) e retenção das últimas linhas apuradas (`lastLinesRef`) durante os recálculos assíncronos do motor, impedindo que o componente desmonte (`return null`) e seja recriado fechado quando as entradas calculadas ficam transitoriamente vazias.
+- Adiciona teste automatizado de regressão em `tests/presetGrossSummary.test.ts` validando a retenção de abertura e integridade dos valores durante a digitação.
+
 ## Padronização e Reposicionamento das Memórias de Cálculo no Detalhamento — 07/11/2026
 - Padronização visual completa da Memória Previdenciária (`PensionMemory`) e da Memória do IR-EA (`IrEaMemory`) com classes de tipografia do design system (`text-body-xs font-semibold`, `font-mono font-medium tabular-nums`, container neutro `bg-neutral-50/60 dark:bg-neutral-800/40` com bordas suaves e descrição explicativa de suporte).
 - Reposicionamento das memórias de cálculo do topo do Detalhamento para o rodapé (abaixo das tabelas do Holerite e de Diárias), sob a seção agrupada "Auditoria e Memória de Cálculo", garantindo leitura prioritária e direta do contracheque sem poluição visual no topo da tabela.
