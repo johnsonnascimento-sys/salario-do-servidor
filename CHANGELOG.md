@@ -1,5 +1,11 @@
 # Changelog
 
+## Dedução Automática de Dependentes no IR-EA e Simplificação da Usabilidade — 07/11/2026
+- Integração direta dos dependentes informados no cabeçalho na apuração do IR-EA (RRA): quando o servidor informa dependentes, a dedução legal (R$ 189,59 por dependente) é calculada e aplicada automaticamente na base dos atrasados, sem exigir que o usuário abra seções avançadas ou calcule valores manualmente.
+- Controle reativo por checkbox transparente na seção de apuração do IR-EA ("Deduzir dependentes na base do IR-EA"), ativo por padrão quando há dependentes informados, com opção de desmarcar com um clique caso a fonte pagadora não tenha abatido dependentes na competência de origem.
+- Proteção do motor de cálculo contra bloqueios indevidos causados por itens de ajuste documental adicionados e deixados em branco no formulário.
+- Registro detalhado na memória de cálculo e nas exportações (PDF/Excel) identificando a quantidade de dependentes e o valor exato abatido na base do RRA.
+
 ## Expansão do IR-EA/RRA para múltiplas competências e distinção do impacto marginal — 07/11/2026
 - Desbloqueia a apuração progressiva de IR-EA / RRA para qualquer número de meses ($NM \ge 1$), permitindo simulações com competências distintas (ex.: outubro e novembro) em horas extras, substituições e rubricas manuais.
 - Aplica a redução tributária de 2026 (Lei nº 15.270/2025 e Anexo X da IN RFB nº 1.500/2014) sobre o montante tributável acumulado recebido no mês, conforme a fundamentação oficial estrita, sem multiplicação ou divisão indevida dos limites de R$ 5.000,00 e R$ 7.350,00 pelo número de meses.

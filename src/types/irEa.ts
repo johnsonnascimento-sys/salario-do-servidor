@@ -10,6 +10,7 @@ export interface IrEaContext {
     mesesRraInformados?: number;
     referenciaMeses?: string;
     ajustesBaseDocumentados?: IrEaDocumentedAdjustment[];
+    deduzirDependentes?: boolean;
 }
 
 export interface IrTableMetadata {
@@ -47,6 +48,8 @@ export interface IrEaMemory {
     reducao: number;
     imposto: number;
     ajustesBaseDocumentados?: IrEaDocumentedAdjustment[];
+    dependentesDeduzidos?: number;
+    dependentesValor?: number;
     avisos: string[];
 }
 

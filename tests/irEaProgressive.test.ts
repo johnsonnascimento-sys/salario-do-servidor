@@ -104,16 +104,29 @@ test('faixas inclusivas e arredondamento não caem em faixa final', () => {
     assert.throws(() => calculateIrrfProgressive(1000, irBrackets2024_2025, 0), /IR-EA/);
 });
 
-test('holerite fevereiro2025: ajuste documentado reproduz base, sem dependentes automáticos', async () => {
+test('holerite fevereiro2025: dependentes do cabeçalho deduzem base do RRA automaticamente com opção de desmarcar', async () => {
+    // Por padrão, dependentes > 0 no cabeçalho deduzem automaticamente a base do RRA:
     const params = createParams({ dependentes: 2, overtimeEntries: [he('real', 9291.22)] });
-    assert.equal((await calculateDeductions(0, params)).irEA, 1659.09);
-    params.irEaContext = { mesPagamento: '2025-02', ajustesBaseDocumentados: [{ valor: 379.18,
+    const resultAuto = await calculateDeductions(0, params);
+    assert.equal(resultAuto.irEA, 1554.81);
+    assert.equal(resultAuto.overtimeIrEA, 1554.81);
+    assert.equal(resultAuto.overtimePss, 0);
+    assert.equal(resultAuto.irEaMemory?.baseCalculo, 8912.04);
+    assert.equal(resultAuto.irEaMemory?.dependentesDeduzidos, 2);
+    assert.equal(resultAuto.irEaMemory?.dependentesValor, 379.18);
+
+    // Quando desmarcado explicitamente (deduzirDependentes: false), não deduz:
+    params.irEaContext = { mesPagamento: '2025-02', deduzirDependentes: false };
+    const resultSemDep = await calculateDeductions(0, params);
+    assert.equal(resultSemDep.irEA, 1659.09);
+    assert.equal(resultSemDep.irEaMemory?.baseCalculo, 9291.22);
+
+    // Ajustes documentados adicionais continuam suportados:
+    params.irEaContext = { mesPagamento: '2025-02', deduzirDependentes: false, ajustesBaseDocumentados: [{ valor: 379.18,
         descricao: 'Ajuste observado na base do holerite fevereiro2025', fundamento: 'Holerite 8249.pdf: base8912,04' }] };
-    const result = await calculateDeductions(0, params);
-    assert.equal(result.irEA, 1554.81);
-    assert.equal(result.overtimeIrEA, 1554.81);
-    assert.equal(result.overtimePss, 0);
-    assert.equal(result.irEaMemory?.baseCalculo, 8912.04);
+    const resultDoc = await calculateDeductions(0, params);
+    assert.equal(resultDoc.irEA, 1554.81);
+    assert.equal(resultDoc.irEaMemory?.baseCalculo, 8912.04);
 });
 
 test('união das competências positivas define NM, override exige referência', async () => {

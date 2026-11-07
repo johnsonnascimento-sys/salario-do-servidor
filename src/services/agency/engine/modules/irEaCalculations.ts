@@ -86,15 +86,18 @@ export function calculateIrEa(
     if (reductionRule && reductionRule.verifiedMonths && !reductionRule.verifiedMonths.includes(meses)) {
         fail('a redução do IR ainda não foi verificada para este número de meses de RRA.');
     }
-    const adjustments = context?.ajustesBaseDocumentados || [];
+    const rawAdjustments = context?.ajustesBaseDocumentados || [];
+    const adjustments = rawAdjustments.filter(a => a.valor > 0 || Boolean(a.descricao?.trim()) || Boolean(a.fundamento?.trim()));
     for (const adjustment of adjustments) {
-        if (!Number.isFinite(adjustment.valor) || adjustment.valor < 0 || !adjustment.descricao?.trim() || !adjustment.fundamento?.trim()) fail('ajuste da base requer valor válido, descrição e fundamento.');
+        if (!Number.isFinite(adjustment.valor) || adjustment.valor <= 0 || !adjustment.descricao?.trim() || !adjustment.fundamento?.trim()) fail('ajuste da base requer valor válido, descrição e fundamento.');
     }
+    const deductDeps = context?.deduzirDependentes ?? (contributions.dependents > 0 || metadata.rra.deductDependents);
+    const dependentesValor = deductDeps ? round(contributions.dependents * (config.values?.deducao_dep || 0)) : 0;
     const baseBruta = round(prior.filter(source => source.value > 0).reduce((sum, source) => sum + source.value, 0));
     const sourceDeductions = -prior.filter(source => source.value < 0).reduce((sum, source) => sum + source.value, 0);
     const deducoes = round(sourceDeductions + contributions.rpps +
         (metadata.rra.deductComplementaryPension ? contributions.complementary : 0) +
-        (metadata.rra.deductDependents ? contributions.dependents * (config.values?.deducao_dep || 0) : 0) +
+        dependentesValor +
         adjustments.reduce((sum, adjustment) => sum + adjustment.valor, 0));
     const baseCalculo = Math.max(0, round(baseBruta - deducoes));
     const impostoAntesReducao = calculateIrrfProgressive(baseCalculo, config.historico_ir_brackets?.[tabela] || [], meses);
@@ -111,11 +114,13 @@ export function calculateIrEa(
     }
     const imposto = round(impostoAntesReducao - reducao);
     const avisos = ['O rateio por entrada é informativo; o imposto é apurado sobre a base conjunta de RRA.'];
+    if (dependentesValor > 0) avisos.push(`Dedução de ${contributions.dependents} dependente(s) aplicada na base do IR-EA (R$ ${dependentesValor.toFixed(2).replace('.', ',')}).`);
     if (adjustments.length) avisos.push('A base contém ajustes documentados de conferência; não representam deduções automáticas.');
     if (classified.current.length) avisos.push('Rendimentos do próprio ano foram encaminhados à base mensal.');
     if (reductionRule && reducao > 0) avisos.push('A redução do imposto (Anexo X da IN RFB 1.500/2014) foi aplicada sobre o montante tributável pago no mês.');
     return { tax: imposto, entryTax: allocateIrEaCents(imposto, prior), memory: {
         status: 'ready', mesPagamento, competencias, meses, tabela, baseBruta, deducoes,
-        baseCalculo, impostoAntesReducao, reducao, imposto, ajustesBaseDocumentados: adjustments, avisos
+        baseCalculo, impostoAntesReducao, reducao, imposto, ajustesBaseDocumentados: adjustments,
+        dependentesDeduzidos: deductDeps ? contributions.dependents : 0, dependentesValor, avisos
     } };
 }

@@ -26,7 +26,16 @@ assert.equal(contextInputs[0].props.value, '2027-01', 'Payment display follows t
 assert.equal(contextInputs[0].props.readOnly, true, 'Payment is collected once, in the header');
 tree.update(React.createElement(IrEaContextSection, { value: { mesPagamento: '2026-10' }, mesFolha: '2027-02', onChange: value => { context = value; }, styles }));
 assert.equal(tree.root.findAllByType('input')[0].props.value, '2027-02');
+tree.unmount();
 
+tree = create(React.createElement(IrEaContextSection, { value: { mesPagamento: '2027-01' }, mesFolha: '2027-01', dependentes: 2, deducaoDependente: 189.59, onChange: value => { context = value; }, styles }));
+assert.ok(JSON.stringify(tree.toJSON()).includes('Deduzir dependentes na base do IR-EA'));
+assert.ok(JSON.stringify(tree.toJSON()).includes('379,18'));
+const depCheckbox = tree.root.findAllByType('input').find(input => input.props.type === 'checkbox');
+assert.ok(depCheckbox, 'Checkbox de dependentes presente quando dependentes > 0');
+assert.equal(depCheckbox.props.checked, true);
+act(() => depCheckbox.props.onChange({ target: { checked: false } }));
+assert.equal(context.deduzirDependentes, false);
 tree.unmount();
 
 const state: CalculatorState = { ...INITIAL_STATE,

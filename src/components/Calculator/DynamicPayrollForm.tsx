@@ -290,8 +290,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             })}
 
             {(state.overtimeEntries.some(entry => entry.isEA) || state.substitutionEntries.some(entry => entry.isEA) || state.rubricasExtras.some(entry => entry.isEA) || state.heIsEA || state.substIsEA) && <IrEaContextSection
-                value={state.irEaContext} onChange={context => update('irEaContext', context)} styles={styles} error={calculationError}
-                mesFolha={toReferenceMonthIndex(state.mesRef) ? `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}` : undefined} />}
+                value={state.irEaContext}
+                onChange={context => update('irEaContext', context)}
+                styles={styles}
+                error={calculationError}
+                mesFolha={toReferenceMonthIndex(state.mesRef) ? `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}` : undefined}
+                dependentes={Number(state.dependentes) || 0}
+                deducaoDependente={courtConfig?.values?.deducao_dep || 189.59}
+            />}
 
             <ManualRubricasSection
                 rubricas={state.rubricasExtras}

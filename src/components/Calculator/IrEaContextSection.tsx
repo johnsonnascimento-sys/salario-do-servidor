@@ -1,12 +1,22 @@
 import React from 'react';
 import type { IrEaContext } from '../../types/irEa';
 
-interface Props { value?: IrEaContext; onChange: (value: IrEaContext) => void; styles: any; error?: string | null; mesFolha?: string }
+interface Props {
+    value?: IrEaContext;
+    onChange: (value: IrEaContext) => void;
+    styles: any;
+    error?: string | null;
+    mesFolha?: string;
+    dependentes?: number;
+    deducaoDependente?: number;
+}
 
-export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onChange, styles, error, mesFolha }: Props) => {
+export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onChange, styles, error, mesFolha, dependentes = 0, deducaoDependente = 189.59 }: Props) => {
     const value: IrEaContext = providedValue ?? {};
     const patch = (change: Partial<IrEaContext>) => onChange({ ...value, ...change });
     const adjustments = value.ajustesBaseDocumentados ?? [];
+    const isDeduzirDeps = value.deduzirDependentes ?? true;
+    const valorTotalDeps = dependentes * deducaoDependente;
     return <section className={`${styles.card} space-y-3`} aria-label="Apuração do IR-EA">
         <h3 className={styles.sectionTitle}>Apuração do IR-EA</h3>
         <p className="text-body-xs">O mês de pagamento acompanha automaticamente o mês e ano da folha no cabeçalho. Informe em cada parcela EA apenas as competências originais.</p>
@@ -23,6 +33,22 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
         {value.mesesRraInformados !== undefined && <label className={styles.label}>Referência do demonstrativo do NM
             <input type="text" required className={styles.input} value={value.referenciaMeses ?? ''} onChange={event => patch({ referenciaMeses: event.target.value })} />
         </label>}
+        {dependentes > 0 && (
+            <div className="p-3 bg-neutral-50 dark:bg-dark-surface rounded-xl border border-neutral-200 dark:border-dark-border space-y-1">
+                <label className="flex items-center gap-2 cursor-pointer text-body-xs font-semibold">
+                    <input
+                        type="checkbox"
+                        checked={isDeduzirDeps}
+                        onChange={event => patch({ deduzirDependentes: event.target.checked })}
+                        className="rounded border-neutral-300 dark:border-dark-border h-4 w-4 text-primary-600 focus:ring-primary-500"
+                    />
+                    Deduzir dependentes na base do IR-EA ({dependentes} {dependentes === 1 ? 'dependente' : 'dependentes'} = {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotalDeps)})
+                </label>
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400 pl-6">
+                    Aplica automaticamente a dedução dos dependentes informados no cabeçalho na base de cálculo dos atrasados (RRA). Desmarque caso o órgão pagador não tenha abatido dependentes na competência de origem.
+                </p>
+            </div>
+        )}
         <details className="space-y-3" open={adjustments.length > 0 || undefined}>
             <summary className="cursor-pointer text-body-xs font-semibold">Deduções documentadas da base do IR-EA</summary>
             <p className="text-body-xs">Inclua apenas deduções admitidas para estes atrasados, identificadas no documento de origem.</p>

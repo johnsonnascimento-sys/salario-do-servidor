@@ -19,7 +19,11 @@ export function mapStateToAgencyParams(
         grossSalary: 0, // Ignorado pelo JMU (calcula de cargo/padrao)
         dependents: state.dependentes,
         // The header is the receipt month for this single-payroll simulation.
-        irEaContext: { ...state.irEaContext, mesPagamento: competencia },
+        irEaContext: {
+            ...state.irEaContext,
+            mesPagamento: competencia,
+            deduzirDependentes: state.irEaContext?.deduzirDependentes ?? (state.dependentes > 0 ? true : false)
+        },
         discounts: state.emprestimos + state.planoSaude + state.pensao,
         otherDeductions: 0,
         rubricasExtras: state.rubricasExtras,
