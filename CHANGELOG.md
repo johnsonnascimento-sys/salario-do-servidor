@@ -1,5 +1,10 @@
 # Changelog
 
+## Atualização do Texto Didático de RRA nas Competências de EA — 07/11/2026
+- Atualiza a redação explicativa do callout de RRA (`IrEaCompetencias.tsx`) com texto detalhado sobre a retenção de valores acumulados e a diluição das alíquotas de imposto.
+- Apresenta as faixas de isenção de 2026 proporcionais aos meses informados (1 mês: até R$ 2.428,80; 2 meses: até R$ 4.857,60; 3 meses: até R$ 7.286,40).
+- Orienta o servidor a indicar os meses correspondentes aos comprovantes de pagamento e preserva a dica contextual por tipo de parcela.
+
 ## Migração do Card de IR-EA para o Rodapé e Ajustes Avançados Colapsáveis — 07/11/2026
 - Elimina o card invasivo de "Apuração do IR-EA" do meio do formulário (`DynamicPayrollForm.tsx`), despoluindo a tela principal e deixando a apuração de atrasados (RRA) 100% fluida e automática a partir dos meses informados nas parcelas.
 - Reposiciona a seção de auditoria e ajustes avançados de IR-EA (`IrEaContextSection.tsx`) para o rodapé (`ResultsSummary.tsx`), integrada à "Memória do IR-EA" (`IrEaMemory.tsx`), sob a seção "Auditoria e Memória de Cálculo".
