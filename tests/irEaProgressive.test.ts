@@ -148,7 +148,9 @@ test('próprio ano migra mensal, valor misturado e pagamento divergente bloqueia
     const normal = await calculateDeductions(0, createParams({ overtimeEntries: [{ ...he('a', 3500), isEA: false }] }));
     assert.equal(result.irrf, normal.irrf);
     await assert.rejects(() => calculateDeductions(0, createParams({ overtimeEntries: [he('a', 3500, ['2024-12', '2025-01'])] })), /separe/);
-    await assert.rejects(() => calculateDeductions(0, createParams({ overtimeEntries: [he('a', 3500)], irEaContext: { mesPagamento: '2025-03' } })), /cabeçalho/);
+    const directInput = createParams({ overtimeEntries: [he('a', 3500)] });
+    directInput.irEaContext = { mesPagamento: '2025-03' };
+    await assert.rejects(() => calculateDeductions(0, directInput), /cabeçalho/);
 });
 
 test('EA incompleto bloqueia e semEA não exige contexto ou tabelaRRA', async () => {
@@ -214,4 +216,29 @@ test('duas HE com frações de centavo têm bruto e baseRRA iguais à soma ofici
     assert.equal(manual.heTotal, 104.13);
     assert.equal(manual.heVal50, 0);
     assert.equal(manual.heVal100, 0);
+});
+
+
+test('mês de pagamento segue cabeçalho futuro e preserva competências e documentos', async () => {
+    const state: CalculatorState = { ...INITIAL_STATE, anoRef: '2027', mesRef: 'JANEIRO',
+        cargo: 'tecnico', padrao: 'C13', funcao: '0', tabelaIR: '2025_jan', tabelaPSS: '2025',
+        irEaContext: { mesPagamento: '2026-10', referenciaMeses: 'Documento preservado' },
+        overtimeEntries: [he('future', 3500, ['2026-11'])] };
+    const before = JSON.stringify(state);
+    const config: CourtConfig = { ...mockConfig, historico_ir_metadata: { future: {
+        validFrom: '2027-01-01', reference: 'Synthetic future fixture',
+        rra: { reductionApplicable: false, deductDependents: false, deductComplementaryPension: false } } },
+        historico_ir_brackets: { future: irBrackets2024_2025 } };
+    const params = mapStateToAgencyParams(state, 'cjf', config);
+    assert.equal(params.irEaContext?.mesPagamento, '2027-01');
+    assert.equal(params.irEaContext?.referenciaMeses, 'Documento preservado');
+    const result = await calculateDeductions(0, params);
+    assert.equal(result.irEaMemory?.mesPagamento, '2027-01');
+    assert.deepEqual(result.irEaMemory?.competencias, ['2026-11']);
+    assert.equal(result.irEaMemory?.meses, 1);
+    const feb = mapStateToAgencyParams({ ...state, mesRef: 'FEVEREIRO' }, 'cjf', config);
+    assert.equal(feb.irEaContext?.mesPagamento, '2027-02');
+    const legacy = mapStateToAgencyParams({ ...state, irEaContext: undefined }, 'cjf', config);
+    assert.equal(legacy.irEaContext?.mesPagamento, '2027-01');
+    assert.equal(JSON.stringify(state), before, 'Adapter must preserve the saved snapshot');
 });

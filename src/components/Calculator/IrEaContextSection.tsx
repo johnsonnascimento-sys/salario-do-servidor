@@ -9,12 +9,11 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
     const adjustments = value.ajustesBaseDocumentados ?? [];
     return <section className={`${styles.card} space-y-3`} aria-label="Apuração do IR-EA">
         <h3 className={styles.sectionTitle}>Apuração do IR-EA</h3>
-        <p className="text-body-xs">O mês do pagamento deve coincidir com o mês e ano da folha no cabeçalho. As competências originais são informadas em cada parcela EA.</p>
+        <p className="text-body-xs">O mês de pagamento acompanha automaticamente o mês e ano da folha no cabeçalho. Informe em cada parcela EA apenas as competências originais.</p>
         {error?.includes('IR-EA') && <p role="alert" className="text-body-xs text-warning-700 dark:text-warning-300">Há dados de IR-EA que precisam de revisão. Confira o pagamento, as competências e os documentos informados. {error}</p>}
-        {mesFolha && <button type="button" className="text-body-xs font-semibold underline" onClick={() => patch({ mesPagamento: mesFolha })}>Usar mês e ano da folha ({mesFolha})</button>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <label className={styles.label}>Mês do pagamento dos atrasados
-                <input type="month" required className={styles.input} value={value.mesPagamento ?? ''} onChange={event => patch({ mesPagamento: event.target.value })} />
+                <input type="month" readOnly className={styles.input} value={mesFolha ?? ''} />
             </label>
             <label className={styles.label}>Número de meses (NM) do demonstrativo, se houver
                 <input type="number" min="0.1" step="0.1" className={styles.input} value={value.mesesRraInformados ?? ''} onChange={event => patch({ mesesRraInformados: event.target.value === '' ? undefined : Math.max(0, Math.round(Number(event.target.value) * 10) / 10) })} />
