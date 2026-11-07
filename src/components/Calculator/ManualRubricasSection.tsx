@@ -1,3 +1,4 @@
+import { IrEaCompetencias } from './IrEaCompetencias';
 import React from 'react';
 import { DollarSign, Minus, Plus, Trash2 } from 'lucide-react';
 import { Rubrica, RubricaTaxDetail } from '../../types';
@@ -11,6 +12,8 @@ interface ManualRubricasSectionProps {
     totalCreditos: number;
     totalDescontos: number;
     rubricasTax?: Record<string, RubricaTaxDetail>;
+    irEaEntryTax?: Record<string, number>;
+    irEaCurrentYearKeys?: string[];
     addRubrica: (tipo?: Rubrica['tipo']) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
@@ -23,6 +26,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     totalCreditos,
     totalDescontos,
     rubricasTax,
+    irEaEntryTax,
+    irEaCurrentYearKeys,
     addRubrica,
     removeRubrica,
     updateRubrica,
@@ -41,14 +46,17 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
         }
 
         const tax = rubricasTax?.[rubrica.id];
+        if (rubrica.isEA && !tax) return [];
         const lines: PresetGrossLine[] = [
             { label: `${label} Bruto`, value: valor }
         ];
 
         if (tax) {
-            if (tax.ir > 0) {
-                const irLabel = rubrica.isEA ? `Desconto IR-EA (${label})` : `Desconto IR (${label})`;
-                lines.push({ label: irLabel, value: tax.ir, isDiscount: true });
+            const isRra = rubrica.isEA && !irEaCurrentYearKeys?.includes(`rubrica:${rubrica.id}`);
+            const ir = isRra ? (irEaEntryTax?.[`rubrica:${rubrica.id}`] ?? 0) : tax.ir;
+            if (ir > 0) {
+                const irLabel = isRra ? `Desconto IR-EA (${label})` : `Desconto IR (${label})`;
+                lines.push({ label: irLabel, value: ir, isDiscount: true });
             }
             if (tax.pss > 0) {
                 const pssLabel = rubrica.pssCompetenciaSeparada ? `Desconto PSS-EA (${label})` : `Desconto PSS (${label})`;
@@ -57,7 +65,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
             if (tax.funpresp > 0) {
                 lines.push({ label: `Desconto Funpresp (${label})`, value: tax.funpresp, isDiscount: true });
             }
-            lines.push({ label: `${label} Líquido`, value: tax.liquido });
+            lines.push({ label: `${label} Líquido`, value: Math.max(0, valor - ir - tax.pss - tax.funpresp) });
         } else {
             lines.push({ label: `${label} Líquido`, value: valor });
         }
@@ -231,6 +239,10 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </label>
                     </div>
 
+                    {rubrica.isEA && <IrEaCompetencias value={rubrica.competenciasEA} onChange={competencias => updateRubrica(rubrica.id, 'competenciasEA', competencias)} styles={styles} />}
+                    {rubrica.isEA && rubrica.tipo === 'D' && <label className={styles.label}>Fundamento e referência documental da dedução EA
+                        <input required className={styles.input} value={rubrica.fundamentoDeducaoEA ?? ''} onChange={event => updateRubrica(rubrica.id, 'fundamentoDeducaoEA', event.target.value)} />
+                    </label>}
                     <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />
                 </div>
             ))}

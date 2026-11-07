@@ -1,3 +1,4 @@
+import { IrEaMemory } from './IrEaMemory';
 import { PensionMemory } from './PensionMemory';
 import React from 'react';
 import { Receipt } from 'lucide-react';
@@ -210,6 +211,7 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
 
             <div className="p-4 sm:p-6 space-y-6">
                 {state.pensionMemory && <PensionMemory memory={state.pensionMemory} />}
+                <IrEaMemory memory={state.irEaMemory} />
                 <div className="sm:hidden">
                     <MobileSummarySection
                         title="Holerite (sem diárias)"

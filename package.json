@@ -23,7 +23,8 @@
     "audit": "node scripts/audit-project.cjs",
     "audit:design": "node scripts/audit-design-system.cjs",
     "test:loading": "node scripts/test-calculator-loading.mjs",
-    "validate:deploy": "node scripts/validate-deploy.mjs"
+    "validate:deploy": "node scripts/validate-deploy.mjs",
+    "test:ir-ea": "node scripts/test-ir-ea-progressive.mjs && node scripts/test-ir-ea-config.mjs && node scripts/test-ir-ea-ui.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",

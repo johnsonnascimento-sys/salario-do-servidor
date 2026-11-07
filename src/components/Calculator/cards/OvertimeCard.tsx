@@ -1,3 +1,4 @@
+import { IrEaCompetencias } from '../IrEaCompetencias';
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { CourtConfig, OvertimeEntry } from '../../../types';
@@ -109,6 +110,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             <span>Calcular por função substituída.</span>
                         </label>
                     </div>
+
+                    {entry.isEA && <IrEaCompetencias value={entry.competenciasEA} onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })} styles={styles} />}
 
                     {!usarSubstituicaoFuncao ? (
                         <div className="grid grid-cols-2 gap-4 mt-4">

@@ -14,7 +14,11 @@ const configuration = (): CourtConfig => ({
         atual: { teto_rgps: 5000, faixas: [{ min: 0, max: 100000, rate: 0.1 }] },
         anterior: { teto_rgps: 4000, faixas: [{ min: 0, max: 100000, rate: 0.08 }] },
     },
-    historico_ir: { teste: 100 }, historico_ir_brackets: {}, values: { deducao_dep: 100 },
+    historico_ir: { teste: 100 },
+    historico_ir_brackets: { teste: [{ min: 0, max: Infinity, rate: 0.2, deduction: 100 }] },
+    historico_ir_metadata: { teste: { validFrom: '2026-01-01', reference: 'Synthetic pension isolation fixture',
+        rra: { reductionApplicable: false, deductDependents: false, deductComplementaryPension: false } } },
+    values: { deducao_dep: 100 },
     payrollRules: { gajRate: 0.5, specificGratificationRate: 0.1, vrRateOnCj1: 0.1,
         monthDayDivisor: 30, overtimeMonthHours: 200, transportWorkdays: 22,
         transportDiscountRate: 0.06, irrfTopRate: 0.2 },
@@ -218,7 +222,7 @@ test('historical recalculation uses historical total less actually paid, with se
 });
 
 test('legacy capped EA cannot silently apply current marginal rate', async () => {
-    const p = parameters({ rubricasExtras: [{ id: 'r', descricao: 'EA', valor: 100, tipo: 'C', incideIR: false,
+    const p = parameters({ irEaContext: { mesPagamento: '2026-07' }, rubricasExtras: [{ competenciasEA: ['2025-01'], id: 'r', descricao: 'EA', valor: 100, tipo: 'C', incideIR: false,
         incidePSS: true, isEA: true, pssCompetenciaSeparada: true }] });
     await assert.rejects(new AgencyCalculationEngine().calculateTotal(p), /por competência/);
 });
@@ -262,8 +266,8 @@ test('anonymous August and September payroll reconciliation: capped RPPS plus op
 
 test('retroactive destinations reduce only the selected IR base and flags do not double charge', async () => {
     const engine = new AgencyCalculationEngine();
-    const base = parameters({ adiant13Venc: 1, segunda13Venc: 1,
-        rubricasExtras: [{ id: 'r', descricao: 'Retroativo', tipo: 'C', valor: 1000,
+    const base = parameters({ adiant13Venc: 1, segunda13Venc: 1, irEaContext: { mesPagamento: '2026-07' },
+        rubricasExtras: [{ competenciasEA: ['2025-01'], id: 'r', descricao: 'Retroativo', tipo: 'C', valor: 1000,
             incideIR: true, incidePSS: true, pssCompetenciaSeparada: true, isEA: true }] });
     for (const destinoIR of ['mensal', 'ea', '13'] as const) {
         const result = await engine.calculateTotal({ ...base, pensionRetroEntries: [{ id: 'm', competencia: '2025-01',
@@ -275,7 +279,7 @@ test('retroactive destinations reduce only the selected IR base and flags do not
             modo: 'manual', destinoIR, ajusteRpps: 0, ajusteComplementar: 0, justificativa: 'Controle sem ajuste' }] });
         for (const [destination, field] of [['mensal', 'irrf'], ['ea', 'irEA'], ['13', 'imposto13']]) {
             assert.equal(Math.round((noAdjustment.breakdown[field] - result.breakdown[field]) * 100) / 100,
-                destination === destinoIR ? 30 : 0);
+                destination === destinoIR ? (destination === 'ea' ? 20 : 30) : 0); // RRA deducts official pension only.
         }
         // Removing EA flags only changes calculation classification, never adds a second pension assessment.
         const comparison = await engine.calculateTotal({ ...base,

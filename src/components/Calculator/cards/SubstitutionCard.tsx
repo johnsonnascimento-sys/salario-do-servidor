@@ -1,3 +1,4 @@
+import { IrEaCompetencias } from '../IrEaCompetencias';
 import React from 'react';
 import { SubstitutionEntry } from '../../../types';
 
@@ -47,6 +48,12 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                             <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
                         </label>
                     </div>
+
+                    {entry.isEA && <IrEaCompetencias value={entry.competenciasEA} onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })} styles={styles} />}
+
+                    {entry.isEA && <label className={styles.label}>Valor bruto documentado da substituição (opcional)
+                        <input type="number" min="0" step="0.01" className={styles.input} value={entry.valorBrutoManual ?? ''} onChange={event => updateEntry(entry.id, { valorBrutoManual: event.target.value === '' ? undefined : Math.max(0, Number(event.target.value) || 0) })} />
+                    </label>}
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {functionKeys.map((key) => (

@@ -1,5 +1,6 @@
 import { AdjustmentScheduleConfig, EffectiveConfig } from './types';
 import { CourtConfig, TaxTable, AdjustmentScheduleEntry } from '../../types';
+import type { IrTableMetadata } from '../../types/irEa';
 
 const toNumberKey = (key: string) => {
     const parsed = Number(key.replace(/[^\d.]/g, ''));
@@ -84,10 +85,21 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
     }
 
     const historico_ir: Record<string, number> = {};
+    const historico_ir_metadata: Record<string, IrTableMetadata> = {};
     const historico_ir_brackets: Record<string, Array<{ min: number; max: number; rate: number; deduction: number }>> = {};
     if (effective.ir_deduction) {
         Object.entries(effective.ir_deduction).forEach(([key, table]) => {
             historico_ir[key] = table.deduction;
+            // Missing metadata remains missing: the EA engine must request review,
+            // rather than infer legal validity or RRA deductions from a table name.
+            if (table.valid_from && table.reference && table.rra) {
+                historico_ir_metadata[key] = {
+                    validFrom: table.valid_from,
+                    ...(table.valid_to ? { validTo: table.valid_to } : {}),
+                    reference: table.reference,
+                    rra: table.rra,
+                };
+            }
             historico_ir_brackets[key] = (table.brackets || []).map((bracket) => ({
                 min: bracket.min,
                 max: bracket.max ?? Infinity,
@@ -127,6 +139,7 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         historico_pss,
         historico_ir,
         historico_ir_brackets,
+        historico_ir_metadata,
         values: {
             food_allowance: pickLatestValue(effective.benefits?.auxilio_alimentacao),
             pre_school: pickLatestValue(effective.benefits?.auxilio_preescolar),

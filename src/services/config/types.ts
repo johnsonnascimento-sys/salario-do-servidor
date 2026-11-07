@@ -1,3 +1,5 @@
+import type { IrTableMetadata } from '../../types/irEa';
+
 /**
  * Tipos para o Sistema de Configuração Hierárquica
  * 
@@ -21,6 +23,12 @@ export interface GlobalConfig {
 export interface IRDeductionConfig {
     [year: string]: {
         deduction: number;
+        /** Calendar validity of the tax table, independently of config version dates. */
+        valid_from?: string;
+        valid_to?: string;
+        reference?: string;
+        revision?: string;
+        rra?: IrTableMetadata['rra'];
         brackets: Array<{
             min: number;
             max: number | null;

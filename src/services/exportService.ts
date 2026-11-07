@@ -1,3 +1,4 @@
+import { buildIrEaAuditRows } from '../utils/irEaExport';
 import { buildPensionAuditRows } from '../utils/pensionExport';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
@@ -103,6 +104,15 @@ export const exportToPDF = (
         doc.autoTable({ head: [['Referência / Campo', 'Valor']], body: pensionRows,
             startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
     }
+    const irEaRows = buildIrEaAuditRows(state.irEaMemory);
+    if (irEaRows.length > 0) {
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text('Memória do IR-EA', 14, 18);
+        doc.autoTable({ head: [['Campo', 'Valor']], body: irEaRows,
+            startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
+    }
     const pdfBlob = doc.output('blob');
     const filename = options?.filename?.trim() || `Holerite_${state.mesRef}_${state.anoRef}`;
     saveAs(pdfBlob, `${filename}.pdf`);
@@ -155,6 +165,12 @@ export const exportToExcel = (
         XLSX.utils.book_append_sheet(wb, auditSheet, 'Memória previdenciária');
     }
 
+    const irEaRows = buildIrEaAuditRows(state.irEaMemory);
+    if (irEaRows.length > 0) {
+        const irEaSheet = XLSX.utils.aoa_to_sheet([['Campo', 'Valor'], ...irEaRows]);
+        irEaSheet['!cols'] = [{ wch: 40 }, { wch: 70 }];
+        XLSX.utils.book_append_sheet(wb, irEaSheet, 'Memória IR-EA');
+    }
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const filename = options?.filename?.trim() || `Holerite_${state.mesRef}_${state.anoRef}`;

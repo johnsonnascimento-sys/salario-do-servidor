@@ -1,4 +1,4 @@
-import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
+import { CalculatorState, CourtConfig } from '../../types';
 import {
     resolveDailiesDailyRate,
     resolveDailiesDiscountRules,
@@ -25,38 +25,6 @@ interface BuildPresetGrossLinesParams {
     currentFunctionValue: number;
     gratificacaoEspecificaCalculada: number;
 }
-
-const buildSubstitutionBreakdown = (
-    diasMap: Record<string, number>,
-    payrollRules: CourtConfig['payrollRules'],
-    currentTables: BuildPresetGrossLinesParams['currentTables'],
-    currentFunctionValue: number,
-    gratificacaoEspecificaCalculada: number
-) => {
-    const divisor = payrollRules?.monthDayDivisor ?? 30;
-    const baseAbatimento = currentFunctionValue + gratificacaoEspecificaCalculada;
-
-    const linhas = Object.entries(diasMap || {})
-        .filter(([, days]) => Number(days) > 0)
-        .map(([funcKey, days]) => {
-            const destino = currentTables.funcoes[funcKey] || 0;
-            const bruto = destino > baseAbatimento
-                ? roundCurrency(((destino - baseAbatimento) / divisor) * Number(days))
-                : 0;
-
-            return {
-                key: funcKey,
-                days: Number(days),
-                value: bruto
-            };
-        })
-        .filter((linha) => linha.value > 0);
-
-    return {
-        linhas,
-        total: roundCurrency(linhas.reduce((acc, linha) => acc + linha.value, 0))
-    };
-};
 
 export const buildPresetGrossLines = ({
     instance,
@@ -170,178 +138,51 @@ export const buildPresetGrossLines = ({
             ];
         }
         case 'hora_extra': {
-            const entry = instance.overtimeEntryId
-                ? state.overtimeEntries.find(item => item.id === instance.overtimeEntryId)
-                : state.overtimeEntries[0];
-            const fallbackEntry: OvertimeEntry = {
-                id: 'legacy-he',
-                qtd50: state.heQtd50 || 0,
-                qtd100: state.heQtd100 || 0,
-                isEA: state.heIsEA,
-                excluirIR: state.heExcluirIR,
-                usarSubstituicaoFuncao: false
-            };
-            const overtimeEntry = entry || fallbackEntry;
-            const overtimeBaseEntries = state.overtimeEntries.length > 0 ? state.overtimeEntries : [fallbackEntry];
-            const overtimeDivisor = courtConfig.payrollRules?.overtimeMonthHours || 200;
-            const baseOvertime = state.vencimento + state.gaj + state.aqTituloValor + state.aqTreinoValor +
-                state.gratEspecificaValor + state.vpni_lei + state.vpni_decisao + state.ats + state.abonoPermanencia;
-            const resolveFuncValue = (funcKey?: string) => {
-                if (!funcKey || funcKey === noFunctionCode) return 0;
-                return currentTables.funcoes[funcKey] || 0;
-            };
-            const calcSegment = (funcKey: string | undefined, qtd50: number, qtd100: number) => {
-                const valorHora = overtimeDivisor > 0 ? (baseOvertime + resolveFuncValue(funcKey)) / overtimeDivisor : 0;
-                return {
-                    he50: valorHora * 1.5 * Math.max(0, qtd50 || 0),
-                    he100: valorHora * 2.0 * Math.max(0, qtd100 || 0)
-                };
-            };
-            const calcEntryTotals = (item: OvertimeEntry) => {
-                const titular = calcSegment(state.funcao, item.qtd50 || 0, item.qtd100 || 0);
-                let he50 = titular.he50;
-                let he100 = titular.he100;
-
-                if (item.usarSubstituicaoFuncao && item.horasPorFuncao) {
-                    Object.entries(item.horasPorFuncao).forEach(([funcKey, horas]) => {
-                        const segmento = calcSegment(funcKey, horas?.qtd50 || 0, horas?.qtd100 || 0);
-                        he50 += segmento.he50;
-                        he100 += segmento.he100;
-                    });
-                }
-
-                return { he50, he100, total: he50 + he100 };
-            };
-
-            const currentHe = calcEntryTotals(overtimeEntry);
-            const he50Bruto = roundCurrency(currentHe.he50);
-            const he100Bruto = roundCurrency(currentHe.he100);
-            const heTotalBruto = roundCurrency(he50Bruto + he100Bruto);
-            const mensalBaseTotal = overtimeBaseEntries
-                .filter(item => !item.isEA && !item.excluirIR)
-                .reduce((acc, item) => acc + calcEntryTotals(item).total, 0);
-            const eaBaseTotal = overtimeBaseEntries
-                .filter(item => item.isEA && !item.excluirIR)
-                .reduce((acc, item) => acc + calcEntryTotals(item).total, 0);
-            const heIrMensalTotal = Math.max(0, state.heIrMensal || 0);
-            const heIrEATotal = Math.max(0, state.heIrEA || 0);
-
-            let heIr = 0;
-            if (!overtimeEntry.excluirIR && !overtimeEntry.isEA && mensalBaseTotal > 0) {
-                heIr += heIrMensalTotal * (heTotalBruto / mensalBaseTotal);
+            const entries = state.overtimeCalculatedEntries ?? [];
+            const entry = instance.overtimeEntryId ? entries.find(item => item.id === instance.overtimeEntryId) : entries[0];
+            if (!entry) return [];
+            const he50Bruto = entry.heVal50;
+            const he100Bruto = entry.heVal100;
+            const heTotalBruto = entry.heTotal;
+            const mensalBase = entries.filter(item => !item.isEA && !item.excluirIR).reduce((sum, item) => sum + item.heTotal, 0);
+            const heIr = entry.excluirIR ? 0 : entry.isEA
+                ? (state.irEaEntryTax?.[`he:${entry.id}`] ?? 0)
+                : roundCurrency(mensalBase > 0 ? (state.heIrMensal || 0) * heTotalBruto / mensalBase : 0);
+            const irLabel = entry.isEA ? 'Desconto IR-EA (Hora extra)' : 'Desconto IR (Hora extra)';
+            if (Math.abs(roundCurrency(he50Bruto + he100Bruto) - heTotalBruto) > 0.001) {
+                return [
+                    { label: 'Valor bruto manual/importado', value: heTotalBruto },
+                    { label: irLabel, value: heIr, isDiscount: true },
+                    { label: 'Total hora extra Líquido', value: roundCurrency(Math.max(0, heTotalBruto - heIr)) },
+                ];
             }
-            if (!overtimeEntry.excluirIR && overtimeEntry.isEA && eaBaseTotal > 0) {
-                heIr += heIrEATotal * (heTotalBruto / eaBaseTotal);
-            }
-            heIr = roundCurrency(Math.min(Math.max(0, heIr), heTotalBruto));
-
-            const hePss = 0;
-            const heTotalDescontos = roundCurrency(heIr + hePss);
-            const proporcaoHe50 = heTotalBruto > 0 ? he50Bruto / heTotalBruto : 0;
-            const descontoHe50 = roundCurrency(heTotalDescontos * proporcaoHe50);
-            const descontoHe100 = roundCurrency(Math.max(0, heTotalDescontos - descontoHe50));
-            const he50Liquido = roundCurrency(Math.max(0, he50Bruto - descontoHe50));
-            const he100Liquido = roundCurrency(Math.max(0, he100Bruto - descontoHe100));
-            const heTotalLiquido = roundCurrency(Math.max(0, heTotalBruto - heTotalDescontos));
-            const irLabel = overtimeEntry.isEA ? 'Desconto IR-EA (Hora extra)' : 'Desconto IR (Hora extra)';
-
+            const desconto50 = roundCurrency(heTotalBruto > 0 ? heIr * he50Bruto / heTotalBruto : 0);
             return [
                 { label: 'Hora extra 50% Bruto', value: he50Bruto },
                 { label: 'Hora extra 100% Bruto', value: he100Bruto },
                 { label: irLabel, value: heIr, isDiscount: true },
-                { label: 'Desconto PSS (Hora extra)', value: hePss, isDiscount: true },
-                { label: 'Hora extra 50% Líquido', value: he50Liquido },
-                { label: 'Hora extra 100% Líquido', value: he100Liquido },
+                { label: 'Desconto PSS (Hora extra)', value: 0, isDiscount: true },
+                { label: 'Hora extra 50% Líquido', value: roundCurrency(Math.max(0, he50Bruto - desconto50)) },
+                { label: 'Hora extra 100% Líquido', value: roundCurrency(Math.max(0, he100Bruto - (heIr - desconto50))) },
                 { label: 'Total hora extra Bruto', value: heTotalBruto },
-                { label: 'Total hora extra Líquido', value: heTotalLiquido }
+                { label: 'Total hora extra Líquido', value: roundCurrency(Math.max(0, heTotalBruto - heIr)) },
             ];
         }
         case 'substituicao': {
-            const substitutionEntry = instance.substitutionEntryId
-                ? state.substitutionEntries.find(item => item.id === instance.substitutionEntryId)
-                : state.substitutionEntries[0];
-            const fallbackEntry: SubstitutionEntry = {
-                id: 'legacy-subst',
-                dias: { ...(state.substDias || {}) },
-                isEA: state.substIsEA,
-                excluirIR: false,
-                pssIsEA: state.substPssIsEA
-            };
-            const currentEntry = substitutionEntry || fallbackEntry;
-            const substitutionEntries = state.substitutionEntries.length > 0 ? state.substitutionEntries : [fallbackEntry];
-
-            const substitutionBreakdown = buildSubstitutionBreakdown(
-                currentEntry.dias || {},
-                courtConfig.payrollRules,
-                currentTables,
-                currentFunctionValue,
-                gratificacaoEspecificaCalculada
-            );
-            const substTotalBruto = roundCurrency(substitutionBreakdown.total);
-            const sumBreakdownTotal = (entry: SubstitutionEntry) => buildSubstitutionBreakdown(
-                entry.dias || {},
-                courtConfig.payrollRules,
-                currentTables,
-                currentFunctionValue,
-                gratificacaoEspecificaCalculada
-            ).total;
-            const mensalBaseTotal = substitutionEntries
-                .filter(item => !item.isEA && !item.excluirIR)
-                .reduce((acc, item) => acc + sumBreakdownTotal(item), 0);
-            const eaBaseTotal = substitutionEntries
-                .filter(item => item.isEA && !item.excluirIR)
-                .reduce((acc, item) => acc + sumBreakdownTotal(item), 0);
-            const pssEaBaseTotal = substitutionEntries
-                .filter(item => item.pssIsEA)
-                .reduce((acc, item) => acc + sumBreakdownTotal(item), 0);
-
-            let substIr = 0;
-            if (!currentEntry.excluirIR && currentEntry.isEA && eaBaseTotal > 0) {
-                substIr = (state.substIrEA || 0) * (substTotalBruto / eaBaseTotal);
-            } else if (!currentEntry.excluirIR && !currentEntry.isEA && mensalBaseTotal > 0) {
-                substIr = (state.substIrMensal || 0) * (substTotalBruto / mensalBaseTotal);
-            }
-            let substPss = 0;
-            if (currentEntry.pssIsEA && pssEaBaseTotal > 0) {
-                substPss = (state.substPss || 0) * (substTotalBruto / pssEaBaseTotal);
-            }
-            substIr = roundCurrency(Math.max(0, substIr));
-            substPss = roundCurrency(Math.max(0, substPss));
-            const substTotalCap = roundCurrency(Math.min(substTotalBruto, substIr + substPss));
-            if (substIr + substPss > substTotalCap && substIr > 0) {
-                substIr = roundCurrency(Math.max(0, substTotalCap - substPss));
-            }
-            const substTotalDescontos = roundCurrency(substIr + substPss);
-            let descontoSubstAcumulado = 0;
-
-            const porFuncaoBruto = substitutionBreakdown.linhas.map((linha) => ({
-                label: `Substituição ${linha.key.toUpperCase()} (${linha.days} dia(s)) Bruto`,
-                value: linha.value
-            }));
-            const porFuncaoLiquido = substitutionBreakdown.linhas.map((linha, index) => {
-                const isLast = index === substitutionBreakdown.linhas.length - 1;
-                const proporcao = substTotalBruto > 0 ? linha.value / substTotalBruto : 0;
-                const desconto = isLast
-                    ? roundCurrency(Math.max(0, substTotalDescontos - descontoSubstAcumulado))
-                    : roundCurrency(substTotalDescontos * proporcao);
-                descontoSubstAcumulado += desconto;
-                return {
-                    label: `Substituição ${linha.key.toUpperCase()} (${linha.days} dia(s)) Líquido`,
-                    value: roundCurrency(Math.max(0, linha.value - desconto))
-                };
-            });
-
+            const entries = state.substitutionCalculatedEntries ?? [];
+            const entry = instance.substitutionEntryId ? entries.find(item => item.id === instance.substitutionEntryId) : entries[0];
+            if (!entry) return [];
+            const mensalBase = entries.filter(item => !item.isEA && !item.excluirIR).reduce((sum, item) => sum + item.total, 0);
+            const pssBase = entries.filter(item => item.pssIsEA).reduce((sum, item) => sum + item.total, 0);
+            const ir = entry.excluirIR ? 0 : entry.isEA
+                ? (state.irEaEntryTax?.[`subst:${entry.id}`] ?? 0)
+                : roundCurrency(mensalBase > 0 ? (state.substIrMensal || 0) * entry.total / mensalBase : 0);
+            const pss = roundCurrency(entry.pssIsEA && pssBase > 0 ? (state.substPss || 0) * entry.total / pssBase : 0);
             return [
-                ...porFuncaoBruto,
-                {
-                    label: currentEntry.isEA ? 'Desconto IR-EA (Substituição)' : 'Desconto IR (Substituição)',
-                    value: substIr,
-                    isDiscount: true
-                },
-                { label: 'Desconto PSS (Substituição)', value: substPss, isDiscount: true },
-                ...porFuncaoLiquido,
-                { label: 'Total substituição Bruto', value: substTotalBruto },
-                { label: 'Total substituição Líquido', value: roundCurrency(Math.max(0, substTotalBruto - substTotalDescontos)) }
+                { label: 'Total substituição Bruto', value: entry.total },
+                { label: entry.isEA ? 'Desconto IR-EA (Substituição)' : 'Desconto IR (Substituição)', value: ir, isDiscount: true },
+                { label: 'Desconto PSS (Substituição)', value: pss, isDiscount: true },
+                { label: 'Total substituição Líquido', value: roundCurrency(Math.max(0, entry.total - ir - pss)) },
             ];
         }
         case 'licenca':

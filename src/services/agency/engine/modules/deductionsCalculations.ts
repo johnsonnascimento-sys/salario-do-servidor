@@ -8,7 +8,9 @@
  */
 
 import { CourtConfig, Rubrica, RubricaTaxDetail } from '../../../../types';
-import { calculatePss, calculateIrrf, calculateIrrfProgressive } from '../../../../core/calculations/taxUtils';
+import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
+import type { IrEaMemory, CalculatedOvertimeEntry, CalculatedSubstitutionEntry } from '../../../../types/irEa';
+import { calculateIrEa, classifyIrEaSources, type IrEaSource } from './irEaCalculations';
 import { IAgencyCalculationParams } from '../types';
 import { getPayrollRules } from './configRules';
 import { calculateMonthlyPensionContext } from './pensionContext';
@@ -26,6 +28,11 @@ export interface DeductionsResult {
     pensionRetroMemory: PensionRetroMemory[];
     irrf: number;
     irEA: number;
+    irEaMemory?: IrEaMemory;
+    irEaEntryTax: Record<string, number>;
+    irEaCurrentYearKeys: string[];
+    overtimeCalculatedEntries: CalculatedOvertimeEntry[];
+    substitutionCalculatedEntries: CalculatedSubstitutionEntry[];
     aqIr: number;
     aqPss: number;
     gratIr: number;
@@ -110,19 +117,43 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
 
     const overtime = await calculateOvertime(params);
     const substitution = await calculateSubstitution(params);
+    const eaSources: IrEaSource[] = [
+        ...overtime.entries.filter(entry => entry.isEA && !entry.excluirIR).map(entry => ({
+            key: `he:${entry.id}`, value: entry.heTotal,
+            competencias: params.overtimeEntries?.find(input => input.id === entry.id)?.competenciasEA ?? params.heCompetenciasEA
+        })),
+        ...substitution.entries.filter(entry => entry.isEA && !entry.excluirIR).map(entry => ({
+            key: `subst:${entry.id}`, value: entry.total,
+            competencias: params.substitutionEntries?.find(input => input.id === entry.id)?.competenciasEA ?? params.substCompetenciasEA
+        })),
+        ...(params.rubricasExtras || []).filter(entry => entry.isEA).map(entry => ({
+            key: `rubrica:${entry.id}`, value: (entry.tipo === 'D' ? -1 : 1) * Number(entry.valor || 0),
+            competencias: entry.competenciasEA, deductionReference: entry.fundamentoDeducaoEA
+        }))
+    ];
+    const classifiedEa = classifyIrEaSources(eaSources, params.irEaContext);
+    if (classifiedEa.mesPagamento && classifiedEa.mesPagamento !== params.competencia) {
+        throw new Error('IR-EA: alinhe o mês e ano do cabeçalho ao mês de pagamento informado.');
+    }
+    if (classifiedEa.current.length) {
+        const metadata = config.historico_ir_metadata?.[params.tabelaIR];
+        const paymentDate = `${classifiedEa.mesPagamento}-01`;
+        if (!metadata?.reference?.trim() || metadata.validFrom > paymentDate || (metadata.validTo && paymentDate >= metadata.validTo) ||
+            !Number.isFinite(config.historico_ir?.[params.tabelaIR])) {
+            throw new Error('IR-EA: selecione a tabela mensal vigente no mês do pagamento para os rendimentos do próprio ano.');
+        }
+    }
+    const currentEaKeys = new Set(classifiedEa.current.map(source => source.key));
+    // Classification affects IR only. Preserve all pension flags and values.
+    overtime.entries.forEach(entry => { if (currentEaKeys.has(`he:${entry.id}`)) entry.isEA = false; });
+    substitution.entries.forEach(entry => { if (currentEaKeys.has(`subst:${entry.id}`)) entry.isEA = false; });
     const hasOvertimeEntries = (params.overtimeEntries?.length || 0) > 0;
     const overtimeMensalBase = overtime.entries
         .filter((entry) => !entry.isEA && !entry.excluirIR)
         .reduce((acc, entry) => acc + entry.heTotal, 0);
-    const overtimeEABase = overtime.entries
-        .filter((entry) => entry.isEA && !entry.excluirIR)
-        .reduce((acc, entry) => acc + entry.heTotal, 0);
     const hasSubstitutionEntries = (params.substitutionEntries?.length || 0) > 0;
     const substitutionMensalBase = substitution.entries
         .filter((entry) => !entry.isEA && !entry.excluirIR)
-        .reduce((acc, entry) => acc + entry.total, 0);
-    const substitutionEABase = substitution.entries
-        .filter((entry) => entry.isEA && !entry.excluirIR)
         .reduce((acc, entry) => acc + entry.total, 0);
     const substitutionPssEABase = substitution.entries
         .filter((entry) => entry.pssIsEA)
@@ -180,6 +211,16 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const pensionRetroMemory = calculatePensionRetroactives(params);
     pssEA += pensionRetroMemory.reduce((sum, entry) => sum + entry.rpps, 0);
     const funprespEA = roundPension(pensionRetroMemory.reduce((sum, entry) => sum + entry.complementar, 0));
+    if (classifiedEa.prior.length && pensionRetroMemory.some(entry => entry.destinoIR === 'ea' &&
+        (entry.rpps !== 0 || entry.complementar !== 0) && !classifiedEa.competencias.includes(entry.competencia))) {
+        throw new Error('IR-EA: contribuição retroativa sem vínculo com as competências do grupo de RRA.');
+    }
+    const eaResult = calculateIrEa(classifiedEa, config, params.irEaContext, {
+        rpps: pensionRetroMemory.filter(entry => entry.destinoIR === 'ea').reduce((sum, entry) => sum + entry.rpps, 0),
+        complementary: pensionRetroMemory.filter(entry => entry.destinoIR === 'ea').reduce((sum, entry) => sum + entry.complementar, 0),
+        dependents: params.dependents
+    });
+    const irEA = eaResult.tax;
 
     // Total Tributavel Construction
     let totalTrib = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
@@ -190,7 +231,9 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     totalTrib += overtimeMensalBase;
     totalTrib += substitutionMensalBase;
 
-    totalTrib = Math.max(0, totalTrib + rubricasAdjustments.irMensal);
+    const currentManualEa = classifiedEa.current.filter(source => source.key.startsWith('rubrica:'))
+        .reduce((sum, source) => sum + source.value, 0);
+    totalTrib = Math.max(0, totalTrib + rubricasAdjustments.irMensal + currentManualEa);
 
     const deducaoDep = config.values?.deducao_dep || 0;
     const retroMensalDedutivel = pensionRetroMemory.filter(entry => entry.destinoIR === 'mensal')
@@ -213,22 +256,6 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const vantagensPss = vantagensBase * pssEffectiveRate;
     const abonoIr = abonoPerm * irEffectiveRate;
 
-    // Brackets da tabela progressiva de IR
-    const irBrackets = config.historico_ir_brackets?.[params.tabelaIR] || [];
-
-    // IR de Exercicio Anterior (EA): HE/Substituicao marcadas como EA.
-    const baseEA =
-        overtimeEABase +
-        substitutionEABase +
-        rubricasAdjustments.irEA;
-    const baseIREA = Math.max(0, baseEA - (params.dependents * deducaoDep) -
-        pensionRetroMemory.filter(entry => entry.destinoIR === 'ea').reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0));
-    
-    // Apuração progressiva oficial (RRA - art. 12-A da Lei 7.713/1988)
-    const irEA = irBrackets.length > 0
-        ? calculateIrrfProgressive(baseIREA, irBrackets, 1)
-        : calculateIrrf(baseIREA, payrollRules.irrfTopRate, deductionVal);
-
     let overtimeIr = 0;
     let overtimeIrMensal = 0;
     let overtimeIrEA = 0;
@@ -250,21 +277,10 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         substitutionIr += substitutionIrMensal;
     }
 
-    const totalPositiveEaBases = overtimeEABase + substitutionEABase + Math.max(0, rubricasAdjustments.irEA);
-    if (irEA > 0 && totalPositiveEaBases > 0) {
-        if (overtimeEABase > 0 && substitutionEABase === 0 && rubricasAdjustments.irEA <= 0) {
-            overtimeIrEA = irEA;
-        } else if (substitutionEABase > 0 && overtimeEABase === 0 && rubricasAdjustments.irEA <= 0) {
-            substitutionIrEA = irEA;
-        } else {
-            overtimeIrEA = Math.round((irEA * (overtimeEABase / totalPositiveEaBases)) * 100) / 100;
-            substitutionIrEA = Math.round((irEA * (substitutionEABase / totalPositiveEaBases)) * 100) / 100;
-        }
-        overtimeIr += overtimeIrEA;
-        substitutionIr += substitutionIrEA;
-    }
-
-    const irEaRate = totalPositiveEaBases > 0 ? irEA / totalPositiveEaBases : 0;
+    overtimeIrEA = Math.round(Object.entries(eaResult.entryTax).filter(([key]) => key.startsWith('he:')).reduce((sum, [, value]) => sum + value, 0) * 100) / 100;
+    substitutionIrEA = Math.round(Object.entries(eaResult.entryTax).filter(([key]) => key.startsWith('subst:')).reduce((sum, [, value]) => sum + value, 0) * 100) / 100;
+    overtimeIr += overtimeIrEA;
+    substitutionIr += substitutionIrEA;
     const funprespAliq = params.funprespAliq || 0.085;
     const rubricasTax: Record<string, RubricaTaxDetail> = {};
 
@@ -279,9 +295,9 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
                 liquido: 0
             };
         } else {
-            const ir = r.isEA
-                ? Math.round(valor * irEaRate * 100) / 100
-                : (r.incideIR ? Math.round(valor * irEffectiveRate * 100) / 100 : 0);
+            const ir = r.isEA && !currentEaKeys.has(`rubrica:${r.id}`)
+                ? (eaResult.entryTax[`rubrica:${r.id}`] || 0)
+                : ((r.incideIR || currentEaKeys.has(`rubrica:${r.id}`)) ? Math.round(valor * irEffectiveRate * 100) / 100 : 0);
             const pss = (r.incidePSS || r.pssCompetenciaSeparada)
                 ? Math.round(valor * pssEffectiveRate * 100) / 100
                 : 0;
@@ -309,6 +325,11 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         pensionRetroMemory,
         irrf: irMensal,
         irEA,
+        irEaMemory: eaResult.memory,
+        irEaEntryTax: eaResult.entryTax,
+        irEaCurrentYearKeys: [...currentEaKeys],
+        overtimeCalculatedEntries: overtime.entries,
+        substitutionCalculatedEntries: substitution.entries,
         aqIr,
         aqPss,
         gratIr,

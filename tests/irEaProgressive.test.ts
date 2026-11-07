@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { calculateIrrfProgressive, IrrfBracket } from '../src/core/calculations/taxUtils';
+import { calculateOvertime } from '../src/services/agency/engine/modules/overtimeCalculations';
+import { calculateSubstitution } from '../src/services/agency/engine/modules/substitutionCalculations';
+import { allocateIrEaCents, classifyIrEaSources, calculateIrEa } from '../src/services/agency/engine/modules/irEaCalculations';
 import { calculateDeductions } from '../src/services/agency/engine/modules/deductionsCalculations';
 import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToParams';
 import { INITIAL_STATE, CourtConfig, CalculatorState } from '../src/types';
@@ -40,7 +43,7 @@ const mockConfig: CourtConfig = {
             tecnico: { C12: 5498.51, C13: 5663.47 }
         },
         funcoes: {
-            fc4: 2313.27
+            fc4: 2313.27, cj1: 10000
         }
     },
     historico_ir: {
@@ -51,6 +54,7 @@ const mockConfig: CourtConfig = {
         '2024_fev': irBrackets2024_2025,
         '2025_jan': irBrackets2024_2025
     },
+    historico_ir_metadata: { '2025_jan': { validFrom: '2025-01-01', validTo: '2025-05-01', reference: 'RFB janeiro a abril de 2025', rra: { deductDependents: false, deductComplementaryPension: false, reductionApplicable: false } } },
     historico_pss: {
         '2025': {
             teto_rgps: 8157.41,
@@ -67,6 +71,7 @@ const mockConfig: CourtConfig = {
 const createParams = (patch: Partial<CalculatorState>) => {
     const state: CalculatorState = {
         ...INITIAL_STATE,
+        mesRef: 'FEVEREIRO', anoRef: '2025', irEaContext: { mesPagamento: '2025-02' },
         cargo: 'tecnico',
         padrao: 'C12',
         funcao: '0',
@@ -81,136 +86,132 @@ const createParams = (patch: Partial<CalculatorState>) => {
     return mapStateToAgencyParams(state, 'jmu', mockConfig);
 };
 
-test('taxUtils: calculateIrrfProgressive aplica faixas progressivas unitárias (NM = 1)', () => {
-    // Faixa 1 (Isenção): até 2.259,20
-    assert.equal(calculateIrrfProgressive(2000, irBrackets2024_2025, 1), 0);
-    assert.equal(calculateIrrfProgressive(2259.20, irBrackets2024_2025, 1), 0);
 
-    // Faixa 2 (7,5%): 2.500,00 -> (2500 * 0.075) - 169.44 = 187.50 - 169.44 = 18.06
-    assert.equal(calculateIrrfProgressive(2500, irBrackets2024_2025, 1), 18.06);
+const he = (id: string, value: number, competenciasEA = ['2024-12']) => ({ id, qtd50: 0, qtd100: 0,
+    valorBrutoManual: value, isEA: true, excluirIR: false, competenciasEA });
 
-    // Faixa 3 (15%): 3.500,00 -> (3500 * 0.15) - 381.44 = 525 - 381.44 = 143.56
-    assert.equal(calculateIrrfProgressive(3500, irBrackets2024_2025, 1), 143.56);
-
-    // Faixa 4 (22,5%): 4.000,00 -> (4000 * 0.225) - 662.77 = 900 - 662.77 = 237.23
-    assert.equal(calculateIrrfProgressive(4000, irBrackets2024_2025, 1), 237.23);
-
-    // Faixa 5 (27,5%): 8.912,04 (Holerite 1 líquido de dependentes) -> (8912.04 * 0.275) - 896.00 = 1554.81
-    assert.equal(calculateIrrfProgressive(8912.04, irBrackets2024_2025, 1), 1554.81);
-});
-
-test('taxUtils: calculateIrrfProgressive suporta RRA com múltiplos meses (NM > 1)', () => {
-    // Se NM = 3 meses, o limite da faixa de isenção passa para 3 * 2.259,20 = 6.777,60
-    assert.equal(calculateIrrfProgressive(6000, irBrackets2024_2025, 3), 0);
-
-    // Base de 9.000 em 3 meses: média de 3.000/mês (3ª faixa: 15% dedução 3 * 381,44 = 1.144,32)
-    // Imposto: 9000 * 0.15 - 1144.32 = 1350 - 1144.32 = 205.68
+test('faixas inclusivas e arredondamento não caem em faixa final', () => {
+    for (const [base, expected] of [[2259.20, 0], [2500, 18.06], [2826.65, 42.56], [2826.66, 42.56],
+        [3751.05, 181.22], [3751.06, 181.22], [4000, 237.23], [8912.04, 1554.81]]) {
+        assert.equal(calculateIrrfProgressive(base, irBrackets2024_2025), expected);
+    }
+    assert.equal(calculateIrrfProgressive(2826.655, irBrackets2024_2025), 42.56);
     assert.equal(calculateIrrfProgressive(9000, irBrackets2024_2025, 3), 205.68);
+    assert.throws(() => calculateIrrfProgressive(1000, []), /IR-EA/);
+    assert.throws(() => calculateIrrfProgressive(1000, [{ ...irBrackets2024_2025[0], min: 100 }]), /IR-EA/);
+    assert.throws(() => calculateIrrfProgressive(1000, irBrackets2024_2025, 0), /IR-EA/);
 });
 
-test('Holerite Real 1 (Fev/2025): HE-EA R$ 9.291,22 com 2 dependentes gera IR-EA de R$ 1.554,81 exato', async () => {
-    const params = createParams({
-        padrao: 'C12',
-        funcao: 'fc4',
-        dependentes: 2,
-        overtimeEntries: [
-            {
-                id: 'he-ea-1',
-                qtd50: 0,
-                qtd100: 0,
-                heTotal: 9291.22,
-                isEA: true,
-                excluirIR: false
-            }
-        ]
-    });
-
-    const res = await calculateDeductions(0, params);
-
-    // Verificações estritas
-    assert.equal(res.irEA, 1554.81, 'IR-EA total da folha deve ser 1554.81');
-    assert.equal(res.overtimeIrEA, 1554.81, 'IR-EA alocado ao card de HE deve ser 1554.81');
-    assert.equal(res.overtimePss, 0, 'Horas extras não têm PSS');
+test('holerite fevereiro2025: ajuste documentado reproduz base, sem dependentes automáticos', async () => {
+    const params = createParams({ dependentes: 2, overtimeEntries: [he('real', 9291.22)] });
+    assert.equal((await calculateDeductions(0, params)).irEA, 1659.09);
+    params.irEaContext = { mesPagamento: '2025-02', ajustesBaseDocumentados: [{ valor: 379.18,
+        descricao: 'Ajuste observado na base do holerite fevereiro2025', fundamento: 'Holerite 8249.pdf: base8912,04' }] };
+    const result = await calculateDeductions(0, params);
+    assert.equal(result.irEA, 1554.81);
+    assert.equal(result.overtimeIrEA, 1554.81);
+    assert.equal(result.overtimePss, 0);
+    assert.equal(result.irEaMemory?.baseCalculo, 8912.04);
 });
 
-test('Holerite Real 2 (Jan/2026): HE-EA R$ 942,87 com 2 dependentes gera IR-EA R$ 0,00 (isenção)', async () => {
-    const params = createParams({
-        padrao: 'C13',
-        funcao: 'fc4',
-        dependentes: 2,
-        overtimeEntries: [
-            {
-                id: 'he-ea-2',
-                qtd50: 0,
-                qtd100: 0,
-                heTotal: 942.87,
-                isEA: true,
-                excluirIR: false
-            }
-        ]
-    });
-
-    const res = await calculateDeductions(0, params);
-
-    assert.equal(res.irEA, 0, 'IR-EA total da folha deve ser 0.00');
-    assert.equal(res.overtimeIrEA, 0, 'IR-EA alocado ao card de HE deve ser 0.00');
-    assert.equal(res.overtimePss, 0, 'Horas extras não têm PSS');
+test('união das competências positivas define NM, override exige referência', async () => {
+    const params = createParams({ overtimeEntries: [he('a', 4500, ['2024-10', '2024-11']), he('b', 4500, ['2024-11', '2024-12'])] });
+    let result = await calculateDeductions(0, params);
+    assert.equal(result.irEaMemory?.meses, 3); assert.equal(result.irEA, 205.68);
+    params.irEaContext = { mesPagamento: '2025-02', mesesRraInformados: 1.5, referenciaMeses: 'Memória administrativa' };
+    result = await calculateDeductions(0, params);
+    assert.equal(result.irEaMemory?.meses, 1.5);
+    params.irEaContext.referenciaMeses = '';
+    await assert.rejects(() => calculateDeductions(0, params), /IR-EA/);
+    assert.throws(() => classifyIrEaSources([{ key: 'c', value: 5000, competencias: ['2024-12'] },
+        { key: 'd', value: -100, competencias: ['2024-11'], deductionReference: 'Documento' }], { mesPagamento: '2025-02' }), /sem rendimento/);
 });
 
-test('Faixa Intermediária 3 (15%): HE-EA de R$ 3.500,00 sem dependentes apura R$ 143,56', async () => {
-    const params = createParams({
-        padrao: 'C12',
-        funcao: '0',
-        dependentes: 0,
-        overtimeEntries: [
-            {
-                id: 'he-ea-intermed',
-                qtd50: 0,
-                qtd100: 0,
-                heTotal: 3500.00,
-                isEA: true,
-                excluirIR: false
-            }
-        ]
-    });
-
-    const res = await calculateDeductions(0, params);
-
-    assert.equal(res.irEA, 143.56, 'IR-EA deve aplicar 15% - 381.44 = 143.56');
-    assert.equal(res.overtimeIrEA, 143.56, 'Card de HE deve receber 143.56');
+test('rateio reconciliado com centavos e desconto fora do denominador', async () => {
+    const result = await calculateDeductions(0, createParams({ overtimeEntries: [he('a', 2000)], substitutionEntries: [
+        { id: 'b', dias: {}, isEA: true, pssIsEA: false, valorBrutoManual: 2000, competenciasEA: ['2024-12'] }] }));
+    assert.equal(result.irEA, 237.23);
+    assert.equal(Math.round((result.overtimeIrEA + result.substitutionIrEA) * 100), 23723);
+    const mixed = await calculateDeductions(0, createParams({ overtimeEntries: [he('a', 6000)], rubricasExtras: [
+        { id: 'credit', descricao: 'Crédito', tipo: 'C', valor: 2000, isEA: true, incideIR: false, incidePSS: false, competenciasEA: ['2024-12'] },
+        { id: 'debit', descricao: 'Desconto', tipo: 'D', valor: 1000, isEA: true, incideIR: false, incidePSS: false, competenciasEA: ['2024-12'], fundamentoDeducaoEA: 'Dedução documental' }
+    ] }));
+    assert.equal(mixed.irEA, 1029);
+    assert.equal(mixed.overtimeIrEA + mixed.rubricasTax.credit.ir, 1029);
+    assert.deepEqual(allocateIrEaCents(.01, [{ key: 'z', value: 1 }, { key: 'a', value: 1 }]), { z: .01, a: 0 });
 });
 
-test('Múltiplos Cards EA: Horas Extras e Substituição com rateio proporcional reconciliado', async () => {
-    const params = createParams({
-        padrao: 'C12',
-        funcao: '0',
-        dependentes: 0,
-        overtimeEntries: [
-            {
-                id: 'he-1',
-                heTotal: 6000.00,
-                isEA: true,
-                excluirIR: false
-            }
-        ],
-        substitutionEntries: [
-            {
-                id: 'subst-1',
-                total: 4000.00,
-                isEA: true,
-                excluirIR: false
-            }
-        ]
-    });
+test('próprio ano migra mensal, valor misturado e pagamento divergente bloqueiam', async () => {
+    const result = await calculateDeductions(0, createParams({ overtimeEntries: [he('a', 3500, ['2025-01'])] }));
+    assert.equal(result.irEA, 0); assert.equal(result.overtimeCalculatedEntries[0].isEA, false);
+    assert.deepEqual(result.irEaCurrentYearKeys, ['he:a']);
+    const normal = await calculateDeductions(0, createParams({ overtimeEntries: [{ ...he('a', 3500), isEA: false }] }));
+    assert.equal(result.irrf, normal.irrf);
+    await assert.rejects(() => calculateDeductions(0, createParams({ overtimeEntries: [he('a', 3500, ['2024-12', '2025-01'])] })), /separe/);
+    await assert.rejects(() => calculateDeductions(0, createParams({ overtimeEntries: [he('a', 3500)], irEaContext: { mesPagamento: '2025-03' } })), /cabeçalho/);
+});
 
-    const res = await calculateDeductions(0, params);
+test('EA incompleto bloqueia e semEA não exige contexto ou tabelaRRA', async () => {
+    const params = createParams({ overtimeEntries: [he('a', 3500, [])] });
+    await assert.rejects(() => calculateDeductions(0, params), /competências/);
+    params.overtimeEntries = [he('a', 3500)]; params.irEaContext = {};
+    await assert.rejects(() => calculateDeductions(0, params), /pagamento/);
+    params.overtimeEntries = []; assert.equal((await calculateDeductions(0, params)).irEA, 0);
+    const missing = createParams({ overtimeEntries: [he('a', 1000)] });
+    missing.agencyConfig = { ...mockConfig, historico_ir_metadata: {} };
+    await assert.rejects(() => calculateDeductions(0, missing), /vigência/);
+});
 
-    // Base total = 10.000. Faixa 5: 10000 * 0.275 - 896.00 = 1854.00
-    assert.equal(res.irEA, 1854.00, 'IR-EA consolidado deve ser 1854.00');
-    // HE = 60%: 1854.00 * 0.6 = 1112.40
-    assert.equal(res.overtimeIrEA, 1112.40, 'HE deve receber 1112.40');
-    // Substituição = 40%: 1854.00 * 0.4 = 741.60
-    assert.equal(res.substitutionIrEA, 741.60, 'Substituição deve receber 741.60');
-    // A soma dos dois cards deve bater rigorosamente com o irEA total da folha
-    assert.equal(Math.round((res.overtimeIrEA + res.substitutionIrEA) * 100) / 100, res.irEA);
+test('2026: vigente + redução verificadaNM1, múltiplos meses permanecem pendentes', () => {
+    const brackets2026 = [{ min: 0, max: 2428.8, rate: 0, deduction: 0 },
+        { min: 2428.81, max: 2826.65, rate: .075, deduction: 182.16 },
+        { min: 2826.66, max: 3751.05, rate: .15, deduction: 394.16 },
+        { min: 3751.06, max: 4664.68, rate: .225, deduction: 675.49 },
+        { min: 4664.69, max: Infinity, rate: .275, deduction: 908.73 }];
+    const config = { ...mockConfig, historico_ir_brackets: { y2026: brackets2026 }, historico_ir_metadata: { y2026: {
+        validFrom: '2026-01-01', reference: 'RFB tabela2026', rra: { deductDependents: false, deductComplementaryPension: false,
+            reductionApplicable: true, reduction: { status: 'verified', mode: 'total', verifiedMonths: [1], exemptIncome: 5000,
+                partialIncome: 7350, maxReduction: 312.89, intercept: 978.62, slope: .133145, reference: 'INRFB1500 art37 / AnexoX' } }
+    } } } as CourtConfig;
+    const context = { mesPagamento: '2026-01' };
+    const classified = classifyIrEaSources([{ key: 'he:a', value: 942.87, competencias: ['2025-11'] }], context);
+    const deductions = { rpps: 0, complementary: 0, dependents: 0 };
+    assert.equal(calculateIrEa(classified, config, context, deductions).tax, 0);
+    classified.prior[0].value = 3500;
+    assert.equal(calculateIrEa(classified, config, context, deductions).tax, 0);
+    assert.throws(() => calculateIrEa(classified, config, { ...context, mesesRraInformados: 2, referenciaMeses: 'Documento' }, deductions), /não foi verificada/);
+    config.historico_ir_metadata!.y2026.rra.reduction!.status = 'pending';
+    assert.throws(() => calculateIrEa(classified, config, context, deductions), /pendente/);
+});
+
+test('substituição preserva abatimentoGAE, totais derivados não viram entrada', async () => {
+    const input = createParams({ gratEspecificaTipo: 'gae', substitutionEntries: [{ id: 's', dias: { cj1: 30 }, isEA: false, pssIsEA: false }] });
+    assert.equal((await calculateSubstitution(input)).total, 8075.52);
+    const stale = { ...createParams({}), heTotal: 1000, substTotal: 1000 };
+    assert.equal((await calculateOvertime(stale)).heTotal, 0);
+    assert.equal((await calculateSubstitution(stale)).total, 0);
+    await assert.rejects(() => calculateOvertime(createParams({ overtimeEntries: [he('bad', -100)] })), /inválido/);
+});
+
+test('duas HE com frações de centavo têm bruto e baseRRA iguais à soma oficial dos cards', async () => {
+    const params = createParams({ overtimeEntries: [
+        { ...he('a', 0), qtd50: 1, valorBrutoManual: undefined },
+        { ...he('b', 0), qtd50: 1, valorBrutoManual: undefined }
+    ] });
+    params.agencyConfig = { ...mockConfig, bases: { ...mockConfig.bases,
+        salario: { tecnico: { C12: 5498.60 } } } } as CourtConfig;
+    const overtime = await calculateOvertime(params);
+    // Each raw value is 113.114057... . Rounding only after summing would give 226.23.
+    assert.deepEqual(overtime.entries.map(entry => entry.heTotal), [113.11, 113.11]);
+    assert.equal(overtime.heVal50, 226.22);
+    assert.equal(overtime.heVal100, 0);
+    assert.equal(overtime.heTotal, 226.22);
+    const deductions = await calculateDeductions(0, params);
+    assert.equal(deductions.irEaMemory?.baseBruta, overtime.heTotal);
+    assert.equal(deductions.overtimeCalculatedEntries.reduce((sum, entry) => sum + entry.heTotal, 0), overtime.heTotal);
+    params.overtimeEntries = [he('manual', 104.125)];
+    const manual = await calculateOvertime(params);
+    assert.equal(manual.heTotal, 104.13);
+    assert.equal(manual.heVal50, 0);
+    assert.equal(manual.heVal100, 0);
 });
