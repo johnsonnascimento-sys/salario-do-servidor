@@ -1,5 +1,9 @@
 # Changelog
 
+## Alinhamento do Atalho com a Memória do IR-EA e Auto-Expansão — 07/11/2026
+- Atualiza o texto do botão de atalho em `IrEaCompetencias.tsx` de "Ver Apuração do IR-EA" para "Ver Memória do IR-EA", alinhando-o com a nomenclatura oficial da seção no rodapé.
+- Configura o scroll para expandir automaticamente o acordeão colapsado (`details.open = true`) da Memória do IR-EA ao ser clicado, permitindo ao servidor visualizar instantaneamente a tabela de cálculo de RRA e o destaque visual.
+
 ## Auto-Ordenação Cronológica e Dinamismo Temporal nas Competências de EA — 07/11/2026
 - Implementa auto-ordenação cronológica automática das competências originais de EA (`IrEaCompetencias.tsx` e `irEaCalculations.ts`), permitindo ao servidor inserir meses em qualquer ordem sem exigência de ordenação prévia nem travamento da calculadora.
 - Cria função inteligente de cascata temporal (`getPreviousMonth`): ao adicionar um novo mês trabalhado em um card com competências já existentes, sugere automaticamente o mês imediatamente anterior à menor competência (ex.: tendo `11/2025`, sugere `10/2025`; tendo `01/2025`, sugere `12/2024`).

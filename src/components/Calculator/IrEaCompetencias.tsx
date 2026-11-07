@@ -52,8 +52,12 @@ export const IrEaCompetencias: React.FC<Props> = ({
 }) => {
     const scrollToIrEa = () => {
         if (typeof document === 'undefined') return;
-        const target = document.getElementById('apuracao-ir-ea');
+        const target = document.getElementById('apuracao-ir-ea') || document.getElementById('memoria-ir-ea');
         if (target) {
+            const details = target.querySelector('details') || target.closest('details');
+            if (details) {
+                details.open = true;
+            }
             target.scrollIntoView({ behavior: 'smooth', block: 'center' });
             target.classList.add('ring-2', 'ring-primary-500', 'transition-all', 'duration-500');
             setTimeout(() => {
@@ -232,7 +236,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                     onClick={scrollToIrEa}
                     className="inline-flex items-center gap-1 text-body-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer"
                 >
-                    <span>Ver Apuração do IR-EA</span>
+                    <span>Ver Memória do IR-EA</span>
                     <ArrowDown className="w-3.5 h-3.5" />
                 </button>
             </div>
