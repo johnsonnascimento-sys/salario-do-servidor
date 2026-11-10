@@ -2,7 +2,7 @@ import React from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { Settings } from 'lucide-react';
+import { Info, Settings } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { ManualRubricasSection } from './ManualRubricasSection';
@@ -241,9 +241,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </div>
 
             <div className={styles.card}>
-                <h3 className={styles.sectionTitle}>
+                <h3 className={`${styles.sectionTitle} relative`}>
                     <Settings className="w-4 h-4" />
                     Rubricas Pré-definidas
+                    <span className="relative inline-flex items-center group">
+                        <button
+                            type="button"
+                            aria-label="Informações sobre rubricas pré-definidas"
+                            className="rounded p-1 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                        >
+                            <Info className="w-4 h-4" />
+                        </button>
+                        <span role="tooltip" className="pointer-events-none invisible absolute left-0 top-full z-tooltip mt-1 w-72 rounded-lg border border-neutral-200 bg-white p-3 text-left text-body-xs font-normal normal-case tracking-normal text-neutral-700 opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
+                            Adicione ao formulário itens pré-definidos de remuneração, benefícios e outras verbas para informar os dados e calcular seus valores na simulação.
+                        </span>
+                    </span>
                 </h3>
 
                 <PresetControlsSection

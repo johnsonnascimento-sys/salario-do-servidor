@@ -32,19 +32,18 @@ export interface PresetInstance {
 }
 
 export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
-    { id: 'gratificacao', label: 'Gratificacao Especifica (GAE/GAS)' },
-
-    { id: 'abono', label: 'Abono de Permanencia' },
-    { id: 'ferias', label: 'Ferias' },
     { id: 'decimo', label: '13o Salario' },
-    { id: 'hora_extra', label: 'Horas Extras' },
-    { id: 'substituicao', label: 'Substituicao' },
-    { id: 'licenca', label: 'Licenca Compensatoria' },
-    { id: 'gaacta', label: 'GAACTA - Ativ. Alta Complexidade (CJ)' },
-    { id: 'pre_escolar', label: 'Auxilio Pre-Escolar' },
+    { id: 'abono', label: 'Abono de Permanencia' },
     { id: 'aux_transporte', label: 'Auxilio Transporte' },
+    { id: 'pre_escolar', label: 'Auxilio Pre-Escolar' },
     { id: 'diarias', label: 'Diarias de Viagem' },
-    { id: 'indenizacao_transporte', label: 'Indenização de Transporte' }
+    { id: 'ferias', label: 'Ferias' },
+    { id: 'gaacta', label: 'GAACTA - Ativ. Alta Complexidade (CJ)' },
+    { id: 'gratificacao', label: 'Gratificacao Especifica (GAE/GAS)' },
+    { id: 'hora_extra', label: 'Horas Extras' },
+    { id: 'indenizacao_transporte', label: 'Indenização de Transporte' },
+    { id: 'licenca', label: 'Licenca Compensatoria' },
+    { id: 'substituicao', label: 'Substituicao' }
 ];
 
 export const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra', 'substituicao']);
