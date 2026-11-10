@@ -17,7 +17,8 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, compete
         <p className="text-body-sm text-neutral-600 dark:text-neutral-300">Competência da folha: <strong>{competenciaReferencia}</strong></p>
         {memory && memory.status !== 'unavailable' && memory.status !== 'invalid' ? <>
             <p className="text-body-sm text-neutral-600 dark:text-neutral-300">Valor integral aplicável: <strong>{formatCurrency(memory.fullAmount)}</strong></p>
-            {memory.validFrom && <p className="text-body-xs text-neutral-500">Vigência a partir de {memory.validFrom.split('-').reverse().join('/')}{memory.validTo ? ` até ${memory.validTo.split('-').reverse().join('/')}` : ''}; considere apenas dias elegíveis dentro da vigência.</p>}
+            {memory.validFrom && <p className="text-body-xs text-neutral-500">Vigência a partir de {memory.validFrom.split('-').reverse().join('/')}{memory.validTo ? ` até ${memory.validTo.split('-').reverse().join('/')}` : ''}.</p>}
+            {memory.transitionWarning && <p role="status" className="rounded-lg border border-warning-200 bg-warning-50 p-3 text-body-sm text-warning-700 dark:border-warning-700 dark:bg-warning-950 dark:text-warning-200">{memory.transitionWarning}</p>}
         </> : <p role="status" className="text-body-sm text-warning-700">{memory?.reason || 'Não há configuração aplicável para esta competência.'}</p>}
         <div>
             <label htmlFor="transporte-indenizacao-dias" className={styles.label}>Dias de serviço externo no mês</label>

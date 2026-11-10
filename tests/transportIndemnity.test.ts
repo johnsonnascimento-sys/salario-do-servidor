@@ -10,7 +10,7 @@ import { useCalculatorResults } from '../src/hooks/calculator/useCalculatorResul
 import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
 
 const transport: TransportIndemnityConfig = {
-  enabled: true, divisor: 20,
+  enabled: true, divisor: 20, transitionPolicy: 'latest_in_month',
   versions: [{ validFrom: '2026-02-13', validTo: null, fullAmount: 2168.46, reference: 'ATN STM nº 935/2026' }],
   normativeLabel: 'ATN STM nº 212/2017 • nº 935/2026', info: 'Teste', notes: [],
   incidences: { ir: false, pss: false, funpresp: false },
@@ -62,8 +62,12 @@ test('transporte: configuração, divisor, vigência e desabilitação são expl
   assert.equal(calculate(20, { ...config, transportIndemnity: { ...transport, enabled: false } }).amount, 0);
   assert.equal(calculate(20, config, '2026-01').status, 'unavailable');
   const transition = calculate(20, config, '2026-02');
-  assert.equal(transition.status, 'unavailable');
-  assert.match(transition.reason!, /vigência muda/);
+  assert.equal(transition.status, 'full');
+  assert.equal(transition.amount, 2168.46);
+  assert.equal(transition.transitionDate, '2026-02-13');
+  assert.match(transition.transitionWarning!, /13\/02\/2026/);
+  assert.match(transition.transitionWarning!, /simulação/);
+  assert.equal(resolveTransportIndemnity({ ...transport, transitionPolicy: undefined }, '2026-02').status, 'unavailable');
   assert.equal(calculate(20, config, '2026-03').amount, 2168.46);
   assert.equal(calculate(20, config, '2026-13').status, 'unavailable');
   assert.equal(resolveTransportIndemnity({ ...transport, divisor: 0 }, '2026-11').status, 'unavailable');
@@ -106,13 +110,44 @@ test('transporte: versões históricas selecionam valor, divisor, incidências e
   assert.equal(calculate(5, court, '2028-01').divisor, 10);
   assert.equal(calculate(5, court, '2029-01').status, 'unavailable');
   assert.match(calculate(5, court, '2029-01').reason!, /incidências incompatíveis/);
-  for (const competence of ['2022-09', '2022-10', '2026-02']) {
+  for (const competence of ['2022-09']) {
     assert.equal(calculate(10, court, competence).status, 'unavailable', competence);
     assert.equal(calculate(10, court, competence).amount, 0);
   }
+  for (const [competence, amount, date] of [['2022-10', 2075.88, '2022-10-21'], ['2026-02', 2168.46, '2026-02-13']] as const) {
+    const result = calculate(20, court, competence);
+    assert.equal(result.amount, amount);
+    assert.equal(result.status, 'full');
+    assert.equal(result.transitionDate, date);
+    assert.match(result.transitionWarning!, /valor atualizado/);
+  }
+  assert.equal(calculate(20, court, '2026-01').transitionWarning, undefined);
+  assert.equal(calculate(20, court, '2026-03').transitionWarning, undefined);
   const before = JSON.stringify(historical);
   calculate(10, court, '2025-01');
   assert.equal(JSON.stringify(historical), before, 'resolver não altera a configuração histórica');
+});
+
+test('transporte: convenção de transição não mascara sobreposição nem estende vigência encerrada', () => {
+  const base = transport.versions[0];
+  const conflicting: TransportIndemnityConfig = { ...transport, versions: [
+    { ...base, validFrom: '2025-01-01', validTo: '2026-02-15', fullAmount: 2075.88 },
+    base,
+  ] };
+  const conflict = resolveTransportIndemnity(conflicting, '2026-02');
+  assert.equal(conflict.status, 'unavailable');
+  assert.match(conflict.reason!, /sobrepostas/);
+  const ended = resolveTransportIndemnity({ ...transport, versions: [
+    { ...base, validFrom: '2025-01-01', validTo: '2026-02-12' },
+  ] }, '2026-02');
+  assert.equal(ended.status, 'unavailable');
+  assert.equal(ended.amount, 0);
+  const reversed = resolveTransportIndemnity({ ...transport, versions: [
+    base,
+    { ...base, validFrom: '2025-01-01', validTo: '2026-02-12', fullAmount: 2075.88 },
+  ] }, '2026-02');
+  assert.equal(reversed.fullAmount, 2168.46);
+  assert.equal(reversed.transitionDate, '2026-02-13');
 });
 
 test('transporte: configuração versionada incompleta não herda silenciosamente parâmetros legados', () => {

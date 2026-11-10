@@ -7,6 +7,8 @@ export interface TransportIndemnityIncidences {
 /** Monthly reimbursement for designated external service using a private vehicle. */
 export interface TransportIndemnityConfig {
   enabled: boolean;
+  /** Monthly simulation convention for a rule starting during the competence. */
+  transitionPolicy?: 'latest_in_month';
   /** @deprecated Read only for an entirely legacy configuration. New rules belong to each version. */
   divisor?: number;
   versions: Array<{
@@ -39,4 +41,6 @@ export interface TransportIndemnityMemory {
   validTo?: string | null;
   reference?: string;
   normativeLabel?: string;
+  transitionWarning?: string;
+  transitionDate?: string;
 }

@@ -49,13 +49,22 @@ export function resolveTransportIndemnity(
   const versions = config.versions.filter(version =>
     version.validFrom <= monthEnd && (version.validTo == null || version.validTo >= monthStart)
   );
-  // A single monthly quantity cannot allocate days between two legal rates.
-  if (versions.length !== 1) {
-    return { ...memory, reason: versions.length === 0
-      ? 'Não há valor da indenização de transporte cadastrado para esta competência.'
-      : 'Esta competência contém mais de uma vigência. A quantidade mensal de dias não permite separar os valores.' };
+  if (versions.length === 0) {
+    return { ...memory, reason: 'Não há valor da indenização de transporte cadastrado para esta competência.' };
   }
-  const version = versions[0];
+  const chronological = [...versions].sort((a, b) => a.validFrom.localeCompare(b.validFrom));
+  if (chronological.some((version, index) => index > 0 &&
+      (chronological[index - 1].validTo == null || chronological[index - 1].validTo! >= version.validFrom))) {
+    return { ...memory, reason: 'Há vigências sobrepostas na configuração da indenização de transporte.' };
+  }
+  // The opt-in monthly convention uses the rule applicable at month end. It
+  // does not rewrite the legal effective dates or infer a rate beyond its end.
+  const version = config.transitionPolicy === 'latest_in_month'
+    ? chronological.find(item => item.validTo == null || item.validTo >= monthEnd)
+    : versions.length === 1 ? versions[0] : undefined;
+  if (!version) {
+    return { ...memory, reason: 'Não há uma única regra aplicável ao fim desta competência; confira as vigências configuradas.' };
+  }
   const divisor = versionedRules ? version.divisor : config.divisor;
   const incidences = versionedRules ? version.incidences : config.incidences;
   if (!Number.isInteger(divisor) || (divisor ?? 0) <= 0 || !hasIncidenceFlags(incidences) ||
@@ -64,10 +73,17 @@ export function resolveTransportIndemnity(
   }
   memory.divisor = divisor!;
   memory.normativeLabel = version.normativeLabel || config.normativeLabel;
-  if (version.validFrom > monthStart || (version.validTo != null && version.validTo < monthEnd)) {
+  const startsWithinMonth = version.validFrom > monthStart;
+  const endsWithinMonth = version.validTo != null && version.validTo < monthEnd;
+  if (endsWithinMonth || (startsWithinMonth && config.transitionPolicy !== 'latest_in_month')) {
     return { ...memory, fullAmount: version.fullAmount, validFrom: version.validFrom,
       validTo: version.validTo, reference: version.reference,
       reason: 'A vigência muda dentro desta competência. Sem as datas das diligências, não é possível aplicar o valor mensal com segurança.' };
+  }
+  if (startsWithinMonth) {
+    memory.transitionDate = version.validFrom;
+    const dateLabel = version.validFrom.split('-').reverse().join('/');
+    memory.transitionWarning = `Houve alteração de vigência em ${dateLabel}. Nesta simulação, o valor atualizado é aplicado a toda a competência, preservada a data de vigência da norma.`;
   }
   return {
     ...memory, status: 'zero', fullAmount: version.fullAmount,

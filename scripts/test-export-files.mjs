@@ -20,6 +20,7 @@ try {
     const { exportToPDF, exportToExcel } = await server.ssrLoadModule('/src/services/exportService.ts');
     const state = { ...INITIAL_STATE, nome: 'VALIDACAO DE EXPORTACAO', mesRef: 'NOVEMBRO', anoRef: 2026,
         totalBruto: 1350, totalDescontos: 125, liquido: 1225,
+        transporteIndenizacaoAtivo: true, transporteIndenizacaoMemory: { transitionWarning: 'ALERTA TESTE DE VIGENCIA' },
         irEaMemory: { status: 'ready', mesPagamento: '2026-11', competencias: ['2024-01', '2024-02'], meses: 2,
             tabela: 'Tabela documentada', baseBruta: 10000, deducoes: 1000, baseCalculo: 9000,
             impostoAntesReducao: 125, reducao: 0, imposto: 125,
@@ -44,6 +45,7 @@ try {
         'RESTITUICAO AUX. ALIM.', 'VALIDACAO DE EXPORTACAO', '1.225,00']) {
         assert(pdfContent.includes(content), `PDF missing ${content}`);
     }
+    assert(pdfContent.includes('ALERTA TESTE DE VIGENCIA'), 'PDF preserves transition warning');
     assert(pdfContent.includes('2024-01, 2024-02'), 'PDF preserves original EA months');
     assert(pdfContent.includes('Documento EA 123'), 'PDF preserves documented deduction');
     assert(pdfContent.includes('%%EOF'), 'PDF must have a complete trailer.');
@@ -54,6 +56,7 @@ try {
     assert(memoryCells.some(row => row[0] === 'Número de meses (NM)' && row[1] === '2'));
     assert(memoryCells.some(row => row[1]?.includes?.('Documento EA 123')));
     const cells = XLSX.utils.sheet_to_json(workbook.Sheets.Holerite, { header: 1 });
+    assert(cells.some(row => row[0] === 'ALERTA DE VIGÊNCIA:' && row[1] === 'ALERTA TESTE DE VIGENCIA'));
     assert(cells.some(row => row[1] === 'CREDITO TESTE' && row[2] === 1100));
     assert(cells.some(row => row[1] === 'DESCONTO TESTE' && row[3] === 100));
     assert(cells.some(row => row[1] === 'DIARIAS TESTE' && row[2] === 250));

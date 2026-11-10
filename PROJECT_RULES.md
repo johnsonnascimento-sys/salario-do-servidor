@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 01:48
+Atualizado em: 10/11/2026 01:54
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -261,6 +261,6 @@ Cada rubrica manual deve suportar:
 ## 13. Indenização de Transporte na JMU
 
 1. A indenização do ATN STM nº 212/2017 alcança o Oficial de Justiça Avaliador Federal e o servidor designado ad hoc, inclusive de cargo diverso. O usuário informa os dias elegíveis de diligência externa, excluídos afastamentos e impedimentos; diversas diligências no mesmo dia contam uma vez.
-2. Valor integral e divisor são configurados por órgão e vigência. O cálculo usa o valor integral multiplicado pelos dias elegíveis limitados ao divisor, dividido pelo divisor, com arredondamento apenas no resultado. O ATN STM nº 596/2022 fixou R$ 2.075,88 desde sua publicação em 21/10/2022; o ATN STM nº 935/2026 fixou R$ 2.168,46 desde sua publicação em 13/02/2026. Não se presume valor para período anterior ao cadastro. Como não há datas individuais das diligências na entrada, competência com mudança de vigência intramês fica indisponível.
+2. Valor integral e divisor são configurados por órgão e vigência. O cálculo usa o valor integral multiplicado pelos dias elegíveis limitados ao divisor, dividido pelo divisor, com arredondamento apenas no resultado. O ATN STM nº 596/2022 fixou R$ 2.075,88 desde sua publicação em 21/10/2022; o ATN STM nº 935/2026 fixou R$ 2.168,46 desde sua publicação em 13/02/2026. Não se presume valor para período anterior ao cadastro. Na JMU, quando a vigência de novo valor começar durante a competência, a simulação usa o valor atualizado para o mês todo, com alerta informando a data efetiva e que o tratamento é uma convenção de simulação, sem afirmar retroatividade legal. A política é configurada por órgão; meses sem versão vigente ao final permanecem indisponíveis.
 3. A simulação não substitui a comprovação e atestação exigidas pelo art. 3º do ATN nº 212/2017. Diárias no mesmo mês não excluem automaticamente toda a indenização: o usuário exclui os dias impedidos. Não se aplicam desconto de auxílio-alimentação, incidências de IR, PSS e Funpresp, nem inclusão em bases remuneratórias. O crédito integra o Holerite e não o bloco de Diárias.
 4. Em `org_config.configuration.transport_indemnity.versions`, `validFrom` e `validTo` representam os limites históricos de vigência; valor integral, divisor e incidências integram cada versão. Novas versões preservam as anteriores. A ausência de configuração ou de vigência aplicável não presume regras da JMU para outro órgão.

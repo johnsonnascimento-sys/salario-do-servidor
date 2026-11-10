@@ -1,8 +1,13 @@
 # Changelog
 
+## Indenização de Transporte — meses de transição
+
+- Para a JMU, competências com novo valor em vigência intramês passam a simular o valor atualizado para o mês inteiro, com alerta sobre a data efetiva e a convenção adotada. A ressalva acompanha as exportações PDF e Excel.
+
+
 ## Histórico da Indenização de Transporte — JMU
 
-- Incluída a configuração histórica do ATN STM nº 596/2022, publicada em 21/10/2022, e versionados divisor e incidências para preservar simulações anteriores. Fevereiro de 2026 continua indisponível enquanto não houver critério para a transição intramês.
+- Incluída a configuração histórica do ATN STM nº 596/2022, publicada em 21/10/2022, e versionados divisor e incidências para preservar simulações anteriores. Na etapa inicial, fevereiro de 2026 permanecia indisponível até a definição da convenção de simulação registrada acima.
 
 ## Indenização de Transporte — JMU
 

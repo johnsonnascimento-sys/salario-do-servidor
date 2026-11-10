@@ -95,6 +95,15 @@ export const exportToPDF = (
     const splitDisclaimer = doc.splitTextToSize(disclaimerText, 180);
     doc.text(splitDisclaimer, 105, pageHeight - 15, { align: 'center' });
 
+    const transitionWarning = state.transporteIndenizacaoAtivo ? state.transporteIndenizacaoMemory?.transitionWarning : undefined;
+    if (transitionWarning) {
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text('Indenização de Transporte — alerta de vigência', 14, 18);
+        doc.autoTable({ head: [['Alerta da simulação']], body: [[transitionWarning]],
+            startY: 24, theme: 'grid', styles: { fontSize: 9 }, margin: { bottom: 20 } });
+    }
     const pensionRows = buildPensionAuditRows(state.pensionMemory);
     if (pensionRows.length > 0) {
         doc.addPage();
@@ -153,6 +162,8 @@ export const exportToExcel = (
     }
 
     wsData.push(['']);
+    const transitionWarning = state.transporteIndenizacaoAtivo ? state.transporteIndenizacaoMemory?.transitionWarning : undefined;
+    if (transitionWarning) wsData.push(['ALERTA DE VIGÊNCIA:', transitionWarning]);
     wsData.push(['AVISO LEGAL:', 'Os dados desta simulação são meramente ilustrativos e não possuem valor legal. Confirme sempre com o órgão oficial.']);
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
