@@ -237,9 +237,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     calculationError={calculationError}
                     pensionContext={pensionContexts?.monthly ?? null}
                     selectionRequired={pensionSelection.incompatible}
+                    calculationReady={calculationReady}
                 />
 
-                <PensionRetroForm state={inputState ?? state} update={update} styles={styles} pssTableOptions={pssOptions}
+                <PensionRetroForm state={inputState ?? state} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
                     pensionParams={pensionParams} pensionContexts={pensionContexts}
                     invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
                         ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
@@ -303,6 +304,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         updateSubstitutionEntry={updateSubstitutionEntry}
                         courtConfig={courtConfig}
                         lines={getPresetGrossLines(instance)}
+                        calculationReady={calculationReady}
                     />
                 );
             })}
@@ -312,7 +314,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 rubricasTax={state.rubricasTax}
                 calculationReady={calculationReady && Boolean(state.pensionMemory)}
                 funprespParticipacao={state.funprespParticipacao}
-                pensionMemory={state.pensionMemory}
                 pensionRetroEntries={(inputState ?? state).pensionRetroEntries}
                 pensionConfig={courtConfig.previdenciaComplementar}
                 competencia={pensionParams.competencia}

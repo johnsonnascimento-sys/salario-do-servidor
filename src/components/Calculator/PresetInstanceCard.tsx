@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GripVertical, Info, Trash2 } from 'lucide-react';
 import { PresetGrossSummary } from './PresetGrossSummary';
+import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS } from './dynamicPayrollForm.helpers';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
@@ -25,6 +26,7 @@ interface PresetInstanceCardProps {
     updateSubstitutionEntry: (id: string, patch: Partial<SubstitutionEntry>) => void;
     courtConfig: CourtConfig;
     lines: PresetGrossLine[];
+    calculationReady?: boolean;
 }
 
 const getPresetHeaderInfo = (
@@ -128,7 +130,8 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     updateOvertimeEntry,
     updateSubstitutionEntry,
     courtConfig,
-    lines
+    lines,
+    calculationReady = false
 }) => {
     const headerInfo = getPresetHeaderInfo(instance.presetId, courtConfig, presetLabel, instance, state);
     const [infoOpen, setInfoOpen] = useState(false);
@@ -202,7 +205,9 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 courtConfig={courtConfig}
             />
 
-            <PresetGrossSummary lines={lines} />
+            <PresetGrossSummary lines={lines}>
+                {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
+            </PresetGrossSummary>
         </div>
     );
 };

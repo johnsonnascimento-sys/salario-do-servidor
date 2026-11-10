@@ -4,7 +4,7 @@ import type { Rubrica } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 
 /** Informational breakdown only: the payroll engine already accounts for the deductions. */
-export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: Rubrica[] }> = ({ memory, rubricas = [] }) => {
+export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: Rubrica[]; scope?: 'monthly' | 'thirteenth' | 'historical'; historicalEntryId?: string; embedded?: boolean }> = ({ memory, rubricas = [], scope, historicalEntryId, embedded = false }) => {
     const assessments = (items: PensionRubricAssessment[] = []) => items.length > 0 && <details className="mt-2">
         <summary>Enquadramentos e fontes das rubricas</summary>
         {items.map(item => <div key={item.rubricaId} className="mt-2 break-words">
@@ -36,12 +36,8 @@ export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: 
         </section>;
     };
 
-    return <section aria-label="Resumo compartilhado da Funpresp" className="mt-4 rounded-xl border border-neutral-200 p-4 text-body-xs dark:border-neutral-700">
-        <h4 className="font-semibold">Resumo compartilhado da Funpresp</h4>
-        <p className="mt-1">Os valores da folha mensal incluem todas as parcelas da base, não apenas as rubricas manuais. A contrapartida patronal e os pagamentos externos são informativos.</p>
-        {group(memory.mensal)}
-        {memory.thirteenth && group(memory.thirteenth)}
-        {memory.retroativos.map(entry => <section key={entry.id} className="mt-3">
+    const groups = [
+        ...(scope === 'historical' || !scope ? memory.retroativos.filter(entry => !historicalEntryId || entry.id === historicalEntryId).map(entry => <section key={entry.id} className="mt-3">
             <h5 className="font-semibold">Retroativo — {entry.competencia} — {entry.tipo === '13' ? '13º salário' : 'Mensal'}</h5>
             <dl className="mt-1"><div className="flex flex-wrap justify-between gap-2">
                 <dt>Diferença RPPS descontada em folha</dt><dd className="font-mono">{formatCurrency(entry.rpps)}</dd>
@@ -54,6 +50,14 @@ export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: 
             </div>)}
             {entry.fonteHistorica && <p>Fonte: {entry.fonteHistorica}</p>}
             {assessments(entry.enquadramentos)}
-        </section>)}
+        </section>) : []),
+    ];
+    if ((scope === 'monthly' || !scope) && memory.mensal) groups.push(group(memory.mensal));
+    if ((scope === 'thirteenth' || !scope) && memory.thirteenth) groups.push(group(memory.thirteenth));
+    if (groups.length === 0) return null;
+    return <section aria-label="Resumo compartilhado da Funpresp" className={embedded ? 'pt-2 text-body-xs' : 'mt-4 rounded-xl border border-neutral-200 p-4 text-body-xs dark:border-neutral-700'}>
+        {!embedded && <><h4 className="font-semibold">Resumo compartilhado da Funpresp</h4>
+        <p className="mt-1">Os valores da folha mensal incluem todas as parcelas da base, não apenas as rubricas manuais. A contrapartida patronal e os pagamentos externos são informativos.</p></>}
+        {groups}
     </section>;
 };

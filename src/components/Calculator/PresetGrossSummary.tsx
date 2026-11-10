@@ -1,13 +1,14 @@
-import React, { useRef, useState } from 'react';
+import React, { ReactNode, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { formatCurrency } from '../../utils/calculations';
 import { PresetGrossLine, isDiscountLabel } from './dynamicPayrollForm.helpers';
 
 interface PresetGrossSummaryProps {
     lines: PresetGrossLine[];
+    children?: ReactNode;
 }
 
-export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines }) => {
+export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, children }) => {
     const [isOpen, setIsOpen] = useState(false);
     const lastLinesRef = useRef<PresetGrossLine[]>(lines);
 
@@ -55,6 +56,7 @@ export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines })
                         </div>
                     );
                 })}
+                {children}
             </div>
         </details>
     );
