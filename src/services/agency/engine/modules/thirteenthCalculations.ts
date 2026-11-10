@@ -50,7 +50,8 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
     const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
     const gaj = baseVencimento * payrollRules.gajRate;
-    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+    const funcaoValorBruta = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+    const funcaoValor = params.decimoIncideFuncao !== false ? funcaoValorBruta : 0;
 
     let aqTituloVal = 0;
     let aqTreinoVal = 0;
@@ -67,15 +68,39 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
-    const baseSemFC =
-        baseVencimento +
-        gaj +
-        aqTituloVal +
-        aqTreinoVal +
-        gratVal +
-        (params.vpni_lei || 0) +
-        (params.vpni_decisao || 0) +
-        (params.ats || 0);
+    const incideVenc = params.decimoIncideVencimento !== false;
+    const incideGAJ = params.decimoIncideGAJ !== false;
+    const incideAQTitulo = params.decimoIncideAQTitulo !== false;
+    const incideAQTreino = params.decimoIncideAQTreino !== false;
+    const incideGrat = params.decimoIncideGrat !== false;
+    const incideVPNI = params.decimoIncideVPNI !== false;
+    const incideATS = params.decimoIncideATS !== false;
+    const incideAbono = Boolean(params.decimoIncideAbono);
+
+    let baseSemFC = 0;
+    if (incideVenc) baseSemFC += baseVencimento;
+    if (incideGAJ) baseSemFC += gaj;
+    if (incideAQTitulo) baseSemFC += aqTituloVal;
+    if (incideAQTreino) baseSemFC += aqTreinoVal;
+    if (incideGrat) baseSemFC += gratVal;
+    if (incideVPNI) baseSemFC += ((params.vpni_lei || 0) + (params.vpni_decisao || 0));
+    if (incideATS) baseSemFC += (params.ats || 0);
+
+    if (incideAbono && params.recebeAbono) {
+        baseSemFC += (params.abonoPermanencia || params.pssMensal || 0);
+    }
+
+    if (params.decimoRubricasInclusas && Array.isArray(params.rubricasExtras)) {
+        params.rubricasExtras
+            .filter(r => r.tipo === 'C' && params.decimoRubricasInclusas?.[r.id] === true)
+            .forEach(r => {
+                baseSemFC += (r.valor || 0);
+            });
+    }
+
+    if (params.decimoOutrasParcelas && params.decimoOutrasParcelas > 0) {
+        baseSemFC += params.decimoOutrasParcelas;
+    }
 
     const metadeVencimento13 = baseSemFC / 2;
     const metadeFC13 = funcaoValor / 2;

@@ -91,6 +91,17 @@ export function mapStateToAgencyParams(
         adiant13FC: state.adiant13FC,
         segunda13Venc: state.segunda13Venc,
         segunda13FC: state.segunda13FC,
+        decimoIncideVencimento: state.decimoIncideVencimento !== false,
+        decimoIncideGAJ: state.decimoIncideGAJ !== false,
+        decimoIncideFuncao: state.decimoIncideFuncao !== false,
+        decimoIncideAQTitulo: state.decimoIncideAQTitulo !== false,
+        decimoIncideAQTreino: state.decimoIncideAQTreino !== false,
+        decimoIncideATS: state.decimoIncideATS !== false,
+        decimoIncideVPNI: state.decimoIncideVPNI !== false,
+        decimoIncideAbono: Boolean(state.decimoIncideAbono),
+        decimoIncideGrat: state.decimoIncideGrat !== false,
+        decimoOutrasParcelas: state.decimoOutrasParcelas || 0,
+        decimoRubricasInclusas: state.decimoRubricasInclusas || {},
 
         // Hora Extra e Substituição (Fase 8)
         heQtd50: state.heQtd50 || 0,

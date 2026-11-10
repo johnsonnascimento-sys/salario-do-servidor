@@ -65,6 +65,17 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     adiant13FC: number;
     segunda13Venc: number;
     segunda13FC: number;
+    decimoIncideVencimento?: boolean;
+    decimoIncideGAJ?: boolean;
+    decimoIncideFuncao?: boolean;
+    decimoIncideAQTitulo?: boolean;
+    decimoIncideAQTreino?: boolean;
+    decimoIncideATS?: boolean;
+    decimoIncideVPNI?: boolean;
+    decimoIncideAbono?: boolean;
+    decimoIncideGrat?: boolean;
+    decimoOutrasParcelas?: number;
+    decimoRubricasInclusas?: Record<string, boolean>;
     tabelaIR: string;
 
     // Hora Extra e Substituicao

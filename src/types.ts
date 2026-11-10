@@ -402,6 +402,19 @@ export interface CalculatorState {
   segunda13FC: number;   // Segunda parcela do 13o (FC/CJ)
   manualAdiant13: boolean; // Checkbox to not auto-calc 13th (JAN/JUN)
 
+  // Composição da Base do 13º Salário (seleção dinâmica de parcelas)
+  decimoIncideVencimento?: boolean;
+  decimoIncideGAJ?: boolean;
+  decimoIncideFuncao?: boolean;
+  decimoIncideAQTitulo?: boolean;
+  decimoIncideAQTreino?: boolean;
+  decimoIncideATS?: boolean;
+  decimoIncideVPNI?: boolean;
+  decimoIncideAbono?: boolean;
+  decimoIncideGrat?: boolean;
+  decimoOutrasParcelas?: number;
+  decimoRubricasInclusas?: Record<string, boolean>;
+
   // Specific for November Override (Debit Correction)
   manualDecimoTerceiroNov: boolean;
   decimoTerceiroNovVenc: number;
@@ -687,6 +700,18 @@ export const INITIAL_STATE: CalculatorState = {
   segunda13Venc: 0,
   segunda13FC: 0,
   manualAdiant13: false,
+
+  decimoIncideVencimento: true,
+  decimoIncideGAJ: true,
+  decimoIncideFuncao: true,
+  decimoIncideAQTitulo: true,
+  decimoIncideAQTreino: true,
+  decimoIncideATS: true,
+  decimoIncideVPNI: true,
+  decimoIncideAbono: false,
+  decimoIncideGrat: true,
+  decimoOutrasParcelas: 0,
+  decimoRubricasInclusas: {},
 
   manualDecimoTerceiroNov: false,
   decimoTerceiroNovVenc: 0,
