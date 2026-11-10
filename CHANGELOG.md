@@ -4,6 +4,7 @@
 # Changelog
 
 ## Funpresp em rubricas manuais — integração ao main atualizado — 10/11/2026
+- Interface: resumo mensal da Funpresp junto à configuração previdenciária, resumo do 13º dentro do Resumo Calculado desse card e apuração de cada retroativo na competência correspondente; removido o painel global da seção Rubricas Manuais.
 - Revisão pré-merge: a opção de Funpresp mensal não é exigida indevidamente na competência antiga de um vínculo exclusivo de PSS; a classificação obrigatória histórica continua independente. Teste de regressão reproduz o bloqueio e verifica ambos os comportamentos.
 - Substituído o rateio individual fictício por resumo Funpresp compartilhado e pendências explícitas; resultados, salvamento e exportação ficam bloqueados até a apuração histórica necessária ser concluída.
 - Integradas as rubricas manuais aos vínculos por competência original, com validação de regime, participação, tabelas, incidências independentes, fontes e bases históricas.

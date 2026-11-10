@@ -7,9 +7,12 @@ import { deriveLinkedPensionBases, getPensionRubricDistribution } from '../../se
 import { PensionRetroEntry } from '../../types/pension';
 import { toPositiveNumber, toDecimalRateFromPercentInput } from './dynamicPayrollForm.helpers';
 import { formatCurrency } from '../../utils/calculations';
+import type { PensionMemory } from '../../types/pension';
+import { SharedPensionSummary } from './SharedPensionSummary';
 
 interface Props {
     state: CalculatorState;
+    pensionMemory?: PensionMemory;
     update: (field: keyof CalculatorState, value: any) => void;
     styles: Record<string, string>;
     pssTableOptions: string[];
@@ -21,7 +24,7 @@ interface Props {
 
 const newRetroId = () => globalThis.crypto?.randomUUID?.() ?? `retro-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTableOptions, pensionParams, pensionContexts, invalidateOptionConfirmation }) => {
+export const PensionRetroForm: React.FC<Props> = ({ state, pensionMemory, update, styles, pssTableOptions, pensionParams, pensionContexts, invalidateOptionConfirmation }) => {
     const entries = state.pensionRetroEntries ?? [];
     const rubrics = state.rubricasExtras ?? [];
     const eligible = rubrics.filter(rubrica => Number(rubrica.valor) > 0 &&
@@ -74,6 +77,7 @@ export const PensionRetroForm: React.FC<Props> = ({ state, update, styles, pssTa
             };
             return <fieldset key={entry.id} className="mt-4 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 space-y-3">
                 <legend className="font-semibold">{linked ? 'Competência' : 'Ajuste salvo'} {index + 1}</legend>
+                {pensionMemory && <SharedPensionSummary memory={pensionMemory} rubricas={rubrics} scope="historical" historicalEntryId={entry.id} embedded />}
                 {!linked && <p className="text-body-xs">Ajuste salvo anteriormente. Revise os dados e evite lançá-lo novamente.</p>}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <label className={styles.label}>Competência original
