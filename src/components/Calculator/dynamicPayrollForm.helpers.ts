@@ -14,12 +14,14 @@ export type PredefinedRubricId =
     | 'gaacta'
     | 'pre_escolar'
     | 'aux_transporte'
-    | 'diarias';
+    | 'diarias'
+    | 'indenizacao_transporte';
 
 export interface PresetGrossLine {
     label: string;
     value: number;
     isDiscount?: boolean;
+    displayValue?: string;
 }
 
 export interface PresetInstance {
@@ -41,7 +43,8 @@ export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }
     { id: 'gaacta', label: 'GAACTA - Ativ. Alta Complexidade (CJ)' },
     { id: 'pre_escolar', label: 'Auxilio Pre-Escolar' },
     { id: 'aux_transporte', label: 'Auxilio Transporte' },
-    { id: 'diarias', label: 'Diarias de Viagem' }
+    { id: 'diarias', label: 'Diarias de Viagem' },
+    { id: 'indenizacao_transporte', label: 'Indenização de Transporte' }
 ];
 
 export const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra', 'substituicao']);
@@ -213,6 +216,8 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
             return state.auxPreEscolarQtd > 0;
         case 'aux_transporte':
             return state.auxTransporteGasto > 0;
+        case 'indenizacao_transporte':
+            return Boolean(state.transporteIndenizacaoAtivo);
         case 'diarias':
             // No modo por datas, a quantidade é derivada pelo motor e pode
             // permanecer zerada na entrada salva. Mesmo uma data incompleta

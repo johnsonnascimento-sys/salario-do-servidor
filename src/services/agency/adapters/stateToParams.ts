@@ -127,6 +127,8 @@ export function mapStateToAgencyParams(
         diariasEquipeTrabalho: Boolean(state.diariasEquipeTrabalho),
         diariasEquipeTrabalhoMaiorCargo: state.diariasEquipeTrabalhoMaiorCargo,
         licencaDias: Math.max(0, Math.floor(Number(state.licencaDias) || 0)),
+        transporteIndenizacaoAtivo: state.transporteIndenizacaoAtivo === true,
+        transporteIndenizacaoDias: state.transporteIndenizacaoDias ?? 0,
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,
         // GAACTA (Resolução STM nº 397/2026)

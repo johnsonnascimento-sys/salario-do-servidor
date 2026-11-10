@@ -240,6 +240,17 @@ export const buildPresetGrossLines = ({
                 { label: 'Auxílio-transporte Líquido', value: roundCurrency(Math.max(0, transporteBruto - cotaParte)) }
             ];
         }
+        case 'indenizacao_transporte': {
+            const memory = state.transporteIndenizacaoMemory;
+            if (!memory || memory.status === 'unavailable' || memory.status === 'invalid') return [{ label: 'Valor indisponível para esta competência', value: 0, displayValue: '—' }];
+            return [
+                { label: 'Valor integral de referência', value: memory.fullAmount },
+                { label: 'Dias informados', value: memory.days, displayValue: String(memory.days) },
+                { label: 'Divisor', value: memory.divisor, displayValue: String(memory.divisor) },
+                { label: `Cálculo: valor integral × ${memory.eligibleDays} ÷ ${memory.divisor}`, value: memory.amount },
+                { label: 'Valor a receber', value: memory.amount }
+            ];
+        }
         case 'diarias': {
             const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
             const discountRules = resolveDailiesDiscountRules(courtConfig?.dailies, transportWorkdays);

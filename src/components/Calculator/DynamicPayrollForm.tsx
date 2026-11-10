@@ -108,7 +108,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         initialState: inputState,
         update,
         updateSubstDays,
-        functionKeys
+        functionKeys,
+        transportIndemnityEnabled: Boolean(courtConfig.transportIndemnity?.enabled)
     });
 
     const totalCreditos = state.rubricasExtras

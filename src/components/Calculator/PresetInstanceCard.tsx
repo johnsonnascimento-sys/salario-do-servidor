@@ -1,5 +1,5 @@
-import React from 'react';
-import { GripVertical, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { GripVertical, Info, Trash2 } from 'lucide-react';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS } from './dynamicPayrollForm.helpers';
@@ -73,6 +73,8 @@ const getPresetHeaderInfo = (
                 title: 'Substituição de Função',
                 normBadge: 'Lei 8.112/90, art. 38'
             };
+        case 'indenizacao_transporte':
+            return { title: 'Indenização de Transporte', normBadge: courtConfig.transportIndemnity?.normativeLabel };
         case 'diarias': {
             const normInfo = courtConfig?.dailies?.normativeInfo;
             const normBadge = normInfo?.localRuleLabel || normInfo?.branchRuleLabel || normInfo?.generalRuleLabel || 'Regulamentação PJU';
@@ -129,6 +131,16 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     lines
 }) => {
     const headerInfo = getPresetHeaderInfo(instance.presetId, courtConfig, presetLabel, instance, state);
+    const [infoOpen, setInfoOpen] = useState(false);
+    const infoRef = useRef<HTMLSpanElement>(null);
+    useEffect(() => {
+        if (!infoOpen) return;
+        const outside = (event: PointerEvent) => { if (!infoRef.current?.contains(event.target as Node)) setInfoOpen(false); };
+        const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setInfoOpen(false); };
+        document.addEventListener('pointerdown', outside);
+        document.addEventListener('keydown', escape);
+        return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
+    }, [infoOpen]);
 
     return (
         <div
@@ -149,6 +161,16 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     {headerInfo.normBadge && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
+                        </span>
+                    )}
+                    {instance.presetId === 'indenizacao_transporte' && (
+                        <span ref={infoRef} className="relative inline-flex" onMouseEnter={() => setInfoOpen(true)} onMouseLeave={() => setInfoOpen(false)} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setInfoOpen(false); }} onPointerDown={e => e.stopPropagation()}>
+                            <button type="button" aria-label="Informações sobre indenização de transporte" aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} aria-describedby={infoOpen ? `info-${instance.key}` : undefined} onFocus={() => setInfoOpen(true)} onClick={e => { e.stopPropagation(); setInfoOpen(true); }} className="rounded p-1 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                                <Info className="h-4 w-4" />
+                            </button>
+                            {infoOpen && <span id={`info-${instance.key}`} role="tooltip" className="fixed left-4 right-4 top-1/3 z-tooltip sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-72 rounded-lg border border-neutral-200 bg-white p-3 text-body-xs normal-case tracking-normal text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
+                                {courtConfig.transportIndemnity?.info}
+                            </span>}
                         </span>
                     )}
                     {MULTI_INSTANCE_PRESETS.has(instance.presetId) && (

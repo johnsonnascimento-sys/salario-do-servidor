@@ -100,6 +100,8 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     diariasEquipeTrabalho?: boolean;
     diariasEquipeTrabalhoMaiorCargo?: string;
     licencaDias: number;
+    transporteIndenizacaoAtivo?: boolean;
+    transporteIndenizacaoDias?: number;
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
     rubricasExtras?: Rubrica[];

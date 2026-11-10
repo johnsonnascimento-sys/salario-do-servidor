@@ -1,4 +1,5 @@
 import type { IrTableMetadata } from '../../types/irEa';
+import type { TransportIndemnityConfig } from '../../types/transportIndemnity';
 
 /**
  * Tipos para o Sistema de Configuração Hierárquica
@@ -67,6 +68,8 @@ export interface PowerConfig {
     payroll_rules?: PayrollRulesConfig;
     previdencia_complementar?: PrevidenciaComplementarPowerConfig;
     career_catalog?: CareerCatalogConfig;
+    /** Specific external-service reimbursement, enabled only by an organ rule. */
+    transport_indemnity?: TransportIndemnityConfig;
 }
 
 export interface PrevidenciaComplementarPowerConfig {

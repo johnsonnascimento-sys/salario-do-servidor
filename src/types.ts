@@ -1,5 +1,7 @@
 import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry, CalculatedSubstitutionEntry } from './types/irEa';
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
+import type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
+export type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 export interface SalaryTable {
   [cargo: string]: {
     [padrao: string]: number;
@@ -159,6 +161,7 @@ export interface CourtConfig {
     preschool_allowance?: Array<{ label: string; value: number }>;
   };
   dailies?: DailiesConfig;
+  transportIndemnity?: TransportIndemnityConfig;
   payrollRules?: PayrollRulesConfig;
   previdenciaComplementar?: PrevidenciaComplementarConfig;
   careerCatalog?: CareerCatalogConfig;
@@ -292,6 +295,10 @@ export interface CalculatorState {
   baseLicenca: string; // 'auto', 'cj4', 'cj3'...
   incluirAbonoLicenca: boolean;
   licencaValor: number;
+  transporteIndenizacaoAtivo: boolean;
+  transporteIndenizacaoDias: number;
+  transporteIndenizacaoValor: number;
+  transporteIndenizacaoMemory?: TransportIndemnityMemory;
   // GAACTA (Resolução STM nº 397/2026)
   gaactaAtivo: boolean;
   gaactaValor: number;
@@ -507,6 +514,8 @@ export type CalculatedPayrollState = Pick<
   | 'diariasDiasDescontoAlimentacaoCalc'
   | 'diariasDiasDescontoTransporteCalc'
   | 'licencaValor'
+  | 'transporteIndenizacaoValor'
+  | 'transporteIndenizacaoMemory'
   | 'gaactaValor'
   | 'gaactaBaseCalculo'
   | 'rubricasTax'
@@ -578,6 +587,10 @@ export const INITIAL_STATE: CalculatorState = {
   baseLicenca: 'auto',
   incluirAbonoLicenca: true,
   licencaValor: 0,
+  transporteIndenizacaoAtivo: false,
+  transporteIndenizacaoDias: 0,
+  transporteIndenizacaoValor: 0,
+  transporteIndenizacaoMemory: undefined,
   gaactaAtivo: false,
   gaactaValor: 0,
   gaactaBaseCalculo: 0,

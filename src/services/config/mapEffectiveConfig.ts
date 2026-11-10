@@ -131,6 +131,8 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         orgSlug: effective.org_slug,
         orgName: effective.org_name,
         powerName: effective.power_name,
+        // No fallback: an organ without a registered rule cannot offer this credit.
+        transportIndemnity: effective.transport_indemnity,
         adjustment_schedule: toAdjustmentSchedule(effective.adjustment_schedule),
         bases: {
             salario: salaryBasesNormalized,

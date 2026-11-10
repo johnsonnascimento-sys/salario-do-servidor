@@ -88,6 +88,8 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'diariasDiasDescontoAlimentacaoCalc',
     'diariasDiasDescontoTransporteCalc',
     'licencaValor',
+    'transporteIndenizacaoValor',
+    'transporteIndenizacaoMemory',
     'gaactaValor',
     'gaactaBaseCalculo',
     'rubricasTax',
@@ -230,6 +232,10 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
             ? merged.diariasFeriados.filter((d): d is string => typeof d === 'string')
             : [],
         licencaDias: Math.max(0, Math.floor(Number(merged.licencaDias) || 0)),
+        transporteIndenizacaoAtivo: merged.transporteIndenizacaoAtivo === true,
+        // Keep invalid days visible for validation; never silently truncate a decimal into a payable day.
+        transporteIndenizacaoDias: Number.isFinite(Number(merged.transporteIndenizacaoDias))
+            ? Number(merged.transporteIndenizacaoDias) : 0,
         gaactaAtivo: Boolean(merged.gaactaAtivo),
         gaactaRecesso: Boolean(merged.gaactaRecesso),
         gaactaPercentual: Number(merged.gaactaPercentual) > 0 ? Number(merged.gaactaPercentual) : 0.15,

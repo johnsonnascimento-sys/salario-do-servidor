@@ -16,6 +16,7 @@ interface UseDynamicPresetInstancesParams {
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     functionKeys: string[];
+    transportIndemnityEnabled: boolean;
 }
 
 const createOvertimeEntry = (): OvertimeEntry => ({
@@ -42,7 +43,8 @@ export const useDynamicPresetInstances = ({
     initialState = state,
     update,
     updateSubstDays,
-    functionKeys
+    functionKeys,
+    transportIndemnityEnabled
 }: UseDynamicPresetInstancesParams) => {
     const overtimeLegacyMigratedRef = useRef(false);
     const substitutionLegacyMigratedRef = useRef(false);
@@ -91,9 +93,14 @@ export const useDynamicPresetInstances = ({
         [enabledPresets]
     );
     const availablePresets = PREDEFINED_OPTIONS.filter(
-        option => MULTI_INSTANCE_PRESETS.has(option.id) || !enabledPresetIds.has(option.id)
+        option => (option.id !== 'indenizacao_transporte' || transportIndemnityEnabled) && (MULTI_INSTANCE_PRESETS.has(option.id) || !enabledPresetIds.has(option.id))
     );
     const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(PREDEFINED_OPTIONS[0]?.id || '');
+    useEffect(() => {
+        if (!availablePresets.some(option => option.id === selectedPreset)) {
+            setSelectedPreset(availablePresets[0]?.id || '');
+        }
+    }, [enabledPresets, transportIndemnityEnabled, selectedPreset]);
     const [reorderMode, setReorderMode] = useState(false);
     const [draggingPreset, setDraggingPreset] = useState<string | null>(null);
 
@@ -366,6 +373,10 @@ export const useDynamicPresetInstances = ({
             case 'aux_transporte':
                 update('auxTransporteGasto', 0);
                 break;
+            case 'indenizacao_transporte':
+                update('transporteIndenizacaoAtivo', false);
+                update('transporteIndenizacaoDias', 0);
+                break;
             case 'diarias':
                 update('diariasQtd', 0);
                 update('diariasEmbarque', 'nenhum');
@@ -390,7 +401,7 @@ export const useDynamicPresetInstances = ({
     };
 
     const includePreset = () => {
-        if (!selectedPreset) return;
+        if (!selectedPreset || !availablePresets.some(option => option.id === selectedPreset)) return;
 
         if (selectedPreset === 'hora_extra') {
             const newEntry = createOvertimeEntry();
@@ -422,6 +433,9 @@ export const useDynamicPresetInstances = ({
             return;
         }
 
+        if (selectedPreset === 'indenizacao_transporte') {
+            update('transporteIndenizacaoAtivo', true);
+        }
         if (selectedPreset === 'gaacta') {
             update('gaactaAtivo', true);
         }

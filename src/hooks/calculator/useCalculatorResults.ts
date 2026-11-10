@@ -57,6 +57,7 @@ export const useCalculatorResults = (
         state.diariasAssessoramentoMagistrado, state.diariasAcompanhamentoIntegral, state.diariasAutoridadeAssistida,
         state.diariasEquipeTrabalho, state.diariasEquipeTrabalhoMaiorCargo,
         state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca,
+        state.transporteIndenizacaoAtivo, state.transporteIndenizacaoDias,
         state.gaactaAtivo, state.gaactaValor, state.gaactaPercentual, state.gaactaRecesso,
         state.gaactaIncideVencimento, state.gaactaIncideGAJ, state.gaactaIncideFuncao,
         state.gaactaIncideAQTitulo, state.gaactaIncideAQTreino, state.gaactaIncideATS,
@@ -171,6 +172,8 @@ export const useCalculatorResults = (
                     diariasDiasDescontoAlimentacaoCalc: bd.diariasDiasDescAlim || 0,
                     diariasDiasDescontoTransporteCalc: bd.diariasDiasDescTransp || 0,
                     licencaValor: bd.licencaCompensatoria || 0,
+                    transporteIndenizacaoValor: bd.transporteIndenizacaoValor || 0,
+                    transporteIndenizacaoMemory: bd.transporteIndenizacaoMemory,
                     gaactaValor: bd.gaacta || 0,
                     gaactaBaseCalculo: bd.gaactaBase || 0,
                     rubricasTax: bd.rubricasTax || {},
@@ -266,6 +269,7 @@ export const useCalculatorResults = (
 
         if (effectiveState.auxPreEscolarValor > 0) rows.push({ label: 'AUXÍLIO PRÉ-ESCOLAR', value: effectiveState.auxPreEscolarValor, type: 'C' });
         if (effectiveState.auxTransporteValor > 0) rows.push({ label: 'AUXÍLIO-TRANSPORTE', value: effectiveState.auxTransporteValor, type: 'C' });
+        if (effectiveState.transporteIndenizacaoValor > 0) rows.push({ label: 'INDENIZAÇÃO DE TRANSPORTE', value: effectiveState.transporteIndenizacaoValor, type: 'C' });
         if (effectiveState.licencaValor > 0) rows.push({ label: 'INDENIZAÇÃO LICENÇA COMPENSATÓRIA', value: effectiveState.licencaValor, type: 'C' });
         if (effectiveState.gaactaValor > 0) rows.push({ label: 'INDENIZAÇÃO- GRAT AT ALTA COMPLEX TEC ADM (GAACTA) - EC', value: effectiveState.gaactaValor, type: 'C' });
         if (effectiveState.abonoPermanencia > 0) rows.push({ label: 'ABONO DE PERMANÊNCIA', value: effectiveState.abonoPermanencia, type: 'C' });

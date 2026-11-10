@@ -25,6 +25,7 @@
     "test:loading": "node scripts/test-calculator-loading.mjs",
     "validate:deploy": "node scripts/validate-deploy.mjs",
     "test:field-calculator": "node scripts/test-field-calculator.mjs",
+    "test:transport-indemnity": "node scripts/test-transport-indemnity.mjs",
     "test:ir-ea": "node scripts/test-ir-ea-progressive.mjs && node scripts/test-ir-ea-config.mjs && node scripts/test-ir-ea-ui.mjs"
   },
   "dependencies": {

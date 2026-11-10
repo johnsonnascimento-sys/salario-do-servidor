@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 07/11/2026 05:23
+Atualizado em: 10/11/2026 01:17
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -257,3 +257,10 @@ Cada rubrica manual deve suportar:
 4. **Natureza indenizatória e isenção:** A gratificação possui natureza estritamente indenizatória (art. 4º), não integrando a remuneração nem compondo base de cálculo para contribuição previdenciária (PSS/RPPS) nem incidência de imposto de renda (IRRF), nem servindo de base para outros adicionais.
 5. **Incompatibilidade com serviço extraordinário:** O acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário, exceto no período do recesso judiciário (art. 6º). Havendo concomitância, o servidor deverá optar entre a GAACTA e as Horas Extras. A calculadora emite alertas cruzados em ambos os módulos (GAACTA e Horas Extras), mantendo a ressalva ativável para o período de recesso forense.
 6. **Módulo base para a Justiça Federal:** A arquitetura do módulo GAACTA serve de base unificada e parametrizada para a expansão e aplicação na Justiça Federal (JF) e demais órgãos do Poder Judiciário da União.
+
+## 13. Indenização de Transporte na JMU
+
+1. A indenização do ATN STM nº 212/2017 alcança o Oficial de Justiça Avaliador Federal e o servidor designado ad hoc, inclusive de cargo diverso. O usuário informa os dias elegíveis de diligência externa, excluídos afastamentos e impedimentos; diversas diligências no mesmo dia contam uma vez.
+2. Valor integral e divisor são configurados por órgão e vigência. O cálculo usa o valor integral multiplicado pelos dias elegíveis limitados ao divisor, dividido pelo divisor, com arredondamento apenas no resultado. A versão introduzida pelo ATN STM nº 935/2026 entrou em vigor na publicação de 13/02/2026; não se presume valor anterior. Como não há datas individuais das diligências na entrada, competência com mudança de vigência intramês fica indisponível.
+3. A simulação não substitui a comprovação e atestação exigidas pelo art. 3º do ATN nº 212/2017. Diárias no mesmo mês não excluem automaticamente toda a indenização: o usuário exclui os dias impedidos. Não se aplicam desconto de auxílio-alimentação, incidências de IR, PSS e Funpresp, nem inclusão em bases remuneratórias. O crédito integra o Holerite e não o bloco de Diárias.
+4. Em `org_config.configuration.transport_indemnity.versions`, `validFrom` e `validTo` representam os limites históricos de vigência. Novas versões preservam as anteriores. A ausência de configuração ou de vigência aplicável não presume regras da JMU para outro órgão.

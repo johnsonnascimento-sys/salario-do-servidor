@@ -5,6 +5,7 @@ import { ThirteenthCard } from './cards/ThirteenthCard';
 import { OvertimeCard } from './cards/OvertimeCard';
 import { SubstitutionCard } from './cards/SubstitutionCard';
 import { LicenseCard } from './cards/LicenseCard';
+import { TransportIndemnityCard } from './cards/TransportIndemnityCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { GaactaCard } from './cards/GaactaCard';
 import { SimplePresetFields } from './SimplePresetFields';
@@ -56,6 +57,10 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
                 isNovoAQ={isNovoAQ}
             />
         );
+    }
+
+    if (presetId === 'indenizacao_transporte') {
+        return <TransportIndemnityCard state={state} update={update} styles={styles} competenciaReferencia={competenciaReferencia} />;
     }
 
     if (presetId === 'ferias') {

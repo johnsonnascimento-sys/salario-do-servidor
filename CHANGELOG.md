@@ -1,5 +1,11 @@
 # Changelog
 
+## Indenização de Transporte — JMU
+
+- Adicionada simulação por dias elegíveis, com configuração e vigência próprias, memória de cálculo e crédito no holerite, sem incidências ou desconto de alimentação.
+- O ATN STM nº 935/2026 foi publicado em 13/02/2026; a competência de transição permanece indisponível sem datas das diligências. A configuração foi aplicada ao banco em 10/11/2026 após ensaio transacional, validação de isolamento e idempotência; o frontend requer implantação para disponibilizar o card no site.
+
+
 ## Alinhamento do Atalho com a Memória do IR-EA e Auto-Expansão — 07/11/2026
 - Atualiza o texto do botão de atalho em `IrEaCompetencias.tsx` de "Ver Apuração do IR-EA" para "Ver Memória do IR-EA", alinhando-o com a nomenclatura oficial da seção no rodapé.
 - Configura o scroll para expandir automaticamente o acordeão colapsado (`details.open = true`) da Memória do IR-EA ao ser clicado, permitindo ao servidor visualizar instantaneamente a tabela de cálculo de RRA e o destaque visual.

@@ -32,6 +32,7 @@ import { calculateDailies } from './modules/dailiesCalculations';
 import { calculateCompensatoryLeave } from './modules/leaveCalculations';
 import { calculateGaacta } from './modules/gaactaCalculations';
 import { calculateDeductions } from './modules/deductionsCalculations';
+import { calculateTransportIndemnity } from './modules/transportIndemnityCalculations';
 
 const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number }> = []) => {
     return rubricas.reduce(
@@ -106,6 +107,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const overtime = await calculateOvertime(params);
         const substitution = await calculateSubstitution(params);
         const dailies = await calculateDailies(params);
+        const transportIndemnity = calculateTransportIndemnity(params);
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
@@ -122,7 +124,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         // 5. Calcular Totais
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
             benefits.auxTransporte + vacation.value + thirteenth.gratNatalinaTotal + overtime.heTotal +
-            substitution.total + dailies.valor + compensatoryLeave + gaactaResult.valor + rubricasTotals.creditos;
+            substitution.total + dailies.valor + compensatoryLeave + gaactaResult.valor + rubricasTotals.creditos + transportIndemnity.amount;
 
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
@@ -134,7 +136,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
             netSalary: totalGross - totalDeductions,
             totalDeductions: totalDeductions,
             totalBenefits: benefits.auxAlimentacao + benefits.auxPreEscolar +
-                benefits.auxTransporte + dailies.valor + compensatoryLeave + gaactaResult.valor,
+                benefits.auxTransporte + dailies.valor + compensatoryLeave + gaactaResult.valor + transportIndemnity.amount,
             pensionMemory: { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,
                 retroativos: deductions.pensionRetroMemory },
             breakdown: {
@@ -223,6 +225,8 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 licencaCompensatoria: compensatoryLeave,
                 gaacta: gaactaResult.valor,
                 gaactaBase: gaactaResult.baseCalculo,
+                transporteIndenizacaoValor: transportIndemnity.amount,
+                transporteIndenizacaoMemory: transportIndemnity,
 
                 // BenefÃ­cios
                 ...benefits,
