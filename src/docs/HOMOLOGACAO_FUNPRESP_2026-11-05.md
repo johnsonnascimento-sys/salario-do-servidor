@@ -41,3 +41,11 @@ O verificador remoto opcionalmente compara com `PENSION_CONFIG_SNAPSHOT`, que de
 - A cobertura normativa permanece a da etapa 3: catálogo de 2026, histórico abril–dezembro/2026 e verbas não comprovadas pendentes.
 
 Próximo passo operacional: preparar a publicação do código validado e concluir a conferência visual e do fluxo autenticado no ambiente acessível. Não declarar homologação integral do site com base apenas nestas verificações.
+
+## Conferência pré-merge — 10/11/2026
+
+- Integração com `main` 3d951ec preservada em worktree isolada. A prévia Vercel 9b40046 abriu no próprio domínio após limitar o redirecionamento canônico, usando `VITE_VERCEL_ENV`.
+- Login realizado pelo usuário na prévia. Criado um snapshot identificado como `VALIDACAO FUNPRESP - DADOS SINTETICOS`, com cargo/padrão iniciais da calculadora, RPPS limitado, participação patrocinada e alíquota de 6,5%. O salvamento confirmou sucesso; a lista e a reabertura para edição preservaram regime, participação, alíquota, contribuição normal de R$ 84,58, contrapartida informativa de R$ 84,58 e líquido de R$ 9.079,67. O snapshot sintético ficou na área do usuário para conferência. Outros snapshots não foram alterados.
+- Revisão independente pelo Calc Engine Specialist confirmou e corrigiu um bloqueio na combinação PSS histórico/Funpresp mensal facultativa: a opção mensal não é exigida na competência antiga; a obrigatoriedade histórica continua validada. A regressão falhou antes e passou após a correção do commit 8460570. O cenário corrigido foi conferido em testes, sem alegar execução desse cenário específico no navegador.
+- Verificações finais: 12 testes de catálogo, 13 de vínculos e 21 de persistência aprovados; geração real de PDF/XLSX aprovada; checagem TypeScript aprovada. A expectativa do teste de montagem de cards foi alinhada à ordenação alfabética já presente no main.
+- A conferência autenticada não representa nova auditoria de todas as políticas RLS ou de todos os cenários normativos. Permanecem os limites de cobertura registrados acima. A configuração do banco não foi reaplicada nesta conferência.
