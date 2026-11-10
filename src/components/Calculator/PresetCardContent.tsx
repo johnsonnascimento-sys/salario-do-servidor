@@ -60,7 +60,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     }
 
     if (presetId === 'indenizacao_transporte') {
-        return <TransportIndemnityCard state={state} update={update} styles={styles} competenciaReferencia={competenciaReferencia} />;
+        return <TransportIndemnityCard state={state} update={update} styles={styles} competenciaReferencia={competenciaReferencia} courtConfig={courtConfig} />;
     }
 
     if (presetId === 'ferias') {

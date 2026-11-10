@@ -1,5 +1,14 @@
 # Changelog
 
+## Indenização de Transporte — CJF e Justiça Federal
+
+- Implementada a Indenização de Transporte para o Conselho da Justiça Federal (CJF) e os Tribunais Regionais Federais (TRFs 1 a 6), estendendo a infraestrutura de cálculo data-driven com preservação integral do comportamento já implantado para a JMU.
+- Regulamentação baseada na Resolução CJF nº 4/2008 (arts. 54 a 58) e nas Portarias CJF nº 43/2025 (R$ 2.289,21) e nº 182/2026 (R$ 2.391,30).
+- Suporte à distinção entre a competência da folha de pagamento e o mês de execução do serviço externo (art. 56), com contagem de dias restrita ao calendário do mês de serviço, incluindo virada de ano e anos bissextos.
+- Modelagem segregada da data de publicação no DOU e dos efeitos financeiros retroativos a 1º de janeiro de cada exercício, com alertas informativos nas simulações anteriores à publicação e indisponibilidade explícita para períodos sem cadastro normativo (evitando presunção histórica de valores).
+- Preservação da isenção de IR, PSS e Funpresp-Jud, ausência de reflexo no auxílio-alimentação e nas diárias, crédito único no Holerite e detalhamento completo em salvamento, restauração e exportações PDF e Excel.
+- Preparada migration idempotente em `supabase/migrations/20261110_cjf_transport_indemnity.sql` com guarda de segurança e fallback técnico transitório em `ConfigService.ts`.
+
 ## Indenização de Transporte — meses de transição
 
 - Para a JMU, competências com novo valor em vigência intramês passam a simular o valor atualizado para o mês inteiro, com alerta sobre a data efetiva e a convenção adotada. A ressalva acompanha as exportações PDF e Excel.

@@ -171,6 +171,16 @@ export class ConfigService {
 
         // 2. Registro cadastrado no banco (caminho data-driven canônico)
         if (data) {
+            const transitional = this.getTransitionalOrgFallback(orgSlug);
+            if (transitional?.configuration?.transport_indemnity && !data.configuration?.transport_indemnity) {
+                return {
+                    ...data,
+                    configuration: {
+                        ...data.configuration,
+                        transport_indemnity: transitional.configuration.transport_indemnity
+                    }
+                } as OrgConfigRecord;
+            }
             return data as OrgConfigRecord;
         }
 
@@ -273,6 +283,48 @@ export class ConfigService {
                         transport_workdays: 22,
                         transport_discount_rate: 0.06,
                         irrf_top_rate: 0.275
+                    },
+                    transport_indemnity: {
+                        enabled: true,
+                        competenceMode: 'previous_month',
+                        divisor: 20,
+                        versions: [
+                            {
+                                validFrom: '2025-01-01',
+                                validTo: '2025-12-31',
+                                fullAmount: 2289.21,
+                                divisor: 20,
+                                incidences: { ir: false, pss: false, funpresp: false },
+                                publicationDate: '2025-02-13',
+                                financialEffectsFrom: '2025-01-01',
+                                normativeLabel: 'Res. CJF nº 4/2008 • Portaria nº 43/2025',
+                                reference: 'Portaria CJF nº 43, de 22/01/2025 (DOU 13/02/2025, Seção 1, p. 119), com efeitos financeiros a partir de 01/01/2025'
+                            },
+                            {
+                                validFrom: '2026-01-01',
+                                validTo: null,
+                                fullAmount: 2391.30,
+                                divisor: 20,
+                                incidences: { ir: false, pss: false, funpresp: false },
+                                publicationDate: '2026-04-08',
+                                financialEffectsFrom: '2026-01-01',
+                                normativeLabel: 'Res. CJF nº 4/2008 • Portaria nº 182/2026',
+                                reference: 'Portaria CJF nº 182, de 06/04/2026 (DOU 08/04/2026, Seção 1, p. 177), com efeitos financeiros a partir de 01/01/2026'
+                            }
+                        ],
+                        normativeLabel: 'Res. CJF nº 4/2008 • Portaria nº 182/2026',
+                        info: 'Ressarcimento das despesas com veículo particular utilizado em serviço externo pelo Analista Judiciário, Área Judiciária, especialidade Oficial de Justiça Avaliador Federal. O pagamento é realizado no mês seguinte ao da execução do serviço, integral a partir de 20 dias e proporcional (1/20 por dia) abaixo desse número.',
+                        notes: [
+                            'O pagamento é realizado no mês seguinte ao da execução do serviço externo (art. 56 da Resolução CJF nº 4/2008). Os dias informados referem-se ao mês de serviço.',
+                            'São devidos 20 dias para o valor integral, ou 1/20 por dia de efetiva realização de serviço externo quando inferior a 20 dias (art. 55, caput e § 1º).',
+                            'Considere apenas dias de efetivo serviço externo, excluindo férias, licenças e demais afastamentos, ainda que considerados em lei como de efetivo exercício (art. 56, parágrafo único).',
+                            'Não computar os dias que servirem de base para o cálculo de diárias (art. 55, § 2º). A existência de diárias no mês não exclui automaticamente a indenização dos demais dias elegíveis.',
+                            'É vedada a concessão de suprimento de fundos para tal finalidade, bem como a utilização de veículo oficial (art. 57).',
+                            'A prestação dos serviços deve ser atestada pelo titular da unidade (art. 56); este cálculo constitui uma simulação.',
+                            'Portaria CJF nº 182/2026 publicada no DOU em 08/04/2026, com efeitos financeiros a partir de 01/01/2026 (R$ 2.391,30). Período de 2025 regido pela Portaria CJF nº 43/2025 (R$ 2.289,21).',
+                            'Não incidem IR (Decreto nº 9.580/2018, art. 35, I, \'e\'), PSS (Lei nº 10.887/2004, art. 4º, § 1º, III) nem contribuição Funpresp-Jud, nem há desconto sobre auxílio-alimentação.'
+                        ],
+                        incidences: { ir: false, pss: false, funpresp: false }
                     }
                 }
             };

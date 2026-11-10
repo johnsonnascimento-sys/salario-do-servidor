@@ -7,6 +7,15 @@ const isCalendarDate = (value: unknown): value is string => {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 };
 
+export const getPreviousCompetence = (competence: string): string => {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(competence)) return '';
+  const [year, month] = competence.split('-').map(Number);
+  if (month === 1) {
+    return `${year - 1}-12`;
+  }
+  return `${year}-${String(month - 1).padStart(2, '0')}`;
+};
+
 /** Resolves configured validity only; no JMU amount or statutory divisor is assumed. */
 export function resolveTransportIndemnity(
   config: TransportIndemnityConfig | undefined,
@@ -20,15 +29,26 @@ export function resolveTransportIndemnity(
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(competence)) {
     return { ...memory, reason: 'Informe uma competência válida para a folha.' };
   }
-  const [year, month] = competence.split('-').map(Number);
-  const maxDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const monthStart = `${competence}-01`;
-  const monthEnd = `${competence}-${maxDays}`;
+
+  const isPreviousMonthMode = config.competenceMode === 'previous_month';
+  const serviceCompetence = isPreviousMonthMode ? getPreviousCompetence(competence) : competence;
+  memory.serviceCompetence = serviceCompetence;
+  memory.paymentCompetence = competence;
+
+  const [serviceYear, serviceMonth] = serviceCompetence.split('-').map(Number);
+  const maxDays = new Date(Date.UTC(serviceYear, serviceMonth, 0)).getUTCDate();
   memory.maxDays = maxDays;
+
+  const targetCompetence = serviceCompetence;
+  const monthStart = `${targetCompetence}-01`;
+  const monthEnd = `${targetCompetence}-${maxDays}`;
+
   if (!Array.isArray(config.versions) || config.versions.some(version =>
     !isCalendarDate(version.validFrom) ||
     (version.validTo != null && (!isCalendarDate(version.validTo) || version.validTo < version.validFrom)) ||
-    !Number.isFinite(version.fullAmount) || version.fullAmount <= 0 || !version.reference?.trim()
+    !Number.isFinite(version.fullAmount) || version.fullAmount <= 0 || !version.reference?.trim() ||
+    (version.publicationDate != null && !isCalendarDate(version.publicationDate)) ||
+    (version.financialEffectsFrom != null && !isCalendarDate(version.financialEffectsFrom))
   )) {
     return { ...memory, reason: 'Valores e vigências da indenização de transporte precisam ser configurados.' };
   }
@@ -46,15 +66,25 @@ export function resolveTransportIndemnity(
   )) {
     return { ...memory, reason: 'Cada vigência precisa de divisor e incidências completos para preservar o histórico.' };
   }
-  const versions = config.versions.filter(version =>
-    version.validFrom <= monthEnd && (version.validTo == null || version.validTo >= monthStart)
-  );
+
+  const getVersionStart = (version: { validFrom: string; financialEffectsFrom?: string }) => {
+    return version.financialEffectsFrom || version.validFrom;
+  };
+
+  const versions = config.versions.filter(version => {
+    const start = getVersionStart(version);
+    return start <= monthEnd && (version.validTo == null || version.validTo >= monthStart);
+  });
+
   if (versions.length === 0) {
-    return { ...memory, reason: 'Não há valor da indenização de transporte cadastrado para esta competência.' };
+    const compLabel = isPreviousMonthMode
+      ? `o mês de serviço (${serviceCompetence.split('-').reverse().join('/')})`
+      : 'esta competência';
+    return { ...memory, reason: `Não há valor da indenização de transporte cadastrado para ${compLabel}.` };
   }
-  const chronological = [...versions].sort((a, b) => a.validFrom.localeCompare(b.validFrom));
+  const chronological = [...versions].sort((a, b) => getVersionStart(a).localeCompare(getVersionStart(b)));
   if (chronological.some((version, index) => index > 0 &&
-      (chronological[index - 1].validTo == null || chronological[index - 1].validTo! >= version.validFrom))) {
+      (chronological[index - 1].validTo == null || chronological[index - 1].validTo! >= getVersionStart(version)))) {
     return { ...memory, reason: 'Há vigências sobrepostas na configuração da indenização de transporte.' };
   }
   // The opt-in monthly convention uses the rule applicable at month end. It
@@ -73,21 +103,43 @@ export function resolveTransportIndemnity(
   }
   memory.divisor = divisor!;
   memory.normativeLabel = version.normativeLabel || config.normativeLabel;
-  const startsWithinMonth = version.validFrom > monthStart;
+
+  const versionStart = getVersionStart(version);
+  const startsWithinMonth = versionStart > monthStart;
   const endsWithinMonth = version.validTo != null && version.validTo < monthEnd;
   if (endsWithinMonth || (startsWithinMonth && config.transitionPolicy !== 'latest_in_month')) {
     return { ...memory, fullAmount: version.fullAmount, validFrom: version.validFrom,
       validTo: version.validTo, reference: version.reference,
+      publicationDate: version.publicationDate, financialEffectsFrom: version.financialEffectsFrom,
       reason: 'A vigência muda dentro desta competência. Sem as datas das diligências, não é possível aplicar o valor mensal com segurança.' };
   }
   if (startsWithinMonth) {
-    memory.transitionDate = version.validFrom;
-    const dateLabel = version.validFrom.split('-').reverse().join('/');
+    memory.transitionDate = versionStart;
+    const dateLabel = versionStart.split('-').reverse().join('/');
     memory.transitionWarning = `Houve alteração de vigência em ${dateLabel}. Nesta simulação, o valor atualizado é aplicado a toda a competência, preservada a data de vigência da norma.`;
+  }
+  if (version.publicationDate) {
+    memory.publicationDate = version.publicationDate;
+  }
+  if (version.financialEffectsFrom) {
+    memory.financialEffectsFrom = version.financialEffectsFrom;
+  }
+  if (version.publicationDate && version.financialEffectsFrom && version.publicationDate > version.financialEffectsFrom) {
+    const pubMonth = version.publicationDate.slice(0, 7);
+    const pubBr = version.publicationDate.split('-').reverse().join('/');
+    const effBr = version.financialEffectsFrom.split('-').reverse().join('/');
+    if (competence < pubMonth || targetCompetence < pubMonth) {
+      const refTitle = version.normativeLabel || version.reference;
+      memory.retroactiveNote = `${refTitle}: ato publicado no DOU em ${pubBr}, com efeitos financeiros retroativos a ${effBr}.`;
+      if (!memory.transitionWarning) {
+        memory.transitionWarning = memory.retroactiveNote;
+      }
+    }
   }
   return {
     ...memory, status: 'zero', fullAmount: version.fullAmount,
     validFrom: version.validFrom, validTo: version.validTo, reference: version.reference,
+    publicationDate: version.publicationDate, financialEffectsFrom: version.financialEffectsFrom,
   };
 }
 

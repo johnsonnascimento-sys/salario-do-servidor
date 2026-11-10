@@ -243,13 +243,21 @@ export const buildPresetGrossLines = ({
         case 'indenizacao_transporte': {
             const memory = state.transporteIndenizacaoMemory;
             if (!memory || memory.status === 'unavailable' || memory.status === 'invalid') return [{ label: 'Valor indisponível para esta competência', value: 0, displayValue: '—' }];
-            return [
-                { label: 'Valor integral de referência', value: memory.fullAmount },
+            const lines: PresetGrossLine[] = [
+                { label: 'Valor integral de referência', value: memory.fullAmount }
+            ];
+            if (memory.serviceCompetence && memory.serviceCompetence !== memory.competence) {
+                const parts = memory.serviceCompetence.split('-');
+                const display = parts.length === 2 ? `${parts[1]}/${parts[0]}` : memory.serviceCompetence;
+                lines.push({ label: 'Mês de execução do serviço', value: 0, displayValue: display });
+            }
+            lines.push(
                 { label: 'Dias informados', value: memory.days, displayValue: String(memory.days) },
                 { label: 'Divisor', value: memory.divisor, displayValue: String(memory.divisor) },
                 { label: `Cálculo: valor integral × ${memory.eligibleDays} ÷ ${memory.divisor}`, value: memory.amount },
                 { label: 'Valor a receber', value: memory.amount }
-            ];
+            );
+            return lines;
         }
         case 'diarias': {
             const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);

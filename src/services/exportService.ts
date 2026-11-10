@@ -95,8 +95,34 @@ export const exportToPDF = (
     const splitDisclaimer = doc.splitTextToSize(disclaimerText, 180);
     doc.text(splitDisclaimer, 105, pageHeight - 15, { align: 'center' });
 
-    const transitionWarning = state.transporteIndenizacaoAtivo ? state.transporteIndenizacaoMemory?.transitionWarning : undefined;
-    if (transitionWarning) {
+    const transportMemory = state.transporteIndenizacaoAtivo ? state.transporteIndenizacaoMemory : undefined;
+    const transitionWarning = transportMemory?.transitionWarning;
+    if (transportMemory && (transportMemory.amount > 0 || transportMemory.fullAmount > 0)) {
+        const compDisplay = transportMemory.competence ? transportMemory.competence.split('-').reverse().join('/') : `${state.mesRef}/${state.anoRef}`;
+        const isDual = transportMemory.serviceCompetence && transportMemory.serviceCompetence !== transportMemory.competence;
+        const transportRows = [
+            ['Competência da folha (pagamento)', compDisplay],
+            ...(isDual && transportMemory.serviceCompetence ? [['Mês de execução do serviço', transportMemory.serviceCompetence.split('-').reverse().join('/')]] : []),
+            ['Valor integral de referência', formatCurrency(transportMemory.fullAmount)],
+            ['Divisor aplicável', String(transportMemory.divisor || 20)],
+            ['Dias de serviço externo informados', String(transportMemory.days || 0)],
+            ['Dias elegíveis computados', String(transportMemory.eligibleDays || 0)],
+            ['Valor apurado a receber', formatCurrency(transportMemory.amount)],
+            ...(transitionWarning ? [['Alerta de vigência / efeitos', transitionWarning]] : [])
+        ];
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text('Indenização de Transporte — memória de cálculo', 14, 18);
+        doc.autoTable({
+            head: [['Item / Parâmetro', 'Detalhamento']],
+            body: transportRows,
+            startY: 24,
+            theme: 'grid',
+            styles: { fontSize: 9 },
+            margin: { bottom: 20 }
+        });
+    } else if (transitionWarning) {
         doc.addPage();
         doc.setFontSize(12);
         doc.setTextColor(0);
@@ -162,6 +188,20 @@ export const exportToExcel = (
     }
 
     wsData.push(['']);
+    const transportMemory = state.transporteIndenizacaoAtivo ? state.transporteIndenizacaoMemory : undefined;
+    if (transportMemory && (transportMemory.amount > 0 || transportMemory.fullAmount > 0)) {
+        const compDisplay = transportMemory.competence ? transportMemory.competence.split('-').reverse().join('/') : `${state.mesRef}/${state.anoRef}`;
+        const isDual = transportMemory.serviceCompetence && transportMemory.serviceCompetence !== transportMemory.competence;
+        wsData.push(['INDENIZAÇÃO DE TRANSPORTE:']);
+        wsData.push(['Competência da folha (pagamento):', compDisplay]);
+        if (isDual && transportMemory.serviceCompetence) {
+            wsData.push(['Mês de execução do serviço:', transportMemory.serviceCompetence.split('-').reverse().join('/')]);
+        }
+        wsData.push(['Valor integral de referência:', transportMemory.fullAmount]);
+        wsData.push(['Dias informados / Divisor:', `${transportMemory.days} / ${transportMemory.divisor || 20}`]);
+        wsData.push(['Valor apurado a receber:', transportMemory.amount]);
+        wsData.push(['']);
+    }
     const transitionWarning = state.transporteIndenizacaoAtivo ? state.transporteIndenizacaoMemory?.transitionWarning : undefined;
     if (transitionWarning) wsData.push(['ALERTA DE VIGÊNCIA:', transitionWarning]);
     wsData.push(['AVISO LEGAL:', 'Os dados desta simulação são meramente ilustrativos e não possuem valor legal. Confirme sempre com o órgão oficial.']);

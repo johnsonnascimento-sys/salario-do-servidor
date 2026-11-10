@@ -134,7 +134,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const [infoOpen, setInfoOpen] = useState(false);
     const infoRef = useRef<HTMLSpanElement>(null);
     useEffect(() => {
-        if (!infoOpen) return;
+        if (!infoOpen || typeof document === 'undefined') return;
         const outside = (event: PointerEvent) => { if (!infoRef.current?.contains(event.target as Node)) setInfoOpen(false); };
         const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setInfoOpen(false); };
         document.addEventListener('pointerdown', outside);
