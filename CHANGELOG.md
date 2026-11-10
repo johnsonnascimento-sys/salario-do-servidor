@@ -1,5 +1,9 @@
 # Changelog
 
+## Histórico da Indenização de Transporte — JMU
+
+- Incluída a configuração histórica do ATN STM nº 596/2022, publicada em 21/10/2022, e versionados divisor e incidências para preservar simulações anteriores. Fevereiro de 2026 continua indisponível enquanto não houver critério para a transição intramês.
+
 ## Indenização de Transporte — JMU
 
 - Adicionada simulação por dias elegíveis, com configuração e vigência próprias, memória de cálculo e crédito no holerite, sem incidências ou desconto de alimentação.

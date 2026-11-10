@@ -25,18 +25,26 @@ export function resolveTransportIndemnity(
   const monthStart = `${competence}-01`;
   const monthEnd = `${competence}-${maxDays}`;
   memory.maxDays = maxDays;
-  if (!Number.isInteger(config.divisor) || config.divisor <= 0 ||
-      !config.incidences || config.incidences.ir !== false ||
-      config.incidences.pss !== false || config.incidences.funpresp !== false) {
-    return { ...memory, reason: 'Configuração incompleta ou incidências incompatíveis com a indenização de transporte.' };
-  }
-  memory.divisor = config.divisor;
   if (!Array.isArray(config.versions) || config.versions.some(version =>
     !isCalendarDate(version.validFrom) ||
     (version.validTo != null && (!isCalendarDate(version.validTo) || version.validTo < version.validFrom)) ||
     !Number.isFinite(version.fullAmount) || version.fullAmount <= 0 || !version.reference?.trim()
   )) {
     return { ...memory, reason: 'Valores e vigências da indenização de transporte precisam ser configurados.' };
+  }
+  // The deployed legacy shape has all calculation parameters at the top level.
+  // Once any version owns its parameters, require every version to be complete;
+  // a later top-level edit must never silently change an earlier version.
+  const versionedRules = config.versions.some(version => version.divisor !== undefined || version.incidences !== undefined);
+  const hasIncidenceFlags = (value: unknown): value is { ir: boolean; pss: boolean; funpresp: boolean } => {
+    if (!value || typeof value !== 'object') return false;
+    const flags = value as Record<string, unknown>;
+    return ['ir', 'pss', 'funpresp'].every(key => typeof flags[key] === 'boolean');
+  };
+  if (versionedRules && config.versions.some(version =>
+    !Number.isInteger(version.divisor) || (version.divisor ?? 0) <= 0 || !hasIncidenceFlags(version.incidences)
+  )) {
+    return { ...memory, reason: 'Cada vigência precisa de divisor e incidências completos para preservar o histórico.' };
   }
   const versions = config.versions.filter(version =>
     version.validFrom <= monthEnd && (version.validTo == null || version.validTo >= monthStart)
@@ -48,6 +56,14 @@ export function resolveTransportIndemnity(
       : 'Esta competência contém mais de uma vigência. A quantidade mensal de dias não permite separar os valores.' };
   }
   const version = versions[0];
+  const divisor = versionedRules ? version.divisor : config.divisor;
+  const incidences = versionedRules ? version.incidences : config.incidences;
+  if (!Number.isInteger(divisor) || (divisor ?? 0) <= 0 || !hasIncidenceFlags(incidences) ||
+      incidences.ir !== false || incidences.pss !== false || incidences.funpresp !== false) {
+    return { ...memory, reason: 'Configuração incompleta ou incidências incompatíveis com a indenização de transporte nesta vigência.' };
+  }
+  memory.divisor = divisor!;
+  memory.normativeLabel = version.normativeLabel || config.normativeLabel;
   if (version.validFrom > monthStart || (version.validTo != null && version.validTo < monthEnd)) {
     return { ...memory, fullAmount: version.fullAmount, validFrom: version.validFrom,
       validTo: version.validTo, reference: version.reference,

@@ -73,6 +73,70 @@ test('transporte: configuração, divisor, vigência e desabilitação são expl
   assert.equal(resolveTransportIndemnity({ ...transport, versions: [transport.versions[0], transport.versions[0]] }, '2026-11').status, 'unavailable');
 });
 
+test('transporte: versões históricas selecionam valor, divisor, incidências e fundamento da competência', () => {
+  const exempt = { ir: false, pss: false, funpresp: false };
+  const historical: TransportIndemnityConfig = {
+    ...transport,
+    // Conflicting legacy data must have no effect after parameters are versioned.
+    divisor: 99, incidences: { ir: true, pss: true, funpresp: true },
+    versions: [
+      { validFrom: '2022-10-21', validTo: '2026-02-12', fullAmount: 2075.88, divisor: 20,
+        incidences: exempt, reference: 'ATN STM nº 596/2022', normativeLabel: 'ATN STM nº 212/2017 • nº 596/2022' },
+      { validFrom: '2026-02-13', validTo: '2027-12-31', fullAmount: 2168.46, divisor: 20,
+        incidences: exempt, reference: 'ATN STM nº 935/2026', normativeLabel: 'ATN STM nº 212/2017 • nº 935/2026' },
+      // Synthetic future divisor tests temporal isolation, not an official rule.
+      { validFrom: '2028-01-01', validTo: '2028-12-31', fullAmount: 3000, divisor: 10,
+        incidences: exempt, reference: 'Fixture futura' },
+      { validFrom: '2029-01-01', fullAmount: 4000, divisor: 5,
+        incidences: { ir: true, pss: false, funpresp: false }, reference: 'Fixture tributada' },
+    ],
+  };
+  const court = { ...config, transportIndemnity: historical };
+  for (const competence of ['2022-11', '2025-01', '2026-01']) {
+    const result = calculate(10, court, competence);
+    assert.equal(result.amount, 1037.94);
+    assert.equal(result.fullAmount, 2075.88);
+    assert.equal(result.divisor, 20);
+    assert.equal(result.normativeLabel, 'ATN STM nº 212/2017 • nº 596/2022');
+    assert.equal(calculate(22, court, competence).amount, 2075.88);
+  }
+  assert.equal(calculate(10, court, '2026-03').amount, 1084.23);
+  assert.equal(calculate(10, court, '2026-03').normativeLabel, 'ATN STM nº 212/2017 • nº 935/2026');
+  assert.equal(calculate(5, court, '2028-01').amount, 1500);
+  assert.equal(calculate(5, court, '2028-01').divisor, 10);
+  assert.equal(calculate(5, court, '2029-01').status, 'unavailable');
+  assert.match(calculate(5, court, '2029-01').reason!, /incidências incompatíveis/);
+  for (const competence of ['2022-09', '2022-10', '2026-02']) {
+    assert.equal(calculate(10, court, competence).status, 'unavailable', competence);
+    assert.equal(calculate(10, court, competence).amount, 0);
+  }
+  const before = JSON.stringify(historical);
+  calculate(10, court, '2025-01');
+  assert.equal(JSON.stringify(historical), before, 'resolver não altera a configuração histórica');
+});
+
+test('transporte: configuração versionada incompleta não herda silenciosamente parâmetros legados', () => {
+  const version = { ...transport.versions[0], divisor: 20, incidences: { ir: false, pss: false, funpresp: false } };
+  for (const broken of [
+    { ...version, divisor: undefined },
+    { ...version, incidences: undefined },
+    { ...version, incidences: { ir: false, pss: false } as any },
+    { ...version, divisor: 0 },
+  ]) {
+    const result = resolveTransportIndemnity({ ...transport, versions: [broken] }, '2026-11');
+    assert.equal(result.status, 'unavailable');
+    assert.equal(result.amount, 0);
+  }
+  const mixed = resolveTransportIndemnity({ ...transport, versions: [
+    { validFrom: '2025-01-01', validTo: '2025-12-31', fullAmount: 2075.88, reference: 'Legada' },
+    version,
+  ] }, '2025-01');
+  assert.equal(mixed.status, 'unavailable');
+  assert.match(mixed.reason!, /preservar o histórico/);
+  // Entirely legacy configurations remain supported during database/frontend rollout.
+  assert.equal(calculate(10).amount, 1084.23);
+});
+
 test('transporte: crédito no motor é isento e não altera alimentação, auxílio-transporte, diárias ou outras bases', async () => {
   const engine = new AgencyCalculationEngine();
   const state = { ...initial(), heQtd50: 2, diariasQtd: 2, gaactaAtivo: true };

@@ -74,7 +74,7 @@ const getPresetHeaderInfo = (
                 normBadge: 'Lei 8.112/90, art. 38'
             };
         case 'indenizacao_transporte':
-            return { title: 'Indenização de Transporte', normBadge: courtConfig.transportIndemnity?.normativeLabel };
+            return { title: 'Indenização de Transporte', normBadge: state?.transporteIndenizacaoMemory?.normativeLabel || (state?.transporteIndenizacaoMemory?.status === 'unavailable' ? undefined : courtConfig.transportIndemnity?.normativeLabel) };
         case 'diarias': {
             const normInfo = courtConfig?.dailies?.normativeInfo;
             const normBadge = normInfo?.localRuleLabel || normInfo?.branchRuleLabel || normInfo?.generalRuleLabel || 'Regulamentação PJU';
