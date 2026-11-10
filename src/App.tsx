@@ -23,7 +23,9 @@ import UserPayslipsPage from './pages/UserPayslipsPage';
 import UserPayslipDetailPage from './pages/UserPayslipDetailPage';
 
 function App() {
-  if (typeof window !== 'undefined' && window.location.hostname.endsWith('vercel.app')) {
+  if (typeof window !== 'undefined'
+    && window.location.hostname.endsWith('vercel.app')
+    && import.meta.env.VITE_VERCEL_ENV !== 'preview') {
     const target = `https://www.salariodoservidor.com.br${window.location.pathname}${window.location.search}${window.location.hash}`;
     window.location.replace(target);
     return null;
