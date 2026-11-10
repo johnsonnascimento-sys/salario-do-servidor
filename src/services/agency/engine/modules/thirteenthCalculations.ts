@@ -94,6 +94,20 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         adiant13FC = forcePrimeiraByTipo || adiant13FC > 0 || segunda13FC > 0 ? metadeFC13 : 0;
         segunda13Venc = forceSegundaByTipo || segunda13Venc > 0 ? metadeVencimento13 : 0;
         segunda13FC = forceSegundaByTipo || segunda13FC > 0 ? metadeFC13 : 0;
+    } else {
+        // No modo manual, se o servidor for receber a 2ª parcela (mês de novembro ou seleção ativa),
+        // mas não tiver digitado um valor customizado explícito (> 1) para a 2ª parcela,
+        // a calculadora apura automaticamente o saldo complementar (remuneração integral - adiantamento)
+        // para garantir que a base integral e as deduções oficiais fechem em 100% sem exigir conta mental.
+        const querSegundaVenc = params.tipoCalculo === 'nov' || segunda13Venc > 0;
+        if (querSegundaVenc && segunda13Venc <= 1) {
+            segunda13Venc = roundCurrency(Math.max(0, baseSemFC - adiant13Venc));
+        }
+
+        const querSegundaFC = funcaoValor > 0 && (params.tipoCalculo === 'nov' || segunda13FC > 0);
+        if (querSegundaFC && segunda13FC <= 1) {
+            segunda13FC = roundCurrency(Math.max(0, funcaoValor - adiant13FC));
+        }
     }
 
     const primeiraParcelaRecebida = adiant13Venc + adiant13FC;

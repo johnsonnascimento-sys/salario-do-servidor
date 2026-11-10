@@ -146,3 +146,34 @@ test('Modo manual: isolamento estrito sem recomposição indevida', async () => 
     assert.equal(result.adiant13FC, 0);
     assert.equal(result.segunda13FC, 0);
 });
+
+test('Modo manual com adiantamento customizado: apura saldo automático da 2ª parcela em novembro', async () => {
+    // Vencimento = 9000 (base integral). FC = 1000 (base integral).
+    // Servidor informa adiantamento recebido anteriormente: 3500 para vencimento e 400 para FC.
+    // Em novembro, segunda13Venc e segunda13FC não recebem valor explícito (> 1).
+    const params = createBaseParams({
+        tipoCalculo: 'nov',
+        adiant13Venc: 3500,
+        adiant13FC: 400,
+        segunda13Venc: 0,
+        segunda13FC: 0,
+        manualAdiant13: true
+    });
+
+    const result = await calculateThirteenth(params);
+
+    // 2ª parcela deve ser exatamente o saldo complementar para fechar 100% da base:
+    // Saldo vencimento: 9000 - 3500 = 5500
+    // Saldo FC: 1000 - 400 = 600
+    assert.equal(result.adiant13Venc, 3500);
+    assert.equal(result.segunda13Venc, 5500);
+    assert.equal(result.adiant13FC, 400);
+    assert.equal(result.segunda13FC, 600);
+
+    // Abatimento da 1ª parcela deve ser exatamente o valor do adiantamento informado
+    assert.equal(result.primeiraParcelaDesconto, 3900); // 3500 + 400
+    // Gratificação natalina total de proventos = 3500 + 5500 + 400 + 600 = 10000
+    assert.equal(result.gratNatalinaTotal, 10000);
+    // PSS incide sobre 9000 integral (3500 + 5500) -> 900
+    assert.equal(result.pss13, 900);
+});
