@@ -1,4 +1,6 @@
 import { supabase } from '../../lib/supabase';
+import { validatePensionConfigurationInput, validatePensionConfigurationChange, validateOrgPensionOverrideChange } from './pensionConfigValidation';
+import { validateConfigVersionDate } from './configVersionValidation';
 import {
   GlobalConfig,
   OrgConfig,
@@ -124,6 +126,20 @@ export class AdminService {
 
   static async upsertPowerConfig(payload: UpsertPowerConfigDTO): Promise<PowerConfig> {
     const configValue = parseJsonIfString(payload.config_value, 'config_value');
+    if (payload.id) {
+      const { data: previous, error: readError } = await supabase.from('power_config').select('config_key').eq('id', payload.id).single();
+      if (readError || !previous) throw new Error('Não foi possível conferir a configuração anterior.');
+      if (payload.config_key === 'previdencia_complementar' || previous.config_key === 'previdencia_complementar') {
+        throw new Error('Use o versionamento para alterar uma configuração previdenciária publicada.');
+      }
+    }
+    if (payload.config_key === 'previdencia_complementar') {
+      validatePensionConfigurationInput(configValue);
+      const { data: existing, error: readError } = await supabase.from('power_config').select('id')
+        .eq('power_name', payload.power_name).eq('config_key', payload.config_key).limit(1);
+      if (readError) throw new Error('Não foi possível conferir o histórico previdenciário.');
+      if (existing?.length) throw new Error('Use o versionamento para preservar a configuração previdenciária existente.');
+    }
     const sanitized = sanitizePayload({ ...payload, config_value: configValue });
 
     const { data, error } = await supabase
@@ -141,6 +157,19 @@ export class AdminService {
 
   static async versionPowerConfig(payload: UpsertPowerConfigDTO & { previous_id: string }): Promise<void> {
     const configValue = parseJsonIfString(payload.config_value, 'config_value');
+    const { data: previous, error: readError } = await supabase.from('power_config').select('config_key,power_name,config_value,valid_from,valid_to')
+      .eq('id', payload.previous_id).single();
+    if (readError || !previous) throw new Error('Não foi possível conferir a versão anterior.');
+    if (payload.config_key === 'previdencia_complementar' || previous.config_key === 'previdencia_complementar') {
+      const dateError = validateConfigVersionDate(previous, payload.valid_from);
+      if (dateError) throw new Error(dateError);
+      if (payload.valid_to !== null) throw new Error('A nova versão previdenciária deve permanecer ativa.');
+      if (payload.config_key !== previous.config_key || payload.power_name !== previous.power_name || payload.valid_from <= previous.valid_from) {
+        throw new Error('Preserve poder e chave e informe uma vigência posterior para a nova versão previdenciária.');
+      }
+      validatePensionConfigurationInput(configValue);
+      validatePensionConfigurationChange(previous.config_value, configValue, payload.valid_from);
+    }
     const { error } = await supabase.rpc('admin_version_power_config', {
       p_previous_id: payload.previous_id,
       p_power_name: payload.power_name,
@@ -170,6 +199,10 @@ export class AdminService {
 
   static async upsertOrgConfig(payload: UpsertOrgConfigDTO): Promise<OrgConfig> {
     const configValue = parseJsonIfString(payload.configuration, 'configuration');
+    const { data: previous, error: readError } = await supabase.from('org_config').select('configuration')
+      .eq('org_slug', payload.org_slug).maybeSingle();
+    if (readError) throw new Error('Não foi possível conferir os overrides previdenciários anteriores.');
+    validateOrgPensionOverrideChange(previous?.configuration?.previdencia_complementar, configValue.previdencia_complementar);
     const sanitized = sanitizePayload({ ...payload, configuration: configValue });
 
     const { data, error } = await supabase

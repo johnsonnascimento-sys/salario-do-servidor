@@ -69,7 +69,7 @@ export const useCalculator = () => {
         handleDonationComplete: handleDonationCompleteBase
     } = useCalculatorExport();
 
-    const { calculatedState, resultRows, calculationStatus, calculationError, pensionContexts } = useCalculatorResults(
+    const { calculatedState, resultRows, calculationStatus, calculationError, calculationPending, pensionContexts } = useCalculatorResults(
         state,
         agencyService,
         courtConfig,
@@ -206,6 +206,7 @@ export const useCalculator = () => {
         calculatedState,
         calculationStatus,
         calculationError,
+        calculationPending,
         pensionContexts,
         calculationReady,
         effectiveState,

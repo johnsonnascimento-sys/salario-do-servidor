@@ -66,11 +66,17 @@ test('UI oferece modalidades e opções opt-in com confirmação de simulação 
     assert.deepEqual(calls, [['funprespRevisarOpcoes', false]]);
     tree.unmount();
 });
-test('nova simulação não oferece ferramenta previdenciária de retroativos', () => {
+test('nova simulação oferece cadastramento de competência sem preencher dados históricos automaticamente', () => {
     const calls: any[] = [];
     const tree = create(React.createElement(PensionRetroForm, { state: state(), styles: {}, pssTableOptions: [], update: (key, value) => calls.push([key, value]) }));
-    assert.equal(tree.toJSON(), null);
-    assert.deepEqual(calls, []);
+    const add = tree.root.findAllByType('button').find(button => button.children.join('') === 'Adicionar competência');
+    assert.ok(add);
+    act(() => add!.props.onClick());
+    assert.equal(calls[0][0], 'pensionRetroEntries');
+    assert.equal(calls[0][1][0].competencia, '');
+    assert.deepEqual(calls[0][1][0].vinculos, []);
+    assert.equal(calls[0][1][0].regimePrev, undefined);
+    assert.equal(calls[0][1][0].participacao, undefined);
     tree.unmount();
 });
 

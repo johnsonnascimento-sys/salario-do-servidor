@@ -22,6 +22,11 @@ const createRubricaId = () => {
     return `rubrica-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
+const invalidateOptionAmountsOnPeriodChange = (previous: CalculatorState, next: CalculatorState): CalculatorState =>
+    previous.anoRef !== next.anoRef || previous.mesRef !== next.mesRef
+        ? { ...next, rubricasExtras: next.rubricasExtras.map(rubrica => ({ ...rubrica, pensionOptionAmountConfirmed: false })) }
+        : next;
+
 export const useCalculatorState = () => {
     const location = useLocation();
     const navigationState = location.state as CalculatorNavigationState | null;
@@ -37,11 +42,11 @@ export const useCalculatorState = () => {
     ));
 
     const update = useCallback((field: keyof CalculatorState, value: any) => {
-        setState(prev => ({ ...prev, [field]: value }));
+        setState(prev => invalidateOptionAmountsOnPeriodChange(prev, { ...prev, [field]: value }));
     }, []);
 
     const updateMany = useCallback((patch: Partial<CalculatorState>) => {
-        setState(prev => applyCalculatorPatch(prev, patch));
+        setState(prev => invalidateOptionAmountsOnPeriodChange(prev, applyCalculatorPatch(prev, patch)));
     }, []);
 
     const updateSubstDays = useCallback((key: string, days: number) => {
@@ -78,7 +83,9 @@ export const useCalculatorState = () => {
     const updateRubrica = useCallback((id: string, field: keyof Rubrica, value: any) => {
         setState(prev => ({
             ...prev,
-            rubricasExtras: prev.rubricasExtras.map(r => r.id === id ? { ...r, [field]: value } : r)
+            rubricasExtras: prev.rubricasExtras.map(r => r.id === id ? { ...r, [field]: value,
+                ...(['valor', 'tipo', 'pensionRubricId', 'pensionOptionDate', 'pensionOptionReference', 'incideFunpresp', 'funprespCompetenciaSeparada', 'pssCompetenciaSeparada'].includes(field)
+                    ? { pensionOptionAmountConfirmed: false } : {}) } : r)
         }));
     }, []);
 
@@ -90,7 +97,7 @@ export const useCalculatorState = () => {
         if (newTipo === 'jun') updates.mesRef = 'JUNHO';
         if (newTipo === 'nov') updates.mesRef = 'NOVEMBRO';
 
-        setState(prev => ({ ...prev, ...updates }));
+        setState(prev => invalidateOptionAmountsOnPeriodChange(prev, { ...prev, ...updates }));
     }, []);
 
     return {

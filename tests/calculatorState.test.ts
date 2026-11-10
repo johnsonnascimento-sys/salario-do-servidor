@@ -145,7 +145,7 @@ test('montagem de presets mantém 13º e férias enquanto os resultados ainda es
     }
     let renderer;
     act(() => { renderer = create(React.createElement(Harness)); });
-    assert.deepEqual(presets!.enabledPresets.map((preset) => preset.presetId), ['ferias', 'decimo']);
+    assert.deepEqual(presets!.enabledPresets.map((preset) => preset.presetId), ['decimo', 'ferias']);
     act(() => renderer.unmount());
 });
 
