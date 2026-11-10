@@ -12,6 +12,8 @@ import { CalculatorState, CalculatedPayrollState, CourtConfig } from '../../type
 import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
+import { assertPensionRubricsReady, PensionCalculationPendingError } from '../../services/agency/engine/modules/pensionPending';
+import { calculateMonthlyPensionContext } from '../../services/agency/engine/modules/pensionContext';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
@@ -71,12 +73,15 @@ export const useCalculatorResults = (
     const [completed, setCompleted] = useState<{
         token: typeof inputToken; state: CalculatedPayrollState; error: string | null;
         pensionContexts?: PensionSelectionContexts | null; selectionRequired?: boolean;
+        pensionPending?: { message: string; rubricaIds: string[] };
     } | null>(null);
     const canCalculate = Boolean(agencyService && courtConfig && agency?.slug);
     const isCurrent = completed?.token === inputToken;
-    const calculationStatus: 'idle' | 'calculating' | 'ready' | 'error' | 'selection_required' = !canCalculate
-        ? 'idle' : !isCurrent ? 'calculating' : completed.selectionRequired ? 'selection_required' : completed.error ? 'error' : 'ready';
+    const calculationStatus: 'idle' | 'calculating' | 'ready' | 'error' | 'selection_required' | 'pension_pending' = !canCalculate
+        ? 'idle' : !isCurrent ? 'calculating' : completed.pensionPending ? 'pension_pending'
+            : completed.selectionRequired ? 'selection_required' : completed.error ? 'error' : 'ready';
     const calculationError = isCurrent ? completed.error : null;
+    const calculationPending = isCurrent ? completed.pensionPending ?? null : null;
     const calculatedState = useMemo(() => {
         if (calculationStatus === 'ready' && completed) return completed.state;
         const empty = getEmptyCalculatedPayrollState();
@@ -93,6 +98,8 @@ export const useCalculatorResults = (
             try {
                 const orgSlug = agency.slug;
                 const params = mapStateToAgencyParams(state, orgSlug, courtConfig);
+                // Historical participation cannot be inferred from today's selection.
+                assertPensionRubricsReady(params);
                 pensionContexts = await resolvePensionSelectionContexts(params);
                 if (cancelled || currentTokenRef.current !== inputToken) return;
                 if (pensionContexts.requiresChoice) {
@@ -183,6 +190,18 @@ export const useCalculatorResults = (
                 } });
             } catch (error) {
                 if (cancelled || currentTokenRef.current !== inputToken) {
+                    return;
+                }
+                if (error instanceof PensionCalculationPendingError) {
+                    // Editing today's selection must remain possible while a manual rubric is under review.
+                    // This context guides explicit choices only; it does not certify a final calculation.
+                    try {
+                        const monthly = await calculateMonthlyPensionContext(mapStateToAgencyParams(state, agency.slug, courtConfig));
+                        pensionContexts = { monthly, retro: {}, requiresChoice: false };
+                    } catch { pensionContexts = null; }
+                    if (cancelled || currentTokenRef.current !== inputToken) return;
+                    setCompleted({ token: inputToken, pensionContexts, state: getEmptyCalculatedPayrollState(),
+                        error: null, pensionPending: { message: error.message, rubricaIds: error.rubricaIds } });
                     return;
                 }
                 setCompleted({ token: inputToken, pensionContexts, state: getEmptyCalculatedPayrollState(),
@@ -365,5 +384,6 @@ export const useCalculatorResults = (
         return [...creditRows, ...debitRows];
     }, [effectiveState, courtConfig, currentTables, calculationStatus]);
 
-    return { calculatedState, resultRows, calculationStatus, calculationError, pensionContexts: isCurrent ? completed.pensionContexts ?? null : null };
+    return { calculatedState, resultRows, calculationStatus, calculationError, calculationPending,
+        pensionContexts: isCurrent ? completed.pensionContexts ?? null : null };
 };

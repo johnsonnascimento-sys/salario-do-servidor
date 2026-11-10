@@ -1,6 +1,43 @@
-import { AdjustmentScheduleConfig, EffectiveConfig } from './types';
-import { CourtConfig, TaxTable, AdjustmentScheduleEntry } from '../../types';
+import { AdjustmentScheduleConfig, EffectiveConfig, PrevidenciaComplementarPowerConfig } from './types';
+import { CourtConfig, TaxTable, AdjustmentScheduleEntry, PrevidenciaComplementarConfig } from '../../types';
 import type { IrTableMetadata } from '../../types/irEa';
+
+const mapComplementaryConfig = (config: Omit<PrevidenciaComplementarPowerConfig, 'historical_rules'>): PrevidenciaComplementarConfig => ({
+    enabled: Boolean(config.enabled),
+    scope: config.scope ?? 'patrocinado',
+    sponsoredRate: {
+        min: Number(config.sponsored_rate?.min ?? 0),
+        max: Number(config.sponsored_rate?.max ?? 0),
+        step: Number(config.sponsored_rate?.step ?? 0),
+        defaultRpc: Number(config.sponsored_rate?.default_rpc ?? 0),
+    },
+    facultativeRate: {
+        minIfPositive: Number(config.facultative_rate?.min_if_positive ?? 0),
+        max: config.facultative_rate?.max,
+        step: config.facultative_rate?.step,
+        default: Number(config.facultative_rate?.default ?? 0),
+    },
+    linkedRate: config.linked_rate,
+    minimumUrpUnits: config.minimum_urp_units,
+    urpByCompetence: config.urp_by_competence,
+    urpSourcesByCompetence: config.urp_sources_by_competence,
+    incidenceRules: config.incidence_rules,
+    baseRule: config.base_rule ?? 'excedente_teto_rgps',
+    includeThirteenth: Boolean(config.include_thirteenth),
+    rubricCatalog: config.rubric_catalog?.map(rule => ({ id: rule.id, label: rule.label,
+        classification: rule.classification, validFrom: rule.valid_from, validTo: rule.valid_to, source: rule.source })),
+    costingDisclosure: {
+        loadingNormal: config.costing_disclosure?.loading_normal,
+        loadingFacultative: config.costing_disclosure?.loading_facultative,
+        fcbeShareOfNormal: config.costing_disclosure?.fcbe_share_of_normal,
+        adminRemidoAssistido: config.costing_disclosure?.admin_remido_assistido,
+        effectiveFrom: config.costing_disclosure?.effective_from,
+    },
+    references: {
+        regulamentoVersion: config.references?.regulamento_version,
+        planoCusteioRef: config.references?.plano_custeio_ref,
+    },
+});
 
 const toNumberKey = (key: string) => {
     const parsed = Number(key.replace(/[^\d.]/g, ''));
@@ -224,42 +261,13 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                 irrfTopRate: effective.payroll_rules.irrf_top_rate,
             }
             : undefined,
-        previdenciaComplementar: effective.previdencia_complementar
-            ? {
-                enabled: Boolean(effective.previdencia_complementar.enabled),
-                scope: effective.previdencia_complementar.scope ?? 'patrocinado',
-                sponsoredRate: {
-                    min: Number(effective.previdencia_complementar.sponsored_rate?.min ?? 0),
-                    max: Number(effective.previdencia_complementar.sponsored_rate?.max ?? 0),
-                    step: Number(effective.previdencia_complementar.sponsored_rate?.step ?? 0),
-                    defaultRpc: Number(effective.previdencia_complementar.sponsored_rate?.default_rpc ?? 0),
-                },
-                facultativeRate: {
-                    minIfPositive: Number(effective.previdencia_complementar.facultative_rate?.min_if_positive ?? 0),
-                    max: effective.previdencia_complementar.facultative_rate?.max,
-                    step: effective.previdencia_complementar.facultative_rate?.step,
-                    default: Number(effective.previdencia_complementar.facultative_rate?.default ?? 0),
-                },
-                linkedRate: effective.previdencia_complementar.linked_rate,
-                minimumUrpUnits: effective.previdencia_complementar.minimum_urp_units,
-                urpByCompetence: effective.previdencia_complementar.urp_by_competence,
-                urpSourcesByCompetence: effective.previdencia_complementar.urp_sources_by_competence,
-                incidenceRules: effective.previdencia_complementar.incidence_rules,
-                baseRule: effective.previdencia_complementar.base_rule ?? 'excedente_teto_rgps',
-                includeThirteenth: Boolean(effective.previdencia_complementar.include_thirteenth),
-                costingDisclosure: {
-                    loadingNormal: effective.previdencia_complementar.costing_disclosure?.loading_normal,
-                    loadingFacultative: effective.previdencia_complementar.costing_disclosure?.loading_facultative,
-                    fcbeShareOfNormal: effective.previdencia_complementar.costing_disclosure?.fcbe_share_of_normal,
-                    adminRemidoAssistido: effective.previdencia_complementar.costing_disclosure?.admin_remido_assistido,
-                    effectiveFrom: effective.previdencia_complementar.costing_disclosure?.effective_from,
-                },
-                references: {
-                    regulamentoVersion: effective.previdencia_complementar.references?.regulamento_version,
-                    planoCusteioRef: effective.previdencia_complementar.references?.plano_custeio_ref,
-                },
-            }
-            : undefined,
+        previdenciaComplementar: effective.previdencia_complementar ? {
+            ...mapComplementaryConfig(effective.previdencia_complementar),
+            historicalRules: effective.previdencia_complementar.historical_rules?.map(rule => ({
+                id: rule.id, validFrom: rule.valid_from, validTo: rule.valid_to, source: rule.source, tabelaPSS: rule.tabela_pss,
+                configuration: mapComplementaryConfig(rule.configuration),
+            })),
+        } : undefined,
         careerCatalog: effective.career_catalog
             ? {
                 noFunctionCode: effective.career_catalog.no_function_code,

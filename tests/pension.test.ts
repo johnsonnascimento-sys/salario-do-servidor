@@ -31,6 +31,10 @@ const configuration = (): CourtConfig => ({
         urpByCompetence: { '2026-07': 100, '2025-11': 90 },
         urpSourcesByCompetence: { '2026-07': 'https://example.test/2026-07', '2025-11': 'https://example.test/2025-11' },
         incidenceRules: { fc: true, gas: true, gae: true, aqTreino: true },
+        rubricCatalog: [
+            { id: 'teste_credito', label: 'Crédito de teste elegível', classification: 'obrigatoria', validFrom: '2024-01', source: 'Fixture sintética' },
+            { id: 'teste_excluida', label: 'Crédito de teste excluído', classification: 'excluida', validFrom: '2024-01', source: 'Fixture sintética' },
+        ],
     },
 });
 const parameters = (patch: Partial<IAgencyCalculationParams> = {}): IAgencyCalculationParams => ({
@@ -66,7 +70,7 @@ test('monthly context precedes current participation validation and uses the exa
         funprespBaseIntegral: -1, funprespVinculadaInicio: '', funprespIncluirFC: true,
         funprespIncluirGAS: true, gratEspecificaTipo: 'gas', aqTreinoPerc: 0.01,
         funprespIncluirAQTreino: true, incidirPSSGrat: true,
-        rubricasExtras: [{ id: 'r', descricao: 'Teste', valor: 100, tipo: 'D', incideIR: true,
+        rubricasExtras: [{ id: 'r', descricao: 'Teste', valor: 100, tipo: 'D', incideIR: true, pensionRubricId: 'teste_credito',
             incidePSS: true, isEA: false, incideFunpresp: true }] });
     const context = await calculateMonthlyPensionContext(p);
     assert.equal(context.base, 10560);
@@ -202,7 +206,7 @@ test('linked salary maximum, supplementary one-off minimum, and nonfinite bases 
 });
 
 test('manual rubrics have independent opt-in complementary incidence', async () => {
-    const p = parameters({ rubricasExtras: [{ id: 'r', descricao: 'Teste', valor: 100, tipo: 'C', incideIR: true,
+    const p = parameters({ rubricasExtras: [{ id: 'r', descricao: 'Teste', valor: 100, tipo: 'C', incideIR: true, pensionRubricId: 'teste_credito',
         incidePSS: false, isEA: false, pssCompetenciaSeparada: false, incideFunpresp: true }] });
     const result = await new AgencyCalculationEngine().calculateTotal(p);
     assert.equal(result.breakdown.baseRpps, 5000);
@@ -258,7 +262,7 @@ test('anonymous August and September payroll reconciliation: capped RPPS plus op
     assert.equal(september.breakdown.funpresp, 569.79);
     assert.equal(Math.round((september.breakdown.pss + september.breakdown.funpresp) * 100) / 100, 1557.88);
     const august = await engine.calculateTotal({ ...p, rubricasExtras: [{ id: 'passivo', descricao: 'Passivo previdenciário EC',
-        tipo: 'C', valor: 61.99, incidePSS: true, incideIR: true, isEA: false,
+        tipo: 'C', valor: 61.99, incidePSS: true, incideIR: true, isEA: false, pensionRubricId: 'teste_credito',
         pssCompetenciaSeparada: false, incideFunpresp: true }] });
     assert.equal(august.breakdown.funpresp, 575.06);
     assert.equal(Math.round((august.breakdown.pss + august.breakdown.funpresp) * 100) / 100, 1563.15);
@@ -268,7 +272,7 @@ test('retroactive destinations reduce only the selected IR base and flags do not
     const engine = new AgencyCalculationEngine();
     const base = parameters({ adiant13Venc: 1, segunda13Venc: 1, irEaContext: { mesPagamento: '2026-07' },
         rubricasExtras: [{ competenciasEA: ['2025-01'], id: 'r', descricao: 'Retroativo', tipo: 'C', valor: 1000,
-            incideIR: true, incidePSS: true, pssCompetenciaSeparada: true, isEA: true }] });
+            incideIR: true, incidePSS: false, pssCompetenciaSeparada: false, isEA: true, pensionRubricId: 'teste_excluida' }] });
     for (const destinoIR of ['mensal', 'ea', '13'] as const) {
         const result = await engine.calculateTotal({ ...base, pensionRetroEntries: [{ id: 'm', competencia: '2025-01',
             modo: 'manual', destinoIR, ajusteRpps: 100, ajusteComplementar: 50, justificativa: 'Apuração individualizada' }] });
