@@ -1,6 +1,20 @@
 # Previdência dos servidores ativos do PJU/JMU
 
-Conferência normativa e conciliação: 19/10/2026. Complexidade operacional: altíssima. Este relatório registra os fundamentos da revisão; `PROJECT_RULES.md` permanece a referência canônica de arquitetura e governança.
+Atualização da implementação: 05/11/2026. Conferência e conciliação originais: 19/10/2026. Este relatório registra fundamentos e limites; `PROJECT_RULES.md` permanece a referência canônica de arquitetura e governança.
+
+## Entrega das três etapas e aplicação da configuração
+
+As etapas 1 e 2 removeram o desconto fictício individual e disponibilizaram apuração compartilhada e vínculos históricos. A etapa 3 acrescenta natureza da verba, fonte e vigência, com validação própria na competência original. Créditos positivos com PSS original exigem vínculos independentemente da participação atual. Ajustes legados isolados permanecem separados e não liberam rubricas sinalizadas sem vínculo.
+
+O candidato [pju_pension_catalog_2026.json](../../supabase/seeds/pju_pension_catalog_2026.json) distingue VB/GAJ, FC/CJ/local de trabalho e exclusões confirmadas. GAS/GAE/AQ de treinamento e outras verbas manuais permanecem pendentes, sem transformar flags anteriores de parcelas pré-definidas em uma classificação universal. O catálogo cobre janeiro–dezembro/2026; as regras históricas cobrem abril–dezembro/2026, dentro da vigência do [plano de custeio de 2026](https://www.funprespjud.com.br/wp-content/uploads/2026/03/parecer-atuarial-2025-130226.pdf), seção 10. Não inferir PSS de 2027 nem parâmetros anteriores ao intervalo conferido.
+
+O art. 14, § 1º, do regulamento vincula efeitos da opção ao protocolo. O formulário exige data e referência documental; opção posterior ao primeiro dia exige confirmação de que o valor lançado já considera a parcela elegível, sem cálculo automático de prorrata. A memória e as exportações guardam esse enquadramento. Os totais de Funpresp continuam compartilhados por apuração, sem promessa de conciliação individual de cada rubrica.
+
+A migration [20261105_pju_pension_catalog.sql](../../supabase/migrations/20261105_pju_pension_catalog.sql) foi testada em PostgreSQL embarcado descartável, preservando JSON anterior, idempotência e rollback por conflito. Em 05/11/2026, após confirmação expressa do usuário, foi aplicada no projeto `salario_do_servidor`. A configuração efetiva da JMU foi conferida pelo acesso público; os JSONs anteriores e demais configurações foram preservados. O código do site não foi publicado nesta operação. Evidências e limites em [HOMOLOGACAO_FUNPRESP_2026-11-05.md](./HOMOLOGACAO_FUNPRESP_2026-11-05.md). Catálogo ausente ou verba não comprovada mantém a simulação pendente quando seu enquadramento for necessário.
+
+O serviço administrativo exige versionamento para previdência publicada e preserva versões anteriores; não substitui RLS nem protege contra SQL administrativo direto. Testes locais: `test:pension-stage3`, além das suítes previdenciárias das etapas anteriores. Os testes SQL requerem `PENSION_PGLITE_MODULE` apontando para instalação descartável de `@electric-sql/pglite`; sem ela, são explicitamente ignorados.
+
+As seções de conciliação abaixo registram hipóteses dos anexos originais, não certificam todas as verbas, regimes ou competências. Na etapa 3 não houve conciliação adicional com novos contracheques.
 
 ## Fundamentos e vigência
 
@@ -52,7 +66,7 @@ A classificação individual de GAS/AQ e a autorização correspondente devem re
 
 ## URP e contribuição vinculada
 
-Fonte: [tabela oficial da Funpresp-Jud](https://www.funprespjud.com.br/urp/index.php), consultada em 19/10/2026. Datas são as publicações da tabela; não interpolar períodos ausentes.
+Fonte: [tabela oficial da Funpresp-Jud](https://www.funprespjud.com.br/urp/index.php), reconferida em 05/11/2026. Datas são as publicações da tabela; não interpolar períodos ausentes. Novembro/2026 ainda não consta no candidato.
 
 | Mês de publicação | URP (R$) |
 | --- | ---: |
@@ -100,6 +114,6 @@ Antes de aplicar: revisar o diff de impacto pelo fluxo admin e eventuais overrid
 
 As suítes de previdência, integração/exportação, formulário, restauração, carregamento e ordenação passaram (55 testes), junto com TypeScript e compilação Vite. Os testes geram PDF e XLSX em memória e verificam descontos, líquido e separação da memória informativa. Não houve aplicação de migration nem publicação.
 
-Por compatibilidade, o caminho legado de PSS de exercícios anteriores do RPPS sem teto ainda utiliza alíquota marginal atual quando não há apuração por competência; a memória exibe aviso explícito. Para conferência oficial, preencher os retroativos por competência. O PSS do 13º sem teto conserva a composição anterior; a correção de respeito à opção de gratificação no 13º foi limitada aos regimes com teto. Estes comportamentos preservados não são uma certificação normativa do regime sem teto.
+O relato de compatibilidade de 19/10 incluía PSS de exercícios anteriores pela alíquota marginal atual. As etapas 2 e 3 passaram a exigir vínculos das rubricas manuais positivas com PSS por competência original; não tratar esse relato antigo como autorização para dispensar a apuração histórica. O PSS do 13º sem teto conserva a composição anterior; a correção de respeito à opção de gratificação no 13º foi limitada aos regimes com teto. Os comportamentos anteriores fora do escopo não constituem certificação normativa integral do regime sem teto.
 
 As simulações patrocinadas antigas exigem confirmação das novas opções de base antes do recálculo. Os demonstrativos históricos já salvos conservam seus valores. Novos snapshots também guardam a memória previdenciária da data do salvamento.

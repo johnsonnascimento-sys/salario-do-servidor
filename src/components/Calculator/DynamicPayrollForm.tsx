@@ -33,6 +33,8 @@ interface DynamicPayrollFormProps {
     pensionContexts?: PensionSelectionContexts | null;
     preserveRestoredGlobals?: boolean;
     calculationError?: string | null;
+    calculationReady?: boolean;
+    pensionPending?: boolean;
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     courtConfig: CourtConfig;
@@ -49,6 +51,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     pensionContexts,
     preserveRestoredGlobals = false,
     calculationError,
+    calculationReady = false,
+    pensionPending = false,
     update,
     updateSubstDays,
     courtConfig,
@@ -87,7 +91,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const pensionParams = mapStateToAgencyParams(inputState ?? state, '', courtConfig);
     const pensionSelection = usePensionSelection({ params: pensionParams, context: pensionContexts?.monthly ?? null,
-        onApply: patch => updateMany(patch as Partial<CalculatorState>) });
+        onApply: patch => updateMany(patch as Partial<CalculatorState>), normalize: !pensionPending });
 
     const {
         enabledPresets,
@@ -237,6 +241,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
                 <PensionRetroForm state={inputState ?? state} update={update} styles={styles} pssTableOptions={pssOptions}
                     pensionParams={pensionParams} pensionContexts={pensionContexts}
+                    invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
+                        ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
                     allowNormalization={!pensionSelection.incompatible} />
             </div>
 
@@ -304,6 +310,12 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <ManualRubricasSection
                 rubricas={state.rubricasExtras}
                 rubricasTax={state.rubricasTax}
+                calculationReady={calculationReady && Boolean(state.pensionMemory)}
+                funprespParticipacao={state.funprespParticipacao}
+                pensionMemory={state.pensionMemory}
+                pensionRetroEntries={(inputState ?? state).pensionRetroEntries}
+                pensionConfig={courtConfig.previdenciaComplementar}
+                competencia={pensionParams.competencia}
                 irEaEntryTax={state.irEaEntryTax}
                 irEaCurrentYearKeys={state.irEaCurrentYearKeys}
                 competenciaReferencia={competenciaReferencia}

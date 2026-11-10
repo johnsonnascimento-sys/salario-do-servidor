@@ -47,8 +47,10 @@ export const PensionMemory: React.FC<{ memory: PensionMemoryData }> = ({ memory 
         {memory.retroativos.map(entry => <div key={entry.id} className="mt-2 border-t border-neutral-200 dark:border-neutral-700 pt-2 space-y-0.5">
             <p className="font-medium text-neutral-800 dark:text-neutral-200">{entry.competencia} — {entry.tipo === '13' ? '13º salário' : 'Mensal'} — {entry.modo === 'manual' ? 'Ajuste informado' : 'Recalculado por competência'}</p>
             <p className="font-mono tabular-nums text-neutral-600 dark:text-neutral-400">RPPS: {money(entry.rpps)} · Funpresp: {money(entry.complementar)}</p>
+            {entry.entrada?.vinculos && <p className="text-neutral-500 dark:text-neutral-400">Rubricas vinculadas: {entry.entrada.vinculos.length}</p>}
+            {entry.fonteHistorica && <p className="text-neutral-500 dark:text-neutral-400">Fonte histórica: {entry.fonteHistorica}</p>}
             <p className="text-neutral-500 dark:text-neutral-400">Dedução de IR: {entry.destinoIR === 'mensal' ? 'Folha mensal' : entry.destinoIR === '13' ? '13º salário' : 'Exercícios anteriores (EA)'}</p>
-            {entry.justificativa && <p className="text-neutral-500 italic">{entry.justificativa}</p>}
+            {entry.justificativa && <p className="text-neutral-500 dark:text-neutral-400 italic">{entry.justificativa}</p>}
         </div>)}
     </section>}
 </details>;

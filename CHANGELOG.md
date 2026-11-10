@@ -3,6 +3,15 @@
 
 # Changelog
 
+## Funpresp em rubricas manuais — integração ao main atualizado — 10/11/2026
+- Substituído o rateio individual fictício por resumo Funpresp compartilhado e pendências explícitas; resultados, salvamento e exportação ficam bloqueados até a apuração histórica necessária ser concluída.
+- Integradas as rubricas manuais aos vínculos por competência original, com validação de regime, participação, tabelas, incidências independentes, fontes e bases históricas.
+- Adicionado catálogo previdenciário data-driven com classificação e vigência; natureza desconhecida ou documentação incompleta mantém a apuração pendente.
+- Preservados os cálculos recentes de IR-EA/RRA: as competências correntes seguem a apuração mensal atual e os créditos de exercícios anteriores usam o cálculo progressivo por competências distintas e a alocação por entrada do motor de IR-EA.
+- Preservados os recursos recentes de IR-EA/RRA, indenização de transporte e configuração do `main`. Os testes de apuração previdenciária foram ajustados para fornecer competências, tabelas e catálogos sintéticos que esses fluxos agora exigem.
+- Homologação local e leitura pública após a migração foram registradas em `src/docs/HOMOLOGACAO_FUNPRESP_2026-11-05.md`. A migration `20261105_pju_pension_catalog.sql` já foi aplicada, com autorização, ao projeto `salario_do_servidor`; esta integração não reaplica nem altera o banco.
+- Validação integrada: testes Funpresp (etapas 1–3, incluindo PostgreSQL descartável), IR-EA, formulário, configuração e transporte aprovados; TypeScript e build aprovados.
+
 ## Indenização de Transporte — CJF e Justiça Federal
 
 - Implementada a Indenização de Transporte para o Conselho da Justiça Federal (CJF) e os Tribunais Regionais Federais (TRFs 1 a 6), estendendo a infraestrutura de cálculo data-driven com preservação integral do comportamento já implantado para a JMU.

@@ -69,12 +69,12 @@ test('contexto histórico ausente bloqueia seleção inclusive eventos disparado
     tree.unmount();
 });
 
-test('retroativos incompatíveis são limpos juntos sem diálogo nem perda de dados', () => {
+test('retroativos incompatíveis preservam escolhas históricas sem normalização automática', () => {
     const original = [entry({ regimePrev: 'antigo' }), entry({ id: 'retro-2', regimePrev: 'antigo' })];
     const props = input(original);
     const tree = render(props);
     assert.equal(tree.root.findAllByType('dialog').length, 0);
-    assert.deepEqual(calls, [['pensionRetroEntries', original.map(item => ({ ...item, participacao: 'nao' }))]]);
+    assert.deepEqual(calls, []);
     assert.equal(original[0].participacao, 'patrocinado');
     tree.unmount();
 });
@@ -91,12 +91,12 @@ test('troca mensal preserva o enquadramento e as legendas próprios de cada retr
     tree.unmount();
 });
 
-test('troca histórica aplica regime e não participação juntos preservando demais competências', () => {
+test('troca histórica altera apenas regime e preserva participação e demais competências', () => {
     const original = entry({ contribuicaoComplementarRecolhida: 17, aliquotaFacultativa: .02 });
     const other = entry({ id: 'retro-2', regimePrev: 'migrado' });
     const tree = render(input([original, other]));
     act(() => tree.root.findAllByType(PensionRegimeSelect)[0].props.onChange('antigo'));
-    assert.deepEqual(calls, [['pensionRetroEntries', [{ ...original, regimePrev: 'antigo', participacao: 'nao' }, other]]]);
+    assert.deepEqual(calls, [['pensionRetroEntries', [{ ...original, regimePrev: 'antigo' }, other]]]);
     assert.equal(tree.root.findAllByType('dialog').length, 0);
     tree.unmount();
 });

@@ -106,6 +106,8 @@ export interface PrevidenciaComplementarConfig {
   incidenceRules?: { fc: boolean; gas: boolean; gae: boolean; aqTreino: boolean };
   baseRule: string;
   includeThirteenth: boolean;
+  historicalRules?: PensionHistoricalRule[];
+  rubricCatalog?: PensionRubricRule[];
   costingDisclosure?: {
     loadingNormal?: number;
     loadingFacultative?: number;
@@ -117,6 +119,25 @@ export interface PrevidenciaComplementarConfig {
     regulamentoVersion?: string;
     planoCusteioRef?: string;
   };
+}
+
+export interface PensionRubricRule {
+  id: string;
+  label: string;
+  classification: 'obrigatoria' | 'facultativa' | 'excluida' | 'pendente';
+  validFrom: string;
+  validTo?: string | null;
+  source: string;
+}
+
+/** Explicit, sourced historical rules; never inferred from the current configuration. */
+export interface PensionHistoricalRule {
+  id: string;
+  validFrom: string;
+  validTo?: string | null;
+  source: string;
+  tabelaPSS: string;
+  configuration: Omit<PrevidenciaComplementarConfig, 'historicalRules'>;
 }
 
 export interface CareerCatalogConfig {
@@ -189,6 +210,10 @@ export interface Rubrica {
   pssCompetenciaSeparada: boolean;
   incideFunpresp?: boolean;
   funprespCompetenciaSeparada?: boolean;
+  pensionRubricId?: string;
+  pensionOptionDate?: string;
+  pensionOptionReference?: string;
+  pensionOptionAmountConfirmed?: boolean;
 }
 
 export interface OvertimeEntry {
