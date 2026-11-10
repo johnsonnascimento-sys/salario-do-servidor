@@ -5,8 +5,7 @@ import { Rubrica, RubricaTaxDetail, PrevidenciaComplementarConfig } from '../../
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { formatCurrency } from '../../utils/calculations';
-import type { PensionMemory, PensionParticipation, PensionRetroEntry } from '../../types/pension';
-import { SharedPensionSummary } from './SharedPensionSummary';
+import type { PensionParticipation, PensionRetroEntry } from '../../types/pension';
 import { getPensionRubricDistribution } from '../../services/agency/engine/modules/pensionPending';
 import { PensionRubricFields } from './PensionRubricFields';
 import { resolvePensionRubricRule } from '../../services/agency/engine/modules/pensionCatalog';
@@ -19,7 +18,6 @@ interface ManualRubricasSectionProps {
     rubricasTax?: Record<string, RubricaTaxDetail>;
     calculationReady: boolean;
     funprespParticipacao: PensionParticipation;
-    pensionMemory?: PensionMemory;
     pensionRetroEntries?: PensionRetroEntry[];
     pensionConfig?: PrevidenciaComplementarConfig;
     competencia?: string;
@@ -43,7 +41,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     competenciaReferencia,
     calculationReady,
     funprespParticipacao,
-    pensionMemory,
     pensionRetroEntries = [],
     pensionConfig,
     competencia = '',
@@ -147,7 +144,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </div>
                     </div>
                 )}
-                {calculationReady && pensionMemory && <SharedPensionSummary memory={pensionMemory} rubricas={rubricas} />}
             </div>
 
             {rubricas.map((rubrica, index) => {

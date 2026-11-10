@@ -6,6 +6,7 @@ import { PENSION_GUIDANCE, PENSION_HELP_CLASS } from './pensionHelp';
 import { CalculatorState, CourtConfig } from '../../types';
 import { PensionParticipation } from '../../types/pension';
 import { toDecimalRateFromPercentInput, toPercentLabel, toPositiveNumber } from './dynamicPayrollForm.helpers';
+import { SharedPensionSummary } from './SharedPensionSummary';
 
 interface DynamicPayrollTaxSectionProps {
     styles: Record<string, string>;
@@ -21,12 +22,13 @@ interface DynamicPayrollTaxSectionProps {
     calculationError?: string | null;
     pensionContext?: PensionContext | null;
     selectionRequired?: boolean;
+    calculationReady?: boolean;
 }
 
 export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> = ({
     styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
-    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired
+    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady
 }) => {
     const participates = state.funprespParticipacao !== 'nao';
     const optionalItems = [
@@ -83,6 +85,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </div>
             {!pensionContext && <p role="status" className={PENSION_HELP_CLASS}>Aguarde a base previdenciária ou confira os dados salariais para escolher sua participação.</p>}
             {!selectionRequired && funprespValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>}
+            {calculationReady && state.pensionMemory && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="monthly" embedded />}
         </fieldset>}
         <details className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
             open={optionsOpen} onToggle={event => setOptionsOpen(event.currentTarget.open)}>
