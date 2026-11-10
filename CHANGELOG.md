@@ -1,3 +1,6 @@
+## Recomendacao de modelos — 10/11/2026
+- Docs: preservada a preferencia por Luna e adotada recomendacao de modelo e esforco caso a caso, com justificativa e atencao a economia de recursos.
+
 # Changelog
 
 ## Indenização de Transporte — CJF e Justiça Federal
@@ -8,6 +11,9 @@
 - Modelagem segregada da data de publicação no DOU e dos efeitos financeiros retroativos a 1º de janeiro de cada exercício, com alertas informativos nas simulações anteriores à publicação e indisponibilidade explícita para períodos sem cadastro normativo (evitando presunção histórica de valores).
 - Preservação da isenção de IR, PSS e Funpresp-Jud, ausência de reflexo no auxílio-alimentação e nas diárias, crédito único no Holerite e detalhamento completo em salvamento, restauração e exportações PDF e Excel.
 - Preparada migration idempotente em `supabase/migrations/20261110_cjf_transport_indemnity.sql` com guarda de segurança e fallback técnico transitório em `ConfigService.ts`.
+
+## Recomendação de modelos — 10/11/2026
+- Preservada a preferência por Luna e adotada recomendação caso a caso de modelo e esforço, com justificativa e atenção à economia de recursos.
 
 ## Indenização de Transporte — meses de transição
 
@@ -568,3 +574,9 @@
 - Refactor: atomizacao da interface (substituicao de Sections por Cards).
 - Chore: remocao de codigo morto e isolamento de scripts de build.
 - Fix: correcao de tipagem estrita no TypeScript.
+## Governanca de selecao de modelo — 10/11/2026
+- Docs: o agente deve recomendar modelo e esforco antes da tarefa; quando houver diferenca ou o runtime nao expuser/permitir a troca, deve aguardar a escolha do usuario antes de executar.
+
+## Rubricas pré-definidas — 10/11/2026
+- UI: opções do seletor de rubricas pré-definidas organizadas alfabeticamente e incluído ícone informativo sobre sua finalidade.
+

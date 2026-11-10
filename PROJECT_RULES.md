@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 02:44
+Atualizado em: 10/11/2026 02:51
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -178,6 +178,12 @@ Cada rubrica manual deve suportar:
 8. A coordenacao operacional entre especialistas deve ser atribuida ao `Codex Orchestrator`, quando esse papel estiver em uso.
 9. O `Codex Orchestrator` deve classificar a complexidade da tarefa e definir o nivel de raciocinio recomendado entre `Baixa`, `Media`, `Alta` e `Altissima` antes da execucao, sempre que essa informacao for util para a operacao.
 10. Se o runtime nao permitir alterar programaticamente o nivel de raciocinio, a classificacao continua obrigatoria como recomendacao operacional documentada.
+11. GPT-6 Luna e o modelo preferencial para o agente principal em tarefas cotidianas de baixo risco, consultas ao repositorio, ajustes localizados e documentacao simples, usando esforco baixo ou medio conforme a tarefa.
+12. Antes de iniciar cada solicitacao, avaliar caso a caso o modelo e o esforco adequados, considerando complexidade, risco, incerteza, escopo e economia de recursos. Explicar brevemente a razao da escolha de ambos, sem associar automaticamente um modelo ou esforco a uma categoria de tarefa.
+13. Antes de executar uma solicitacao, classificar sua complexidade e recomendar brevemente o modelo e o esforco de raciocinio adequados, conforme os itens anteriores.
+14. Se a recomendacao diferir do modelo selecionado no runtime, interromper antes de iniciar a tarefa e perguntar ao usuario se deseja trocar para o modelo recomendado. A pergunta deve identificar modelo e esforco recomendados.
+15. Se o runtime nao expuser o modelo selecionado ou nao permitir sua troca pelo agente, explicar essa limitacao e aguardar a escolha do usuario antes de iniciar a tarefa. Nao presumir que a recomendacao foi aceita nem prosseguir automaticamente no modelo atual.
+16. Se o modelo selecionado ja corresponder a recomendacao, ou se o usuario optar explicitamente por permanecer no modelo atual, prosseguir e registrar a recomendacao e eventual limitacao do runtime de forma concisa. A recomendacao nao altera o modelo automaticamente.
 
 ### 10.1 Relatorio obrigatorio ao final de cada tarefa
 
