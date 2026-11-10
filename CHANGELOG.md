@@ -3,6 +3,15 @@
 
 # Changelog
 
+## Composição Dinâmica da Base do 13º Salário (Estilo GAACTA) — 10/11/2026
+- Implementada seleção dinâmica de parcelas na base do 13º salário (`thirteenthCalculations.ts` e `ThirteenthCard.tsx`), nos mesmos moldes do card da GAACTA:
+  - Parcelas regulares ativas por padrão: Vencimento Básico, GAJ (140%), FC/CJ, AQ Títulos, AQ Treinamento, VPNI (Lei 11.416/06 e Decisão), ATS (Anuênios) e Gratificações Específicas (GAE/GAS).
+  - Suporte dinâmico para inclusão interativa de Abono de Permanência, rubricas manuais de crédito criadas pelo usuário e campo de ajustes avulsos na base.
+  - Exibição em tempo real dos valores de cada rubrica com subtotal apurado da remuneração de referência do 13º.
+  - Integração plena com a apuração de saldos da 1ª e 2ª parcela e isolamento estrito de PSS e IRRF.
+- Adicionados testes de regressão em `tests/thirteenthIsolation.test.ts`.
+
+
 ## Saldo automático da 2ª Parcela do 13º Salário (Ajuste de Adiantamento) — 10/11/2026
 - Implementada apuração automática do saldo complementar da 2ª parcela do 13º salário (`thirteenthCalculations.ts` e `ThirteenthCard.tsx`): ao preencher manualmente o valor efetivo do adiantamento recebido anteriormente (ex.: rubricas `00177` e `11238` da JMU/PJU), a calculadora apura automaticamente o saldo da 2ª parcela (`remuneração integral - adiantamento informado`), garantindo que o total bruto do 13º e as incidências tributárias (IRRF e PSS) reflitam 100% da base anual sem exigir contas manuais por parte do servidor.
 - Adicionada orientação visual e detalhamento de cálculo no card do 13º salário, com indicação das rubricas de desconto correspondentes no contracheque e opção para personalização manual avulsa do saldo da 2ª parcela quando necessário.

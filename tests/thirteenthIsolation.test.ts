@@ -177,3 +177,28 @@ test('Modo manual com adiantamento customizado: apura saldo automático da 2ª p
     // PSS incide sobre 9000 integral (3500 + 5500) -> 900
     assert.equal(result.pss13, 900);
 });
+
+test('Composição dinâmica da base do 13º (estilo GAACTA): inclusão de rubrica manual e exclusão de função', async () => {
+    // Vencimento = 9000. FC = 1000.
+    // Rubrica manual de crédito de 500 incluída na base do 13º.
+    // FC/CJ desmarcada da composição do 13º.
+    const params = createBaseParams({
+        tipoCalculo: 'nov',
+        decimoIncideFuncao: false, // FC não integra o 13º
+        decimoRubricasInclusas: { 'rub-1': true },
+        rubricasExtras: [{ id: 'rub-1', tipo: 'C', descricao: 'Vantagem Extra', valor: 500 } as any],
+        manualAdiant13: false
+    });
+
+    const result = await calculateThirteenth(params);
+
+    // Base do cargo: 9000 (venc + gaj) + 500 (rubrica manual) = 9500
+    // Metade da 1ª parcela = 4750. Metade da 2ª parcela = 4750.
+    // FC deve ser 0 pois foi desmarcada da composição
+    assert.equal(result.adiant13FC, 0);
+    assert.equal(result.segunda13FC, 0);
+    assert.equal(result.adiant13Venc, 4750);
+    assert.equal(result.segunda13Venc, 4750);
+    assert.equal(result.gratNatalinaTotal, 9500);
+    assert.equal(result.primeiraParcelaDesconto, 4750);
+});

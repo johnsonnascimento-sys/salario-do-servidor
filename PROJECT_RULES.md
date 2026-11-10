@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 20:07
+Atualizado em: 10/11/2026 20:27
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -90,6 +90,7 @@ Cada rubrica manual deve suportar:
 3. Se marcar 2a parcela, marcar automaticamente a 1a correspondente para evitar base incompleta.
 4. Exibir totais brutos e liquidos por parcela.
 5. No modo de ajuste manual do adiantamento recebido anteriormente (1ª parcela), a 2ª parcela apura automaticamente o saldo complementar necessário para integralizar a remuneração de referência e assegurar a retenção tributária legal completa sem exigir cálculo manual do usuário, preservando a possibilidade de edição avulsa.
+6. A base de cálculo da remuneração de referência do 13º salário suporta composição dinâmica por checkboxes com valores em tempo real (similar ao GAACTA): as parcelas regulares (Vencimento, GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS e GAE/GAS) permanecem selecionadas por padrão, e parcelas complementares (Abono de Permanência, rubricas manuais de crédito criadas pelo usuário e ajustes avulsos) podem ser incluídas/excluídas interativamente, recalculando instantaneamente a base apurada e seus reflexos nas parcelas e retenções.
 
 ### 4.4 Diarias
 
