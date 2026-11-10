@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 19:25
+Atualizado em: 10/11/2026 20:07
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -89,6 +89,7 @@ Cada rubrica manual deve suportar:
 2. Na 2a parcela, considerar base total aplicavel, aplicar abatimento da 1a parcela e concentrar desconto no resumo da 2a.
 3. Se marcar 2a parcela, marcar automaticamente a 1a correspondente para evitar base incompleta.
 4. Exibir totais brutos e liquidos por parcela.
+5. No modo de ajuste manual do adiantamento recebido anteriormente (1ª parcela), a 2ª parcela apura automaticamente o saldo complementar necessário para integralizar a remuneração de referência e assegurar a retenção tributária legal completa sem exigir cálculo manual do usuário, preservando a possibilidade de edição avulsa.
 
 ### 4.4 Diarias
 

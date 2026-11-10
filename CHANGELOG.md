@@ -3,6 +3,12 @@
 
 # Changelog
 
+## Saldo automático da 2ª Parcela do 13º Salário (Ajuste de Adiantamento) — 10/11/2026
+- Implementada apuração automática do saldo complementar da 2ª parcela do 13º salário (`thirteenthCalculations.ts` e `ThirteenthCard.tsx`): ao preencher manualmente o valor efetivo do adiantamento recebido anteriormente (ex.: rubricas `00177` e `11238` da JMU/PJU), a calculadora apura automaticamente o saldo da 2ª parcela (`remuneração integral - adiantamento informado`), garantindo que o total bruto do 13º e as incidências tributárias (IRRF e PSS) reflitam 100% da base anual sem exigir contas manuais por parte do servidor.
+- Adicionada orientação visual e detalhamento de cálculo no card do 13º salário, com indicação das rubricas de desconto correspondentes no contracheque e opção para personalização manual avulsa do saldo da 2ª parcela quando necessário.
+- Incluídos testes unitários em `tests/thirteenthIsolation.test.ts` validando a integridade da apuração de saldos, retenções tributárias integrais e isolamento estrito de componentes.
+
+
 ## Funpresp em rubricas manuais — integração ao main atualizado — 10/11/2026
 - Revisão pré-merge: a opção de Funpresp mensal não é exigida indevidamente na competência antiga de um vínculo exclusivo de PSS; a classificação obrigatória histórica continua independente. Teste de regressão reproduz o bloqueio e verifica ambos os comportamentos.
 - Substituído o rateio individual fictício por resumo Funpresp compartilhado e pendências explícitas; resultados, salvamento e exportação ficam bloqueados até a apuração histórica necessária ser concluída.
