@@ -116,7 +116,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
 
             {state.manualAdiant13 && (
                 <div className="bg-primary-50 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-800 rounded-lg p-3 text-body-xs text-primary-800 dark:text-primary-300">
-                    💡 <strong>Como preencher:</strong> Informe nos campos de <em>Adiantamento</em> o valor que foi descontado no seu holerite (ex.: rubricas <code>00177</code> para cargo e <code>11238</code> para FC). A calculadora apura automaticamente o <strong>saldo da 2ª parcela</strong> para garantir que a base integral e os tributos fechem em 100%.
+                    💡 <strong>Como preencher:</strong> Informe nos campos de <em>Adiantamento</em> o valor que foi descontado no seu contracheque a título de adiantamento da 1ª parcela (cargo efetivo e função comissionada ou cargo em comissão - FC/CJ). A calculadora apura automaticamente o <strong>saldo da 2ª parcela</strong> para garantir que a base integral e as retenções tributárias (IRRF e PSS) fechem em 100%.
                 </div>
             )}
 
@@ -124,7 +124,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                 {/* 1ª Parcela - Vencimento */}
                 <div>
                     <label className={styles.label}>
-                        Adiantamento 1ª Parcela (Cargo/Vencimento)
+                        Adiantamento 1ª Parcela (Cargo Efetivo)
                     </label>
                     {state.manualAdiant13 ? (
                         <div>
@@ -137,7 +137,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 placeholder="0,00"
                             />
                             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
-                                Rubrica de desconto <code>00177</code> no holerite
+                                Valor descontado do adiantamento do cargo no contracheque
                             </p>
                         </div>
                     ) : (
@@ -159,7 +159,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                 {/* 1ª Parcela - FC/CJ */}
                 <div>
                     <label className={styles.label}>
-                        Adiantamento 1ª Parcela (Função / FC-CJ)
+                        Adiantamento 1ª Parcela (FC/CJ)
                     </label>
                     {state.manualAdiant13 ? (
                         <div>
@@ -172,7 +172,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 placeholder="0,00"
                             />
                             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
-                                Rubrica de desconto <code>11238</code> no holerite
+                                Valor descontado do adiantamento de FC ou CJ no contracheque
                             </p>
                         </div>
                     ) : (
@@ -194,7 +194,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                 {/* 2ª Parcela - Vencimento */}
                 <div>
                     <div className="flex justify-between items-center mb-1">
-                        <label className={styles.label}>2ª Parcela (Cargo/Vencimento)</label>
+                        <label className={styles.label}>2ª Parcela (Cargo Efetivo)</label>
                         {state.manualAdiant13 && !customizarSegunda && (
                             <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
                                 Saldo automático
@@ -270,7 +270,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                 {/* 2ª Parcela - FC/CJ */}
                 <div>
                     <div className="flex justify-between items-center mb-1">
-                        <label className={styles.label}>2ª Parcela (Função / FC-CJ)</label>
+                        <label className={styles.label}>2ª Parcela (FC/CJ)</label>
                         {state.manualAdiant13 && !customizarSegunda && funcaoValor > 0 && (
                             <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
                                 Saldo automático
