@@ -116,7 +116,10 @@ export const prepareLinkedPensionRetroEntry = (params: IAgencyCalculationParams,
     const assessments: PensionRubricAssessment[] = [];
     for (const link of entry.vinculos!) {
         const rubric = params.rubricasExtras!.find(item => item.id === link.rubricaId)!;
-        const assessment = assessPensionRubric(historical.agencyConfig?.previdenciaComplementar, { ...rubric, valor: link.valor }, entry.competencia, entry.participacao!);
+        // A monthly complementary election does not select historical inclusion for a PSS-only link.
+        const assessment = assessPensionRubric(historical.agencyConfig?.previdenciaComplementar, {
+            ...rubric, valor: link.valor, incideFunpresp: Boolean(rubric.incideFunpresp && rubric.funprespCompetenciaSeparada),
+        }, entry.competencia, entry.participacao!);
         if (assessment) assessments.push(assessment);
     }
     return { entry: { ...entry, ...bases, vinculos: entry.vinculos!.map(link => ({ ...link })) }, params: historical,

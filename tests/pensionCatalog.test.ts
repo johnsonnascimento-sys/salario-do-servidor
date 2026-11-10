@@ -154,6 +154,28 @@ test('historical optional election must already exist in the original competence
         optionReference: 'Documento sintético', optionAmountConfirmed: true }]);
 });
 
+test('PSS-only historical links do not apply a monthly Funpresp election to the original competence', () => {
+    const params = historicalParams();
+    params.funprespParticipacao = 'patrocinado';
+    params.regimePrev = 'rpc';
+    params.rubricasExtras![0] = { ...params.rubricasExtras![0], pensionRubricId: 'optional',
+        pssCompetenciaSeparada: true, funprespCompetenciaSeparada: false,
+        pensionOptionDate: '2026-01-01', pensionOptionReference: 'Opção mensal sintética' };
+    params.pensionRetroEntries![0].baseComplementarOriginal = 6000;
+    params.pensionRetroEntries![0].contribuicaoComplementarRecolhida = 60;
+    const memory = calculatePensionRetroactives(params)[0];
+    assert.equal(memory.rpps, 50);
+    assert.equal(memory.complementar, 0);
+    assert.equal(validateMonthlyPensionRubrics(params)[0].optionDate, '2026-01-01');
+    assert.deepEqual(memory.enquadramentos, [{ rubricaId: 'r', ruleId: 'optional', classification: 'facultativa',
+        source: 'https://example.test/optional', competencia: '2025-07' }]);
+
+    // A monthly selection must not satisfy mandatory inclusion in a separate historical assessment.
+    params.rubricasExtras![0].pensionRubricId = 'required';
+    params.agencyConfig!.previdenciaComplementar!.rubricCatalog![0].classification = 'obrigatoria';
+    pending(() => calculatePensionRetroactives(params), /obrigatória/);
+});
+
 test('audit assessments include only validated option metadata and their own catalog source', () => {
     const entry = rubric({ pensionOptionDate: 'invalid', pensionOptionReference: 'unverified', pensionOptionAmountConfirmed: true });
     assert.deepEqual(assessPensionRubric(configuration(), entry, '2026-07', 'patrocinado'), {
