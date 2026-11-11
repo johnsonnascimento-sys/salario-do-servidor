@@ -7,3 +7,6 @@ Leia e siga o `PROJECT_RULES.md` antes de qualquer alteracao em codigo, schema, 
 Para subagentes especializados do Codex, consulte o catalogo operacional em [src/docs/CODEX_SPECIALISTS.md](./src/docs/CODEX_SPECIALISTS.md) depois de ler o `PROJECT_RULES.md`.
 
 Ao concluir cada tarefa, siga o relatorio obrigatorio de agentes definido na secao 10.1 do `PROJECT_RULES.md`.
+
+Ao concluir qualquer tarefa com alteracoes em arquivos, o Antigravity deve obrigatoriamente executar a sincronizacao e o versionamento automatico (`git pull --rebase`, `git add`, `git commit` semantico e `git push origin main`), conforme detalhado na secao 15 do `PROJECT_RULES.md`.
+

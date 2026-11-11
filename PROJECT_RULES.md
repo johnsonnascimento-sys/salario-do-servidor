@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 20:27
+Atualizado em: 10/11/2026 21:52
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -289,3 +289,14 @@ Cada rubrica manual deve suportar:
 3. **Cálculo e Parâmetros:** O valor integral é devido a partir de 20 dias de serviço externo no mês; abaixo de 20 dias, aplica-se 1/20 por dia elegível (art. 55, caput e § 1º). Dias além do divisor são limitados ao valor integral. A fração diária mantém precisão intermediária com arredondamento em centavos apenas no resultado final.
 4. **Vigência e Efeitos Financeiros:** As portarias do CJF distinguem a data de publicação no DOU (vigência do ato formal) da data de efeitos financeiros retroativos a 1º de janeiro. A Portaria CJF nº 43/2025 fixou R$ 2.289,21 (DOU 13/02/2025, efeitos a 01/01/2025). A Portaria CJF nº 182/2026 fixou R$ 2.391,30 (DOU 08/04/2026, efeitos a 01/01/2026). Períodos sem regra cadastrada (como serviço em 2024) permanecem explicitamente indisponíveis, sem presunção de valores históricos. Competências simuladas antes da publicação informam a data de publicação e a retroatividade dos efeitos financeiros.
 5. **Comprovação, Exclusões e Incidências:** Excluem-se férias, licenças e afastamentos, ainda que de efetivo exercício (art. 56, parágrafo único). Diárias no mês excluem apenas os dias coincidentes, sem zerar os demais dias elegíveis (art. 55, § 2º). É vedado suprimento de fundos ou uso de veículo oficial para a finalidade (art. 57). O pagamento depende de atestação pelo titular da unidade (art. 56). A verba é isenta de IR (Decreto nº 9.580/2018, art. 35, I, 'e'), PSS (Lei nº 10.887/2004, art. 4º, § 1º, III) e Funpresp-Jud, não sofre desconto de auxílio-alimentação e integra o Holerite como crédito único fora do bloco de Diárias.
+
+## 15. Automação de versionamento e sincronização com Git
+
+1. Ao concluir qualquer tarefa que envolva criação, edição ou exclusão de arquivos de código, schema, seeds, regras ou documentação, o agente (Antigravity) deve executar de forma automatizada e sem necessidade de solicitação adicional do usuário:
+   - Sincronização prévia com o remoto (`git pull --rebase origin main`).
+   - Adição das alterações preparadas (`git add -A`).
+   - Criação de commit semântico com mensagem clara e objetiva no padrão Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, etc.).
+   - Envio imediato ao repositório remoto (`git push origin main`).
+2. O agente não deve encerrar seu turno com alterações pendentes não commitadas ou não enviadas, exceto em caso explícito de bloqueio técnico ou erro de autenticação remota que requeira ação do usuário.
+3. Manter a árvore de trabalho limpa e o branch local alinhado ao branch remoto após cada entrega.
+
