@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 22:08
+Atualizado em: 10/11/2026 22:14
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -110,8 +110,8 @@ Cada rubrica manual deve suportar:
 
 ### 4.6 Mobile
 
-1. O rodapé mobile (`MobileResultsBar`) deve manter os botões de ação essenciais (Limpar, Holerites, Salvar, PDF e Excel) diretamente visíveis e acessíveis no dock inferior, evitando ocultá-los em menus ou accordions fechados por padrão.
-2. A versão (`VersionBadge`) pode aparecer no layout do rodapé mobile, mantendo-se discreta e sem interferir nas ações.
+1. No rodapé mobile (`MobileResultsBar`), o valor líquido permanece fixo e visível, com CTA `Exportar` e seta colapsável (accordion) para expandir as ações (Limpar, Holerites, PDF, Excel e Salvar), mantendo a tela compacta e sem transbordo horizontal.
+2. A versão (`VersionBadge`) pode aparecer no layout interno do rodapé, mas não no texto do CTA.
 
 ### 4.7 Regra de compatibilidade
 
