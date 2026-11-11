@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, ChevronUp, FileText, RotateCcw, Save, Table as TableIcon, User } from 'lucide-react';
 import { VersionBadge } from '../ui/VersionBadge';
 import { formatCurrency } from '../../utils/calculations';
@@ -28,8 +29,8 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
 }) => {
     const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
-    return (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 w-full max-w-full overflow-hidden shadow-[0_-4px_10px_rgba(0,0,0,0.12)]">
+    return createPortal(
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 w-auto max-w-none overflow-x-clip shadow-[0_-4px_10px_rgba(0,0,0,0.12)]">
             <div className="bg-white/95 dark:bg-neutral-800/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-700 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -108,6 +109,7 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
                     </div>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 };
