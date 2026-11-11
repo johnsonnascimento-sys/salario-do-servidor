@@ -3,6 +3,11 @@
 
 # Changelog
 
+## Remoção e vigência da GAACTA — 10/11/2026
+- Corrigida a remoção do card para limpar o valor calculado e as entradas próprias da GAACTA; o motor não reativa mais a gratificação a partir de um valor residual salvo.
+- Percentual e vigência passam a vir de configuração versionada do órgão. A regra da Resolução STM nº 397/2026 só é oferecida e calculada a partir da competência 06/2026; competências anteriores sem regra cadastrada não geram GAACTA.
+- Adicionada migration idempotente para registrar a vigência na configuração da JMU/STM, preservando configurações divergentes para revisão.
+
 ## Composição Dinâmica da Base do 13º Salário (Estilo GAACTA) — 10/11/2026
 - Implementada seleção dinâmica de parcelas na base do 13º salário (`thirteenthCalculations.ts` e `ThirteenthCard.tsx`), nos mesmos moldes do card da GAACTA:
   - Parcelas regulares ativas por padrão: Vencimento Básico, GAJ (140%), FC/CJ, AQ Títulos, AQ Treinamento, VPNI (Lei 11.416/06 e Decisão), ATS (Anuênios) e Gratificações Específicas (GAE/GAS).

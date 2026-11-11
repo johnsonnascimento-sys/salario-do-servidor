@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { getTablesForPeriod } from '../../../utils/calculations';
+import { resolveGaactaRule } from '../../../services/agency/engine/modules/gaactaCalculations';
 
 interface GaactaCardProps {
     state: CalculatorState;
@@ -28,6 +29,10 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
 }) => {
     const funcaoStr = (state.funcao || '').toLowerCase();
     const isCJ = funcaoStr.startsWith('cj');
+    const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+    const monthIndex = months.indexOf((state.mesRef || '').toUpperCase()) + 1;
+    const competence = monthIndex > 0 ? `${state.anoRef}-${String(monthIndex).padStart(2, '0')}` : '';
+    const gaactaRule = resolveGaactaRule(courtConfig, competence);
 
     // Resolver valor do cargo/função (prioriza cálculo do motor, com fallback para tabela de configuração)
     let valorFuncao = Number(state.funcaoValor) || 0;
@@ -104,10 +109,15 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
             </div>
 
             {/* Seleção de Itens da Remuneração */}
+            {!gaactaRule && (
+                <div role="status" className="p-3 rounded-xl bg-warning-50 dark:bg-warning-950/30 border border-warning-200 dark:border-warning-800/60 text-body-xs text-warning-800 dark:text-warning-300">
+                    Não há regra GAACTA cadastrada e vigente para esta competência. O card não gera valor.
+                </div>
+            )}
             <div className="space-y-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className={styles.label}>
-                        Composição da Base da Remuneração (15%)
+                        Composição da Base da Remuneração ({gaactaRule ? `${(gaactaRule.percentage * 100).toLocaleString('pt-BR')}%` : 'sem regra vigente'})
                     </span>
                     <label className={styles.checkboxLabel}>
                         <input
@@ -135,7 +145,9 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                             placeholder="0,00"
                         />
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                            O percentual de 15% incidirá diretamente sobre o valor informado.
+                            {gaactaRule
+                                ? `O percentual de ${(gaactaRule.percentage * 100).toLocaleString('pt-BR')}% incidirá diretamente sobre o valor informado.`
+                                : 'O valor manual não será calculado enquanto não houver regra vigente para a competência.'}
                         </p>
                     </div>
                 ) : (

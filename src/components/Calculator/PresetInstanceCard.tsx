@@ -5,6 +5,7 @@ import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS } from './dynamicPayrollForm.helpers';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
+import { resolveGaactaRule } from '../../services/agency/engine/modules/gaactaCalculations';
 
 interface PresetInstanceCardProps {
     instance: PresetInstance;
@@ -41,11 +42,16 @@ const getPresetHeaderInfo = (
     const defaultDivisor = courtConfig?.payrollRules?.overtimeMonthHours || (isJMU ? 175 : 200);
 
     switch (presetId) {
-        case 'gaacta':
+        case 'gaacta': {
+            const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+            const monthIndex = months.indexOf((state?.mesRef || '').toUpperCase()) + 1;
+            const competence = state && monthIndex > 0 ? `${state.anoRef}-${String(monthIndex).padStart(2, '0')}` : '';
+            const rule = resolveGaactaRule(courtConfig, competence);
             return {
                 title: 'Gratificação por Atividades de Alta Complexidade',
-                normBadge: 'Res. STM Nº 397/2026 • 15%'
+                normBadge: rule ? `${rule.reference} • ${(rule.percentage * 100).toLocaleString('pt-BR')}%` : 'Sem regra vigente'
             };
+        }
         case 'hora_extra': {
             const entry = instance?.overtimeEntryId
                 ? state?.overtimeEntries?.find(e => e.id === instance.overtimeEntryId)

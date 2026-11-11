@@ -4,7 +4,7 @@
  * 
  * Principais regras:
  * - Privativa de servidores ocupantes de cargo em comissao (CJ-1, CJ-2, CJ-3 e CJ-4)
- * - 15% aplicado sobre a respectiva remuneracao do servidor
+ * - Percentual aplicado sobre a remuneracao, conforme regra versionada do órgão
  * - Natureza indenizatoria (isencao total de PSS/Previdencia e IRPF)
  * - Incompativel com servico extraordinario (salvo no recesso judiciario)
  */
@@ -21,6 +21,20 @@ export interface IGaactaResult {
     isElegivel: boolean;
 }
 
+export const resolveGaactaRule = (config: CourtConfig | undefined, competence: string) => {
+    if (!config?.gaactaRules?.enabled || !/^\d{4}-(0[1-9]|1[0-2])$/.test(competence)) return null;
+    const versions = config.gaactaRules.versions;
+    if (!Array.isArray(versions)) return null;
+    const matches = versions.filter(version => version && typeof version === 'object' &&
+        /^\d{4}-(0[1-9]|1[0-2])$/.test(version.validFrom) &&
+        (version.validTo == null || /^\d{4}-(0[1-9]|1[0-2])$/.test(version.validTo)) &&
+        version.validFrom <= competence && (version.validTo == null || competence < version.validTo) &&
+        Number.isFinite(version.percentage) && version.percentage > 0 && version.percentage <= 1 &&
+        typeof version.reference === 'string' && version.reference.trim().length > 0
+    );
+    return matches.length === 1 ? matches[0] : null;
+};
+
 const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
     if (!params.agencyConfig) {
         throw new Error('agencyConfig is required for JMU calculations.');
@@ -32,28 +46,29 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     const funcaoStr = (params.funcao || '').toLowerCase();
     const isElegivel = funcaoStr.startsWith('cj');
 
-    const percentual = Number.isFinite(params.gaactaPercentual) && params.gaactaPercentual > 0
-        ? params.gaactaPercentual
-        : 0.15;
-
     // Se nao for elegivel (nao for CJ), nao faz jus a GAACTA conf. arts. 2º e 3º
     if (!isElegivel) {
         return {
             baseCalculo: 0,
-            percentual,
+            percentual: 0,
             valor: 0,
             isElegivel: false
         };
     }
 
-    if (!params.gaactaAtivo && !(params.gaactaValor && params.gaactaValor > 0)) {
+    if (!params.gaactaAtivo) {
         return {
             baseCalculo: 0,
-            percentual,
+            percentual: 0,
             valor: 0,
             isElegivel
         };
     }
+
+    const config = requireAgencyConfig(params);
+    const rule = resolveGaactaRule(config, params.competencia || '');
+    if (!rule) return { baseCalculo: 0, percentual: 0, valor: 0, isElegivel };
+    const percentual = rule.percentage;
 
     // Se o usuario travou uma base manual
     if (params.gaactaManualBase && Number(params.gaactaBaseManualValor) > 0) {
@@ -67,7 +82,6 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
         };
     }
 
-    const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 

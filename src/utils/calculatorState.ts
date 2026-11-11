@@ -238,7 +238,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
             ? Number(merged.transporteIndenizacaoDias) : 0,
         gaactaAtivo: Boolean(merged.gaactaAtivo),
         gaactaRecesso: Boolean(merged.gaactaRecesso),
-        gaactaPercentual: Number(merged.gaactaPercentual) > 0 ? Number(merged.gaactaPercentual) : 0.15,
+        gaactaPercentual: Math.max(0, Number(merged.gaactaPercentual) || 0),
         gaactaIncideVencimento: merged.gaactaIncideVencimento !== false,
         gaactaIncideGAJ: merged.gaactaIncideGAJ !== false,
         gaactaIncideFuncao: merged.gaactaIncideFuncao !== false,

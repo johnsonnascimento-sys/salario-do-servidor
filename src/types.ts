@@ -1,6 +1,8 @@
 import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry, CalculatedSubstitutionEntry } from './types/irEa';
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 import type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
+import type { GaactaRulesConfig } from './types/gaacta';
+export type { GaactaRulesConfig } from './types/gaacta';
 export type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 export interface SalaryTable {
   [cargo: string]: {
@@ -183,6 +185,7 @@ export interface CourtConfig {
   };
   dailies?: DailiesConfig;
   transportIndemnity?: TransportIndemnityConfig;
+  gaactaRules?: GaactaRulesConfig;
   payrollRules?: PayrollRulesConfig;
   previdenciaComplementar?: PrevidenciaComplementarConfig;
   careerCatalog?: CareerCatalogConfig;
@@ -632,7 +635,7 @@ export const INITIAL_STATE: CalculatorState = {
   gaactaAtivo: false,
   gaactaValor: 0,
   gaactaBaseCalculo: 0,
-  gaactaPercentual: 0.15,
+  gaactaPercentual: 0,
   gaactaRecesso: false,
   gaactaIncideVencimento: true,
   gaactaIncideGAJ: true,

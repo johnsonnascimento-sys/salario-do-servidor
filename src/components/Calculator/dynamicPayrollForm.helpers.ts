@@ -167,6 +167,8 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
             return false;
         case 'abono':
             return state.recebeAbono;
+        case 'gaacta':
+            return Boolean(state.gaactaAtivo);
         case 'ferias':
             return state.tipoCalculo === 'jan' || state.manualFerias || state.ferias1_3 > 0 || state.feriasAntecipadas;
         case 'decimo':

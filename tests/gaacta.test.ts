@@ -9,6 +9,10 @@ import { INITIAL_STATE } from '../src/types';
 // Config mock para testes da JMU em 2026
 const mockJmuConfig: any = {
     orgSlug: 'jmu',
+    gaactaRules: {
+        enabled: true,
+        versions: [{ validFrom: '2026-06', percentage: 0.15, reference: 'Resolução STM nº 397/2026' }]
+    },
     careerCatalog: {
         noFunctionCode: '0',
         noFunctionLabel: 'Sem função',
@@ -76,6 +80,7 @@ test('GAACTA: Servidor comissionado CJ-3 tem elegibilidade confirmada', async ()
     const params: any = {
         orgSlug: 'jmu',
         agencyConfig: mockJmuConfig,
+        competencia: '2026-06',
         periodo: 1,
         cargo: 'analista',
         padrao: 'C13',
@@ -97,6 +102,7 @@ test('GAACTA: Servidor sem cargo em comissao (sem CJ) nao e elegivel e recebe va
     const params: any = {
         orgSlug: 'jmu',
         agencyConfig: mockJmuConfig,
+        competencia: '2026-06',
         periodo: 1,
         cargo: 'analista',
         padrao: 'C13',
@@ -117,6 +123,7 @@ test('GAACTA: Caso Real STM - Servidora Ana Cristina Pimentel Carneiro (CJ-03)',
     const params: any = {
         orgSlug: 'jmu',
         agencyConfig: mockJmuConfig,
+        competencia: '2026-06',
         periodo: 1,
         cargo: 'analista',
         padrao: 'C13',
@@ -144,6 +151,7 @@ test('GAACTA: Composicao flexivel por checkboxes permite desmarcar parcelas', as
     const paramsComTodas: any = {
         orgSlug: 'jmu',
         agencyConfig: mockJmuConfig,
+        competencia: '2026-06',
         periodo: 1,
         cargo: 'analista',
         padrao: 'C13',
@@ -262,6 +270,7 @@ test('GAACTA: Rubricas manuais de crédito (como VPNI e ATS dinâmicos) entram n
     const paramsBase: any = {
         orgSlug: 'jmu',
         agencyConfig: mockJmuConfig,
+        competencia: '2026-06',
         periodo: 1,
         cargo: 'analista',
         padrao: 'C13',

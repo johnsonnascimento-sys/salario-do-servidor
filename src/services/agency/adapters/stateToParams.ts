@@ -145,7 +145,7 @@ export function mapStateToAgencyParams(
         // GAACTA (Resolução STM nº 397/2026)
         gaactaAtivo: Boolean(state.gaactaAtivo),
         gaactaValor: state.gaactaValor || 0,
-        gaactaPercentual: state.gaactaPercentual || 0.15,
+        gaactaPercentual: state.gaactaPercentual || 0,
         gaactaRecesso: Boolean(state.gaactaRecesso),
         gaactaIncideVencimento: state.gaactaIncideVencimento !== false,
         gaactaIncideGAJ: state.gaactaIncideGAJ !== false,

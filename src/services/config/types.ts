@@ -1,5 +1,6 @@
 import type { IrTableMetadata } from '../../types/irEa';
 import type { TransportIndemnityConfig } from '../../types/transportIndemnity';
+import type { GaactaRulesConfig } from '../../types/gaacta';
 
 /**
  * Tipos para o Sistema de Configuração Hierárquica
@@ -70,6 +71,7 @@ export interface PowerConfig {
     career_catalog?: CareerCatalogConfig;
     /** Specific external-service reimbursement, enabled only by an organ rule. */
     transport_indemnity?: TransportIndemnityConfig;
+    gaacta_rules?: GaactaRulesConfig;
 }
 
 export interface PrevidenciaComplementarPowerConfig {

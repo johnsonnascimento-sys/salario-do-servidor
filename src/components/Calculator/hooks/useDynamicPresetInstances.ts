@@ -17,6 +17,7 @@ interface UseDynamicPresetInstancesParams {
     updateSubstDays: (key: string, days: number) => void;
     functionKeys: string[];
     transportIndemnityEnabled: boolean;
+    gaactaAvailable: boolean;
 }
 
 const createOvertimeEntry = (): OvertimeEntry => ({
@@ -44,7 +45,8 @@ export const useDynamicPresetInstances = ({
     update,
     updateSubstDays,
     functionKeys,
-    transportIndemnityEnabled
+    transportIndemnityEnabled,
+    gaactaAvailable
 }: UseDynamicPresetInstancesParams) => {
     const overtimeLegacyMigratedRef = useRef(false);
     const substitutionLegacyMigratedRef = useRef(false);
@@ -93,7 +95,9 @@ export const useDynamicPresetInstances = ({
         [enabledPresets]
     );
     const availablePresets = PREDEFINED_OPTIONS.filter(
-        option => (option.id !== 'indenizacao_transporte' || transportIndemnityEnabled) && (MULTI_INSTANCE_PRESETS.has(option.id) || !enabledPresetIds.has(option.id))
+        option => (option.id !== 'indenizacao_transporte' || transportIndemnityEnabled) &&
+            (option.id !== 'gaacta' || gaactaAvailable) &&
+            (MULTI_INSTANCE_PRESETS.has(option.id) || !enabledPresetIds.has(option.id))
     );
     const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(PREDEFINED_OPTIONS[0]?.id || '');
     useEffect(() => {
@@ -377,6 +381,26 @@ export const useDynamicPresetInstances = ({
                 update('transporteIndenizacaoAtivo', false);
                 update('transporteIndenizacaoDias', 0);
                 break;
+            case 'gaacta':
+                update('gaactaAtivo', false);
+                update('gaactaValor', 0);
+                update('gaactaBaseCalculo', 0);
+                update('gaactaPercentual', 0);
+                update('gaactaManualBase', false);
+                update('gaactaBaseManualValor', 0);
+                update('gaactaOutrasParcelas', 0);
+                update('gaactaRecesso', false);
+                update('gaactaIncideAbono', false);
+                update('gaactaIncideGrat', false);
+                update('gaactaIncideVencimento', true);
+                update('gaactaIncideGAJ', true);
+                update('gaactaIncideFuncao', true);
+                update('gaactaIncideAQTitulo', true);
+                update('gaactaIncideAQTreino', true);
+                update('gaactaIncideATS', true);
+                update('gaactaIncideVPNI', true);
+                update('gaactaRubricasInclusas', {});
+                break;
             case 'diarias':
                 update('diariasQtd', 0);
                 update('diariasEmbarque', 'nenhum');
@@ -402,6 +426,7 @@ export const useDynamicPresetInstances = ({
 
     const includePreset = () => {
         if (!selectedPreset || !availablePresets.some(option => option.id === selectedPreset)) return;
+        if (selectedPreset === 'gaacta' && !gaactaAvailable) return;
 
         if (selectedPreset === 'hora_extra') {
             const newEntry = createOvertimeEntry();
