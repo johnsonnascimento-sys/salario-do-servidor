@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { FileText, RotateCcw, Save, Table as TableIcon, User } from 'lucide-react';
 import { VersionBadge } from '../ui/VersionBadge';
 import { formatCurrency } from '../../utils/calculations';
