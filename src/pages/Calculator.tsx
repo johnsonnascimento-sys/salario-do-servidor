@@ -234,7 +234,7 @@ export default function Calculator() {
                 onClearCalculator={handleClearCalculator}
             />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-32">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-36 lg:pb-32">
                 <CalculatorHeader
                     calculationReady={calculationReady}
                     courtConfig={courtConfig}

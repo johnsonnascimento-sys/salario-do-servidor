@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 21:52
+Atualizado em: 10/11/2026 22:01
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -110,8 +110,8 @@ Cada rubrica manual deve suportar:
 
 ### 4.6 Mobile
 
-1. No CTA mobile do rodape, usar apenas `Exportar`.
-2. A versao pode aparecer no layout, mas nao no texto do CTA.
+1. O rodapé mobile (`MobileResultsBar`) deve manter os botões de ação essenciais (Limpar, Holerites, Salvar, PDF e Excel) diretamente visíveis e acessíveis no dock inferior, evitando ocultá-los em menus ou accordions fechados por padrão.
+2. A versão (`VersionBadge`) pode aparecer no layout do rodapé mobile, mantendo-se discreta e sem interferir nas ações.
 
 ### 4.7 Regra de compatibilidade
 
