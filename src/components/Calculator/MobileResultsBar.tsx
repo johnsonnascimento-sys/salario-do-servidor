@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, ChevronUp, FileText, RotateCcw, Save, Table as TableIcon, User } from 'lucide-react';
 import { VersionBadge } from '../ui/VersionBadge';
@@ -28,9 +28,31 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
     savingPayslip = false,
 }) => {
     const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+    const [viewport, setViewport] = useState<{ left: number; top: number; width: number } | null>(null);
+
+    useEffect(() => {
+        const visualViewport = window.visualViewport;
+        if (!visualViewport) return;
+
+        const updateViewport = () => setViewport({
+            left: visualViewport.offsetLeft,
+            top: visualViewport.offsetTop + visualViewport.height,
+            width: visualViewport.width,
+        });
+        updateViewport();
+        visualViewport.addEventListener('resize', updateViewport);
+        visualViewport.addEventListener('scroll', updateViewport);
+        return () => {
+            visualViewport.removeEventListener('resize', updateViewport);
+            visualViewport.removeEventListener('scroll', updateViewport);
+        };
+    }, []);
 
     return createPortal(
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 w-auto max-w-none overflow-x-clip shadow-[0_-4px_10px_rgba(0,0,0,0.12)]">
+        <div
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 w-auto max-w-none overflow-x-clip shadow-[0_-4px_10px_rgba(0,0,0,0.12)]"
+            style={viewport ? { left: viewport.left, top: viewport.top, width: viewport.width, right: 'auto', bottom: 'auto', transform: 'translateY(-100%)' } : undefined}
+        >
             <div className="bg-white/95 dark:bg-neutral-800/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-700 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
