@@ -3,6 +3,17 @@
 
 # Changelog
 
+## Restauração e Disponibilidade da GAACTA em Rubricas Pré-definidas (JMU e CJF) — 13/11/2026
+- UI & Seletor de Rubricas:
+  - Atualizada a nomenclatura no dropdown de Rubricas Pré-definidas para "Gratificação por Atividades de Alta Complexidade (GAACTA)", alinhando o rótulo ao título canônico do card e garantindo fácil localização alfabética no grupo de gratificações.
+  - Ordenação alfabética rigorosamente preservada em `PREDEFINED_OPTIONS`.
+- Configuração e Precedência Data-Driven:
+  - Adicionada parametrização de `gaacta_rules` para a Justiça Federal (CJF e TRFs) e JMU no fallback transitório de `ConfigService`, permitindo disponibilidade imediata da rubrica para todas as calculadoras do PJU a partir de 06/2026.
+  - Criada migration idempotente `supabase/migrations/20261113_cjf_gaacta_validity.sql` para cadastrar a regra na tabela `org_config` dos órgãos da Justiça Federal.
+  - Ajustado o crachá normativo em `PresetInstanceCard` para exibir "PJU • 15%" ou a norma específica do tribunal quando não houver regra customizada.
+- Testes:
+  - Adicionados testes unitários em `tests/gaacta.test.ts` e `tests/configService.test.ts` cobrindo nomenclatura, ordenação, detecção em `hasPresetValue`, resolução em `resolveGaactaRule` e integração no `ConfigService`.
+
 ## Remoção e vigência da GAACTA — 10/11/2026
 - Corrigida a remoção do card para limpar o valor calculado e as entradas próprias da GAACTA; o motor não reativa mais a gratificação a partir de um valor residual salvo.
 - Percentual e vigência passam a vir de configuração versionada do órgão. A regra da Resolução STM nº 397/2026 só é oferecida e calculada a partir da competência 06/2026; competências anteriores sem regra cadastrada não geram GAACTA.

@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 10/11/2026 22:14
+Atualizado em: 13/11/2026 12:58
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -274,6 +274,7 @@ Cada rubrica manual deve suportar:
 4. **Natureza indenizatória e isenção:** A gratificação possui natureza estritamente indenizatória (art. 4º), não integrando a remuneração nem compondo base de cálculo para contribuição previdenciária (PSS/RPPS) nem incidência de imposto de renda (IRRF), nem servindo de base para outros adicionais.
 5. **Incompatibilidade com serviço extraordinário:** O acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário, exceto no período do recesso judiciário (art. 6º). Havendo concomitância, o servidor deverá optar entre a GAACTA e as Horas Extras. A calculadora emite alertas cruzados em ambos os módulos (GAACTA e Horas Extras), mantendo a ressalva ativável para o período de recesso forense.
 6. **Módulo base para a Justiça Federal:** A arquitetura do módulo GAACTA serve de base unificada e parametrizada para a expansão e aplicação na Justiça Federal (JF) e demais órgãos do Poder Judiciário da União.
+7. **Exibição nas Rubricas Pré-definidas:** A gratificação figura no seletor de Rubricas Pré-definidas sob a nomenclatura canônica "Gratificação por Atividades de Alta Complexidade (GAACTA)", alinhando a opção do seletor ao título do card e garantindo localização alfabética imediata no grupo de gratificações. A parametrização versionada (`gaacta_rules`) contempla a JMU e a Justiça Federal (CJF e TRFs) desde 06/2026, com suporte a fallback transitório em `ConfigService` para assegurar disponibilidade operacional contínua na UI.
 
 ## 13. Indenização de Transporte na JMU
 

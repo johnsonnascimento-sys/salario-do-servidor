@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { calculateGaacta } from '../src/services/agency/engine/modules/gaactaCalculations';
+import { calculateGaacta, resolveGaactaRule } from '../src/services/agency/engine/modules/gaactaCalculations';
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
 import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToParams';
-import { INITIAL_STATE } from '../src/types';
+import { INITIAL_STATE, CourtConfig } from '../src/types';
+import { PREDEFINED_OPTIONS, hasPresetValue } from '../src/components/Calculator/dynamicPayrollForm.helpers';
 
 // Config mock para testes da JMU em 2026
 const mockJmuConfig: any = {
@@ -313,4 +314,47 @@ test('GAACTA: Rubricas manuais de crédito (como VPNI e ATS dinâmicos) entram n
     assert.equal(diffBaseApenasATS, 1100);
     // 15% de 1100 = 165
     assert.equal(Math.round((resDesmarcandoVPNI.valor - resSemRubricas.valor) * 100) / 100, 165);
+});
+
+test('GAACTA: Rubrica pré-definida está presente nas opções pré-definidas com rótulo canônico e ordem alfabética', () => {
+    const gaactaOption = PREDEFINED_OPTIONS.find(opt => opt.id === 'gaacta');
+    assert.ok(gaactaOption, 'GAACTA deve constar em PREDEFINED_OPTIONS');
+    assert.equal(gaactaOption.label, 'Gratificação por Atividades de Alta Complexidade (GAACTA)');
+
+    // Verificar se PREDEFINED_OPTIONS mantém ordenação alfabética consistente
+    const labels = PREDEFINED_OPTIONS.map(opt => opt.label);
+    const sorted = [...labels].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+    assert.deepEqual(labels, sorted, 'As rubricas pré-definidas devem estar ordenadas alfabeticamente');
+});
+
+test('GAACTA: hasPresetValue detecta corretamente a ativação da gratificação para preservação e restauração', () => {
+    assert.equal(hasPresetValue('gaacta', INITIAL_STATE), false);
+    assert.equal(hasPresetValue('gaacta', { ...INITIAL_STATE, gaactaAtivo: true }), true);
+    assert.equal(hasPresetValue('gaacta', { ...INITIAL_STATE, gaactaAtivo: false }), false);
+});
+
+test('GAACTA: resolveGaactaRule resolve regra de 15% para JMU e CJF a partir de 2026-06', () => {
+    const mockCjfCourtConfig: CourtConfig = {
+        orgSlug: 'cjf',
+        gaactaRules: {
+            enabled: true,
+            versions: [
+                {
+                    validFrom: '2026-06',
+                    validTo: null,
+                    percentage: 0.15,
+                    reference: 'Resolução STM nº 397/2026 / JF (CJ-1 a CJ-4); efeitos a partir de 01/06/2026'
+                }
+            ]
+        }
+    };
+
+    const jmuRule = resolveGaactaRule(mockJmuConfig, '2026-11');
+    const cjfRule = resolveGaactaRule(mockCjfCourtConfig, '2026-11');
+
+    assert.ok(jmuRule, 'JMU deve ter regra GAACTA vigente em 2026-11');
+    assert.equal(jmuRule.percentage, 0.15);
+
+    assert.ok(cjfRule, 'CJF deve ter regra GAACTA vigente em 2026-11');
+    assert.equal(cjfRule.percentage, 0.15);
 });

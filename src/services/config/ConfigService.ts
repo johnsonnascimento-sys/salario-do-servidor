@@ -172,13 +172,43 @@ export class ConfigService {
         // 2. Registro cadastrado no banco (caminho data-driven canônico)
         if (data) {
             const transitional = this.getTransitionalOrgFallback(orgSlug);
-            if (transitional?.configuration?.transport_indemnity && !data.configuration?.transport_indemnity) {
+            let nextConfig = data.configuration || {};
+            let modified = false;
+
+            if (transitional?.configuration?.transport_indemnity && !nextConfig.transport_indemnity) {
+                nextConfig = {
+                    ...nextConfig,
+                    transport_indemnity: transitional.configuration.transport_indemnity
+                };
+                modified = true;
+            }
+
+            if (!nextConfig.gaacta_rules) {
+                const defaultGaacta = transitional?.configuration?.gaacta_rules || ((orgSlug === 'jmu' || orgSlug === 'stm') ? {
+                    enabled: true,
+                    versions: [
+                        {
+                            validFrom: '2026-06',
+                            validTo: null,
+                            percentage: 0.15,
+                            reference: 'Resolução STM nº 397/2026; efeitos financeiros a partir de 01/06/2026'
+                        }
+                    ]
+                } : undefined);
+
+                if (defaultGaacta) {
+                    nextConfig = {
+                        ...nextConfig,
+                        gaacta_rules: defaultGaacta
+                    };
+                    modified = true;
+                }
+            }
+
+            if (modified) {
                 return {
                     ...data,
-                    configuration: {
-                        ...data.configuration,
-                        transport_indemnity: transitional.configuration.transport_indemnity
-                    }
+                    configuration: nextConfig
                 } as OrgConfigRecord;
             }
             return data as OrgConfigRecord;
@@ -325,6 +355,38 @@ export class ConfigService {
                             'Não incidem IR (Decreto nº 9.580/2018, art. 35, I, \'e\'), PSS (Lei nº 10.887/2004, art. 4º, § 1º, III) nem contribuição Funpresp-Jud, nem há desconto sobre auxílio-alimentação.'
                         ],
                         incidences: { ir: false, pss: false, funpresp: false }
+                    },
+                    gaacta_rules: {
+                        enabled: true,
+                        versions: [
+                            {
+                                validFrom: '2026-06',
+                                validTo: null,
+                                percentage: 0.15,
+                                reference: 'Resolução STM nº 397/2026 / JF (CJ-1 a CJ-4); efeitos a partir de 01/06/2026'
+                            }
+                        ]
+                    }
+                }
+            };
+        }
+
+        if (orgSlug === 'jmu' || orgSlug === 'stm') {
+            return {
+                org_slug: orgSlug,
+                org_name: 'Justiça Militar da União (JMU)',
+                power_name: 'PJU',
+                configuration: {
+                    gaacta_rules: {
+                        enabled: true,
+                        versions: [
+                            {
+                                validFrom: '2026-06',
+                                validTo: null,
+                                percentage: 0.15,
+                                reference: 'Resolução STM nº 397/2026; efeitos financeiros a partir de 01/06/2026'
+                            }
+                        ]
                     }
                 }
             };

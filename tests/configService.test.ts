@@ -235,3 +235,31 @@ test('ConfigService: CJF presente no banco tem precedência canônica sobre qual
     assert.equal(effective.dailies_rules?.embarkation_label, 'Adicional de deslocamento oficial');
     assert.equal(effective.dailies_rules?.derived_from_minister?.minister_per_diem, 1500.00);
 });
+
+test('ConfigService: provê gaacta_rules para JMU e CJF preservando vigência e percentual', async () => {
+    tableMocks = {
+        global_config: () => ({ data: defaultGlobalRecords, error: null }),
+        power_config: () => ({ data: defaultPowerRecords, error: null }),
+        org_config: (slug: string) => ({
+            data: slug === 'jmu' ? {
+                org_slug: 'jmu',
+                org_name: 'Superior Tribunal Militar',
+                power_name: 'PJU',
+                configuration: {} // ainda sem migration de gaacta_rules no banco
+            } : null,
+            error: null
+        })
+    };
+
+    const service = new ConfigService();
+    const jmuEffective = await service.getEffectiveConfig('jmu');
+    const cjfEffective = await service.getEffectiveConfig('cjf');
+
+    assert.ok(jmuEffective.gaacta_rules?.enabled, 'JMU deve ter gaacta_rules habilitado');
+    assert.equal(jmuEffective.gaacta_rules?.versions?.[0]?.percentage, 0.15);
+    assert.equal(jmuEffective.gaacta_rules?.versions?.[0]?.validFrom, '2026-06');
+
+    assert.ok(cjfEffective.gaacta_rules?.enabled, 'CJF deve ter gaacta_rules habilitado');
+    assert.equal(cjfEffective.gaacta_rules?.versions?.[0]?.percentage, 0.15);
+    assert.equal(cjfEffective.gaacta_rules?.versions?.[0]?.validFrom, '2026-06');
+});

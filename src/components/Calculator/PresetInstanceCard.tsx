@@ -47,9 +47,10 @@ const getPresetHeaderInfo = (
             const monthIndex = months.indexOf((state?.mesRef || '').toUpperCase()) + 1;
             const competence = state && monthIndex > 0 ? `${state.anoRef}-${String(monthIndex).padStart(2, '0')}` : '';
             const rule = resolveGaactaRule(courtConfig, competence);
+            const defaultBadge = isJMU ? 'Res. STM Nº 397/2026 • 15%' : 'PJU • 15%';
             return {
                 title: 'Gratificação por Atividades de Alta Complexidade',
-                normBadge: rule ? `${rule.reference} • ${(rule.percentage * 100).toLocaleString('pt-BR')}%` : 'Sem regra vigente'
+                normBadge: rule ? `${rule.reference} • ${(rule.percentage * 100).toLocaleString('pt-BR')}%` : defaultBadge
             };
         }
         case 'hora_extra': {
