@@ -3,6 +3,10 @@
 
 # Changelog
 
+## Simplificação de Categoria para "Direitos Periódicos" — 13/11/2026
+- UI & Usabilidade (dynamicPayrollForm.helpers e PROJECT_RULES):
+  - Simplificado o título da categoria de "Direitos Periódicos & Afastamentos" para somente **"Direitos Periódicos"** no catálogo de verbas e adicionais, tornando o layout mais limpo e conciso após a realocação da licença compensatória.
+
 ## Reorganização da Licença Compensatória e Remoção de Vantagens Pessoais do Catálogo — 13/11/2026
 - UI & Organização (PresetControlsSection, dynamicPayrollForm.helpers, PresetInstanceCard e LicenseCard):
   - **Licença Compensatória movida para "Trabalho Extraordinário & Funções"**: alinhada à natureza de cumulação de acervo/função singular decorrente de trabalho e regime especial de compensação (Resolução STM nº 376/2025).

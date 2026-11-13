@@ -66,7 +66,7 @@ export const PRESET_CATEGORIES = [
     },
     {
         id: 'direitos',
-        title: 'Direitos Periódicos & Afastamentos',
+        title: 'Direitos Periódicos',
         subtitle: 'Férias (1/3) e 13º salário'
     },
     {

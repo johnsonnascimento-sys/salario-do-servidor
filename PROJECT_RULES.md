@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 13/11/2026 16:03
+Atualizado em: 13/11/2026 16:18
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -133,7 +133,7 @@ Cada rubrica manual deve suportar:
 
 ### 4.8 Catálogo visual de verbas, adicionais e benefícios (cards pré-definidos)
 
-1. O seletor de verbas e adicionais apresenta as opções divididas visualmente por categorias conceituais (Trabalho Extraordinário & Funções, Direitos Periódicos & Afastamentos, Indenizações & Viagens, Benefícios & Vantagens), com campo de busca instantânea e botões de ação rápida em substituição a dropdowns fechados que ocultam as opções do usuário.
+1. O seletor de verbas e adicionais apresenta as opções divididas visualmente por categorias conceituais (Trabalho Extraordinário & Funções, Direitos Periódicos, Indenizações & Viagens, Benefícios & Vantagens), com campo de busca instantânea e botões de ação rápida em substituição a dropdowns fechados que ocultam as opções do usuário.
 2. Cada chip informa claramente o estado da verba: se não adicionada, inclusão em 1 clique; se já adicionada, rolagem suave (*scroll into view*) com destaque visual temporário até o card na tela.
 3. Cards que permitem repetição (como Hora Extra e Substituição de Função) informam a quantidade ativa no chip e oferecem botão rápido para inclusão de nova instância, mantendo configurações e cálculos estritamente isolados.
 4. No detalhamento final, rubricas repetidas devem ser apresentadas sem consolidar incidências distintas de forma ambígua.
