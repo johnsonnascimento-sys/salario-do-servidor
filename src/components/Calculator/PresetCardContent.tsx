@@ -64,7 +64,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     }
 
     if (presetId === 'ferias') {
-        return <VacationCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} />;
+        return <VacationCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} courtConfig={courtConfig} />;
     }
 
     if (presetId === 'decimo') {

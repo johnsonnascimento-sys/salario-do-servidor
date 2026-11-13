@@ -21,6 +21,7 @@
     "test:dailies": "node scripts/test-dailies-pju.mjs",
     "test:dailies-restore": "node scripts/test-dailies-restore.mjs",
     "test:thirteenth": "node scripts/test-thirteenth-isolation.mjs",
+    "test:vacation": "node scripts/test-vacation-isolation.mjs",
     "test:config": "node scripts/test-config-service.mjs",
     "test:audit": "node scripts/test-audit-findings-remaining.mjs",
     "test:gaacta": "node scripts/test-gaacta.mjs",

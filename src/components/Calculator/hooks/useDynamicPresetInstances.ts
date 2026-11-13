@@ -344,6 +344,17 @@ export const useDynamicPresetInstances = ({
                 update('feriasDesc', 0);
                 update('feriasDescManual', false);
                 update('feriasAntecipadas', false);
+                update('feriasIncideVencimento', true);
+                update('feriasIncideGAJ', true);
+                update('feriasIncideFuncao', true);
+                update('feriasIncideAQTitulo', true);
+                update('feriasIncideAQTreino', true);
+                update('feriasIncideATS', true);
+                update('feriasIncideVPNI', true);
+                update('feriasIncideAbono', true);
+                update('feriasIncideGrat', true);
+                update('feriasOutrasParcelas', 0);
+                update('feriasRubricasInclusas', {});
                 break;
             case 'decimo':
                 update('manualAdiant13', false);
@@ -463,6 +474,7 @@ export const useDynamicPresetInstances = ({
             update('recebeAbono', true);
             update('gaactaIncideAbono', true);
             update('decimoIncideAbono', true);
+            update('feriasIncideAbono', true);
         }
         if (selectedPreset === 'indenizacao_transporte') {
             update('transporteIndenizacaoAtivo', true);

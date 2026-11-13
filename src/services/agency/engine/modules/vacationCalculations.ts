@@ -55,11 +55,43 @@ export async function calculateVacation(params: IAgencyCalculationParams): Promi
                 gratVal = baseVencimento * payrollRules.specificGratificationRate;
             }
 
-            const totalComFC = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
-                funcaoValor + gratVal + (params.vpni_lei || 0) +
-                (params.vpni_decisao || 0) + (params.ats || 0);
+            const incideVenc = params.feriasIncideVencimento !== false;
+            const incideGAJ = params.feriasIncideGAJ !== false;
+            const incideFuncao = params.feriasIncideFuncao !== false;
+            const incideAQTitulo = params.feriasIncideAQTitulo !== false;
+            const incideAQTreino = params.feriasIncideAQTreino !== false;
+            const incideGrat = params.feriasIncideGrat !== false;
+            const incideVPNI = params.feriasIncideVPNI !== false;
+            const incideATS = params.feriasIncideATS !== false;
+            const incideAbono = params.feriasIncideAbono !== false;
 
-            ferias1_3 = totalComFC / 3;
+            let baseFerias = 0;
+            if (incideVenc) baseFerias += baseVencimento;
+            if (incideGAJ) baseFerias += gaj;
+            if (incideFuncao) baseFerias += funcaoValor;
+            if (incideAQTitulo) baseFerias += aqTituloVal;
+            if (incideAQTreino) baseFerias += aqTreinoVal;
+            if (incideGrat) baseFerias += gratVal;
+            if (incideVPNI) baseFerias += ((params.vpni_lei || 0) + (params.vpni_decisao || 0));
+            if (incideATS) baseFerias += (params.ats || 0);
+
+            if (incideAbono && params.recebeAbono) {
+                baseFerias += (params.abonoPermanencia || params.pssMensal || 0);
+            }
+
+            if (params.feriasRubricasInclusas && Array.isArray(params.rubricasExtras)) {
+                params.rubricasExtras
+                    .filter(r => r.tipo === 'C' && params.feriasRubricasInclusas?.[r.id] === true)
+                    .forEach(r => {
+                        baseFerias += (r.valor || 0);
+                    });
+            }
+
+            if (params.feriasOutrasParcelas && params.feriasOutrasParcelas > 0) {
+                baseFerias += params.feriasOutrasParcelas;
+            }
+
+            ferias1_3 = baseFerias / 3;
         }
     }
     ferias1_3 = Math.round(ferias1_3 * 100) / 100;

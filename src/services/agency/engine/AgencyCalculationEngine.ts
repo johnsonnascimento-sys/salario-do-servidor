@@ -102,8 +102,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         // 2. Calcular BenefÃ­cios
         const benefits = await calculateBenefits(params);
 
-        // 3. Calcular Rendimentos VariÃ¡veis (alguns agora async)
-        const vacation = await calculateVacation(params);
+        // 3. Calcular Rendimentos Variáveis (alguns agora async)
         const overtime = await calculateOvertime(params);
         const substitution = await calculateSubstitution(params);
         const dailies = await calculateDailies(params);
@@ -111,10 +110,19 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
-        // 4. Calcular DeduÃ§Ãµes (agora async)
+        // 4. Calcular Deduções (agora async)
         const deductions = await calculateDeductions(base, params);
-        const thirteenth = await calculateThirteenth(params, deductions.pensionRetroMemory);
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
+        const vacation = await calculateVacation({
+            ...params,
+            abonoPermanencia: abonoPerm || params.abonoPermanencia || params.pssMensal,
+            calculatedPss: deductions.pss
+        });
+        const thirteenth = await calculateThirteenth({
+            ...params,
+            abonoPermanencia: abonoPerm || params.abonoPermanencia || params.pssMensal,
+            calculatedPss: deductions.pss
+        }, deductions.pensionRetroMemory);
         const gaactaResult = await calculateGaacta({
             ...params,
             abonoPermanencia: abonoPerm,

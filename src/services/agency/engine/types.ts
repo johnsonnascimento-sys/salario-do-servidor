@@ -60,6 +60,17 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     feriasAntecipadas: boolean;
     feriasDesc: number;
     feriasDescManual: boolean;
+    feriasIncideVencimento?: boolean;
+    feriasIncideGAJ?: boolean;
+    feriasIncideFuncao?: boolean;
+    feriasIncideAQTitulo?: boolean;
+    feriasIncideAQTreino?: boolean;
+    feriasIncideATS?: boolean;
+    feriasIncideVPNI?: boolean;
+    feriasIncideAbono?: boolean;
+    feriasIncideGrat?: boolean;
+    feriasOutrasParcelas?: number;
+    feriasRubricasInclusas?: Record<string, boolean>;
     manualAdiant13: boolean;
     adiant13Venc: number;
     adiant13FC: number;

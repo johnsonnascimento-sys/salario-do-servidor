@@ -405,6 +405,19 @@ export interface CalculatorState {
   segunda13FC: number;   // Segunda parcela do 13o (FC/CJ)
   manualAdiant13: boolean; // Checkbox to not auto-calc 13th (JAN/JUN)
 
+  // Composição da Base de Férias (1/3 Constitucional - seleção dinâmica de parcelas)
+  feriasIncideVencimento?: boolean;
+  feriasIncideGAJ?: boolean;
+  feriasIncideFuncao?: boolean;
+  feriasIncideAQTitulo?: boolean;
+  feriasIncideAQTreino?: boolean;
+  feriasIncideATS?: boolean;
+  feriasIncideVPNI?: boolean;
+  feriasIncideAbono?: boolean;
+  feriasIncideGrat?: boolean;
+  feriasOutrasParcelas?: number;
+  feriasRubricasInclusas?: Record<string, boolean>;
+
   // Composição da Base do 13º Salário (seleção dinâmica de parcelas)
   decimoIncideVencimento?: boolean;
   decimoIncideGAJ?: boolean;
@@ -703,6 +716,18 @@ export const INITIAL_STATE: CalculatorState = {
   segunda13Venc: 0,
   segunda13FC: 0,
   manualAdiant13: false,
+
+  feriasIncideVencimento: true,
+  feriasIncideGAJ: true,
+  feriasIncideFuncao: true,
+  feriasIncideAQTitulo: true,
+  feriasIncideAQTreino: true,
+  feriasIncideATS: true,
+  feriasIncideVPNI: true,
+  feriasIncideAbono: true,
+  feriasIncideGrat: true,
+  feriasOutrasParcelas: 0,
+  feriasRubricasInclusas: {},
 
   decimoIncideVencimento: true,
   decimoIncideGAJ: true,

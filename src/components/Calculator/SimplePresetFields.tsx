@@ -131,6 +131,7 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
                             if (e.target.checked) {
                                 update('gaactaIncideAbono', true);
                                 update('decimoIncideAbono', true);
+                                update('feriasIncideAbono', true);
                             }
                         }}
                     />

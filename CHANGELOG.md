@@ -3,6 +3,16 @@
 
 # Changelog
 
+## Composição Dinâmica da Base de Férias (1/3 Constitucional) — 13/11/2026
+- UI & Cálculo (VacationCard e Motor de Agência):
+  - Implementada seleção dinâmica de parcelas na base de cálculo de Férias (1/3 Constitucional) nos moldes da Gratificação Natalina (13º) e da GAACTA.
+  - Parcelas regulares ativas por padrão: Vencimento Básico, GAJ (140%), FC/CJ, AQ Títulos, AQ Treinamento, VPNI (Lei e Decisão), ATS (Anuênios) e Gratificações Específicas (GAE/GAS).
+  - Suporte interativo para inclusão e exclusão de parcelas via checkboxes com exibição dos valores em tempo real.
+  - Abono de Permanência selecionado por padrão (`feriasIncideAbono: true` em `INITIAL_STATE`, `calculatorState.ts` e `stateToParams.ts`), incidindo na base de férias quando o abono estiver ativo e sendo marcado automaticamente ao incluir o abono de permanência.
+  - Inclusão interativa de rubricas manuais de crédito criadas pelo usuário (`feriasRubricasInclusas`) e campo para ajustes/outras parcelas avulsas (`feriasOutrasParcelas`).
+  - Exibição de subtotal com a "Base apurada da remuneração (Férias)" e o "1/3 Constitucional correspondente".
+  - Criada suíte de testes unitários isolados em `tests/vacationIsolation.test.ts` e script de execução `scripts/test-vacation-isolation.mjs` (`npm run test:vacation`).
+
 ## Seleção Padrão do Abono de Permanência na Gratificação Natalina (13º Salário) — 13/11/2026
 - UI & Cálculo (ThirteenthCard e Motor de Agência):
   - Definida a incidência do Abono de Permanência na base de cálculo da Gratificação Natalina (13º Salário) como selecionada por padrão (`decimoIncideAbono: true` em `INITIAL_STATE`, `calculatorState.ts` e `stateToParams.ts`).
