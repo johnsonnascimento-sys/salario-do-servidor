@@ -46,12 +46,14 @@ export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }
     { id: 'substituicao', label: 'Substituicao' }
 ];
 
-export const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra', 'substituicao']);
+export const MULTI_INSTANCE_PRESETS = new Set<string>(['hora_extra', 'substituicao', 'vpni', 'ats']);
 export const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras, Substituicao';
 export const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
+export type PresetCatalogItemId = PredefinedRubricId | 'vpni' | 'ats';
+
 export interface PresetCatalogItem {
-    id: PredefinedRubricId;
+    id: PresetCatalogItemId;
     label: string;
     description: string;
     category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios';
@@ -151,6 +153,20 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: 'Ressarcimento de contribuição previdenciária (EC 41/2003)',
         category: 'beneficios',
         tags: ['abono', 'permanencia', 'devolucao', 'pss']
+    },
+    {
+        id: 'vpni',
+        label: 'VPNI',
+        description: 'Vantagem Pessoal Nominalmente Identificada (Quintos/Décimos)',
+        category: 'beneficios',
+        tags: ['vpni', 'quintos', 'decimos', 'vantagem', 'pessoal', 'incorporacao']
+    },
+    {
+        id: 'ats',
+        label: 'ATS',
+        description: 'Adicional por Tempo de Serviço (Anuênios)',
+        category: 'beneficios',
+        tags: ['ats', 'anuenios', 'tempo', 'servico', 'adicional']
     },
     {
         id: 'pre_escolar',

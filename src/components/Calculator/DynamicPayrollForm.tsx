@@ -332,6 +332,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     enabledPresets={enabledPresets}
                     transportIndemnityEnabled={transportIndemnityEnabled}
                     gaactaAvailable={gaactaAvailable}
+                    addRubrica={addRubrica}
+                    rubricas={state.rubricasExtras}
                 />
             </div>
 
@@ -371,25 +373,27 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             })}
 
-            <ManualRubricasSection
-                rubricas={state.rubricasExtras}
-                rubricasTax={state.rubricasTax}
-                calculationReady={calculationReady && Boolean(state.pensionMemory)}
-                funprespParticipacao={state.funprespParticipacao}
-                pensionRetroEntries={(inputState ?? state).pensionRetroEntries}
-                pensionConfig={courtConfig.previdenciaComplementar}
-                competencia={pensionParams.competencia}
-                irEaEntryTax={state.irEaEntryTax}
-                irEaCurrentYearKeys={state.irEaCurrentYearKeys}
-                competenciaReferencia={competenciaReferencia}
-                totalCreditos={totalCreditos}
-                totalDescontos={totalDescontos}
-                styles={styles}
-                addRubrica={addRubrica}
-                removeRubrica={removeRubrica}
-                updateRubrica={updateRubrica}
-                toPositiveNumber={toPositiveNumber}
-            />
+            <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300">
+                <ManualRubricasSection
+                    rubricas={state.rubricasExtras}
+                    rubricasTax={state.rubricasTax}
+                    calculationReady={calculationReady && Boolean(state.pensionMemory)}
+                    funprespParticipacao={state.funprespParticipacao}
+                    pensionRetroEntries={(inputState ?? state).pensionRetroEntries}
+                    pensionConfig={courtConfig.previdenciaComplementar}
+                    competencia={pensionParams.competencia}
+                    irEaEntryTax={state.irEaEntryTax}
+                    irEaCurrentYearKeys={state.irEaCurrentYearKeys}
+                    competenciaReferencia={competenciaReferencia}
+                    totalCreditos={totalCreditos}
+                    totalDescontos={totalDescontos}
+                    styles={styles}
+                    addRubrica={addRubrica}
+                    removeRubrica={removeRubrica}
+                    updateRubrica={updateRubrica}
+                    toPositiveNumber={toPositiveNumber}
+                />
+            </div>
         </>
     );
 };

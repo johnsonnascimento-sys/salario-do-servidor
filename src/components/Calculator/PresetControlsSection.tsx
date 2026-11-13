@@ -21,6 +21,7 @@ import {
     X,
     Sparkles
 } from 'lucide-react';
+import { Rubrica } from '../../types';
 import {
     PredefinedRubricId,
     MULTI_INSTANCE_PRESETS,
@@ -49,6 +50,8 @@ interface PresetControlsSectionProps {
     enabledPresets?: PresetInstance[];
     transportIndemnityEnabled?: boolean;
     gaactaAvailable?: boolean;
+    addRubrica?: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
+    rubricas?: Rubrica[];
 }
 
 const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -64,7 +67,9 @@ const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
     abono: Coins,
     pre_escolar: Baby,
     aux_transporte: Bus,
-    vantagens: FileSpreadsheet
+    vantagens: FileSpreadsheet,
+    vpni: FileSpreadsheet,
+    ats: Award
 };
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
@@ -76,18 +81,35 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     enabledPresetCount,
     enabledPresets = [],
     transportIndemnityEnabled = true,
-    gaactaAvailable = true
+    gaactaAvailable = true,
+    addRubrica,
+    rubricas = []
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Contagem de instâncias ativas por presetId
+    // Contagem de instâncias ativas por presetId e atalhos manuais (VPNI, ATS)
     const activeCounts = useMemo(() => {
         const counts: Record<string, number> = {};
         enabledPresets.forEach(instance => {
             counts[instance.presetId] = (counts[instance.presetId] || 0) + 1;
         });
+
+        if (rubricas && rubricas.length > 0) {
+            rubricas.forEach(r => {
+                if (r.tipo === 'C') {
+                    const desc = (r.descricao || '').trim().toUpperCase();
+                    if (desc === 'VPNI' || desc.startsWith('VPNI')) {
+                        counts['vpni'] = (counts['vpni'] || 0) + 1;
+                    }
+                    if (desc === 'ATS' || desc.startsWith('ATS')) {
+                        counts['ats'] = (counts['ats'] || 0) + 1;
+                    }
+                }
+            });
+        }
+
         return counts;
-    }, [enabledPresets]);
+    }, [enabledPresets, rubricas]);
 
     // Filtra o catálogo com base no termo de busca e disponibilidade do órgão
     const filteredCatalog = useMemo(() => {
@@ -105,7 +127,22 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         });
     }, [searchTerm, transportIndemnityEnabled, gaactaAvailable]);
 
-    const scrollToPresetCard = (presetId: PredefinedRubricId) => {
+    const scrollToManualRubricasSection = () => {
+        const el = document.getElementById('manual-rubricas-section');
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.classList.add('ring-2', 'ring-primary', 'shadow-md');
+            setTimeout(() => {
+                el.classList.remove('ring-2', 'ring-primary', 'shadow-md');
+            }, 1800);
+        }
+    };
+
+    const scrollToPresetCard = (presetId: string) => {
+        if (presetId === 'vpni' || presetId === 'ats') {
+            scrollToManualRubricasSection();
+            return;
+        }
         const el = document.getElementById(`preset-card-${presetId}`);
         if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -116,8 +153,18 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         }
     };
 
-    const handleAddPreset = (presetId: PredefinedRubricId) => {
-        includePreset(presetId);
+    const handleAddPreset = (presetId: string) => {
+        if (presetId === 'vpni') {
+            addRubrica?.({ descricao: 'VPNI', tipo: 'C', incideIR: true, incidePSS: true });
+            setTimeout(scrollToManualRubricasSection, 120);
+            return;
+        }
+        if (presetId === 'ats') {
+            addRubrica?.({ descricao: 'ATS', tipo: 'C', incideIR: true, incidePSS: true });
+            setTimeout(scrollToManualRubricasSection, 120);
+            return;
+        }
+        includePreset(presetId as PredefinedRubricId);
         setTimeout(() => {
             scrollToPresetCard(presetId);
         }, 120);

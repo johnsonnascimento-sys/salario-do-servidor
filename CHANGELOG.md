@@ -3,6 +3,13 @@
 
 # Changelog
 
+## Atalhos de VPNI e ATS em Benefícios & Vantagens e Seção de Ajustes Avulsos Enxuta — 13/11/2026
+- UI & Usabilidade (PresetControlsSection, DynamicPayrollForm, dynamicPayrollForm.helpers e ManualRubricasSection):
+  - **Atalhos Rápidos de VPNI e ATS em Benefícios & Vantagens**: Adicionados os cards/chips **VPNI** e **ATS** na categoria *"Benefícios & Vantagens"* do catálogo visual de verbas.
+  - **Repetição Suportada (`+ Outra`)**: Configurados como verbas multi-instância em `MULTI_INSTANCE_PRESETS`, permitindo inserção sucessiva e indicando o número de instâncias ativas no chip com link de rolagem rápida.
+  - **Comportamento como Rubrica Manual**: Ao clicar em "Adicionar" ou "+ Outra", adiciona uma rubrica manual de crédito com a descrição pré-preenchida e editável (`"VPNI"` ou `"ATS"`), incidências habituais de IR e PSS ativas e realiza rolagem suave com destaque visual para a seção de lançamentos avulsos.
+  - **Card de Lançamentos e Ajustes Avulsos Enxuto**: Removida a barra de templates pré-fabricados (inclusive Acerto/Retroativo), mantendo no topo exclusivamente os botões **`Crédito livre`** e **`Desconto livre`**, com totalizadores segregados e a gaveta de progressive disclosure para opções tributárias avançadas (IR-EA / RRA, PSS retroativo e Funpresp).
+
 ## Modernização da Seção de Rubricas Manuais (Lançamentos e Ajustes Avulsos) — 13/11/2026
 - UI & Usabilidade (ManualRubricasSection, DynamicPayrollForm e useCalculatorState):
   - **Renomeação e Recontextualização**: Seção renomeada para **"Lançamentos e Ajustes Avulsos"**, com descrição explicativa voltada ao servidor.

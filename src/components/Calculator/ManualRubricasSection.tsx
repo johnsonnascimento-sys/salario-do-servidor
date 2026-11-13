@@ -5,13 +5,8 @@ import {
     Plus,
     Trash2,
     SlidersHorizontal,
-    Sparkles,
     ChevronDown,
     ChevronUp,
-    FileSpreadsheet,
-    Award,
-    CalendarClock,
-    HeartHandshake,
     CheckCircle2
 } from 'lucide-react';
 import { Rubrica, RubricaTaxDetail, PrevidenciaComplementarConfig } from '../../types';
@@ -43,78 +38,6 @@ interface ManualRubricasSectionProps {
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     toPositiveNumber: (value: string) => number;
 }
-
-interface RubricaTemplate {
-    id: string;
-    label: string;
-    tipo: 'C' | 'D';
-    icon: React.ComponentType<{ className?: string }>;
-    description: string;
-    patch: Partial<Rubrica>;
-}
-
-const RUBRICA_TEMPLATES: RubricaTemplate[] = [
-    {
-        id: 'vpni',
-        label: 'VPNI (Quintos/Décimos)',
-        tipo: 'C',
-        icon: FileSpreadsheet,
-        description: 'Vantagem pessoal incorporada (Lei 9.527/97 ou decisão judicial)',
-        patch: {
-            descricao: 'VPNI - Incorporação',
-            tipo: 'C',
-            incideIR: true,
-            incidePSS: true,
-            isEA: false,
-            pssCompetenciaSeparada: false
-        }
-    },
-    {
-        id: 'ats',
-        label: 'ATS (Anuênios)',
-        tipo: 'C',
-        icon: Award,
-        description: 'Adicional por Tempo de Serviço (art. 67 da Lei 8.112/90)',
-        patch: {
-            descricao: 'Adicional por Tempo de Serviço (ATS)',
-            tipo: 'C',
-            incideIR: true,
-            incidePSS: true,
-            isEA: false,
-            pssCompetenciaSeparada: false
-        }
-    },
-    {
-        id: 'retroativo_ea',
-        label: 'Acerto / Retroativo (EA)',
-        tipo: 'C',
-        icon: CalendarClock,
-        description: 'Diferenças de meses anteriores tributadas no IR-EA (RRA)',
-        patch: {
-            descricao: 'Acerto Retroativo (Exercício Anterior)',
-            tipo: 'C',
-            incideIR: false,
-            incidePSS: true,
-            isEA: true,
-            pssCompetenciaSeparada: false
-        }
-    },
-    {
-        id: 'pensao',
-        label: 'Pensão Alimentícia Avulsa',
-        tipo: 'D',
-        icon: HeartHandshake,
-        description: 'Desconto judicial de alimentos dedutível da base do imposto',
-        patch: {
-            descricao: 'Pensão Alimentícia Judicial',
-            tipo: 'D',
-            incideIR: false,
-            incidePSS: false,
-            isEA: false,
-            pssCompetenciaSeparada: false
-        }
-    }
-];
 
 export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     rubricas,
@@ -194,26 +117,18 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
         return rubrica.tipo === filtroTipo;
     });
 
-    const handleApplyTemplate = (template: RubricaTemplate) => {
-        const patch = { ...template.patch };
-        if (patch.isEA && (!patch.competenciasEA || patch.competenciasEA.length === 0)) {
-            patch.competenciasEA = [getDefaultEaCompetencia(competenciaReferencia)];
-        }
-        addRubrica(patch);
-    };
-
     return (
         <div className="space-y-4">
-            {/* Bloco Central de Controle e Atalhos */}
+            {/* Bloco Central de Controle de Lançamentos Avulsos */}
             <div className={styles.card}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <h3 className={`${styles.sectionTitle} mb-1 flex items-center gap-2`}>
                             <DollarSign className="w-4 h-4 text-primary" />
                             Lançamentos e Ajustes Avulsos
                         </h3>
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                            Adicione vantagens pessoais (VPNI, ATS), acertos retroativos, pensões ou créditos e descontos manuais.
+                            Adicione vantagens pessoais, acertos retroativos, pensões ou créditos e descontos manuais.
                         </p>
                     </div>
 
@@ -237,60 +152,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             <Minus className="w-3.5 h-3.5" />
                             Desconto livre
                         </button>
-                    </div>
-                </div>
-
-                {/* Barra de Modelos / Atalhos Rápidos em 1 Clique */}
-                <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 mb-2">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider">
-                            Atalhos rápidos para verbas frequentes:
-                        </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                        {RUBRICA_TEMPLATES.map(template => {
-                            const IconComponent = template.icon;
-                            const isCredito = template.tipo === 'C';
-                            return (
-                                <button
-                                    key={template.id}
-                                    type="button"
-                                    onClick={() => handleApplyTemplate(template)}
-                                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                                        isCredito
-                                            ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/30'
-                                            : 'bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-800/60 hover:bg-red-100/60 dark:hover:bg-red-900/30'
-                                    }`}
-                                >
-                                    <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
-                                        isCredito
-                                            ? 'bg-emerald-500 text-white'
-                                            : 'bg-red-500 text-white'
-                                    }`}>
-                                        <IconComponent className="w-3.5 h-3.5" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-body-xs font-semibold text-neutral-800 dark:text-neutral-200 truncate">
-                                                {template.label}
-                                            </span>
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded shrink-0 ${
-                                                isCredito
-                                                    ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
-                                                    : 'bg-red-200 text-red-800 dark:bg-red-900/50 dark:text-red-300'
-                                            }`}>
-                                                {isCredito ? '+ Crédito' : '- Desconto'}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
-                                            {template.description}
-                                        </p>
-                                    </div>
-                                </button>
-                            );
-                        })}
                     </div>
                 </div>
 
