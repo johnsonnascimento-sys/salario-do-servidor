@@ -3,6 +3,13 @@
 
 # Changelog
 
+## Realocação de Auxílios para a Categoria Indenizações & Viagens — 13/11/2026
+- UI & Usabilidade (dynamicPayrollForm.helpers):
+  - **Auxílio Pré-Escolar e Auxílio Transporte realocados**: Movidos da categoria *"Benefícios & Vantagens"* para a categoria **"Indenizações & Viagens"** no catálogo de verbas.
+  - Subtítulos das categorias atualizados para refletir o novo arranjo:
+    - *Indenizações & Viagens*: "Diárias, auxílios e ressarcimento de transporte".
+    - *Benefícios & Vantagens*: "Abono de permanência e vantagens pessoais (VPNI/ATS)".
+
 ## Atalhos de VPNI e ATS em Benefícios & Vantagens e Seção de Ajustes Avulsos Enxuta — 13/11/2026
 - UI & Usabilidade (PresetControlsSection, DynamicPayrollForm, dynamicPayrollForm.helpers e ManualRubricasSection):
   - **Atalhos Rápidos de VPNI e ATS em Benefícios & Vantagens**: Adicionados os cards/chips **VPNI** e **ATS** na categoria *"Benefícios & Vantagens"* do catálogo visual de verbas.

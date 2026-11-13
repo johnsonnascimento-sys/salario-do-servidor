@@ -74,12 +74,12 @@ export const PRESET_CATEGORIES = [
     {
         id: 'indenizacoes',
         title: 'Indenizações & Viagens',
-        subtitle: 'Diárias a serviço e ressarcimento de transporte externo'
+        subtitle: 'Diárias, auxílios e ressarcimento de transporte'
     },
     {
         id: 'beneficios',
         title: 'Benefícios & Vantagens',
-        subtitle: 'Auxílios e abono de permanência'
+        subtitle: 'Abono de permanência e vantagens pessoais (VPNI/ATS)'
     }
 ] as const;
 
@@ -148,6 +148,20 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         tags: ['indenizacao', 'transporte', 'oficial', 'mandados', 'diligencias']
     },
     {
+        id: 'pre_escolar',
+        label: 'Auxílio Pré-Escolar',
+        description: 'Benefício assistencial por dependente elegível',
+        category: 'indenizacoes',
+        tags: ['pre', 'escolar', 'creche', 'filhos', 'dependentes', 'auxilio']
+    },
+    {
+        id: 'aux_transporte',
+        label: 'Auxílio Transporte',
+        description: 'Custeio de transporte coletivo municipal/intermunicipal',
+        category: 'indenizacoes',
+        tags: ['auxilio', 'transporte', 'deslocamento', 'passe']
+    },
+    {
         id: 'abono',
         label: 'Abono de Permanência',
         description: 'Ressarcimento de contribuição previdenciária (EC 41/2003)',
@@ -167,20 +181,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: 'Adicional por Tempo de Serviço (Anuênios)',
         category: 'beneficios',
         tags: ['ats', 'anuenios', 'tempo', 'servico', 'adicional']
-    },
-    {
-        id: 'pre_escolar',
-        label: 'Auxílio Pré-Escolar',
-        description: 'Benefício assistencial por dependente elegível',
-        category: 'beneficios',
-        tags: ['pre', 'escolar', 'creche', 'filhos', 'dependentes', 'auxilio']
-    },
-    {
-        id: 'aux_transporte',
-        label: 'Auxílio Transporte',
-        description: 'Custeio de transporte coletivo municipal/intermunicipal',
-        category: 'beneficios',
-        tags: ['auxilio', 'transporte', 'deslocamento', 'passe']
     }
 ];
 
