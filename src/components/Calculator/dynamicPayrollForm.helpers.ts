@@ -105,7 +105,7 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
     },
     {
         id: 'gratificacao',
-        label: 'Gratificação Específica (GAE / GAS)',
+        label: 'GAE / GAS',
         description: 'GAE (Oficial de Justiça) e GAS (Polícia Judicial) - 35% Lei 11.416/06',
         category: 'trabalho',
         tags: ['gae', 'gas', 'gratificacao', 'especifica', 'oficial', 'seguranca', 'policia']

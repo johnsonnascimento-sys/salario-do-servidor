@@ -3,6 +3,10 @@
 
 # Changelog
 
+## Ajuste de Nomenclatura do Botão de GAE / GAS — 13/11/2026
+- UI & Usabilidade (PresetControlsSection / dynamicPayrollForm.helpers):
+  - Simplificado o rótulo do botão/chip no catálogo de adicionais de "Gratificação Específica (GAE / GAS)" para somente **"GAE / GAS"**, proporcionando leitura direta e objetiva.
+
 ## Catálogo Visual de Adicionais, Verbas e Benefícios — 13/11/2026
 - UI & Usabilidade (PresetControlsSection e DynamicPayrollForm):
   - Substituído o seletor dropdown fechado por um catálogo visual categorizado com Chips e botões interativos em 1 clique.
