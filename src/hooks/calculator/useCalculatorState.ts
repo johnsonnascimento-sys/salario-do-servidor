@@ -56,7 +56,11 @@ export const useCalculatorState = () => {
         }));
     }, []);
 
-    const addRubrica = useCallback((tipo: Rubrica['tipo'] = 'C') => {
+    const addRubrica = useCallback((payload?: Rubrica['tipo'] | Partial<Rubrica>) => {
+        const isString = typeof payload === 'string';
+        const tipo: Rubrica['tipo'] = isString ? payload : payload?.tipo || 'C';
+        const templatePatch = !isString && payload ? payload : {};
+
         const newRubrica: Rubrica = {
             id: createRubricaId(),
             descricao: '',
@@ -65,7 +69,8 @@ export const useCalculatorState = () => {
             incideIR: false,
             incidePSS: false,
             isEA: false,
-            pssCompetenciaSeparada: false
+            pssCompetenciaSeparada: false,
+            ...templatePatch
         };
         setState(prev => ({
             ...prev,

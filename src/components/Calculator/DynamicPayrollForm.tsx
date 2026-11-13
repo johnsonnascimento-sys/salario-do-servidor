@@ -38,7 +38,7 @@ interface DynamicPayrollFormProps {
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     courtConfig: CourtConfig;
-    addRubrica: (tipo?: Rubrica['tipo']) => void;
+    addRubrica: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     styles: any;

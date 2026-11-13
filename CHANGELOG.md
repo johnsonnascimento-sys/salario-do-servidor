@@ -3,6 +3,19 @@
 
 # Changelog
 
+## Modernização da Seção de Rubricas Manuais (Lançamentos e Ajustes Avulsos) — 13/11/2026
+- UI & Usabilidade (ManualRubricasSection, DynamicPayrollForm e useCalculatorState):
+  - **Renomeação e Recontextualização**: Seção renomeada para **"Lançamentos e Ajustes Avulsos"**, com descrição explicativa voltada ao servidor.
+  - **Atalhos Rápidos em 1 Clique (Templates Frequentes)**: Adicionada barra com chips de inserção rápida para verbas recorrentes do PJU com configurações pré-preenchidas:
+    - `+ VPNI (Quintos/Décimos)`: Crédito com incidência padrão de IR e PSS.
+    - `+ ATS (Anuênios)`: Crédito com incidência de IR e PSS.
+    - `+ Acerto / Retroativo (EA)`: Crédito com IR de Exercício Anterior (RRA) configurado.
+    - `+ Pensão Alimentícia Avulsa`: Desconto avulso.
+    - Botões para inserção livre de créditos e descontos genéricos.
+  - **Separação Visual e Filtro de Lançamentos**: Totalizadores segregados com destaque visual em verde (créditos) e vermelho (descontos), e botões de filtro para visualizar "Todos", "Apenas Créditos" ou "Apenas Descontos".
+  - **Progressive Disclosure (Gaveta de Opções Tributárias Avançadas)**: As incidências habituais de folha mensal (IR e PSS) ficam expostas de forma limpa no topo do card, enquanto opções de Exercício Anterior (IR-EA) com competências retroativas, PSS e Funpresp histórica ficam organizadas em gaveta colapsável, abrindo-se automaticamente apenas quando a rubrica possui configuração de EA ou competência separada ativa.
+  - **Feedback de Integração de Base**: Indicação visual destacada nos créditos avulsos informando que a verba fica disponível para seleção dinâmica nas bases de cálculo de GAACTA, Férias, 13º Salário e GAE/GAS.
+
 ## Simplificação de Categoria para "Direitos Periódicos" — 13/11/2026
 - UI & Usabilidade (dynamicPayrollForm.helpers e PROJECT_RULES):
   - Simplificado o título da categoria de "Direitos Periódicos & Afastamentos" para somente **"Direitos Periódicos"** no catálogo de verbas e adicionais, tornando o layout mais limpo e conciso após a realocação da licença compensatória.
