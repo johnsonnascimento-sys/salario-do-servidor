@@ -62,12 +62,12 @@ export const PRESET_CATEGORIES = [
     {
         id: 'trabalho',
         title: 'Trabalho Extraordinário & Funções',
-        subtitle: 'Horas extras, substituições de chefia e gratificações'
+        subtitle: 'Horas extras, substituições de chefia, gratificações e licença compensatória'
     },
     {
         id: 'direitos',
         title: 'Direitos Periódicos & Afastamentos',
-        subtitle: 'Férias (1/3), 13º salário e licença compensatória'
+        subtitle: 'Férias (1/3) e 13º salário'
     },
     {
         id: 'indenizacoes',
@@ -77,7 +77,7 @@ export const PRESET_CATEGORIES = [
     {
         id: 'beneficios',
         title: 'Benefícios & Vantagens',
-        subtitle: 'Auxílios, abono de permanência e vantagens pessoais'
+        subtitle: 'Auxílios e abono de permanência'
     }
 ] as const;
 
@@ -111,6 +111,13 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         tags: ['gae', 'gas', 'gratificacao', 'especifica', 'oficial', 'seguranca', 'policia']
     },
     {
+        id: 'licenca',
+        label: 'Licença Compensatória',
+        description: 'Indenização de dias de licença compensatória (Res. STM 376/2025 - Revogada pela Res. STM 397/2026)',
+        category: 'trabalho',
+        tags: ['licenca', 'compensatoria', 'dias', 'acervo', 'stm', '376', 'revogada']
+    },
+    {
         id: 'ferias',
         label: 'Férias (1/3 Constitucional)',
         description: 'Adicional de 1/3 da remuneração de referência e antecipações',
@@ -123,13 +130,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: '1ª parcela, 2ª parcela e apuração tributária de PSS e IRRF',
         category: 'direitos',
         tags: ['13', 'decimo', 'terceiro', 'natalina', 'adiantamento', 'segunda']
-    },
-    {
-        id: 'licenca',
-        label: 'Licença Compensatória',
-        description: 'Indenização de dias de licença compensatória',
-        category: 'direitos',
-        tags: ['licenca', 'compensatoria', 'dias']
     },
     {
         id: 'diarias',
@@ -165,13 +165,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: 'Custeio de transporte coletivo municipal/intermunicipal',
         category: 'beneficios',
         tags: ['auxilio', 'transporte', 'deslocamento', 'passe']
-    },
-    {
-        id: 'vantagens',
-        label: 'Vantagens Pessoais (VPNI / ATS)',
-        description: 'Quintos/décimos de VPNI e anuênios incorporados',
-        category: 'beneficios',
-        tags: ['vantagens', 'pessoais', 'vpni', 'quintos', 'ats', 'anuenios']
     }
 ];
 

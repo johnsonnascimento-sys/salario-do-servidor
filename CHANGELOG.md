@@ -3,6 +3,12 @@
 
 # Changelog
 
+## Reorganização da Licença Compensatória e Remoção de Vantagens Pessoais do Catálogo — 13/11/2026
+- UI & Organização (PresetControlsSection, dynamicPayrollForm.helpers, PresetInstanceCard e LicenseCard):
+  - **Licença Compensatória movida para "Trabalho Extraordinário & Funções"**: alinhada à natureza de cumulação de acervo/função singular decorrente de trabalho e regime especial de compensação (Resolução STM nº 376/2025).
+  - **Badge e Alerta Normativo de Revogação**: adicionado badge informativo no cabeçalho do card de Licença Compensatória (`Res. STM Nº 376/2025 • Revogada pela Res. 397/2026` para JMU) e aviso explicativo no corpo do card documentando a revogação expressa da norma pela Resolução STM nº 397/2026.
+  - **Remoção de "Vantagens Pessoais (VPNI / ATS)" do Catálogo**: retirado o botão redundante do catálogo de verbas, uma vez que as vantagens pessoais são lançadas diretamente pelo servidor no formulário ou como rubricas manuais de crédito.
+
 ## Ajuste de Nomenclatura do Botão de GAE / GAS — 13/11/2026
 - UI & Usabilidade (PresetControlsSection / dynamicPayrollForm.helpers):
   - Simplificado o rótulo do botão/chip no catálogo de adicionais de "Gratificação Específica (GAE / GAS)" para somente **"GAE / GAS"**, proporcionando leitura direta e objetiva.

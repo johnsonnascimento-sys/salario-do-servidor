@@ -75,7 +75,8 @@ const getPresetHeaderInfo = (
             };
         case 'licenca':
             return {
-                title: 'Licença Compensatória'
+                title: 'Licença Compensatória',
+                normBadge: isJMU ? 'Res. STM Nº 376/2025 • Revogada pela Res. 397/2026' : 'Regulamentação PJU'
             };
         case 'substituicao':
             return {
