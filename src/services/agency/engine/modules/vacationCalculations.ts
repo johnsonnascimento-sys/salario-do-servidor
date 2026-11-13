@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Calculos de Ferias - JMU
  * 
  * Responsavel por calcular:
@@ -9,7 +9,7 @@
 import { CourtConfig } from '../../../../types';
 import { calculateIrrf } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
-import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
+import { getDataForPeriod, normalizeAQPercent, resolveGratificationValue } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 
 export interface VacationResult {
@@ -50,10 +50,15 @@ export async function calculateVacation(params: IAgencyCalculationParams): Promi
                 aqTreinoVal = baseVencimento * normalizeAQPercent(params.aqTreinoPerc);
             }
 
-            let gratVal = 0;
-            if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-                gratVal = baseVencimento * payrollRules.specificGratificationRate;
-            }
+            const gratVal = resolveGratificationValue(
+                params,
+                baseVencimento,
+                gaj,
+                funcaoValor,
+                aqTituloVal,
+                aqTreinoVal,
+                payrollRules.specificGratificationRate
+            );
 
             const incideVenc = params.feriasIncideVencimento !== false;
             const incideGAJ = params.feriasIncideGAJ !== false;

@@ -3,6 +3,15 @@
 
 # Changelog
 
+## Composição Dinâmica da Base da Gratificação Específica (GAE / GAS) — 13/11/2026
+- UI & Cálculo (GratificationCard e Motor de Agência):
+  - Criado o componente dedicado `GratificationCard.tsx` para a Gratificação Específica (GAE / GAS), espelhando o comportamento do 13º Salário e da GAACTA.
+  - Conforme os arts. 16, § 1º e 17, § 1º da Lei nº 11.416/2006, a GAE e a GAS incidem legalmente a 35% sobre o vencimento básico do servidor:
+    - O Vencimento Básico permanece selecionado por padrão (`gratIncideVencimento: true` em `INITIAL_STATE`, `calculatorState.ts` e `stateToParams.ts`).
+    - Todos os demais créditos (GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS, Abono de Permanência, rubricas manuais de crédito e outras parcelas avulsas) permanecem disponíveis para seleção opcional pelo usuário em caso de peculiaridades administrativas/judiciais, mas **desmarcados por padrão** (`false`).
+  - Exibição de subtotal com a "Base apurada da gratificação" e o "Valor da Gratificação (35%)" recalculados em tempo real.
+  - Criada suíte de testes unitários isolados em `tests/gratificationIsolation.test.ts` e script de execução `scripts/test-gratification-isolation.mjs` (`npm run test:gratification`).
+
 ## Composição Dinâmica da Base de Férias (1/3 Constitucional) — 13/11/2026
 - UI & Cálculo (VacationCard e Motor de Agência):
   - Implementada seleção dinâmica de parcelas na base de cálculo de Férias (1/3 Constitucional) nos moldes da Gratificação Natalina (13º) e da GAACTA.

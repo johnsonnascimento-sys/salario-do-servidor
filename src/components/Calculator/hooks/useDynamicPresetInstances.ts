@@ -329,6 +329,16 @@ export const useDynamicPresetInstances = ({
             case 'gratificacao':
                 update('gratEspecificaTipo', '0');
                 update('gratEspecificaValor', 0);
+                update('gratIncideVencimento', true);
+                update('gratIncideGAJ', false);
+                update('gratIncideFuncao', false);
+                update('gratIncideAQTitulo', false);
+                update('gratIncideAQTreino', false);
+                update('gratIncideATS', false);
+                update('gratIncideVPNI', false);
+                update('gratIncideAbono', false);
+                update('gratOutrasParcelas', 0);
+                update('gratRubricasInclusas', {});
                 break;
             case 'vantagens':
                 update('vpni_lei', 0);

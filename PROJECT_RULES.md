@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 13/11/2026 13:58
+Atualizado em: 13/11/2026 14:22
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -98,6 +98,13 @@ Cada rubrica manual deve suportar:
 2. A base de cálculo da remuneração de referência das férias suporta composição dinâmica por checkboxes com valores em tempo real (mesmo comportamento da Gratificação Natalina e da GAACTA): parcelas regulares (Vencimento, GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS e GAE/GAS) permanecem selecionadas por padrão, e parcelas complementares (Abono de Permanência, rubricas manuais de crédito criadas pelo usuário e ajustes avulsos) podem ser incluídas/excluídas interativamente, recalculando instantaneamente o 1/3 apurado e suas retenções de IRRF.
 3. O Abono de Permanência permanece selecionado por padrão (`feriasIncideAbono: true`), incidindo na composição quando o servidor tiver abono ativo (`recebeAbono`), e sendo marcado automaticamente no card de Férias sempre que o usuário adicionar o abono.
 4. Suporte a férias antecipadas (`feriasAntecipadas` e `feriasDescManual`) para dedução integral ou personalizada no contracheque posterior.
+
+### 4.3.2 Gratificação Específica (GAE / GAS - Lei nº 11.416/2006)
+
+1. Conforme os arts. 16, § 1º (GAE) e 17, § 1º (GAS) da Lei nº 11.416/2006, as gratificações específicas de atividade externa e segurança correspondem a 35% do vencimento básico do servidor.
+2. A base de cálculo da GAE/GAS suporta composição dinâmica por checkboxes com valores em tempo real: por padrão legal estrito, apenas o Vencimento Básico permanece selecionado (`gratIncideVencimento: true`).
+3. Outros créditos (GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS, Abono de Permanência, rubricas manuais de crédito e ajustes avulsos) são exibidos para permitir seleção pelo usuário em caso de peculiaridades administrativas ou judiciais, mas **não devem ficar selecionados por padrão** (todos os demais permanecem `false` por padrão).
+4. Suporte a opção de inclusão ou exclusão da gratificação na base de cálculo da contribuição previdenciária (`incidirPSSGrat`).
 
 ### 4.4 Diarias
 

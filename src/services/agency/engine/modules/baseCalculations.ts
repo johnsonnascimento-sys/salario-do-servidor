@@ -110,6 +110,55 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
     return computed;
 }
 
+export function resolveGratificationValue(
+    params: IAgencyCalculationParams,
+    baseVencimento: number,
+    gaj: number,
+    funcaoValor: number,
+    aqTituloVal: number,
+    aqTreinoVal: number,
+    rate: number
+): number {
+    if (params.gratEspecificaTipo !== 'gae' && params.gratEspecificaTipo !== 'gas') {
+        return params.gratEspecificaValor || 0;
+    }
+
+    const incideVenc = params.gratIncideVencimento !== false;
+    const incideGAJ = params.gratIncideGAJ === true;
+    const incideFuncao = params.gratIncideFuncao === true;
+    const incideAQTitulo = params.gratIncideAQTitulo === true;
+    const incideAQTreino = params.gratIncideAQTreino === true;
+    const incideVPNI = params.gratIncideVPNI === true;
+    const incideATS = params.gratIncideATS === true;
+    const incideAbono = params.gratIncideAbono === true;
+
+    let baseGrat = 0;
+    if (incideVenc) baseGrat += baseVencimento;
+    if (incideGAJ) baseGrat += gaj;
+    if (incideFuncao) baseGrat += funcaoValor;
+    if (incideAQTitulo) baseGrat += aqTituloVal;
+    if (incideAQTreino) baseGrat += aqTreinoVal;
+    if (incideVPNI) baseGrat += ((params.vpni_lei || 0) + (params.vpni_decisao || 0));
+    if (incideATS) baseGrat += (params.ats || 0);
+    if (incideAbono && params.recebeAbono) {
+        baseGrat += (params.abonoPermanencia || params.pssMensal || 0);
+    }
+
+    if (params.gratRubricasInclusas && Array.isArray(params.rubricasExtras)) {
+        params.rubricasExtras
+            .filter(r => r.tipo === 'C' && params.gratRubricasInclusas?.[r.id] === true)
+            .forEach(r => {
+                baseGrat += (r.valor || 0);
+            });
+    }
+
+    if (params.gratOutrasParcelas && params.gratOutrasParcelas > 0) {
+        baseGrat += params.gratOutrasParcelas;
+    }
+
+    return Math.round(baseGrat * rate * 100) / 100;
+}
+
 /**
  * Calcula a remuneracao base total
  */
@@ -143,12 +192,15 @@ export async function calculateBase(params: IAgencyCalculationParams): Promise<n
         aqTreinoVal = baseVencimento * normalizeAQPercent(params.aqTreinoPerc);
     }
 
-    let gratVal = 0;
-    if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * payrollRules.specificGratificationRate;
-    } else {
-        gratVal = params.gratEspecificaValor || 0;
-    }
+    const gratVal = resolveGratificationValue(
+        params,
+        baseVencimento,
+        gaj,
+        funcaoValor,
+        aqTituloVal,
+        aqTreinoVal,
+        payrollRules.specificGratificationRate
+    );
 
     const extras = (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
 
@@ -177,12 +229,15 @@ export async function calculateBaseComponents(params: IAgencyCalculationParams) 
         aqTreinoVal = baseVencimento * normalizeAQPercent(params.aqTreinoPerc);
     }
 
-    let gratVal = 0;
-    if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * payrollRules.specificGratificationRate;
-    } else {
-        gratVal = params.gratEspecificaValor || 0;
-    }
+    const gratVal = resolveGratificationValue(
+        params,
+        baseVencimento,
+        gaj,
+        funcaoValor,
+        aqTituloVal,
+        aqTreinoVal,
+        payrollRules.specificGratificationRate
+    );
 
     return {
         vencimento: baseVencimento,

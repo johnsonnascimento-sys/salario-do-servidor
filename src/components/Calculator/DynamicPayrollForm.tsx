@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
@@ -127,15 +127,64 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         .filter(rubrica => rubrica.tipo === 'D')
         .reduce((total, rubrica) => total + (rubrica.valor || 0), 0);
 
-    const gratificacaoEspecificaCalculada =
-        state.gratEspecificaTipo === 'gae' || state.gratEspecificaTipo === 'gas'
-            ? baseVencimento * (payrollRules?.specificGratificationRate ?? 0)
-            : 0;
-
     const funcaoAtualValor =
         state.funcao && state.funcao !== noFunctionCode
             ? (currentTables.funcoes[state.funcao] || 0)
             : 0;
+
+    const gratificacaoEspecificaCalculada = useMemo(() => {
+        if (state.gratEspecificaTipo !== 'gae' && state.gratEspecificaTipo !== 'gas') {
+            return 0;
+        }
+        const rate = payrollRules?.specificGratificationRate ?? 0.35;
+        let baseGrat = 0;
+        if (state.gratIncideVencimento !== false) baseGrat += baseVencimento;
+        if (state.gratIncideGAJ) baseGrat += (state.gaj || 0);
+        if (state.gratIncideFuncao) baseGrat += funcaoAtualValor;
+        if (state.gratIncideAQTitulo) baseGrat += (state.aqTituloValor || 0);
+        if (state.gratIncideAQTreino) baseGrat += (state.aqTreinoValor || 0);
+        if (state.gratIncideVPNI) baseGrat += ((state.vpni_lei || 0) + (state.vpni_decisao || 0));
+        if (state.gratIncideATS) baseGrat += (state.ats || 0);
+        if (state.gratIncideAbono && state.recebeAbono) {
+            baseGrat += (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0);
+        }
+        if (state.gratRubricasInclusas && Array.isArray(state.rubricasExtras)) {
+            state.rubricasExtras
+                .filter(r => r.tipo === 'C' && state.gratRubricasInclusas?.[r.id] === true)
+                .forEach(r => {
+                    baseGrat += (r.valor || 0);
+                });
+        }
+        if (state.gratOutrasParcelas && state.gratOutrasParcelas > 0) {
+            baseGrat += state.gratOutrasParcelas;
+        }
+        return Math.round(baseGrat * rate * 100) / 100;
+    }, [
+        state.gratEspecificaTipo,
+        state.gratIncideVencimento,
+        baseVencimento,
+        state.gratIncideGAJ,
+        state.gaj,
+        state.gratIncideFuncao,
+        funcaoAtualValor,
+        state.gratIncideAQTitulo,
+        state.aqTituloValor,
+        state.gratIncideAQTreino,
+        state.aqTreinoValor,
+        state.gratIncideVPNI,
+        state.vpni_lei,
+        state.vpni_decisao,
+        state.gratIncideATS,
+        state.ats,
+        state.gratIncideAbono,
+        state.recebeAbono,
+        state.abonoPermanencia,
+        state.pssMensal,
+        state.gratRubricasInclusas,
+        state.rubricasExtras,
+        state.gratOutrasParcelas,
+        payrollRules?.specificGratificationRate
+    ]);
 
     const { handleCargoChange } = usePayrollFormNormalization({
         state,

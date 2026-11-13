@@ -1,6 +1,7 @@
 import React from 'react';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
 import { VacationCard } from './cards/VacationCard';
+import { GratificationCard } from './cards/GratificationCard';
 import { ThirteenthCard } from './cards/ThirteenthCard';
 import { OvertimeCard } from './cards/OvertimeCard';
 import { SubstitutionCard } from './cards/SubstitutionCard';
@@ -42,7 +43,6 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
 
     if (
         presetId === 'aq' ||
-        presetId === 'gratificacao' ||
         presetId === 'vantagens' ||
         presetId === 'abono' ||
         presetId === 'pre_escolar' ||
@@ -57,6 +57,10 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
                 isNovoAQ={isNovoAQ}
             />
         );
+    }
+
+    if (presetId === 'gratificacao') {
+        return <GratificationCard state={state} update={update} styles={styles} courtConfig={courtConfig} competenciaReferencia={competenciaReferencia} />;
     }
 
     if (presetId === 'indenizacao_transporte') {

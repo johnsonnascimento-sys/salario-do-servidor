@@ -26,6 +26,16 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     recebeAbono: boolean;
     gratEspecificaTipo: '0' | 'gae' | 'gas';
     gratEspecificaValor: number;
+    gratIncideVencimento?: boolean;
+    gratIncideGAJ?: boolean;
+    gratIncideFuncao?: boolean;
+    gratIncideAQTitulo?: boolean;
+    gratIncideAQTreino?: boolean;
+    gratIncideATS?: boolean;
+    gratIncideVPNI?: boolean;
+    gratIncideAbono?: boolean;
+    gratOutrasParcelas?: number;
+    gratRubricasInclusas?: Record<string, boolean>;
     vpni_lei: number;
     vpni_decisao: number;
     ats: number;

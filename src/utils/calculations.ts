@@ -157,7 +157,28 @@ export const calculateBaseFixa = (
 
     let gratVal = state.gratEspecificaValor;
     if (state.gratEspecificaTipo === 'gae' || state.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * gratRate;
+        let baseGrat = 0;
+        if (state.gratIncideVencimento !== false) baseGrat += baseVencimento;
+        if (state.gratIncideGAJ) baseGrat += gaj;
+        if (state.gratIncideFuncao) baseGrat += funcaoValor;
+        if (state.gratIncideAQTitulo) baseGrat += aqTituloVal;
+        if (state.gratIncideAQTreino) baseGrat += aqTreinoVal;
+        if (state.gratIncideVPNI) baseGrat += ((state.vpni_lei || 0) + (state.vpni_decisao || 0));
+        if (state.gratIncideATS) baseGrat += (state.ats || 0);
+        if (state.gratIncideAbono && state.recebeAbono) {
+            baseGrat += (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0);
+        }
+        if (state.gratRubricasInclusas && Array.isArray(state.rubricasExtras)) {
+            state.rubricasExtras
+                .filter(r => r.tipo === 'C' && state.gratRubricasInclusas?.[r.id] === true)
+                .forEach(r => {
+                    baseGrat += (r.valor || 0);
+                });
+        }
+        if (state.gratOutrasParcelas && state.gratOutrasParcelas > 0) {
+            baseGrat += state.gratOutrasParcelas;
+        }
+        gratVal = baseGrat * gratRate;
     } else {
         gratVal = 0;
     }
@@ -210,7 +231,28 @@ export const calculateAll = (state: CalculatorState, config?: CourtConfig): Calc
     let gratVal = state.gratEspecificaValor;
     const gratType = (state.gratEspecificaTipo || '').toLowerCase().trim();
     if (gratType === 'gae' || gratType === 'gas') {
-        gratVal = round2(baseVencimento * payrollRules.specificGratificationRate);
+        let baseGrat = 0;
+        if (state.gratIncideVencimento !== false) baseGrat += baseVencimento;
+        if (state.gratIncideGAJ) baseGrat += gaj;
+        if (state.gratIncideFuncao) baseGrat += funcaoValor;
+        if (state.gratIncideAQTitulo) baseGrat += aqTituloVal;
+        if (state.gratIncideAQTreino) baseGrat += aqTreinoVal;
+        if (state.gratIncideVPNI) baseGrat += ((state.vpni_lei || 0) + (state.vpni_decisao || 0));
+        if (state.gratIncideATS) baseGrat += (state.ats || 0);
+        if (state.gratIncideAbono && state.recebeAbono) {
+            baseGrat += (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0);
+        }
+        if (state.gratRubricasInclusas && Array.isArray(state.rubricasExtras)) {
+            state.rubricasExtras
+                .filter(r => r.tipo === 'C' && state.gratRubricasInclusas?.[r.id] === true)
+                .forEach(r => {
+                    baseGrat += (r.valor || 0);
+                });
+        }
+        if (state.gratOutrasParcelas && state.gratOutrasParcelas > 0) {
+            baseGrat += state.gratOutrasParcelas;
+        }
+        gratVal = round2(baseGrat * payrollRules.specificGratificationRate);
     } else {
         gratVal = 0;
     }

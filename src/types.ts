@@ -405,6 +405,18 @@ export interface CalculatorState {
   segunda13FC: number;   // Segunda parcela do 13o (FC/CJ)
   manualAdiant13: boolean; // Checkbox to not auto-calc 13th (JAN/JUN)
 
+  // Composição da Base da Gratificação Específica (GAE / GAS - seleção dinâmica de parcelas)
+  gratIncideVencimento?: boolean;
+  gratIncideGAJ?: boolean;
+  gratIncideFuncao?: boolean;
+  gratIncideAQTitulo?: boolean;
+  gratIncideAQTreino?: boolean;
+  gratIncideATS?: boolean;
+  gratIncideVPNI?: boolean;
+  gratIncideAbono?: boolean;
+  gratOutrasParcelas?: number;
+  gratRubricasInclusas?: Record<string, boolean>;
+
   // Composição da Base de Férias (1/3 Constitucional - seleção dinâmica de parcelas)
   feriasIncideVencimento?: boolean;
   feriasIncideGAJ?: boolean;
@@ -716,6 +728,17 @@ export const INITIAL_STATE: CalculatorState = {
   segunda13Venc: 0,
   segunda13FC: 0,
   manualAdiant13: false,
+
+  gratIncideVencimento: true,
+  gratIncideGAJ: false,
+  gratIncideFuncao: false,
+  gratIncideAQTitulo: false,
+  gratIncideAQTreino: false,
+  gratIncideATS: false,
+  gratIncideVPNI: false,
+  gratIncideAbono: false,
+  gratOutrasParcelas: 0,
+  gratRubricasInclusas: {},
 
   feriasIncideVencimento: true,
   feriasIncideGAJ: true,

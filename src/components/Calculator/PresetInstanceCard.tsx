@@ -94,7 +94,8 @@ const getPresetHeaderInfo = (
         }
         case 'gratificacao':
             return {
-                title: 'Gratificação Específica (GAE / GAS)'
+                title: 'Gratificação Específica (GAE / GAS)',
+                normBadge: 'Lei 11.416/06, arts. 16 e 17'
             };
         case 'vantagens':
             return {

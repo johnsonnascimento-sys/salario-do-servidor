@@ -13,7 +13,7 @@
 import { CourtConfig } from '../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
-import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
+import { getDataForPeriod, normalizeAQPercent, resolveGratificationValue } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
 import { buildComplementaryBase, calculateComplementaryPension } from './pensionCalculations';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
@@ -63,10 +63,15 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         aqTreinoVal = baseVencimento * normalizeAQPercent(params.aqTreinoPerc);
     }
 
-    let gratVal = 0;
-    if (params.gratEspecificaTipo === 'gae' || params.gratEspecificaTipo === 'gas') {
-        gratVal = baseVencimento * payrollRules.specificGratificationRate;
-    }
+    const gratVal = resolveGratificationValue(
+        params,
+        baseVencimento,
+        gaj,
+        funcaoValorBruta,
+        aqTituloVal,
+        aqTreinoVal,
+        payrollRules.specificGratificationRate
+    );
 
     const incideVenc = params.decimoIncideVencimento !== false;
     const incideGAJ = params.decimoIncideGAJ !== false;

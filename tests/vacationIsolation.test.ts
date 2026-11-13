@@ -189,3 +189,4 @@ test('Férias: férias antecipadas aplicam desconto correto', async () => {
     // IR de férias não incide se foi antecipado
     assert.equal(result.irFerias, 0);
 });
+
