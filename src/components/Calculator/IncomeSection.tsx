@@ -125,7 +125,17 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                     <h4 className={styles.innerBoxTitle}>Outros Adicionais</h4>
                     <div className="space-y-3">
                         <label className={styles.checkboxLabel}>
-                            <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={state.recebeAbono}
+                                onChange={e => {
+                                    update('recebeAbono', e.target.checked);
+                                    if (e.target.checked) {
+                                        update('gaactaIncideAbono', true);
+                                    }
+                                }}
+                            />
                             <span>Abono de Permanência</span>
                         </label>
 

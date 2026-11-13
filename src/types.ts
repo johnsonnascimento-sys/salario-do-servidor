@@ -644,7 +644,7 @@ export const INITIAL_STATE: CalculatorState = {
   gaactaIncideAQTreino: true,
   gaactaIncideATS: true,
   gaactaIncideVPNI: true,
-  gaactaIncideAbono: false,
+  gaactaIncideAbono: true,
   gaactaIncideGrat: false,
   gaactaOutrasParcelas: 0,
   gaactaManualBase: false,

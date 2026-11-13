@@ -144,7 +144,7 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
         base += gratVal;
     }
     // Abono de Permanencia so incide se o servidor efetivamente receber abono (modulo ativo)
-    if (params.gaactaIncideAbono === true && params.recebeAbono) {
+    if (params.gaactaIncideAbono !== false && params.recebeAbono) {
         const abonoVal = Number(params.abonoPermanencia) || 0;
         base += abonoVal;
     }

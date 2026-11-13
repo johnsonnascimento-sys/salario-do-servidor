@@ -358,3 +358,38 @@ test('GAACTA: resolveGaactaRule resolve regra de 15% para JMU e CJF a partir de 
     assert.ok(cjfRule, 'CJF deve ter regra GAACTA vigente em 2026-11');
     assert.equal(cjfRule.percentage, 0.15);
 });
+
+test('GAACTA: abono de permanência fica selecionado por padrão e incide quando o abono é ativado', async () => {
+    assert.equal(INITIAL_STATE.gaactaIncideAbono, true, 'gaactaIncideAbono deve ser true por padrão no INITIAL_STATE');
+
+    const engine = new AgencyCalculationEngine();
+    const stateComAbonoPadrao: any = {
+        ...INITIAL_STATE,
+        periodo: 1,
+        cargo: 'analista',
+        padrao: 'C13',
+        funcao: 'cj3',
+        tabelaPSS: '2026',
+        tabelaIR: '2025_maio',
+        regimePrev: 'rpc',
+        recebeAbono: true,
+        gaactaAtivo: true
+        // gaactaIncideAbono omitido para testar valor padrão
+    };
+
+    const params = mapStateToAgencyParams(stateComAbonoPadrao, 'jmu', mockJmuConfig);
+    assert.equal(params.gaactaIncideAbono, true, 'mapStateToAgencyParams deve propagar gaactaIncideAbono como true por padrão');
+
+    const resComAbono = await engine.calculateTotal(params);
+
+    // Agora desmarcando explicitamente o abono na GAACTA
+    const stateComAbonoDesmarcado: any = {
+        ...stateComAbonoPadrao,
+        gaactaIncideAbono: false
+    };
+    const paramsDesmarcado = mapStateToAgencyParams(stateComAbonoDesmarcado, 'jmu', mockJmuConfig);
+    const resSemAbono = await engine.calculateTotal(paramsDesmarcado);
+
+    const diffBase = Math.round((resComAbono.breakdown.gaactaBase - resSemAbono.breakdown.gaactaBase) * 100) / 100;
+    assert.equal(diffBase, resComAbono.breakdown.pss, 'A base da GAACTA deve incluir o valor do abono por padrão');
+});

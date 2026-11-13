@@ -3,6 +3,13 @@
 
 # Changelog
 
+## Seleção Padrão do Abono de Permanência na GAACTA — 13/11/2026
+- UI & Cálculo (GaactaCard e Motor de Agência):
+  - Definida a incidência do Abono de Permanência na base de cálculo da GAACTA como selecionada por padrão (`gaactaIncideAbono: true` em `INITIAL_STATE`, `calculatorState.ts` e `stateToParams.ts`).
+  - No card da GAACTA, o checkbox do Abono de Permanência permanece selecionado por padrão, incidindo imediatamente assim que o servidor receber o abono.
+  - Ao adicionar o Abono de Permanência (seja pelo seletor de rubricas pré-definidas ou marcando o campo de abono), o abono é automaticamente marcado para incidência no card da GAACTA.
+  - Adicionado teste automatizado em `tests/gaacta.test.ts` validando o comportamento de seleção padrão e incidência automática.
+
 ## Restauração e Disponibilidade da GAACTA em Rubricas Pré-definidas (JMU e CJF) — 13/11/2026
 - UI & Seletor de Rubricas:
   - Atualizada a nomenclatura no dropdown de Rubricas Pré-definidas para "Gratificação por Atividades de Alta Complexidade (GAACTA)", alinhando o rótulo ao título canônico do card e garantindo fácil localização alfabética no grupo de gratificações.

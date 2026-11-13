@@ -246,7 +246,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         gaactaIncideAQTreino: merged.gaactaIncideAQTreino !== false,
         gaactaIncideATS: merged.gaactaIncideATS !== false,
         gaactaIncideVPNI: merged.gaactaIncideVPNI !== false,
-        gaactaIncideAbono: Boolean(merged.gaactaIncideAbono),
+        gaactaIncideAbono: merged.gaactaIncideAbono !== false,
         gaactaIncideGrat: Boolean(merged.gaactaIncideGrat),
         gaactaOutrasParcelas: Math.max(0, Number(merged.gaactaOutrasParcelas) || 0),
         gaactaManualBase: Boolean(merged.gaactaManualBase),

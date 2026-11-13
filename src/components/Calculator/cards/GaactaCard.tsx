@@ -260,7 +260,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                                     type="checkbox"
                                     className={styles.checkbox}
                                     disabled={!temAbonoAtivo}
-                                    checked={temAbonoAtivo && Boolean(state.gaactaIncideAbono)}
+                                    checked={state.gaactaIncideAbono !== false}
                                     onChange={e => update('gaactaIncideAbono', e.target.checked)}
                                 />
                                 <span className="flex-1 flex flex-col">

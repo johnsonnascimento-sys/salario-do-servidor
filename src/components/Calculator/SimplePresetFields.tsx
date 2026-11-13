@@ -122,7 +122,17 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
         return (
             <div className="space-y-3">
                 <label className={styles.checkboxLabel}>
-                    <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono} onChange={e => update('recebeAbono', e.target.checked)} />
+                    <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={state.recebeAbono}
+                        onChange={e => {
+                            update('recebeAbono', e.target.checked);
+                            if (e.target.checked) {
+                                update('gaactaIncideAbono', true);
+                            }
+                        }}
+                    />
                     <span>Recebe abono de permanencia</span>
                 </label>
             </div>

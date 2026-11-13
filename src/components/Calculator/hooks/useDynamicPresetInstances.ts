@@ -390,7 +390,7 @@ export const useDynamicPresetInstances = ({
                 update('gaactaBaseManualValor', 0);
                 update('gaactaOutrasParcelas', 0);
                 update('gaactaRecesso', false);
-                update('gaactaIncideAbono', false);
+                update('gaactaIncideAbono', true);
                 update('gaactaIncideGrat', false);
                 update('gaactaIncideVencimento', true);
                 update('gaactaIncideGAJ', true);
@@ -458,6 +458,10 @@ export const useDynamicPresetInstances = ({
             return;
         }
 
+        if (selectedPreset === 'abono') {
+            update('recebeAbono', true);
+            update('gaactaIncideAbono', true);
+        }
         if (selectedPreset === 'indenizacao_transporte') {
             update('transporteIndenizacaoAtivo', true);
         }

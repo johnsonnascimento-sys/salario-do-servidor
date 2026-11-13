@@ -154,7 +154,7 @@ export function mapStateToAgencyParams(
         gaactaIncideAQTreino: state.gaactaIncideAQTreino !== false,
         gaactaIncideATS: state.gaactaIncideATS !== false,
         gaactaIncideVPNI: state.gaactaIncideVPNI !== false,
-        gaactaIncideAbono: Boolean(state.gaactaIncideAbono),
+        gaactaIncideAbono: state.gaactaIncideAbono !== false,
         gaactaIncideGrat: Boolean(state.gaactaIncideGrat),
         gaactaOutrasParcelas: state.gaactaOutrasParcelas || 0,
         gaactaManualBase: Boolean(state.gaactaManualBase),
