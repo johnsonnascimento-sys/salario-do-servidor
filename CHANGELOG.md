@@ -3,6 +3,13 @@
 
 # Changelog
 
+## Seleção Padrão do Abono de Permanência na Gratificação Natalina (13º Salário) — 13/11/2026
+- UI & Cálculo (ThirteenthCard e Motor de Agência):
+  - Definida a incidência do Abono de Permanência na base de cálculo da Gratificação Natalina (13º Salário) como selecionada por padrão (`decimoIncideAbono: true` em `INITIAL_STATE`, `calculatorState.ts` e `stateToParams.ts`).
+  - No card da Gratificação Natalina (13º Salário), o checkbox do Abono de Permanência permanece selecionado por padrão (`checked={incideAbono}` com default `true`), incidindo na remuneração de referência e no cálculo das parcelas assim que o servidor receber abono.
+  - Ao ativar ou incluir o Abono de Permanência (seja pelo seletor de rubricas pré-definidas em `useDynamicPresetInstances` ou marcando o checkbox `recebeAbono` nos formulários de entradas), o abono é automaticamente marcado para incidência na composição do 13º salário (`decimoIncideAbono: true`).
+  - Adicionado teste unitário em `tests/thirteenthIsolation.test.ts` validando a seleção por padrão, o reflexo no cálculo da remuneração de referência, e a exclusão manual quando desmarcado.
+
 ## Seleção Padrão do Abono de Permanência na GAACTA — 13/11/2026
 - UI & Cálculo (GaactaCard e Motor de Agência):
   - Definida a incidência do Abono de Permanência na base de cálculo da GAACTA como selecionada por padrão (`gaactaIncideAbono: true` em `INITIAL_STATE`, `calculatorState.ts` e `stateToParams.ts`).

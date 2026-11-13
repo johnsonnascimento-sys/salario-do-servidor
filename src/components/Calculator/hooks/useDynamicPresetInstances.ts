@@ -351,6 +351,7 @@ export const useDynamicPresetInstances = ({
                 update('adiant13FC', 0);
                 update('segunda13Venc', 0);
                 update('segunda13FC', 0);
+                update('decimoIncideAbono', true);
                 break;
             case 'hora_extra':
                 update('heQtd50', 0);
@@ -461,6 +462,7 @@ export const useDynamicPresetInstances = ({
         if (selectedPreset === 'abono') {
             update('recebeAbono', true);
             update('gaactaIncideAbono', true);
+            update('decimoIncideAbono', true);
         }
         if (selectedPreset === 'indenizacao_transporte') {
             update('transporteIndenizacaoAtivo', true);

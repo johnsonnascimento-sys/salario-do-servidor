@@ -711,7 +711,7 @@ export const INITIAL_STATE: CalculatorState = {
   decimoIncideAQTreino: true,
   decimoIncideATS: true,
   decimoIncideVPNI: true,
-  decimoIncideAbono: false,
+  decimoIncideAbono: true,
   decimoIncideGrat: true,
   decimoOutrasParcelas: 0,
   decimoRubricasInclusas: {},

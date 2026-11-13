@@ -259,7 +259,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         decimoIncideAQTreino: merged.decimoIncideAQTreino !== false,
         decimoIncideATS: merged.decimoIncideATS !== false,
         decimoIncideVPNI: merged.decimoIncideVPNI !== false,
-        decimoIncideAbono: Boolean(merged.decimoIncideAbono),
+        decimoIncideAbono: merged.decimoIncideAbono !== false,
         decimoIncideGrat: merged.decimoIncideGrat !== false,
         decimoOutrasParcelas: Math.max(0, Number(merged.decimoOutrasParcelas) || 0),
         decimoRubricasInclusas: typeof merged.decimoRubricasInclusas === 'object' && merged.decimoRubricasInclusas !== null ? { ...merged.decimoRubricasInclusas } : {},

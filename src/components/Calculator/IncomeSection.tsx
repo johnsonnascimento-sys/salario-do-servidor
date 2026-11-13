@@ -133,6 +133,7 @@ export const IncomeSection: React.FC<IncomeSectionProps> = ({ state, update, cou
                                     update('recebeAbono', e.target.checked);
                                     if (e.target.checked) {
                                         update('gaactaIncideAbono', true);
+                                        update('decimoIncideAbono', true);
                                     }
                                 }}
                             />

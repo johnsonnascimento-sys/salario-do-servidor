@@ -75,7 +75,7 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     const incideGrat = params.decimoIncideGrat !== false;
     const incideVPNI = params.decimoIncideVPNI !== false;
     const incideATS = params.decimoIncideATS !== false;
-    const incideAbono = Boolean(params.decimoIncideAbono);
+    const incideAbono = params.decimoIncideAbono !== false;
 
     let baseSemFC = 0;
     if (incideVenc) baseSemFC += baseVencimento;

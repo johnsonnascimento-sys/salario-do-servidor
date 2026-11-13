@@ -98,7 +98,7 @@ export function mapStateToAgencyParams(
         decimoIncideAQTreino: state.decimoIncideAQTreino !== false,
         decimoIncideATS: state.decimoIncideATS !== false,
         decimoIncideVPNI: state.decimoIncideVPNI !== false,
-        decimoIncideAbono: Boolean(state.decimoIncideAbono),
+        decimoIncideAbono: state.decimoIncideAbono !== false,
         decimoIncideGrat: state.decimoIncideGrat !== false,
         decimoOutrasParcelas: state.decimoOutrasParcelas || 0,
         decimoRubricasInclusas: state.decimoRubricasInclusas || {},

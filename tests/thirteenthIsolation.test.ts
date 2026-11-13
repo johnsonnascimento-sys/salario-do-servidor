@@ -3,6 +3,7 @@ import test from 'node:test';
 import { calculateThirteenth } from '../src/services/agency/engine/modules/thirteenthCalculations';
 import type { IAgencyCalculationParams } from '../src/services/agency/types';
 import type { CourtConfig } from '../src/types';
+import { INITIAL_STATE } from '../src/types';
 
 const mockConfig: CourtConfig = {
     bases: {
@@ -201,4 +202,47 @@ test('Composição dinâmica da base do 13º (estilo GAACTA): inclusão de rubri
     assert.equal(result.segunda13Venc, 4750);
     assert.equal(result.gratNatalinaTotal, 9500);
     assert.equal(result.primeiraParcelaDesconto, 4750);
+});
+
+test('13º Salário: abono de permanência fica selecionado por padrão e incide quando o abono é ativado', async () => {
+    assert.equal(INITIAL_STATE.decimoIncideAbono, true, 'decimoIncideAbono deve ser true por padrão no INITIAL_STATE');
+
+    // Vencimento = 9000 (6000 + 3000), FC = 1000. Abono = 800.
+    const paramsComAbono = createBaseParams({
+        tipoCalculo: 'nov',
+        recebeAbono: true,
+        abonoPermanencia: 800,
+        manualAdiant13: false
+        // decimoIncideAbono omitido para testar valor padrão (true)
+    });
+
+    const resComAbono = await calculateThirteenth(paramsComAbono);
+    // Base remuneratória com abono no 13º: 9000 (cargo) + 800 (abono mensal na composição) = 9800. FC = 1000.
+    // Metade cargo: 9800 / 2 = 4900.
+    // Metade FC: 1000 / 2 = 500.
+    // Créditos brutos: (4900 + 4900) + (500 + 500) = 10800.
+    // Abono do 13º (devolução do PSS sobre 9800 com alíquota 10% do mock): 980.
+    // Total gratificação natalina de crédito: 10800 + 980 = 11780.
+    assert.equal(resComAbono.adiant13Venc, 4900);
+    assert.equal(resComAbono.segunda13Venc, 4900);
+    assert.equal(resComAbono.abono13, 980);
+    assert.equal(resComAbono.gratNatalinaTotal, 11780);
+
+    // Agora desmarcando explicitamente o abono na composição do 13º
+    const paramsSemAbono = createBaseParams({
+        ...paramsComAbono,
+        decimoIncideAbono: false
+    });
+
+    const resSemAbono = await calculateThirteenth(paramsSemAbono);
+    // Base remuneratória sem abono na composição do 13º: 9000 (cargo). FC = 1000.
+    // Metade cargo: 9000 / 2 = 4500.
+    // Metade FC: 1000 / 2 = 500.
+    // Créditos brutos: 9000 + 1000 = 10000.
+    // Abono do 13º (devolução do PSS sobre 9000 com alíquota 10% do mock): 900.
+    // Total gratificação natalina de crédito: 10000 + 900 = 10900.
+    assert.equal(resSemAbono.adiant13Venc, 4500);
+    assert.equal(resSemAbono.segunda13Venc, 4500);
+    assert.equal(resSemAbono.abono13, 900);
+    assert.equal(resSemAbono.gratNatalinaTotal, 10900);
 });

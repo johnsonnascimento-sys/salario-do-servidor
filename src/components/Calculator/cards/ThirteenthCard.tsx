@@ -46,7 +46,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
     const incideVPNI = state.decimoIncideVPNI !== false;
     const incideATS = state.decimoIncideATS !== false;
     const incideGrat = state.decimoIncideGrat !== false;
-    const incideAbono = Boolean(state.decimoIncideAbono);
+    const incideAbono = state.decimoIncideAbono !== false;
 
     const funcaoValor = incideFuncao ? funcaoValorBruta : 0;
 
@@ -294,7 +294,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                             type="checkbox"
                             className={styles.checkbox}
                             disabled={!temAbonoAtivo}
-                            checked={temAbonoAtivo && incideAbono}
+                            checked={incideAbono}
                             onChange={e => update('decimoIncideAbono', e.target.checked)}
                         />
                         <span className="flex-1 flex flex-col">
