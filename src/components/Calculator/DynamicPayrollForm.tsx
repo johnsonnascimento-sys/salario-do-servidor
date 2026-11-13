@@ -17,7 +17,6 @@ import { useFunprespForm } from './hooks/useFunprespForm';
 import { useDynamicPresetInstances } from './hooks/useDynamicPresetInstances';
 import { usePayrollFormNormalization } from './hooks/usePayrollFormNormalization';
 import { buildPresetGrossLines } from './presetGrossLines';
-import { resolveGaactaRule } from '../../services/agency/engine/modules/gaactaCalculations';
 import {
     PresetGrossLine,
     PresetInstance,
@@ -91,7 +90,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     });
 
     const pensionParams = mapStateToAgencyParams(inputState ?? state, '', courtConfig);
-    const gaactaAvailable = Boolean(resolveGaactaRule(courtConfig, pensionParams.competencia || ''));
+    const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
+    const gaactaAvailable = Boolean(courtConfig?.gaactaRules?.enabled || orgSlug === 'jmu' || orgSlug === 'stm' || orgSlug === 'cjf' || orgSlug.startsWith('trf'));
     const pensionSelection = usePensionSelection({ params: pensionParams, context: pensionContexts?.monthly ?? null,
         onApply: patch => updateMany(patch as Partial<CalculatorState>), normalize: !pensionPending });
 

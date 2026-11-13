@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 13/11/2026 12:58
+Atualizado em: 13/11/2026 13:16
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
