@@ -128,7 +128,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             Lançamentos e Ajustes Avulsos
                         </h3>
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                            Adicione vantagens pessoais, acertos retroativos, pensões ou créditos e descontos manuais.
+                            Lance créditos (VPNI, ATS, acertos e retroativos) ou descontos (empréstimos consignados, planos de saúde, coparticipação, pensões judiciais, mensalidades sindicais e outros ajustes).
                         </p>
                     </div>
 
@@ -220,8 +220,13 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 )}
 
                 {rubricas.length === 0 && (
-                    <div className="py-4 text-center text-neutral-400 dark:text-neutral-500 text-body-xs italic">
-                        Nenhum crédito ou desconto avulso adicionado. Use os botões acima para incluir.
+                    <div className="py-3 px-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/30 border border-dashed border-neutral-200 dark:border-neutral-800 text-center space-y-1">
+                        <p className="text-body-xs text-neutral-600 dark:text-neutral-400">
+                            Nenhum lançamento avulso adicionado no momento.
+                        </p>
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-500">
+                            Utilize <strong>Crédito livre</strong> para verbas como VPNI, ATS, acertos ou diferenças retroativas; e <strong>Desconto livre</strong> para empréstimos consignados, planos de saúde, coparticipação, mensalidades associativas ou pensões judiciais.
+                        </p>
                     </div>
                 )}
             </div>
@@ -306,11 +311,69 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 <label className={styles.label}>Descrição da Verba</label>
                                 <input
                                     type="text"
+                                    list={`sugestoes-${rubrica.id}`}
                                     className={styles.input}
                                     value={rubrica.descricao}
-                                    placeholder="Ex.: VPNI, Devolução, Acerto..."
+                                    placeholder={
+                                        isCredito
+                                            ? 'Ex.: VPNI, ATS, Acerto Retroativo, Diferença Salarial...'
+                                            : 'Ex.: Empréstimo Consignado, Plano de Saúde, Coparticipação, Pensão...'
+                                    }
                                     onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)}
                                 />
+                                <datalist id={`sugestoes-${rubrica.id}`}>
+                                    {isCredito ? (
+                                        <>
+                                            <option value="VPNI" />
+                                            <option value="ATS" />
+                                            <option value="Acerto Retroativo (Exercício Anterior)" />
+                                            <option value="Diferença Salarial" />
+                                            <option value="Restituição / Reposição ao Erário" />
+                                            <option value="Ressarcimento de Despesas" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <option value="Empréstimo Consignado" />
+                                            <option value="Plano de Saúde (Mensalidade)" />
+                                            <option value="Plano de Saúde (Coparticipação)" />
+                                            <option value="Pensão Alimentícia Judicial" />
+                                            <option value="Mensalidade Sindical / Associação" />
+                                            <option value="Previdência Complementar / Privada" />
+                                            <option value="Seguro de Vida" />
+                                            <option value="Reposição ao Erário / Devolução" />
+                                        </>
+                                    )}
+                                </datalist>
+                                <div className="flex items-center gap-1.5 flex-wrap mt-1 text-[11px] text-neutral-400 dark:text-neutral-500">
+                                    <span>Sugestões rápidas:</span>
+                                    {isCredito ? (
+                                        <>
+                                            {['VPNI', 'ATS', 'Acerto Retroativo', 'Diferença Salarial'].map(sugestao => (
+                                                <button
+                                                    key={sugestao}
+                                                    type="button"
+                                                    onClick={() => updateRubrica(rubrica.id, 'descricao', sugestao)}
+                                                    className="px-1.5 py-0.5 rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
+                                                >
+                                                    {sugestao}
+                                                </button>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {['Empréstimo Consignado', 'Plano de Saúde', 'Coparticipação', 'Pensão Alimentícia'].map(sugestao => (
+                                                <button
+                                                    key={sugestao}
+                                                    type="button"
+                                                    onClick={() => updateRubrica(rubrica.id, 'descricao', sugestao)}
+                                                    className="px-1.5 py-0.5 rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
+                                                >
+                                                    {sugestao}
+                                                </button>
+                                            ))}
+                                        </>
+                                    )}
+                                </div>
                             </div>
                             <div>
                                 <label className={styles.label}>Valor (R$)</label>

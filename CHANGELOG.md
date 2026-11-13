@@ -3,6 +3,13 @@
 
 # Changelog
 
+## Enriquecimento de Descrições e Sugestões em Lançamentos Avulsos — 13/11/2026
+- UI & Usabilidade (ManualRubricasSection):
+  - **Descrições e Exemplos Expandidos no Cabeçalho e Estado Vazio**: Subtítulo e texto orientativo atualizados para destacar explicitamente verbas frequentes da folha do PJU: empréstimos consignados, planos de saúde (mensalidade e coparticipação), pensões judiciais, mensalidades sindicais, além de créditos como VPNI, ATS, acertos e diferenças retroativas.
+  - **Datalist de Autocompletar Dinâmico**: Campo de descrição agora integrado com `<datalist>` que sugere verbas canônicas de acordo com o tipo (Crédito ou Desconto) ao digitar.
+  - **Pills de Sugestão Rápida em 1 Clique**: Adicionados botões de atalho diretamente abaixo do campo de descrição de cada card (`Empréstimo Consignado`, `Plano de Saúde`, `Coparticipação`, `Pensão Alimentícia`, `VPNI`, `ATS`, `Acerto Retroativo`, `Diferença Salarial`) para preenchimento imediato.
+  - **Placeholders Contextuais**: Placeholders dinâmicos orientando o usuário com exemplos reais para créditos e descontos.
+
 ## Realocação de Auxílios para a Categoria Indenizações & Viagens — 13/11/2026
 - UI & Usabilidade (dynamicPayrollForm.helpers):
   - **Auxílio Pré-Escolar e Auxílio Transporte realocados**: Movidos da categoria *"Benefícios & Vantagens"* para a categoria **"Indenizações & Viagens"** no catálogo de verbas.
