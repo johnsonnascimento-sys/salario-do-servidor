@@ -3,6 +3,19 @@
 
 # Changelog
 
+## Catálogo Visual de Adicionais, Verbas e Benefícios — 13/11/2026
+- UI & Usabilidade (PresetControlsSection e DynamicPayrollForm):
+  - Substituído o seletor dropdown fechado por um catálogo visual categorizado com Chips e botões interativos em 1 clique.
+  - Agrupamento em 4 categorias conceituais:
+    1. **Trabalho Extraordinário & Funções**: Horas Extras (50%/100%), Adicional Noturno, Adicional de Qualificação e Substituição de Função/Cargo em Comissão.
+    2. **Direitos Periódicos & Afastamentos**: Férias (1/3 Constitucional), Gratificação Natalina (13º Salário) e Abono de Permanência.
+    3. **Indenizações & Viagens**: Diárias de Viagem, Indenização de Transporte e Ajuda de Custo (Mudança).
+    4. **Benefícios & Vantagens**: Auxílio-Alimentação, Auxílio Pré-Escolar, Auxílio-Transporte e Gratificações Específicas (GAE/GAS e GAACTA).
+  - Campo de busca instantânea integrado com filtro em tempo real por nome da verba, descrição e palavras-chave/tags.
+  - Feedback de estado em tempo real: verbas ativas exibem indicador visual "✓ Adicionado" e, ao clicar, realizam rolagem suave (*scroll into view*) com destaque animado no card correspondente.
+  - Verbas multi-instância (Horas Extras e Substituição) exibem indicador de quantidade ativa e botão rápido "+ Outra" para adição sucessiva.
+  - Renomeada a seção no formulário dinâmico para "Adicionais, Verbas e Benefícios" com subtítulo explicativo amigável, eliminando o jargão contábil e permitindo localização imediata pelo usuário.
+
 ## Composição Dinâmica da Base da Gratificação Específica (GAE / GAS) — 13/11/2026
 - UI & Cálculo (GratificationCard e Motor de Agência):
   - Criado o componente dedicado `GratificationCard.tsx` para a Gratificação Específica (GAE / GAS), espelhando o comportamento do 13º Salário e da GAACTA.

@@ -50,6 +50,131 @@ export const MULTI_INSTANCE_PRESETS = new Set<PredefinedRubricId>(['hora_extra',
 export const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras, Substituicao';
 export const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
+export interface PresetCatalogItem {
+    id: PredefinedRubricId;
+    label: string;
+    description: string;
+    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios';
+    tags: string[];
+}
+
+export const PRESET_CATEGORIES = [
+    {
+        id: 'trabalho',
+        title: 'Trabalho Extraordinário & Funções',
+        subtitle: 'Horas extras, substituições de chefia e gratificações'
+    },
+    {
+        id: 'direitos',
+        title: 'Direitos Periódicos & Afastamentos',
+        subtitle: 'Férias (1/3), 13º salário e licença compensatória'
+    },
+    {
+        id: 'indenizacoes',
+        title: 'Indenizações & Viagens',
+        subtitle: 'Diárias a serviço e ressarcimento de transporte externo'
+    },
+    {
+        id: 'beneficios',
+        title: 'Benefícios & Vantagens',
+        subtitle: 'Auxílios, abono de permanência e vantagens pessoais'
+    }
+] as const;
+
+export const PRESET_CATALOG: PresetCatalogItem[] = [
+    {
+        id: 'hora_extra',
+        label: 'Serviço Extraordinário (Horas Extras)',
+        description: 'Cálculo de 50% e 100% com divisor da jornada ordinária ou especial',
+        category: 'trabalho',
+        tags: ['hora', 'extra', 'he', 'servico', 'extraordinario', '50%', '100%']
+    },
+    {
+        id: 'substituicao',
+        label: 'Substituição de Função',
+        description: 'Substituição de titular de cargo em comissão ou função de confiança',
+        category: 'trabalho',
+        tags: ['substituicao', 'funcao', 'cargo', 'comissao', 'titular', 'dias', 'fc', 'cj']
+    },
+    {
+        id: 'gaacta',
+        label: 'Gratificação de Alta Complexidade (GAACTA)',
+        description: 'Gratificação de 15% sobre remuneração de CJ (Res. STM 397/26 e JF)',
+        category: 'trabalho',
+        tags: ['gaacta', 'alta', 'complexidade', 'cj', '15%']
+    },
+    {
+        id: 'gratificacao',
+        label: 'Gratificação Específica (GAE / GAS)',
+        description: 'GAE (Oficial de Justiça) e GAS (Polícia Judicial) - 35% Lei 11.416/06',
+        category: 'trabalho',
+        tags: ['gae', 'gas', 'gratificacao', 'especifica', 'oficial', 'seguranca', 'policia']
+    },
+    {
+        id: 'ferias',
+        label: 'Férias (1/3 Constitucional)',
+        description: 'Adicional de 1/3 da remuneração de referência e antecipações',
+        category: 'direitos',
+        tags: ['ferias', '1/3', 'terco', 'constitucional', 'antecipadas']
+    },
+    {
+        id: 'decimo',
+        label: 'Gratificação Natalina (13º Salário)',
+        description: '1ª parcela, 2ª parcela e apuração tributária de PSS e IRRF',
+        category: 'direitos',
+        tags: ['13', 'decimo', 'terceiro', 'natalina', 'adiantamento', 'segunda']
+    },
+    {
+        id: 'licenca',
+        label: 'Licença Compensatória',
+        description: 'Indenização de dias de licença compensatória',
+        category: 'direitos',
+        tags: ['licenca', 'compensatoria', 'dias']
+    },
+    {
+        id: 'diarias',
+        label: 'Diárias de Viagem',
+        description: 'Deslocamento a serviço, embarque e equipe no PJU',
+        category: 'indenizacoes',
+        tags: ['diarias', 'viagem', 'embarque', 'transporte', 'deslocamento']
+    },
+    {
+        id: 'indenizacao_transporte',
+        label: 'Indenização de Transporte',
+        description: 'Cumprimento de mandados por Oficial de Justiça (JMU e CJF)',
+        category: 'indenizacoes',
+        tags: ['indenizacao', 'transporte', 'oficial', 'mandados', 'diligencias']
+    },
+    {
+        id: 'abono',
+        label: 'Abono de Permanência',
+        description: 'Ressarcimento de contribuição previdenciária (EC 41/2003)',
+        category: 'beneficios',
+        tags: ['abono', 'permanencia', 'devolucao', 'pss']
+    },
+    {
+        id: 'pre_escolar',
+        label: 'Auxílio Pré-Escolar',
+        description: 'Benefício assistencial por dependente elegível',
+        category: 'beneficios',
+        tags: ['pre', 'escolar', 'creche', 'filhos', 'dependentes', 'auxilio']
+    },
+    {
+        id: 'aux_transporte',
+        label: 'Auxílio Transporte',
+        description: 'Custeio de transporte coletivo municipal/intermunicipal',
+        category: 'beneficios',
+        tags: ['auxilio', 'transporte', 'deslocamento', 'passe']
+    },
+    {
+        id: 'vantagens',
+        label: 'Vantagens Pessoais (VPNI / ATS)',
+        description: 'Quintos/décimos de VPNI e anuênios incorporados',
+        category: 'beneficios',
+        tags: ['vantagens', 'pessoais', 'vpni', 'quintos', 'ats', 'anuenios']
+    }
+];
+
 export const toNumber = (value: string) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;

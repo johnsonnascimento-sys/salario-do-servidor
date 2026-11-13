@@ -180,3 +180,4 @@ test('GAE/GAS: quando tipo for "0" (nenhuma), gratificação é zerada', async (
     const components = await calculateBaseComponents(params);
     assert.equal(components.gratEspecifica, 0);
 });
+

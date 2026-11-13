@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { Info, Settings } from 'lucide-react';
+import { Info, Settings, Sparkles } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { ManualRubricasSection } from './ManualRubricasSection';
@@ -95,6 +95,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const pensionSelection = usePensionSelection({ params: pensionParams, context: pensionContexts?.monthly ?? null,
         onApply: patch => updateMany(patch as Partial<CalculatorState>), normalize: !pensionPending });
 
+    const transportIndemnityEnabled = Boolean(courtConfig.transportIndemnity?.enabled);
+
     const {
         enabledPresets,
         availablePresets,
@@ -115,7 +117,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         update,
         updateSubstDays,
         functionKeys,
-        transportIndemnityEnabled: Boolean(courtConfig.transportIndemnity?.enabled),
+        transportIndemnityEnabled,
         gaactaAvailable
     });
 
@@ -301,18 +303,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             <div className={styles.card}>
                 <h3 className={`${styles.sectionTitle} relative`}>
-                    <Settings className="w-4 h-4" />
-                    Rubricas Pré-definidas
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    Adicionais, Verbas e Benefícios
                     <span className="relative inline-flex items-center group">
                         <button
                             type="button"
-                            aria-label="Informações sobre rubricas pré-definidas"
+                            aria-label="Informações sobre adicionais, verbas e benefícios"
                             className="rounded p-1 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
                         >
                             <Info className="w-4 h-4" />
                         </button>
                         <span role="tooltip" className="pointer-events-none hidden fixed left-4 right-4 top-1/3 z-tooltip rounded-lg border border-neutral-200 bg-white p-3 text-left text-body-xs font-normal normal-case tracking-normal text-neutral-700 shadow-lg group-hover:block group-focus-within:block sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-1 sm:w-72 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
-                            Adicione ao formulário itens pré-definidos de remuneração, benefícios e outras verbas para informar os dados e calcular seus valores na simulação.
+                            Adicione ao formulário itens pré-definidos de remuneração (Horas Extras, Férias, 13º Salário, Diárias, Substituição, Auxílios e Gratificações) para informar os dados e calcular seus valores na simulação.
                         </span>
                     </span>
                 </h3>
@@ -327,6 +329,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     setReorderMode={setReorderMode}
                     enabledPresetCount={enabledPresets.length}
                     multiInstanceHintLabel={MULTI_INSTANCE_HINT_LABEL}
+                    enabledPresets={enabledPresets}
+                    transportIndemnityEnabled={transportIndemnityEnabled}
+                    gaactaAvailable={gaactaAvailable}
                 />
             </div>
 
@@ -335,29 +340,34 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 if (!preset) return null;
 
                 return (
-                    <PresetInstanceCard
+                    <div
+                        id={`preset-card-${instance.presetId}`}
                         key={instance.key}
-                        instance={instance}
-                        presetLabel={preset.label}
-                        reorderMode={reorderMode}
-                        draggingPreset={draggingPreset}
-                        handlePresetDragStart={handlePresetDragStart}
-                        handlePresetDragOver={handlePresetDragOver}
-                        handlePresetDrop={handlePresetDrop}
-                        handlePresetDragEnd={handlePresetDragEnd}
-                        removePreset={removePreset}
-                        state={state}
-                        update={update}
-                        styles={styles}
-                        isNovoAQ={isNovoAQ}
-                        competenciaReferencia={competenciaReferencia}
-                        functionKeys={functionKeys}
-                        updateOvertimeEntry={updateOvertimeEntry}
-                        updateSubstitutionEntry={updateSubstitutionEntry}
-                        courtConfig={courtConfig}
-                        lines={getPresetGrossLines(instance)}
-                        calculationReady={calculationReady}
-                    />
+                        className="scroll-mt-20 transition-all duration-300"
+                    >
+                        <PresetInstanceCard
+                            instance={instance}
+                            presetLabel={preset.label}
+                            reorderMode={reorderMode}
+                            draggingPreset={draggingPreset}
+                            handlePresetDragStart={handlePresetDragStart}
+                            handlePresetDragOver={handlePresetDragOver}
+                            handlePresetDrop={handlePresetDrop}
+                            handlePresetDragEnd={handlePresetDragEnd}
+                            removePreset={removePreset}
+                            state={state}
+                            update={update}
+                            styles={styles}
+                            isNovoAQ={isNovoAQ}
+                            competenciaReferencia={competenciaReferencia}
+                            functionKeys={functionKeys}
+                            updateOvertimeEntry={updateOvertimeEntry}
+                            updateSubstitutionEntry={updateSubstitutionEntry}
+                            courtConfig={courtConfig}
+                            lines={getPresetGrossLines(instance)}
+                            calculationReady={calculationReady}
+                        />
+                    </div>
                 );
             })}
 

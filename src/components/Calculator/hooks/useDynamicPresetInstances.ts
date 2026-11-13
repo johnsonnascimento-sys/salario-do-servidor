@@ -446,11 +446,13 @@ export const useDynamicPresetInstances = ({
         }
     };
 
-    const includePreset = () => {
-        if (!selectedPreset || !availablePresets.some(option => option.id === selectedPreset)) return;
-        if (selectedPreset === 'gaacta' && !gaactaAvailable) return;
+    const includePreset = (targetPreset?: PredefinedRubricId) => {
+        const preset = targetPreset || selectedPreset;
+        if (!preset) return;
+        if (preset === 'gaacta' && !gaactaAvailable) return;
+        if (preset === 'indenizacao_transporte' && !transportIndemnityEnabled) return;
 
-        if (selectedPreset === 'hora_extra') {
+        if (preset === 'hora_extra') {
             const newEntry = createOvertimeEntry();
             const hasActiveOvertimePreset = enabledPresets.some(item => item.presetId === 'hora_extra');
             update('overtimeEntries', hasActiveOvertimePreset ? [newEntry, ...state.overtimeEntries] : [newEntry]);
@@ -465,7 +467,7 @@ export const useDynamicPresetInstances = ({
             return;
         }
 
-        if (selectedPreset === 'substituicao') {
+        if (preset === 'substituicao') {
             const newEntry = createSubstitutionEntry();
             const hasActiveSubstitutionPreset = enabledPresets.some(item => item.presetId === 'substituicao');
             update('substitutionEntries', hasActiveSubstitutionPreset ? [newEntry, ...state.substitutionEntries] : [newEntry]);
@@ -480,21 +482,21 @@ export const useDynamicPresetInstances = ({
             return;
         }
 
-        if (selectedPreset === 'abono') {
+        if (preset === 'abono') {
             update('recebeAbono', true);
             update('gaactaIncideAbono', true);
             update('decimoIncideAbono', true);
             update('feriasIncideAbono', true);
         }
-        if (selectedPreset === 'indenizacao_transporte') {
+        if (preset === 'indenizacao_transporte') {
             update('transporteIndenizacaoAtivo', true);
         }
-        if (selectedPreset === 'gaacta') {
+        if (preset === 'gaacta') {
             update('gaactaAtivo', true);
         }
-        if (enabledPresetIds.has(selectedPreset)) return;
+        if (enabledPresetIds.has(preset)) return;
         setEnabledPresets(prev => [
-            { key: createUniqueId(`preset-${selectedPreset}`), presetId: selectedPreset },
+            { key: createUniqueId(`preset-${preset}`), presetId: preset },
             ...prev
         ]);
     };
