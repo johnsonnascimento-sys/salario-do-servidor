@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 14/11/2026 01:59
+Atualizado em: 14/11/2026 02:50
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -156,6 +156,7 @@ Cada rubrica manual deve suportar:
 4. O divisor mensal é parametrizado e editável por instância (`OvertimeEntry.divisor`), garantindo isolamento entre cards e permitindo override direto pelo usuário.
 5. Em conformidade com o art. 6º, § 1º da Resolução STM nº 374/2025 (redação da Resolução STM nº 399/2026), no período de recesso forense / plantão o teto informativo da JMU eleva-se de 30 para 50 horas mensais.
 6. A memória de cálculo unitária informa os valores da Hora Normal (com identificação do divisor aplicado), Hora Extra (+50%) e Hora Extra (+100%) integrada organicamente ao Resumo Calculado (`PresetGrossSummary`) do card de Serviço Extraordinário, preservando o padrão visual e a consistência arquitetural do sistema.
+7. No modo de cálculo por função substituída, as horas são remuneradas pela função de destino apenas quando seu valor supera a função atual acrescida da gratificação específica, seguindo o limite do card de Substituição. Para função de destino menor ou igual a esse limite, as horas efetivamente trabalhadas permanecem remuneradas pela função atual; servidor sem função pode usar a remuneração de função superior efetivamente substituída.
 
 ## 5. Admin e seguranca operacional
 

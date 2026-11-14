@@ -67,6 +67,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
         gratVal = baseVencimento * payrollRules.specificGratificationRate;
     }
 
+    // Mantém o mesmo limite do card de Substituição: o valor do destino
+    // precisa superar a função atual acrescida da gratificação específica.
+    const baseAbatimentoSubstituicao =
+        (isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0)) + gratVal;
+
     // Função auxiliar para calcular o valor da baseHE para uma função específica (a própria ou substituída)
     const calcHEForFunction = (funcKey: string, q50: number, q100: number, divisor: number) => {
         const paramFuncValor = isNoFunction(funcKey, config) ? 0 : (funcoes[funcKey] || 0);
@@ -129,7 +134,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                     const h50 = Math.max(0, Number(horas.qtd50 || 0));
                     const h100 = Math.max(0, Number(horas.qtd100 || 0));
                     if (h50 > 0 || h100 > 0) {
-                        const res = calcHEForFunction(funcKey, h50, h100, entryDivisor);
+                        const valorFuncaoSubstituida = isNoFunction(funcKey, config) ? 0 : (funcoes[funcKey] || 0);
+                        const funcaoParaRemunerar = valorFuncaoSubstituida > baseAbatimentoSubstituicao
+                            ? funcKey
+                            : params.funcao;
+                        const res = calcHEForFunction(funcaoParaRemunerar, h50, h100, entryDivisor);
                         heVal50 += res.v50;
                         heVal100 += res.v100;
                     }

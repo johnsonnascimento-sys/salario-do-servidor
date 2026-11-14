@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Horas extras durante substituição de função — 14/11/2026
+- O HE usa a remuneração da função substituída somente quando ela supera o limite aplicado no card de Substituição; funções abaixo desse limite preservam o cálculo pela função titular.
+
 ## Jornada e divisor avançados no card de HE — 14/11/2026
 - Jornada semanal e divisor mensal agora ficam recolhidos em Opções avançadas de jornada; o divisor aplicado permanece visível no resumo. A seção inicia aberta em jornada personalizada.
 
