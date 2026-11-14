@@ -11,6 +11,7 @@ import { CalculatorState, CourtConfig } from '../../types';
 import { PensionParticipation } from '../../types/pension';
 import { toDecimalRateFromPercentInput, toPercentLabel, toPositiveNumber } from './dynamicPayrollForm.helpers';
 import { SharedPensionSummary } from './SharedPensionSummary';
+import { getPensionErrorFeedback } from '../../utils/pensionFeedback';
 
 interface DynamicPayrollTaxSectionProps {
     styles: Record<string, string>;
@@ -38,12 +39,13 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     const urp = state.funprespParticipacao === 'vinculado' ? resolvePensionUrp(config,
         `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}`, state.funprespVinculadaInicio ?? '') : null;
     const linkedError = urp?.reference ? validateLinkedPensionSalary(state.funprespBaseIntegral, urp.reference, pensionContext?.base) : urp?.error;
+    const linkedFeedback = getPensionErrorFeedback(linkedError);
     const optionalItems = [
         ['fc', 'funprespIncluirFC', 'FC/CJ'], ['gas', 'funprespIncluirGAS', 'GAS'],
         ['gae', 'funprespIncluirGAE', 'GAE'], ['aqTreino', 'funprespIncluirAQTreino', 'AQ de treinamento']
     ] as const;
     const pensionEngineError = /previdência/i.test(calculationError ?? '') ? calculationError : null;
-    const pendingOptions = Boolean(pensionEngineError || (participates && (state.funprespRevisarOpcoes || funprespAdditionalValidationError)));
+    const pendingOptions = Boolean((pensionEngineError && !linkedFeedback?.configuration) || (participates && (state.funprespRevisarOpcoes || funprespAdditionalValidationError)));
     const [optionsOpen, setOptionsOpen] = useState(pendingOptions);
     useEffect(() => {
         if (pendingOptions) setOptionsOpen(true);
@@ -69,8 +71,9 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 <span>{label} — inclusão salva</span>
             </label>)}
         </fieldset>}
-        {showFunprespSection && config && <fieldset className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
+        {showFunprespSection && config && <fieldset id="funpresp-settings" tabIndex={-1} className="mt-4 space-y-3 scroll-mt-24 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
             <legend className={styles.innerBoxTitle}>Funpresp-Jud</legend>
+            <p className={PENSION_HELP_CLASS}>Use os dados da sua adesão ao plano. A participação na Funpresp é uma escolha separada do regime previdenciário acima.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PensionParticipationSelect className={styles.input} labelClassName={styles.label} compact
                     value={state.funprespParticipacao} onChange={handleFunprespParticipacaoChange}
@@ -82,25 +85,36 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                         {funprespNormalOptions.map(rate => <option key={rate} value={rate}>{toPercentLabel(rate)}</option>)}
                     </select>
                 </label>}
-                {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Remuneração de participação escolhida (R$)
-                    <input type="number" className={styles.input} min={0} step="0.01" aria-describedby="funpresp-urp-reference" aria-invalid={Boolean(linkedError)} value={state.funprespBaseIntegral ?? ''} onChange={e => update('funprespBaseIntegral', toPositiveNumber(e.target.value))} />
+                {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Base de contribuição escolhida no plano (R$)
+                    <input type="number" className={styles.input} min={0} step="0.01" aria-describedby="funpresp-urp-reference" aria-invalid={Boolean(linkedError && !linkedFeedback?.configuration)} value={state.funprespBaseIntegral ?? ''} onChange={e => update('funprespBaseIntegral', toPositiveNumber(e.target.value))} />
+                    <span className={PENSION_HELP_CLASS}>É o valor sobre o qual a alíquota será aplicada. Não informe aqui o desconto mensal do contracheque.</span>
                 </label>}
-                {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Competência de inscrição ou eleição da base
-                    <input type="month" className={styles.input} value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
+                {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Mês e ano da inscrição ou alteração da base
+                    <input type="month" className={styles.input} aria-describedby="funpresp-date-help" value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
                 </label>}
             </div>
             {urp?.reference && <p id="funpresp-urp-reference" className={PENSION_HELP_CLASS}>
-                Mínimo: {formatCurrency(urp.reference.minimo)} ({urp.reference.unidadesMinimas} URPs).
-                {' '}URP de referência: {formatCurrency(urp.reference.valor)} — {urp.reference.competencia}.
+                Menor base permitida: <strong>{formatCurrency(urp.reference.minimo)}</strong>.
+                {' '}Referência: {urp.reference.competencia}.
                 {' '}<a href={/^https?:\/\//i.test(urp.reference.fonte) ? urp.reference.fonte : undefined} target="_blank" rel="noopener noreferrer" className="underline">Fonte oficial</a>
                 {pensionContext && <> Máximo pela base elegível: {formatCurrency(pensionContext.base)}.</>}
             </p>}
-            {state.funprespParticipacao === 'vinculado' && <p className={PENSION_HELP_CLASS}>
-                Informe a competência de referência da base vigente nesta folha conforme seu cadastro no plano.
-                Uma eleição feita em novembro pode produzir efeitos em janeiro do ano seguinte. A data e o valor informados não são alterados automaticamente.
+            {urp?.reference && pensionContext && urp.reference.minimo <= pensionContext.base && <button type="button" className="text-body-xs font-semibold underline" onClick={() => update('funprespBaseIntegral', urp.reference!.minimo)}>
+                Usar menor base permitida
+            </button>}
+            {urp?.reference && <p className={PENSION_HELP_CLASS}>Use a menor base somente se ela corresponder à sua adesão ao plano.</p>}
+            {state.funprespParticipacao === 'vinculado' && <p id="funpresp-date-help" className={PENSION_HELP_CLASS}>
+                Use a inscrição ou alteração que já estava valendo no mês deste holerite.
+                Uma alteração solicitada em novembro pode começar a valer somente em janeiro. Confira essa informação no cadastro do plano.
             </p>}
             {!pensionContext && <p role="status" className={PENSION_HELP_CLASS}>Aguarde a base previdenciária ou confira os dados salariais para escolher sua participação.</p>}
-            {!selectionRequired && (linkedError || funprespValidationError) && <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedError || funprespValidationError}</p>}
+            {!selectionRequired && (linkedError || funprespValidationError) && (linkedFeedback?.configuration ?
+                <div id="funpresp-urp-reference" role="status" className="rounded-lg border border-warning-300 bg-warning-50 p-4 text-body-xs text-warning-800 dark:bg-warning-900/20 dark:text-warning-200">
+                    <p className="font-semibold">{linkedFeedback.title}</p>
+                    <p className="mt-2">{linkedFeedback.message}</p>
+                    <p className="mt-2">O resultado completo ficará disponível depois dessa atualização. Você pode continuar preenchendo as outras verbas; seu rascunho será mantido.</p>
+                    <details className="mt-2"><summary className="cursor-pointer underline">Informações para suporte</summary><p className="mt-2 break-words">{linkedError}</p></details>
+                </div> : <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedFeedback?.message || linkedError || funprespValidationError}</p>)}
             {participates && calculationReady && state.pensionMemory && <details className="group rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                     <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>

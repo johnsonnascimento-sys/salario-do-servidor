@@ -3,6 +3,11 @@
 
 # Changelog
 
+## Funpresp-Jud — orientação para o usuário — 14/11/2026
+- Falta de URP agora é apresentada como atualização necessária pela equipe do site, com dados preservados, mês legível e detalhes técnicos recolhidos; cabeçalho, seção e rodapés deixam de repetir o erro técnico como instrução ao usuário.
+- Campos explicam a diferença entre base de contribuição e desconto mensal. Ação explícita permite usar a menor base apurada pelo motor, somente com referência válida e base elegível conhecida; data e modalidade são preservadas.
+- Testes de formulário: 39 aprovados; página completa conferida no Chrome em desktop e tela de 390px, com transporte local isolado e motor real. A atualização do parâmetro em produção permanece pendente de acesso administrativo.
+
 ## Funpresp-Jud — referência URP e orientação de limites — 14/11/2026
 - Centralizada no motor a resolução temporal da URP e a validação do mínimo vinculado, com mensagens em reais, competência e fonte; a tela também informa o máximo elegível sem substituir entradas.
 - Memórias novas e exportações PDF/XLSX registram a referência utilizada no mensal, 13º e retroativos completos; snapshots antigos continuam legíveis.

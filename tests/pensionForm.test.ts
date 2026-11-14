@@ -1,3 +1,4 @@
+import { getPensionErrorFeedback } from '../src/utils/pensionFeedback';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
@@ -282,4 +283,51 @@ test('URP orienta o mínimo e máximo sem substituir valores nem restaurar resum
     assert.equal(tree.root.findAllByProps({ 'aria-label': 'Resumo compartilhado da Funpresp' }).length, 0);
     assert.deepEqual(calls, []);
     tree.unmount(); hook.tree.unmount();
+});
+
+
+test('falta de tabela é apresentada como atualização do site, sem invalidar a entrada ou abrir opções adicionais', () => {
+    const input = state({ funprespParticipacao: 'vinculado', funprespAliq: .06, funprespBaseIntegral: 3000, funprespVinculadaInicio: '2026-11', mesRef: 'NOVEMBRO' });
+    const engineError = 'Previdência: modalidade vinculada exige URP e fonte oficial da competência 2026-11; parâmetro ausente ou inválido.';
+    const calls: any[] = [];
+    const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: input,
+        update: (...args) => calls.push(args), handleRegimePrevChange: () => {}, showFunprespSection: true,
+        previdenciaComplementar: config, funprespNormalOptions: [.06], handleFunprespParticipacaoChange: () => {}, calculationError: engineError }));
+    const notice = tree.root.findByProps({ role: 'status', id: 'funpresp-urp-reference' });
+    assert.match(JSON.stringify(tree.toJSON()), /equipe do site/);
+    assert.equal(tree.root.findAllByType('button').some(button => button.children.join('') === 'Usar menor base permitida'), false);
+    const amount = tree.root.findAllByType('input').find(input => input.props['aria-describedby'] === 'funpresp-urp-reference')!;
+    assert.equal(amount.props['aria-invalid'], false);
+    assert.equal(amount.props.value, 3000);
+    const extras = tree.root.findAllByType('details').find(details => details.findAllByType('summary').some(summary => summary.children.join('').includes('Opções adicionais')))!;
+    assert.equal(extras.props.open, false);
+    assert.deepEqual(calls, []);
+    tree.unmount();
+});
+
+test('usar menor base é uma ação explícita e altera somente o valor escolhido', () => {
+    const calls: any[] = [];
+    const input = state({ funprespParticipacao: 'vinculado', funprespAliq: .06, funprespVinculadaInicio: '2026-06', funprespBaseIntegral: 500 });
+    const props = { styles: {}, state: input, update: (...args: any[]) => calls.push(args),
+        handleRegimePrevChange: () => {}, showFunprespSection: true, previdenciaComplementar: config,
+        funprespNormalOptions: [.06], handleFunprespParticipacaoChange: () => {},
+        pensionContext: { base: 1000, teto: 5000, regimePrev: 'antigo' as const, allowed: ['nao','vinculado'] as any, unavailableReasons: {}, componentes: {} } };
+    const tree = create(React.createElement(DynamicPayrollTaxSection, props));
+    assert.deepEqual(calls, []);
+    act(() => tree.root.findAllByType('button').find(button => button.children.join('') === 'Usar menor base permitida')!.props.onClick());
+    assert.deepEqual(calls, [['funprespBaseIntegral', 24]]);
+    act(() => tree.update(React.createElement(DynamicPayrollTaxSection, { ...props, pensionContext: { ...props.pensionContext, base: 20 } })));
+    assert.equal(tree.root.findAllByType('button').some(button => button.children.join('') === 'Usar menor base permitida'), false);
+    tree.unmount();
+});
+
+test('feedback usa mês legível e preserva erros não reconhecidos para a apresentação original', () => {
+    const detail = 'Previdência: modalidade vinculada exige URP e fonte oficial da competência 2026-11; parâmetro ausente ou inválido.';
+    const feedback = getPensionErrorFeedback(detail)!;
+    assert.equal(feedback.configuration, true);
+    assert.match(feedback.message, /novembro de 2026/);
+    assert.equal(getPensionErrorFeedback('Previdência: tabela histórica de RPPS indisponível.'), null);
+    assert.equal(getPensionErrorFeedback('Apuração pendente (2026-11): ' + detail), null);
+    assert.equal(getPensionErrorFeedback(null), null);
+    assert.equal(getPensionErrorFeedback('informe o início da participação vinculada (inscrição ou eleição da base), anterior ou igual à competência.')?.configuration, false);
 });

@@ -1,3 +1,4 @@
+import { getPensionErrorFeedback } from '../utils/pensionFeedback';
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCalculator } from '../hooks/useCalculator';
@@ -198,9 +199,11 @@ export default function Calculator() {
         lastRestoreSourceRef.current = 'blank';
     };
 
+    const pensionFeedback = getPensionErrorFeedback(calculationError);
+    const displayCalculationError = pensionFeedback?.message || calculationError;
     const resultMessage = calculationStatus === 'pension_pending' ? 'Apuração pendente'
         : calculationStatus === 'selection_required' ? 'Revise a participação previdenciária'
-            : calculationStatus === 'error' ? 'Cálculo indisponível' : 'Calculando...';
+            : calculationStatus === 'error' ? (pensionFeedback?.configuration ? 'Funpresp em atualização' : pensionFeedback?.title || 'Cálculo indisponível') : 'Calculando...';
 
     if (loadingConfig || loadingAgency) {
         return (
@@ -271,8 +274,9 @@ export default function Calculator() {
                         preserveRestoredGlobals={preserveRestoredGlobals}
                     />
                     {calculationStatus === 'error' && <div id="calculator-error" role="alert" aria-live="polite" className="rounded-xl border border-error-300 bg-error-50 dark:bg-error-900/20 p-4 text-body text-error-700 dark:text-error-300">
-                        <p className="font-semibold">Não foi possível calcular esta simulação</p>
-                        <p className="mt-1">{calculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
+                        <p className="font-semibold">{pensionFeedback?.title || 'Não foi possível calcular esta simulação'}</p>
+                        <p className="mt-1">{displayCalculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
+                        {pensionFeedback && <a href="#funpresp-settings" className="mt-2 inline-block font-semibold underline">Ver dados da Funpresp</a>}
                     </div>}
                     {calculationPending && <div id="calculator-pension-pending" role="status" aria-live="polite" className="rounded-xl border border-warning-300 bg-warning-50 dark:bg-warning-900/20 p-4 text-body text-warning-700 dark:text-warning-300">
                         <p className="font-semibold">Apuração pendente</p>
@@ -325,7 +329,7 @@ export default function Calculator() {
                     /> : <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
                         {calculationPending ? 'Conclua a apuração previdenciária para apresentar o resultado final.'
-                            : calculationError || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
+                            : (pensionFeedback?.configuration ? 'Aguardando a atualização da Funpresp para concluir o holerite.' : displayCalculationError) || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
                     </p>}
                     {!calculationReady && calculationError?.includes('IR-EA') && (
                         <div id="apuracao-ir-ea" className="scroll-mt-20">
@@ -343,7 +347,7 @@ export default function Calculator() {
                 </div>
 
                 <ActionFooter
-                    errorDetail={calculationError}
+                    errorDetail={pensionFeedback?.configuration ? 'Seus dados estão preservados. A equipe do site precisa atualizar a tabela da Funpresp.' : displayCalculationError}
                     calculationReady={calculationReady}
                     resultMessage={resultMessage}
                     state={effectiveState}
