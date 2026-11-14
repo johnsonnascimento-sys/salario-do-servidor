@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Sincronização, commit e push automáticos para o GitHub (salario-do-servidor).
     Em conformidade com a Seção 15 do PROJECT_RULES.md.
