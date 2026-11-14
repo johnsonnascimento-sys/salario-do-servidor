@@ -295,11 +295,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     calculationReady={calculationReady}
                 />
 
-                <PensionRetroForm state={inputState ?? state} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
-                    pensionParams={pensionParams} pensionContexts={pensionContexts}
-                    invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
-                        ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
-                    allowNormalization={!pensionSelection.incompatible} />
             </div>
 
             <div className={styles.card}>
@@ -395,6 +390,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     toPositiveNumber={toPositiveNumber}
                 />
             </div>
+            <PensionRetroForm state={inputState ?? state} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
+                pensionParams={pensionParams} pensionContexts={pensionContexts}
+                invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
+                    ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
+                allowNormalization={!pensionSelection.incompatible} />
         </>
     );
 };
