@@ -462,6 +462,7 @@ export interface CalculatorState {
   pensaoIncideAQTreino?: boolean;
   pensaoIncideGrat?: boolean;
   pensaoIncideGAACTA?: boolean;
+  pensaoGAACTAEscolhaExplicita?: boolean;
   pensaoIncideVPNI?: boolean;
   pensaoIncideATS?: boolean;
   pensaoIncideAbono?: boolean;
@@ -814,6 +815,7 @@ export const INITIAL_STATE: CalculatorState = {
   pensaoIncideAQTreino: true,
   pensaoIncideGrat: true,
   pensaoIncideGAACTA: false,
+  pensaoGAACTAEscolhaExplicita: false,
   pensaoIncideVPNI: true,
   pensaoIncideATS: true,
   pensaoIncideAbono: true,

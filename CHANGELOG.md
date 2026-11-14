@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Migração da seleção de GAACTA na pensão — 14/11/2026
+- Rascunhos e holerites antigos deixam de restaurar a seleção automática de GAACTA. Uma inclusão feita expressamente pelo usuário após esta correção permanece salva.
+
 ## Pensão alimentícia — padrão da GAACTA — 14/11/2026
 - A GAACTA inicia desmarcada na composição da base da pensão, seguindo o padrão das demais verbas indenizatórias citadas.
 

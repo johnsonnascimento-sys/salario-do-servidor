@@ -71,7 +71,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
     const incideAQTitulo = state.pensaoIncideAQTitulo !== false;
     const incideAQTreino = state.pensaoIncideAQTreino !== false;
     const incideGrat = state.pensaoIncideGrat !== false;
-    const incideGAACTA = state.pensaoIncideGAACTA === true;
+    const incideGAACTA = state.pensaoGAACTAEscolhaExplicita === true && state.pensaoIncideGAACTA === true;
     const incideVPNI = state.pensaoIncideVPNI !== false;
     const incideATS = state.pensaoIncideATS !== false;
     const incideAbono = state.pensaoIncideAbono !== false;
@@ -388,7 +388,10 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                         type="checkbox"
                                         className={styles.checkbox}
                                         checked={incideGAACTA}
-                                        onChange={e => update('pensaoIncideGAACTA', e.target.checked)}
+                                        onChange={e => {
+                                            update('pensaoGAACTAEscolhaExplicita', true);
+                                            update('pensaoIncideGAACTA', e.target.checked);
+                                        }}
                                     />
                                     <span className="flex-1 flex items-center justify-between gap-2">
                                         <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAACTA (Alta Complexidade)</span>

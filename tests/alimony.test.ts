@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import React, { useState } from 'react';
+import { act, create } from 'react-test-renderer';
+import { PensaoAlimenticiaCard } from '../src/components/Calculator/cards/PensaoAlimenticiaCard';
+import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
 import { INITIAL_STATE, CalculatorState, Rubrica } from '../src/types';
 import {
     PREDEFINED_OPTIONS,
@@ -7,6 +11,36 @@ import {
     hasPresetValue
 } from '../src/components/Calculator/dynamicPayrollForm.helpers';
 import { buildPresetGrossLines } from '../src/components/Calculator/presetGrossLines';
+
+test('GAACTA na pensão: migra seleção antiga e preserva inclusão expressa após recarregar', () => {
+    assert.equal(hydrateCalculatorState({ pensaoIncideGAACTA: true }).pensaoIncideGAACTA, false);
+    let current: CalculatorState;
+    const Harness = () => {
+        const [state, setState] = useState<CalculatorState>({ ...INITIAL_STATE, pensaoAlimenticiaAtiva: true,
+            vencimento: 1000, gaj: 0, gaactaAtivo: true, gaactaValor: 1000,
+            pensaoIncideGAACTA: true, pensaoGAACTAEscolhaExplicita: false,
+            pensaoPercentual: 20, pensaoDeduzirIRRF: false, pensaoDeduzirPSS: false });
+        current = state;
+        return React.createElement(PensaoAlimenticiaCard, { state,
+            update: (key, value) => setState(prev => ({ ...prev, [key]: value })),
+            styles: {}, calculationReady: true });
+    };
+    let tree: ReturnType<typeof create>;
+    act(() => { tree = create(React.createElement(Harness)); });
+    const checkbox = () => tree.root.findAllByType('label').find(label =>
+        label.findAllByType('span').some(span => span.children.includes('GAACTA (Alta Complexidade)')))!.findByType('input');
+    assert.equal(checkbox().props.checked, false);
+    assert.equal(current!.pensao, 200);
+    act(() => checkbox().props.onChange({ target: { checked: true } }));
+    assert.equal(current!.pensao, 400);
+    assert.equal(checkbox().props.checked, true);
+    const restored = hydrateCalculatorState(stripCalculatedFieldsFromCalculatorState(current!));
+    assert.equal(restored.pensaoIncideGAACTA, true);
+    assert.equal(restored.pensaoGAACTAEscolhaExplicita, true);
+    act(() => checkbox().props.onChange({ target: { checked: false } }));
+    assert.equal(current!.pensao, 200);
+    act(() => tree.unmount());
+});
 
 test('Pensão Alimentícia: valores padrão em INITIAL_STATE', () => {
     assert.equal(INITIAL_STATE.pensaoAlimenticiaAtiva, false);
@@ -19,7 +53,7 @@ test('Pensão Alimentícia: valores padrão em INITIAL_STATE', () => {
     assert.equal(INITIAL_STATE.pensaoIncideAQTitulo, true);
     assert.equal(INITIAL_STATE.pensaoIncideAQTreino, true);
     assert.equal(INITIAL_STATE.pensaoIncideGrat, true);
-    assert.equal(INITIAL_STATE.pensaoIncideGAACTA, true);
+    assert.equal(INITIAL_STATE.pensaoIncideGAACTA, false);
     assert.equal(INITIAL_STATE.pensaoIncideVPNI, true);
     assert.equal(INITIAL_STATE.pensaoIncideATS, true);
     assert.equal(INITIAL_STATE.pensaoIncideAbono, true);
@@ -45,7 +79,7 @@ test('Pensão Alimentícia: catálogo e opções pré-definidas', () => {
     // Presença no catálogo visual
     const catalogItem = PRESET_CATALOG.find(item => item.id === 'pensao');
     assert.ok(catalogItem, 'pensao deve constar em PRESET_CATALOG');
-    assert.equal(catalogItem.category, 'beneficios');
+    assert.equal(catalogItem.category, 'descontos');
 });
 
 test('Pensão Alimentícia: hasPresetValue detecta ativação e valor', () => {

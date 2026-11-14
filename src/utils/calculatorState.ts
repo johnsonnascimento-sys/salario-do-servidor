@@ -146,6 +146,11 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
     }
 
     const safeSnapshot = cloneCalculatorSnapshot(snapshot);
+    // O antigo padrão true não registrava se houve escolha do usuário.
+    // Solicita confirmação explícita uma vez, preservando escolhas posteriores.
+    if (safeSnapshot.pensaoGAACTAEscolhaExplicita !== true) {
+        safeSnapshot.pensaoIncideGAACTA = false;
+    }
     // Older snapshots omitted these inputs. Recover only missing fields from
     // their saved breakdown; explicit values (including zero) remain authoritative.
     const legacyInputs: Array<{
