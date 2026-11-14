@@ -153,6 +153,55 @@ test('OvertimeCard bloqueia destinos sem diferença inclusive em lançamentos j�
 // =========================================================================
 // Teste 1: Divisor 200 na Justiça Federal (Art. 46, caput e § 1º da Res. CJF 4/2008)
 // =========================================================================
+test('HE: composição por card, créditos por ID, abono e GAACTA sem resultado anterior', async () => {
+    const agencyConfig = makeMockConfig();
+    agencyConfig.historico_pss = { '2026': { teto_rgps: 8000, faixas: [{ min: 0, max: 999999, rate: 0.1 }] } };
+    agencyConfig.gaactaRules = { enabled: true, versions: [{ validFrom: '2026-01', percentage: 0.15, reference: 'Regra sintética' }] };
+    const off = Object.fromEntries(['vencimento', 'gaj', 'funcao', 'aqTitulo', 'aqTreino', 'grat', 'vpniLei', 'vpniDecisao', 'ats', 'abono'].map(key => [key, false]));
+    const params: any = {
+        periodo: 0, cargo: 'analista', padrao: 'C13', funcao: 'cj2', competencia: '2026-11',
+        tabelaPSS: '2026', tabelaIR: '2025_maio', regimePrev: 'antigo', recebeAbono: true,
+        pssSobreFC: true, aqTituloVR: 0, aqTreinoVR: 0, aqTituloPerc: 0, aqTreinoPerc: 0,
+        gaactaAtivo: true, gaactaManualBase: true, gaactaBaseManualValor: 10000,
+        agencyConfig, rubricasExtras: [{ id: 'credito', tipo: 'C', descricao: 'VPNI dinâmica', valor: 1000 }, { id: 'debito', tipo: 'D', valor: 9000 }],
+        overtimeEntries: [
+            { id: 'credit', qtd50: 10, qtd100: 0, composicaoBase: { ...off, 'rubrica:credito': true, 'rubrica:debito': true } },
+            { id: 'gaacta', qtd50: 10, qtd100: 0, composicaoBase: { ...off, gaacta: true } },
+            { id: 'abono', qtd50: 10, qtd100: 0, composicaoBase: { ...off, abono: true } },
+            { id: 'zero', qtd50: 10, qtd100: 5, composicaoBase: off },
+        ]
+    };
+    const result = await calculateOvertime(params);
+    assert.equal(result.entries[0].heTotal, 75);
+    assert.equal(result.entries[1].heTotal, 112.5);
+    assert.equal(result.entries[2].heTotal, 333.52);
+    assert.equal(result.entries[3].heTotal, 0);
+    params.gaactaManualBase = false;
+    params.gaactaIncideAbono = true;
+    params.rubricasExtras[0].incidePSS = true;
+    const automatic = await calculateOvertime(params);
+    assert.equal(automatic.entries[1].composicaoBase?.find(part => part.key === 'gaacta')?.valor, 7502.45,
+        'GAACTA automática usa abono do PSS mensal, incluindo a rubrica contributiva');
+    params.rubricasExtras = [];
+    assert.equal((await calculateOvertime(params)).entries[0].heTotal, 0, 'Crédito removido deixa de compor a base');
+    params.gaactaAtivo = false;
+    assert.equal((await calculateOvertime(params)).entries[1].heTotal, 0, 'GAACTA removida não usa resultado residual');
+    params.recebeAbono = false;
+    assert.equal((await calculateOvertime(params)).entries[2].heTotal, 0);
+});
+
+test('OvertimeCard atualiza composição somente na instância selecionada e mantém escolhas anteriores', () => {
+    let patch: any;
+    const tree = create(React.createElement(OvertimeCard, {
+        entry: { id: 'he-base', qtd50: 10, qtd100: 0, isEA: false, excluirIR: false, composicaoBase: { gaj: false } },
+        updateEntry: (id, value) => { patch = { id, value }; }, functionKeys: [], competenciaReferencia: '2026-11', styles: {},
+        baseItems: [{ key: 'abono', label: 'Abono de Permanência', valor: 100, selecionado: true }], baseTotal: 100
+    }));
+    act(() => tree.root.findByProps({ 'aria-label': 'Incluir Abono de Permanência na base de HE' }).props.onChange({ target: { checked: false } }));
+    assert.deepEqual(patch, { id: 'he-base', value: { composicaoBase: { gaj: false, abono: false } } });
+    tree.unmount();
+});
+
 test('Hora Extra JF: Aplicação estrita do divisor 200 e eliminação do erro de 14.28% do divisor 175', async () => {
     const configJF = makeMockConfig(200);
     const config175 = makeMockConfig(175);
@@ -662,11 +711,13 @@ test('OvertimeCard: IR mensal, EA e exclusão são exclusivos e isolados por ins
     });
     const ea = 'Incluir na base do IR de Exercício Anterior (IR-EA / RRA)';
     assert.equal(JSON.stringify(tree.toJSON()).includes('Incidências na Folha Mensal'), false);
-    assert.equal(tree.root.findAllByType('details')[1].props.open, undefined);
+    const advanced = () => tree.root.findAllByType(OvertimeCard)[0].findAllByType('details')
+        .find(detail => JSON.stringify(detail.findByType('summary').children.map(child => typeof child === 'string' ? child : child.props.children)).includes('Opções Tributárias'))!;
+    assert.equal(advanced().props.open, undefined);
     assert.equal(JSON.stringify(tree.toJSON()).includes('PSS'), false);
     change(ea, true);
     assert.deepEqual(entries[0].competenciasEA, ['2025-12']);
-    assert.equal(tree.root.findAllByType('details')[1].props.open, true);
+    assert.equal(advanced().props.open, true);
     change(ea, false);
     assert.equal(entries[0].isEA, false);
     assert.equal(entries[0].excluirIR, false);

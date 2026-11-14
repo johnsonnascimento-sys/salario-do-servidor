@@ -3,6 +3,11 @@
 
 # Changelog
 
+## Composição da base remuneratória de HE — 14/11/2026
+- Cada card de HE oferece seleção independente de vencimento, GAJ, FC/CJ, AQ, GAE/GAS, VPNI, ATS, abono, GAACTA e créditos dinâmicos por ID, com valores e subtotal calculados pelo motor e persistência no holerite.
+- GAACTA e créditos dinâmicos iniciam desmarcados. O abono usa o PSS mensal atual, incluindo rubricas contributivas, sem ciclos com a base de HE. Mantidos os bloqueios para substituições sem diferença e as incidências originais.
+- Testes cobrem isolamento por card, base vazia, parcelas removidas, abono, GAACTA automática e créditos dinâmicos.
+
 ## Bloqueio de HE em substituições sem diferença — 14/11/2026
 - Corrigida a interpretação anterior: destinos inferiores ou iguais passam a gerar zero no modo de substituição, em vez de usar a função titular. Campos inelegíveis ficam desabilitados a partir do resultado do motor; lançamentos antigos e horas globais residuais não contornam a restrição.
 - Acrescentados testes de regressão de motor e interface para FC/CJ, servidor sem função e GAE/GAS.

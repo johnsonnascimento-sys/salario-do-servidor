@@ -7,7 +7,10 @@
  * - Total de Hora Extra
  */
 
-import { CourtConfig } from '../../../../types';
+import { CourtConfig, OvertimeEntry } from '../../../../types';
+import { calculateGaacta } from './gaactaCalculations';
+import { calculateMonthlyPensionContext } from './pensionContext';
+import { hasPensionCeiling, roundPension } from './pensionCalculations';
 import { calculatePss } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
@@ -30,6 +33,8 @@ export interface OvertimeResult {
         valorHora50?: number;
         valorHora100?: number;
         funcoesSubstituicaoElegiveis?: string[];
+        composicaoBase?: Array<{ key: string; label: string; valor: number; selecionado: boolean }>;
+        baseRemuneracao?: number;
     }>;
 }
 
@@ -76,34 +81,43 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
         !isNoFunction(key, config) && funcoes[key] > baseAbatimentoSubstituicao
     );
 
-    // Função auxiliar para calcular o valor da baseHE para uma função específica (a própria ou substituída)
-    const calcHEForFunction = (funcKey: string, q50: number, q100: number, divisor: number) => {
-        const paramFuncValor = isNoFunction(funcKey, config) ? 0 : (funcoes[funcKey] || 0);
-        let baseBaseHE = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
-            paramFuncValor + gratVal + (params.vpni_lei || 0) +
-            (params.vpni_decisao || 0) + (params.ats || 0);
-
-        if (params.recebeAbono) {
-            let baseForPSS = baseBaseHE;
-            baseForPSS -= aqTreinoVal;
-            if (!params.pssSobreFC) baseForPSS -= paramFuncValor;
-            if (!params.incidirPSSGrat) baseForPSS -= gratVal;
-
-            const pssTable = config.historico_pss?.[params.tabelaPSS];
-            const teto = pssTable?.teto_rgps || 0;
-            const usaTeto = params.regimePrev === 'migrado' || params.regimePrev === 'rpc';
-
-            if (pssTable) {
-                if (usaTeto) {
-                    baseForPSS = Math.min(baseForPSS, teto);
-                }
-                const abonoEstimado = calculatePss(baseForPSS, pssTable);
-                baseBaseHE += abonoEstimado;
-            }
-        }
-
-        const paramValorHora = divisor > 0 ? baseBaseHE / divisor : 0;
+    // Calculado pelas entradas atuais, sem consumir resultados de uma renderização anterior.
+    let abonoMensal = 0;
+    const pssTable = config.historico_pss?.[params.tabelaPSS];
+    if (params.recebeAbono && pssTable) {
+        const context = await calculateMonthlyPensionContext(params);
+        abonoMensal = hasPensionCeiling(params.regimePrev)
+            ? roundPension(calculatePss(Math.min(context.baseRppsIntegral, pssTable.teto_rgps), pssTable))
+            : calculatePss(context.baseRppsIntegral, pssTable);
+    }
+    const gaacta = await calculateGaacta({ ...params, abonoPermanencia: abonoMensal });
+    const buildBase = (funcKey: string, entry?: OvertimeEntry) => {
+        const item = (key: string, label: string, valor: number, padrao = true) => ({
+            key, label, valor: Number.isFinite(valor) ? Math.max(0, valor) : 0,
+            selecionado: entry?.composicaoBase?.[key] ?? padrao
+        });
+        const items = [
+            item('vencimento', 'Vencimento Básico', baseVencimento),
+            item('gaj', 'GAJ', gaj),
+            item('funcao', 'Função / Cargo em Comissão (FC/CJ)', isNoFunction(funcKey, config) ? 0 : (funcoes[funcKey] || 0)),
+            item('aqTitulo', 'AQ Títulos', aqTituloVal),
+            item('aqTreino', 'AQ Treinamento', aqTreinoVal),
+            item('grat', 'GAE / GAS', gratVal),
+            item('vpniLei', 'VPNI — Lei', params.vpni_lei || 0),
+            item('vpniDecisao', 'VPNI — Decisão', params.vpni_decisao || 0),
+            item('ats', 'ATS', params.ats || 0),
+            item('abono', 'Abono de Permanência', abonoMensal),
+            item('gaacta', 'GAACTA', gaacta.valor, false),
+            ...(params.rubricasExtras || []).filter(r => r.tipo === 'C').map((r, index) =>
+                item(`rubrica:${r.id}`, r.descricao?.trim() || `Crédito Dinâmico #${index + 1}`, Number(r.valor) || 0, false))
+        ];
+        return { items, total: items.reduce((sum, part) => sum + (part.selecionado ? part.valor : 0), 0) };
+    };
+    const calcHEForFunction = (funcKey: string, q50: number, q100: number, divisor: number, entry?: OvertimeEntry) => {
+        const base = buildBase(funcKey, entry);
+        const paramValorHora = divisor > 0 ? base.total / divisor : 0;
         return {
+            base,
             v50: paramValorHora * 1.5 * q50,
             v100: paramValorHora * 2.0 * q100,
             valorHora: paramValorHora
@@ -127,7 +141,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             
             // Calcula as horas inseridas no escopo "global" do card usando a função titular
             if (!entry.usarSubstituicaoFuncao && (qtd50Global > 0 || qtd100Global > 0)) {
-                const res = calcHEForFunction(params.funcao, qtd50Global, qtd100Global, entryDivisor);
+                const res = calcHEForFunction(params.funcao, qtd50Global, qtd100Global, entryDivisor, entry);
                 heVal50 += res.v50;
                 heVal100 += res.v100;
             }
@@ -139,7 +153,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                     const h50 = Math.max(0, Number(horas.qtd50 || 0));
                     const h100 = Math.max(0, Number(horas.qtd100 || 0));
                     if (h50 > 0 || h100 > 0) {
-                        const res = calcHEForFunction(funcKey, h50, h100, entryDivisor);
+                        const res = calcHEForFunction(funcKey, h50, h100, entryDivisor, entry);
                         heVal50 += res.v50;
                         heVal100 += res.v100;
                     }
@@ -159,7 +173,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 heVal100 = 0;
             }
 
-            const unitRes = calcHEForFunction(params.funcao, 1, 0, entryDivisor);
+            const unitRes = calcHEForFunction(params.funcao, 1, 0, entryDivisor, entry);
             const valorHoraNormal = roundCurrency(unitRes.valorHora);
             const valorHora50 = roundCurrency(valorHoraNormal * 1.5);
             const valorHora100 = roundCurrency(valorHoraNormal * 2.0);
@@ -176,7 +190,9 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 valorHoraNormal,
                 valorHora50,
                 valorHora100,
-                funcoesSubstituicaoElegiveis
+                funcoesSubstituicaoElegiveis,
+                composicaoBase: unitRes.base.items,
+                baseRemuneracao: unitRes.base.total
             };
         });
 

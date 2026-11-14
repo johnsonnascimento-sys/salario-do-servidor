@@ -272,7 +272,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 {isCredito && (
                                     <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
                                         <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                        Disponível para compor bases da GAACTA, Férias, 13º e GAE/GAS
+                                        Disponível para compor bases de HE, GAACTA, Férias, 13º e GAE/GAS
                                     </span>
                                 )}
 

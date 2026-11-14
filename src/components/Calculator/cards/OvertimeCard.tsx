@@ -8,6 +8,8 @@ interface OvertimeCardProps {
     updateEntry: (id: string, patch: Partial<OvertimeEntry>) => void;
     functionKeys: string[];
     eligibleFunctionKeys?: string[];
+    baseItems?: Array<{ key: string; label: string; valor: number; selecionado: boolean }>;
+    baseTotal?: number;
     competenciaReferencia: string;
     styles: any;
     courtConfig?: CourtConfig;
@@ -20,6 +22,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     updateEntry,
     functionKeys,
     eligibleFunctionKeys = [],
+    baseItems = [],
+    baseTotal = 0,
     competenciaReferencia,
     styles,
     courtConfig,
@@ -130,6 +134,27 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
     return (
         <div className="space-y-4">
+            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
+                <summary className="cursor-pointer text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    Composição da Base da Remuneração — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </summary>
+                <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">
+                    Selecione as parcelas para calcular a hora extra neste card. Na substituição, a parcela FC/CJ acompanha a função substituída elegível; os valores abaixo representam a função atual.
+                </p>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {baseItems.map(part => (
+                        <label key={part.key} className={styles.checkboxLabel}>
+                            <input type="checkbox" className={styles.checkbox} checked={part.selecionado} aria-label={`Incluir ${part.label} na base de HE`}
+                                onChange={e => updateEntry(entry.id, { composicaoBase: { ...entry.composicaoBase, [part.key]: e.target.checked } })} />
+                            <span className="flex flex-1 justify-between gap-2 text-body-xs">
+                                <span>{part.label}</span>
+                                <span className="font-mono">{part.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            </span>
+                        </label>
+                    ))}
+                </div>
+                <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">GAACTA e créditos dinâmicos entram somente quando selecionados. A seleção é uma opção da simulação e deve refletir as parcelas admitidas na sua folha.</p>
+            </details>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     {gaactaAtivo && !gaactaRecesso && (

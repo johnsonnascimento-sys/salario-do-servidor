@@ -221,6 +221,7 @@ export interface Rubrica {
 }
 
 export interface OvertimeEntry {
+  composicaoBase?: Record<string, boolean>;
   competenciasEA?: string[];
   id: string;
   qtd50: number;

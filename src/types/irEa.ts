@@ -54,6 +54,8 @@ export interface IrEaMemory {
 }
 
 export interface CalculatedOvertimeEntry {
+    composicaoBase?: Array<{ key: string; label: string; valor: number; selecionado: boolean }>;
+    baseRemuneracao?: number;
     id: string;
     heVal50: number;
     heVal100: number;
