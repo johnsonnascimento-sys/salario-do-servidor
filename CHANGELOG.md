@@ -1,4 +1,6 @@
 ## Recomendacao de modelos — 10/11/2026
+
+- Configurações tributárias: resumo único ao final do container com regime RPPS, opção de FC/CJ, dependentes IR, PSS e IR mensais e memória da Funpresp. Exibe status durante pendências sem reutilizar resultados anteriores.
 - Docs: preservada a preferencia por Luna e adotada recomendacao de modelo e esforco caso a caso, com justificativa e atencao a economia de recursos.
 
 # Changelog

@@ -132,8 +132,8 @@ test('opções adicionais contam apenas opções ativas e recolher não muda ent
     const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: input,
         update: (k,v) => calls.push([k,v]), handleRegimePrevChange: () => {}, showFunprespSection: true,
         previdenciaComplementar: config, funprespNormalOptions: [.03], handleFunprespParticipacaoChange: () => {} }));
-    assert.match(tree.root.findByType('summary').children.join(''), /4.*ativas/);
-    const details = tree.root.findByType('details');
+    assert.match(tree.root.findAllByType('details').find(details => details.props.onToggle)!.findByType('summary').children.join(''), /4.*ativas/);
+    const details = tree.root.findAllByType('details').find(details => details.props.onToggle)!;
     assert.equal(details.props.open, false);
     act(() => details.props.onToggle({ currentTarget: { open: true } }));
     act(() => details.props.onToggle({ currentTarget: { open: false } }));
@@ -152,7 +152,7 @@ test('pendência interna abre expansor mesmo com outro erro na seção essencial
     act(() => tree.update(React.createElement(DynamicPayrollTaxSection, { ...props,
         funprespValidationError: hook.value.funprespValidationError!,
         funprespAdditionalValidationError: hook.value.funprespAdditionalValidationError! })));
-    assert.equal(tree.root.findByType('details').props.open, true);
+    assert.equal(tree.root.findAllByType('details').find(details => details.props.onToggle)!.props.open, true);
     hook.tree.unmount(); tree.unmount();
 });
 
@@ -163,7 +163,7 @@ test('não participante oculta alíquota; vinculada mantém dados obrigatórios 
             funprespNormalOptions: [.05], handleFunprespParticipacaoChange: () => {} }));
         assert.equal(tree.root.findAllByType('select').some(s => s.props.value === INITIAL_STATE.funprespAliq), participation === 'vinculado');
         assert.equal(tree.root.findAllByType('input').filter(i => i.props.type === 'month').length, participation === 'vinculado' ? 1 : 0);
-        assert.equal(tree.root.findByType('details').findAllByType('input').some(i => i.props.type === 'month'), false);
+        assert.equal(tree.root.findAllByType('details').find(details => details.props.onToggle)!.findAllByType('input').some(i => i.props.type === 'month'), false);
         tree.unmount();
     }
 });
@@ -182,7 +182,7 @@ test('pendência exclusiva do motor abre opções adicionais', () => {
     const tree = create(React.createElement(DynamicPayrollTaxSection, { styles: {}, state: state(), update: () => {},
         handleRegimePrevChange: () => {}, showFunprespSection: true, previdenciaComplementar: config, funprespNormalOptions: [],
         handleFunprespParticipacaoChange: () => {}, calculationError: 'Previdência: aporte facultativo inferior ao mínimo configurado.' }));
-    assert.equal(tree.root.findByType('details').props.open, true);
+    assert.equal(tree.root.findAllByType('details').find(details => details.props.onToggle)!.props.open, true);
     tree.unmount();
 });
 
@@ -331,3 +331,24 @@ test('feedback usa mês legível e preserva erros não reconhecidos para a apres
     assert.equal(getPensionErrorFeedback(null), null);
     assert.equal(getPensionErrorFeedback('informe o início da participação vinculada (inscrição ou eleição da base), anterior ou igual à competência.')?.configuration, false);
 });
+
+for (const regimePrev of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
+    test(`resumo tributário cobre ${regimePrev} sem Funpresp e remove valores durante pendência`, () => {
+        const props = { styles: {}, state: state({ regimePrev, funprespParticipacao: 'nao', dependentes: 2, pssMensal: 321, irMensal: 654 }),
+            update: () => {}, handleRegimePrevChange: () => {}, showFunprespSection: true,
+            previdenciaComplementar: config, funprespNormalOptions: [], handleFunprespParticipacaoChange: () => {}, calculationReady: true };
+        const tree = create(React.createElement(DynamicPayrollTaxSection, props));
+        const summary = () => tree.root.findByProps({ 'aria-label': 'Resumo calculado das configurações tributárias' });
+        const text = () => JSON.stringify(summary().findAllByType('dd').map(item => item.children));
+        assert.match(text(), regimePrev === 'migrado' || regimePrev === 'rpc' ? /RPPS limitado/ : /RPPS sem teto/);
+        assert.match(text(), /Não participa/);
+        assert.match(text(), /321,00/);
+        assert.match(text(), /654,00/);
+        assert.match(text(), /"2"|2/);
+        assert.equal(tree.root.findByType('div').children.at(-1), summary());
+        act(() => tree.update(React.createElement(DynamicPayrollTaxSection, { ...props, calculationReady: false, calculationError: 'pendência de configuração' })));
+        assert.doesNotMatch(text(), /321,00|654,00/);
+        assert.equal(summary().findAllByProps({ role: 'status' }).length, 1);
+        tree.unmount();
+    });
+}
