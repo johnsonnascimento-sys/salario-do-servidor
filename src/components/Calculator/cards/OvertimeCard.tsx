@@ -257,23 +257,28 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                 <span>Prestado no recesso forense / plantão (teto de 50h - art. 6º, § 1º)</span>
                             </label>
                         )}
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={usarSubstituicaoFuncao}
-                                onChange={e => {
-                                    const checked = e.target.checked;
-                                    updateEntry(entry.id, {
-                                        usarSubstituicaoFuncao: checked,
-                                        qtd50: checked ? 0 : entry.qtd50,
-                                        qtd100: checked ? 0 : entry.qtd100,
-                                        horasPorFuncao: checked ? (entry.horasPorFuncao || {}) : undefined
-                                    });
-                                }}
-                            />
-                            <span>Calcular por função substituída.</span>
-                        </label>
+                        <div className="flex flex-col gap-1">
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={usarSubstituicaoFuncao}
+                                    onChange={e => {
+                                        const checked = e.target.checked;
+                                        updateEntry(entry.id, {
+                                            usarSubstituicaoFuncao: checked,
+                                            qtd50: checked ? 0 : entry.qtd50,
+                                            qtd100: checked ? 0 : entry.qtd100,
+                                            horasPorFuncao: checked ? (entry.horasPorFuncao || {}) : undefined
+                                        });
+                                    }}
+                                />
+                                <span>Calcular horas extras durante substituição de função</span>
+                            </label>
+                            <p className="pl-6 text-body-xs text-neutral-500 dark:text-neutral-400">
+                                Use quando as horas extras foram realizadas enquanto você substituía o titular. Informe as horas por função/cargo substituído.
+                            </p>
+                        </div>
                     </div>
 
                     {!usarSubstituicaoFuncao ? (
