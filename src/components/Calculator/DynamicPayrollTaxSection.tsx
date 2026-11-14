@@ -118,7 +118,6 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             {participates && calculationReady && state.pensionMemory && <details className="group rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                     <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>
-                    <span className="ml-auto text-body-xs text-neutral-600 dark:text-neutral-300">Desconto em folha: <strong className="font-mono text-error-600 dark:text-error-400">{formatCurrency(state.pensionMemory.mensal.descontoFolha)}</strong></span>
                     <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
                 </summary>
                 <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="monthly" embedded />
