@@ -58,7 +58,7 @@ export interface PresetCatalogItem {
     id: PresetCatalogItemId;
     label: string;
     description: string;
-    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios' | 'descontos';
+    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios' | 'descontos' | 'gratificacoes';
     tags: string[];
 }
 
@@ -83,6 +83,7 @@ export const PRESET_CATEGORIES = [
         title: 'Benefícios & Vantagens',
         subtitle: 'Abono de permanência e vantagens pessoais (VPNI/ATS)'
     },
+    { id: 'gratificacoes', title: 'Gratificações específicas', subtitle: 'GAE e GAS conforme o cargo e a atividade' },
     { id: 'descontos', title: 'Descontos', subtitle: 'Descontos e obrigações da folha' }
 ] as const;
 
@@ -112,7 +113,7 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         id: 'gratificacao',
         label: 'GAE / GAS',
         description: 'GAE (Oficial de Justiça) e GAS (Polícia Judicial) - 35% Lei 11.416/06',
-        category: 'trabalho',
+        category: 'gratificacoes',
         tags: ['gae', 'gas', 'gratificacao', 'especifica', 'oficial', 'seguranca', 'policia']
     },
     {

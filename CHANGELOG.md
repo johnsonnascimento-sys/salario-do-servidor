@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Categoria própria para GAE/GAS — 14/11/2026
+- Movida a rubrica GAE / GAS para **Gratificações específicas**, separando-a de Trabalho Extraordinário & Funções.
+
 ## Ajustes visuais e organização do catálogo — 14/11/2026
 - O estado de espera do card de pensão segue o padrão visual da calculadora, a categoria Descontos foi movida para o fim e a seção foi renomeada para **Adicionais, Verbas, Benefícios e Descontos**.
 
