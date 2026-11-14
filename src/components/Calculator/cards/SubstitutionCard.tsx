@@ -23,14 +23,14 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {functionKeys.map((key) => (
                             <div key={key}>
-                                <label className={styles.label}>{key.toUpperCase()}</label>
+                                <label className={styles.label}>{key.toUpperCase()} — dias de substituição</label>
                                 <input
                                     type="number"
                                     className={styles.input}
                                     min={0}
                                     value={entry.dias[key] || 0}
                                     onChange={e => updateDays(key, Math.max(0, Number(e.target.value) || 0))}
-                                    placeholder="Dias"
+                                    placeholder="Quantidade de dias"
                                 />
                             </div>
                         ))}
@@ -93,8 +93,8 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                         />
                     )}
 
-                    {entry.isEA && <label className={styles.label}>Valor bruto documentado da substituição (opcional)
-                        <input type="number" min="0" step="0.01" className={styles.input} value={entry.valorBrutoManual ?? ''} onChange={event => updateEntry(entry.id, { valorBrutoManual: event.target.value === '' ? undefined : Math.max(0, Number(event.target.value) || 0) })} />
+                    {entry.isEA && <label className={styles.label}>Valor bruto documentado da substituição (R$, opcional)
+                        <input type="number" min="0" step="0.01" className={styles.input} value={entry.valorBrutoManual ?? ''} placeholder="0,00" onChange={event => updateEntry(entry.id, { valorBrutoManual: event.target.value === '' ? undefined : Math.max(0, Number(event.target.value) || 0) })} />
                     </label>}
                 </div>
             </details>
