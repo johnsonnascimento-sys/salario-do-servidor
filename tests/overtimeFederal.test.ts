@@ -176,6 +176,10 @@ test('HE: composição por card, créditos por ID, abono e GAACTA sem resultado 
     assert.equal(result.entries[1].heTotal, 112.5);
     assert.equal(result.entries[2].heTotal, 333.52);
     assert.equal(result.entries[3].heTotal, 0);
+    const legacyVpni = await calculateOvertime({ ...params, vpni_lei: 9999, vpni_decisao: 8888, recebeAbono: false,
+        overtimeEntries: [{ ...params.overtimeEntries[0], composicaoBase: { ...off, vpniLei: true, vpniDecisao: true, 'rubrica:credito': true } }] });
+    assert.equal(legacyVpni.heTotal, 75, 'VPNI entra pelo crédito dinâmico sem somar os campos legados');
+    assert.equal(legacyVpni.entries[0].composicaoBase?.some(part => ['vpniLei', 'vpniDecisao'].includes(part.key)), false);
     params.gaactaManualBase = false;
     params.gaactaIncideAbono = true;
     params.rubricasExtras[0].incidePSS = true;

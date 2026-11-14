@@ -3,6 +3,9 @@
 
 # Changelog
 
+## VPNI dinâmica na base de HE — 14/11/2026
+- Removidas as opções legadas VPNI — Lei e VPNI — Decisão da composição de HE. A VPNI passa a ser selecionada pelos créditos dinâmicos adicionados em Benefícios & Vantagens, por ID do card, sem somar os campos antigos à base de HE.
+
 ## Composição da base remuneratória de HE — 14/11/2026
 - Cada card de HE oferece seleção independente de vencimento, GAJ, FC/CJ, AQ, GAE/GAS, VPNI, ATS, abono, GAACTA e créditos dinâmicos por ID, com valores e subtotal calculados pelo motor e persistência no holerite.
 - GAACTA e créditos dinâmicos iniciam desmarcados. O abono usa o PSS mensal atual, incluindo rubricas contributivas, sem ciclos com a base de HE. Mantidos os bloqueios para substituições sem diferença e as incidências originais.

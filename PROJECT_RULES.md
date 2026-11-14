@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 14/11/2026 03:23
+Atualizado em: 14/11/2026 03:28
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -158,7 +158,7 @@ Cada rubrica manual deve suportar:
 6. A memória de cálculo unitária informa os valores da Hora Normal (com identificação do divisor aplicado), Hora Extra (+50%) e Hora Extra (+100%) integrada organicamente ao Resumo Calculado (`PresetGrossSummary`) do card de Serviço Extraordinário, preservando o padrão visual e a consistência arquitetural do sistema.
 7. No modo de cálculo por função substituída, as horas são remuneradas apenas quando o valor da função de destino supera a função atual acrescida da gratificação específica, seguindo o limite do card de Substituição. Destinos menores ou iguais não geram valor nesse modo e seus campos ficam desabilitados conforme a elegibilidade devolvida pelo motor. Entradas antigas inelegíveis, horas globais residuais e valores brutos manuais são ignorados nesse modo. Para HE pela função atual ou valor bruto documentado, usar o modo comum; servidor sem função pode usar a remuneração de função superior efetivamente substituída.
 
-8. Cada card de HE permite selecionar a composição da base remuneratória, persistida em `OvertimeEntry.composicaoBase`. O motor devolve parcelas, valores, seleções e subtotal; a UI apenas exibe e coleta escolhas. Vencimento, GAJ, FC/CJ, AQ, gratificação específica, VPNI, ATS e abono iniciam selecionados; GAACTA e créditos dinâmicos por ID iniciam desmarcados. O abono utiliza o PSS mensal atual, inclusive rubricas contributivas, independentemente da seleção de HE e da função substituída. A seleção não altera as incidências das parcelas originais nem o critério de elegibilidade da substituição. Férias e gratificação natalina não são oferecidas na composição.
+8. Cada card de HE permite selecionar a composição da base remuneratória, persistida em `OvertimeEntry.composicaoBase`. O motor devolve parcelas, valores, seleções e subtotal; a UI apenas exibe e coleta escolhas. Vencimento, GAJ, FC/CJ, AQ, gratificação específica, ATS e abono iniciam selecionados; GAACTA e créditos dinâmicos por ID iniciam desmarcados. A VPNI é oferecida pelos créditos dinâmicos adicionados em Benefícios & Vantagens; os campos legados VPNI — Lei e VPNI — Decisão não são oferecidos nem somados diretamente à base de HE. O abono utiliza o PSS mensal atual, inclusive rubricas contributivas, independentemente da seleção de HE e da função substituída. A seleção não altera as incidências das parcelas originais nem o critério de elegibilidade da substituição. Férias e gratificação natalina não são oferecidas na composição.
 
 ## 5. Admin e seguranca operacional
 
