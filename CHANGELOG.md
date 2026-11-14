@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Correção do card de pensão alimentícia — 14/11/2026
+- A apuração da pensão aguarda o cálculo atual da folha, evitando oscilações e valores intermediários zerados.
+
 ## Card e Módulo de Pensão Alimentícia com Composição Dinâmica da Base — 14/11/2026
 - UI & Cálculo (PensaoAlimenticiaCard, DynamicPayrollForm, dynamicPayrollForm.helpers, PresetControlsSection, presetGrossLines, useDynamicPresetInstances):
   - **Renomeação da Seção Central**: Atualizada a seção para **"Adicionais, Verbas, Benefícios e Pensão Alimentícia"** com tooltips e aria-labels correspondentes.

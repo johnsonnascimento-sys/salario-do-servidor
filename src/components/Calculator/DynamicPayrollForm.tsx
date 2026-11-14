@@ -235,6 +235,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const renderPreset = (instance: PresetInstance) => (
         <PresetCardContent
             instance={instance}
+            calculationReady={calculationReady}
             state={state}
             update={update}
             styles={styles}

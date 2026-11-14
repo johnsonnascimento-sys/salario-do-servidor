@@ -208,6 +208,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
 
             <PresetCardContent
                 instance={instance}
+                calculationReady={calculationReady}
                 state={state}
                 update={update}
                 styles={styles}

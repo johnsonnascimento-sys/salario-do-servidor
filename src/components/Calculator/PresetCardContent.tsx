@@ -26,6 +26,7 @@ interface PresetCardContentProps {
     updateOvertimeEntry: (id: string, patch: Partial<OvertimeEntry>) => void;
     updateSubstitutionEntry: (id: string, patch: Partial<SubstitutionEntry>) => void;
     courtConfig: CourtConfig;
+    calculationReady?: boolean;
 }
 
 export const PresetCardContent: React.FC<PresetCardContentProps> = ({
@@ -38,7 +39,8 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     functionKeys,
     updateOvertimeEntry,
     updateSubstitutionEntry,
-    courtConfig
+    courtConfig,
+    calculationReady = false
 }) => {
     const presetId = instance.presetId;
 
@@ -147,6 +149,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
         return (
             <PensaoAlimenticiaCard
                 state={state}
+                calculationReady={calculationReady}
                 update={update}
                 styles={styles}
                 courtConfig={courtConfig}

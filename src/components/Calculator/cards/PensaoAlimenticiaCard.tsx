@@ -9,6 +9,7 @@ interface PensaoAlimenticiaCardProps {
     styles: any;
     courtConfig?: CourtConfig;
     competenciaReferencia?: string;
+    calculationReady: boolean;
 }
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
@@ -17,7 +18,8 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
     state,
     update,
     styles,
-    courtConfig
+    courtConfig,
+    calculationReady
 }) => {
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
     const funcaoValorBruta = useMemo(() => {
@@ -159,6 +161,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
 
     // Sincroniza os totais e o valor de pensão no estado da calculadora
     useEffect(() => {
+        if (!calculationReady) return;
         if (state.pensao !== valorCalculado) {
             update('pensao', valorCalculado);
         }
@@ -171,9 +174,13 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
         if (state.pensaoBaseCalculo !== baseLiquida) {
             update('pensaoBaseCalculo', baseLiquida);
         }
-    }, [valorCalculado, totalBaseBruta, totalDeducoes, baseLiquida, state.pensao, state.pensaoBaseBruta, state.pensaoTotalDeducoes, state.pensaoBaseCalculo, update]);
+    }, [calculationReady, valorCalculado, totalBaseBruta, totalDeducoes, baseLiquida, state.pensao, state.pensaoBaseBruta, state.pensaoTotalDeducoes, state.pensaoBaseCalculo, update]);
 
     const atalhosPercentual = [15, 20, 25, 30, 33.33, 50];
+
+    if (!calculationReady) {
+        return <p role="status">Aguardando o cálculo da folha para apurar a pensão...</p>;
+    }
 
     return (
         <div className="space-y-4">
