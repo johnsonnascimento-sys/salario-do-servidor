@@ -1,6 +1,6 @@
 import { IrEaCompetencias, getDefaultEaCompetencia } from '../IrEaCompetencias';
 import React from 'react';
-import { AlertTriangle, Clock } from 'lucide-react';
+import { AlertTriangle, Clock, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { CourtConfig, OvertimeEntry } from '../../../types';
 
 interface OvertimeCardProps {
@@ -236,39 +236,6 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={entry.isEA}
-                                onChange={e => {
-                                    const checked = e.target.checked;
-                                    updateEntry(entry.id, {
-                                        isEA: checked,
-                                        excluirIR: checked ? false : entry.excluirIR,
-                                        competenciasEA: checked && (!entry.competenciasEA || entry.competenciasEA.length === 0)
-                                            ? [getDefaultEaCompetencia(competenciaReferencia)]
-                                            : entry.competenciasEA
-                                    });
-                                }}
-                            />
-                            <span>Incluir na base do IR (Exercício Anterior - EA)</span>
-                        </label>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={entry.excluirIR}
-                                onChange={e => {
-                                    const checked = e.target.checked;
-                                    updateEntry(entry.id, {
-                                        excluirIR: checked,
-                                        isEA: checked ? false : entry.isEA
-                                    });
-                                }}
-                            />
-                            <span>Excluir da base do IR</span>
-                        </label>
                         {isJMU && (
                             <label className={styles.checkboxLabel}>
                                 <input
@@ -298,16 +265,6 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             <span>Calcular por função substituída.</span>
                         </label>
                     </div>
-
-                    {entry.isEA && (
-                        <IrEaCompetencias
-                            tipo="horas_extras"
-                            value={entry.competenciasEA}
-                            onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
-                            styles={styles}
-                            competenciaReferencia={competenciaReferencia}
-                        />
-                    )}
 
                     {!usarSubstituicaoFuncao ? (
                         <div className="grid grid-cols-2 gap-4 mt-4">
@@ -402,6 +359,78 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     )}
                 </div>
             </div>
+
+            <div className="p-3 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    Incidências na Folha Mensal
+                </div>
+                <div className="flex items-center gap-6 flex-wrap">
+                    <label className={styles.checkboxLabel}>
+                        <input
+                            type="checkbox"
+                            className={styles.checkbox}
+                            checked={!entry.isEA && !entry.excluirIR}
+                            onChange={e => updateEntry(entry.id, { excluirIR: !e.target.checked, isEA: false })}
+                        />
+                        <span>Incidir no Imposto de Renda (IR Mensal)</span>
+                    </label>
+                    {entry.isEA && <span className="text-body-xs text-primary font-medium">IR de Exercício Anterior (IR-EA / RRA) ativo</span>}
+                </div>
+            </div>
+
+            <details className="group pt-1" open={entry.isEA || entry.excluirIR || undefined}>
+                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary rounded">
+                    <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    <span>Opções Tributárias Avançadas & Exercícios Anteriores (EA)</span>
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="mt-2.5 p-3.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-3">
+                    <div className="flex items-center gap-4 flex-wrap">
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={entry.isEA}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateEntry(entry.id, {
+                                        isEA: checked,
+                                        excluirIR: checked ? false : entry.excluirIR,
+                                        competenciasEA: checked && (!entry.competenciasEA || entry.competenciasEA.length === 0)
+                                            ? [getDefaultEaCompetencia(competenciaReferencia)]
+                                            : entry.competenciasEA
+                                    });
+                                }}
+                            />
+                            <span>Incluir na base do IR de Exercício Anterior (IR-EA / RRA)</span>
+                        </label>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={entry.excluirIR}
+                                onChange={e => {
+                                    const checked = e.target.checked;
+                                    updateEntry(entry.id, {
+                                        excluirIR: checked,
+                                        isEA: checked ? false : entry.isEA
+                                    });
+                                }}
+                            />
+                            <span>Excluir da base do IR</span>
+                        </label>
+                    </div>
+                    {entry.isEA && (
+                        <IrEaCompetencias
+                            tipo="horas_extras"
+                            value={entry.competenciasEA}
+                            onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
+                            styles={styles}
+                            competenciaReferencia={competenciaReferencia}
+                        />
+                    )}
+                </div>
+            </details>
         </div>
     );
 };

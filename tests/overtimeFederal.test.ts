@@ -580,3 +580,50 @@ test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo cu
 
     tree.unmount();
 });
+
+
+test('OvertimeCard: IR mensal, EA e exclusão são exclusivos e isolados por instância', () => {
+    let entries: any[] = [
+        { id: 'he-a', qtd50: 2, qtd100: 0, isEA: false, excluirIR: false },
+        { id: 'he-b', qtd50: 3, qtd100: 0, isEA: false, excluirIR: false },
+    ];
+    const patches: string[] = [];
+    const updateEntry = (id: string, patch: any) => {
+        patches.push(id);
+        entries = entries.map(entry => entry.id === id ? { ...entry, ...patch } : entry);
+    };
+    const render = () => React.createElement('div', {}, ...entries.map(entry => React.createElement(OvertimeCard, {
+        key: entry.id, entry, updateEntry, functionKeys: [], competenciaReferencia: '11/2026', styles: {},
+        courtConfig: { orgSlug: 'cjf' } as CourtConfig,
+    })));
+    const tree = create(render());
+    const checkbox = (text: string) => tree.root.findAllByType(OvertimeCard)[0].findAllByType('label')
+        .find(label => label.findAllByType('span').some(span => span.children.includes(text)))!.findByType('input');
+    const change = (text: string, checked: boolean) => act(() => {
+        checkbox(text).props.onChange({ target: { checked } });
+        tree.update(render());
+    });
+    const monthly = 'Incidir no Imposto de Renda (IR Mensal)';
+    const ea = 'Incluir na base do IR de Exercício Anterior (IR-EA / RRA)';
+    assert.equal(checkbox(monthly).props.checked, true);
+    assert.equal(tree.root.findAllByType('details')[0].props.open, undefined);
+    assert.equal(JSON.stringify(tree.toJSON()).includes('PSS'), false);
+    change(ea, true);
+    assert.equal(checkbox(monthly).props.checked, false);
+    assert.deepEqual(entries[0].competenciasEA, ['2025-12']);
+    assert.equal(tree.root.findAllByType('details')[0].props.open, true);
+    change(monthly, true);
+    assert.equal(entries[0].isEA, false);
+    assert.equal(entries[0].excluirIR, false);
+    assert.deepEqual(entries[0].competenciasEA, ['2025-12'], 'Alternar preserva meses informados');
+    change(monthly, false);
+    assert.equal(entries[0].excluirIR, true);
+    change(ea, true);
+    assert.equal(entries[0].excluirIR, false);
+    change('Excluir da base do IR', true);
+    assert.equal(entries[0].isEA, false);
+    assert.equal(checkbox(monthly).props.checked, false);
+    assert.deepEqual(entries[1], { id: 'he-b', qtd50: 3, qtd100: 0, isEA: false, excluirIR: false });
+    assert.ok(patches.every(id => id === 'he-a'));
+    tree.unmount();
+});

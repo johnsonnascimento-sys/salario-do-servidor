@@ -3,6 +3,11 @@
 
 # Changelog
 
+## Organização tributária do card de HE — 14/11/2026
+- Incidência de IR mensal em contêiner próprio e opções de IR-EA e exclusão de IR em seção recolhível, seguindo a identidade do card de crédito.
+- Preservados os meses de EA, a exclusividade entre os modos de IR e o isolamento entre instâncias. Sem opção de PSS para horas extras.
+
+
 ## Seleção previdenciária de GAE/GAS — 14/11/2026
 - Trocas explícitas do tipo usam padrões de PSS configurados por poder: GAE incluída e GAS excluída, mantendo edição manual e snapshots.
 - Adicionada nota fundamentada em STJ (AgInt no REsp 1.849.491/SP) e TNU (Tema 257) após a introdução do card.
