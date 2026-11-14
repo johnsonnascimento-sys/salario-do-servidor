@@ -3,6 +3,11 @@
 
 # Changelog
 
+## Ferramenta de commit e push automáticos para o GitHub — 14/11/2026
+- Adicionado script `scripts/git-sync.mjs` para automação completa de sincronização, commit semântico e push para o GitHub.
+- Configurados comandos npm `sync`, `sync:watch` (monitoramento contínuo) e `git:push`.
+- Criado wrapper PowerShell `git-sync.ps1`, Git hook `post-commit`, tasks do VS Code e aliases locais (`git sync` e `git autopush`).
+
 ## Migração da seleção de GAACTA na pensão — 14/11/2026
 - Rascunhos e holerites antigos deixam de restaurar a seleção automática de GAACTA. Uma inclusão feita expressamente pelo usuário após esta correção permanece salva.
 

@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 14/11/2026 03:31
+Atualizado em: 14/11/2026 14:22
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -319,4 +319,9 @@ Cada rubrica manual deve suportar:
    - Envio imediato ao repositório remoto (`git push origin main`).
 2. O agente não deve encerrar seu turno com alterações pendentes não commitadas ou não enviadas, exceto em caso explícito de bloqueio técnico ou erro de autenticação remota que requeira ação do usuário.
 3. Manter a árvore de trabalho limpa e o branch local alinhado ao branch remoto após cada entrega.
+4. Ferramentas locais de automação disponíveis para desenvolvedores e agentes:
+   - Script npm: `npm run sync` (sincroniza, commita e envia) e `npm run sync:watch` (monitoramento contínuo em background).
+   - Script PowerShell: `.\git-sync.ps1` (ou `.\git-sync.ps1 "mensagem"` / `.\git-sync.ps1 -Watch`).
+   - Git aliases: `git sync` e `git autopush`.
+   - Git Hook (`.git/hooks/post-commit`): envio automático para `origin/main` após qualquer commit local.
 

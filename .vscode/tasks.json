@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Git: Sincronizar e Push para GitHub",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "sync"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "Git: Monitoramento Contínuo (Auto-Commit & Push)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "sync:watch"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}
