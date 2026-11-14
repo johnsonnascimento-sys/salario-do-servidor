@@ -12,8 +12,9 @@ export const PensionParticipationSelect: React.FC<{
     allowed?: PensionParticipation[];
     unavailableReasons?: Partial<Record<PensionParticipation, string>>;
     disabled?: boolean;
+    compact?: boolean;
 }> = ({ value, onChange, className, label = 'Participação no plano', labelClassName, sponsoredDisabled = false,
-    allowed, unavailableReasons, disabled = false }) => {
+    allowed, unavailableReasons, disabled = false, compact = false }) => {
     const id = useId();
     const helpId = `${id}-help`;
     return <div data-pension-selection-field tabIndex={-1} role="group" aria-labelledby={`${id}-label`}>
@@ -29,9 +30,9 @@ export const PensionParticipationSelect: React.FC<{
             <option value="patrocinado" disabled={sponsoredDisabled || (allowed && !allowed.includes('patrocinado'))}>Patrocinada — com contrapartida</option>
             <option value="vinculado" disabled={allowed && !allowed.includes('vinculado')}>Vinculada — sem contrapartida</option>
         </select>
-        <p id={helpId} className={PENSION_HELP_CLASS}>{PENSION_PARTICIPATION_HELP[value]}</p>
-        {unavailableReasons && Object.entries(unavailableReasons).map(([key, reason]) => <p key={key} className={PENSION_HELP_CLASS}>
+        <p id={helpId} className={PENSION_HELP_CLASS}>{compact ? (value === 'nao' ? 'Sem contribuição à Funpresp.' : value === 'patrocinado' ? 'Com contribuição do órgão.' : 'Sem contribuição do órgão.') : PENSION_PARTICIPATION_HELP[value]}</p>
+        {unavailableReasons && Object.keys(unavailableReasons).length > 0 && <details className={PENSION_HELP_CLASS}><summary className="cursor-pointer">Entenda as opções indisponíveis</summary>{Object.entries(unavailableReasons).map(([key, reason]) => <p key={key} className={PENSION_HELP_CLASS}>
             {key === 'patrocinado' ? 'Patrocinada indisponível' : 'Vinculada indisponível'}: {reason}
-        </p>)}
+        </p>)}</details>}
     </div>;
 };

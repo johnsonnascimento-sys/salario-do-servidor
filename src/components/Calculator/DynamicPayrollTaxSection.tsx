@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { PensionRegimeSelect } from './PensionRegimeSelect';
 import type { PensionContext } from '../../services/agency/engine/modules/pensionContext';
 import { PensionParticipationSelect } from './PensionParticipationSelect';
-import { PENSION_GUIDANCE, PENSION_HELP_CLASS } from './pensionHelp';
+import { PENSION_HELP_CLASS } from './pensionHelp';
+import { formatCurrency } from '../../utils/calculations';
+import { ChevronDown } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import { PensionParticipation } from '../../types/pension';
 import { toDecimalRateFromPercentInput, toPercentLabel, toPositiveNumber } from './dynamicPayrollForm.helpers';
@@ -47,14 +49,13 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     return <div className={styles.innerBox}>
         <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <PensionRegimeSelect className={styles.input} labelClassName={styles.label}
+            <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
             <label className={styles.label}>Dependentes (IR)
                 <input type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
             </label>
 
         </div>
-        <p className={PENSION_HELP_CLASS}>{PENSION_GUIDANCE}</p>
         {optionalItems.some(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]) && <fieldset className="mt-3 space-y-2">
             <legend className={styles.label}>Opções salvas que precisam de revisão</legend>
             <p className={PENSION_HELP_CLASS}>A configuração atual não permite estas inclusões. Desmarque-as para continuar, ou confira a configuração e a competência desta simulação.</p>
@@ -66,7 +67,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         {showFunprespSection && config && <fieldset className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
             <legend className={styles.innerBoxTitle}>Funpresp-Jud</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <PensionParticipationSelect className={styles.input} labelClassName={styles.label}
+                <PensionParticipationSelect className={styles.input} labelClassName={styles.label} compact
                     value={state.funprespParticipacao} onChange={handleFunprespParticipacaoChange}
                     disabled={!pensionContext}
                     allowed={pensionContext?.allowed ?? []} unavailableReasons={pensionContext?.unavailableReasons} />
@@ -85,7 +86,14 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </div>
             {!pensionContext && <p role="status" className={PENSION_HELP_CLASS}>Aguarde a base previdenciária ou confira os dados salariais para escolher sua participação.</p>}
             {!selectionRequired && funprespValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>}
-            {calculationReady && state.pensionMemory && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="monthly" embedded />}
+            {participates && calculationReady && state.pensionMemory && <details className="group rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
+                    <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>
+                    <span className="ml-auto text-body-xs text-neutral-600 dark:text-neutral-300">Desconto em folha: <strong className="font-mono text-error-600 dark:text-error-400">{formatCurrency(state.pensionMemory.mensal.descontoFolha)}</strong></span>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
+                </summary>
+                <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="monthly" embedded />
+            </details>}
         </fieldset>}
         <details className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
             open={optionsOpen} onToggle={event => setOptionsOpen(event.currentTarget.open)}>

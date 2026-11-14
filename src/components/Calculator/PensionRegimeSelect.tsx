@@ -20,7 +20,8 @@ export const PensionRegimeSelect: React.FC<{
     label?: string;
     labelClassName?: string;
     disabled?: boolean;
-}> = ({ value, onChange, className, label = 'Regime previdenciário', labelClassName, disabled = false }) => {
+    compact?: boolean;
+}> = ({ value, onChange, className, label = 'Regime previdenciário', labelClassName, disabled = false, compact = false }) => {
     const id = useId();
     const helpId = `${id}-help`;
     return <div data-pension-selection-field tabIndex={-1} role="group" aria-labelledby={`${id}-label`}>
@@ -34,6 +35,6 @@ export const PensionRegimeSelect: React.FC<{
             <option value="antigo">RPPS sem teto do RGPS</option>
             <option value="rpc">RPPS limitado ao teto do RGPS</option>
         </select>
-        <p id={helpId} className={PENSION_HELP_CLASS}>{PENSION_REGIME_HELP[pensionRegimeGroup(value)]}</p>
+        <p id={helpId} className={PENSION_HELP_CLASS}>{compact ? (pensionRegimeGroup(value) === 'rpc' ? 'Contribuição limitada ao teto do INSS.' : 'Contribuição sem limite do teto do INSS.') : PENSION_REGIME_HELP[pensionRegimeGroup(value)]}</p>
     </div>;
 };
