@@ -58,11 +58,12 @@ export interface PresetCatalogItem {
     id: PresetCatalogItemId;
     label: string;
     description: string;
-    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios';
+    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios' | 'descontos';
     tags: string[];
 }
 
 export const PRESET_CATEGORIES = [
+    { id: 'descontos', title: 'Descontos', subtitle: 'Descontos e obrigações da folha' },
     {
         id: 'trabalho',
         title: 'Trabalho Extraordinário & Funções',
@@ -188,7 +189,7 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         id: 'pensao',
         label: 'Pensão Alimentícia',
         description: 'Cálculo por percentual sobre remuneração/líquido ou valor fixo',
-        category: 'beneficios',
+        category: 'descontos',
         tags: ['pensao', 'alimenticia', 'alimentos', 'judicial', 'desconto', '%', 'fixo']
     }
 ];

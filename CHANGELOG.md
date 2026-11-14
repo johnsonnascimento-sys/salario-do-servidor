@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Categoria própria para pensão alimentícia — 14/11/2026
+- Criada a categoria **Descontos** no catálogo de rubricas predefinidas, que agora reúne o botão Pensão Alimentícia.
+
 ## Correção do card de pensão alimentícia — 14/11/2026
 - A apuração da pensão aguarda o cálculo atual da folha, evitando oscilações e valores intermediários zerados.
 
