@@ -3,6 +3,10 @@
 
 # Changelog
 
+## Organização tributária do card de Substituição — 14/11/2026
+- Opções de IR-EA, exclusão de IR e PSS-EA agrupadas em seção recolhível no padrão de HE. Competências e valor documentado mantidos no mesmo grupo; dias por função continuam na área principal.
+
+
 ## Simplificação do card de HE — 14/11/2026
 - Removido o contêiner de IR mensal; a incidência padrão permanece implícita e as opções de EA e exclusão de IR continuam na seção avançada.
 

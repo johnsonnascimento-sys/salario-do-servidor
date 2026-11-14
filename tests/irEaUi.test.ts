@@ -162,3 +162,25 @@ assert.deepEqual(latest!.resultRows, []);
 assert.ok(latest!.calculationError?.includes('IR-EA'));
 tree.unmount();
 console.log('IR-EA UI: inputs, original months, reload, official gross/tax allocation, manual EA, invalidation and errors passed.');
+
+
+// Substitution advanced options preserve independent tax flags and documented EA inputs.
+const { SubstitutionCard } = await import('../src/components/Calculator/cards/SubstitutionCard');
+let substitution: any = { id: 'subst-ui', dias: { fc1: 4 }, isEA: true, excluirIR: false, pssIsEA: true, competenciasEA: ['2024-02'], valorBrutoManual: 5000 };
+const substPatches: any[] = [];
+const substTree = create(React.createElement(SubstitutionCard, {
+    entry: substitution, updateEntry: (id, patch) => { substPatches.push({ id, patch }); },
+    functionKeys: ['fc1'], competenciaReferencia: '11/2026', styles: {},
+}));
+const drawer = substTree.root.findByType('details');
+assert.equal(drawer.props.open, true);
+assert.ok(JSON.stringify(drawer.findByType('summary').children.map(child => typeof child === 'string' ? child : child.props.children)).includes('Opções Tributárias Avançadas'));
+assert.equal(substPatches.length, 0, 'Abrir um snapshot não altera os dados');
+const taxChecks = drawer.findAllByType('input').filter(input => input.props.type === 'checkbox');
+assert.deepEqual(taxChecks.map(input => input.props.checked), [true, false, true]);
+act(() => taxChecks[1].props.onChange({ target: { checked: true } }));
+assert.deepEqual(substPatches.pop(), { id: 'subst-ui', patch: { excluirIR: true, isEA: false } });
+assert.equal(substitution.pssIsEA, true, 'IR não modifica seleção de PSS');
+assert.equal(drawer.findAllByType('input').find(input => input.props.type === 'number')!.props.value, 5000);
+assert.deepEqual(substitution.competenciasEA, ['2024-02']);
+substTree.unmount();
