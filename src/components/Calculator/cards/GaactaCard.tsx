@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { getTablesForPeriod } from '../../../utils/calculations';
 import { resolveGaactaRule } from '../../../services/agency/engine/modules/gaactaCalculations';
@@ -315,13 +315,6 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                 </div>
             </details>
 
-            {/* Informação Legal de Natureza Indenizatória */}
-            <div className="flex items-center gap-2 text-body-xs text-neutral-500 dark:text-neutral-400 pt-1">
-                <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                <span>
-                    <strong className="text-neutral-700 dark:text-neutral-300">Natureza indenizatória (art. 4º):</strong> isenta de PSS/Previdência e retenção de IRRF.
-                </span>
-            </div>
         </div>
     );
 };

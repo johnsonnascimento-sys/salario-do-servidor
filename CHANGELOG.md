@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Nota de incidências da GAACTA — 14/11/2026
+- Removida do card a nota sobre natureza indenizatória e isenção de PSS/IRRF, a pedido do usuário.
+
 ## Cabeçalho da base da GAACTA — 14/11/2026
 - Removido o título antigo e o subtotal separado. O container recolhível agora apresenta “Composição da base de cálculo da GAACTA - R$ …”, tanto na composição por parcelas quanto na base manual.
 
