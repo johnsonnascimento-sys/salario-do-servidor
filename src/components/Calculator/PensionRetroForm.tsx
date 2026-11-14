@@ -50,9 +50,10 @@ export const PensionRetroForm: React.FC<Props> = ({ state, pensionMemory, update
     const addEntry = () => update('pensionRetroEntries', [...entries, {
         id: newRetroId(), competencia: '', modo: 'completo', tipo: 'mensal', vinculos: [],
     } satisfies PensionRetroEntry]);
-    return <details id="pension-retro-form" className={styles.innerBox} open={openForHistory || undefined}>
-        <summary className="cursor-pointer text-body-xs font-bold uppercase text-neutral-700 dark:text-neutral-300">Apuração previdenciária por competência</summary>
-        <p className="mt-2 text-body-xs">Informe a situação de cada competência original e vincule as rubricas que compõem a apuração. Não duplique descontos já informados em ajustes salvos.</p>
+    if (!openForHistory) return null;
+    return <details id="pension-retro-form" className={`${styles.innerBox} mt-4`} open>
+        <summary className="cursor-pointer text-body-xs font-bold uppercase text-neutral-700 dark:text-neutral-300">Apuração previdenciária da verba retroativa</summary>
+        <p className="mt-2 text-body-xs">Esta verba se refere a uma competência anterior. Informe o período e vincule o valor correspondente para calcular a contribuição daquele período.</p>
         <button type="button" className="mt-3 font-semibold underline" onClick={addEntry}>Adicionar competência</button>
         {eligible.length > 0 && <div className="mt-3 text-body-xs" aria-label="Distribuição das rubricas por competência">
             <p className="font-semibold">Distribuição das rubricas</p>
