@@ -4,6 +4,8 @@ import { calculateBase, calculateBaseComponents } from '../src/services/agency/e
 import type { IAgencyCalculationParams } from '../src/services/agency/types';
 import type { CourtConfig } from '../src/types';
 import { INITIAL_STATE } from '../src/types';
+import { getGratificationSelectionPatch } from '../src/utils/gratificationSelection';
+import { applyCalculatorPatch } from '../src/utils/calculatorState';
 
 const mockConfig: CourtConfig = {
     bases: {
@@ -39,6 +41,27 @@ const mockConfig: CourtConfig = {
         cargoLabels: {}
     }
 };
+
+test('Troca GAE/GAS aplica padrão configurado e permite ajuste manual até a próxima troca', () => {
+    const config: CourtConfig = { ...mockConfig, payrollRules: {
+        ...mockConfig.payrollRules!, specificGratificationPssDefaults: { gae: true, gas: false },
+    } };
+    const gae = applyCalculatorPatch(INITIAL_STATE, getGratificationSelectionPatch('gae', config));
+    assert.equal(gae.incidirPSSGrat, true);
+    const gas = applyCalculatorPatch(gae, getGratificationSelectionPatch('gas', config));
+    assert.equal(gas.incidirPSSGrat, false);
+    const manual = applyCalculatorPatch(gas, { incidirPSSGrat: true });
+    assert.equal(manual.incidirPSSGrat, true);
+    assert.equal(applyCalculatorPatch(manual, { gratOutrasParcelas: 100 }).incidirPSSGrat, true);
+    assert.equal(applyCalculatorPatch(manual, getGratificationSelectionPatch('gas', config)).incidirPSSGrat, false);
+    assert.equal(applyCalculatorPatch(gas, getGratificationSelectionPatch('gae', config)).incidirPSSGrat, true);
+});
+
+test('Sem padrão cadastrado ou ao selecionar nenhuma, preserva a incidência informada', () => {
+    assert.deepEqual(getGratificationSelectionPatch('gas', mockConfig), { gratEspecificaTipo: 'gas' });
+    assert.deepEqual(getGratificationSelectionPatch('gae'), { gratEspecificaTipo: 'gae' });
+    assert.deepEqual(getGratificationSelectionPatch('0', mockConfig), { gratEspecificaTipo: '0' });
+});
 
 const createBaseParams = (overrides: Partial<IAgencyCalculationParams> = {}): IAgencyCalculationParams => ({
     periodo: 0,

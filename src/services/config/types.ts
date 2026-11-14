@@ -243,6 +243,7 @@ export interface DailiesRulesConfig {
  * Regras gerais de calculo da folha
  */
 export interface PayrollRulesConfig {
+    specific_gratification_pss_defaults?: Partial<Record<'gae' | 'gas', boolean>>;
     gaj_rate: number;
     specific_gratification_rate: number;
     vr_rate_on_cj1: number;

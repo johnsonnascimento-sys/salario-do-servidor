@@ -76,6 +76,7 @@ export interface DailiesConfig {
 }
 
 export interface PayrollRulesConfig {
+  specificGratificationPssDefaults?: Partial<Record<'gae' | 'gas', boolean>>;
   gajRate: number;
   specificGratificationRate: number;
   vrRateOnCj1: number;

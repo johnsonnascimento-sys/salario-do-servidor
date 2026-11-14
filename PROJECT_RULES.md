@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 14/11/2026 01:16
+Atualizado em: 14/11/2026 01:59
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -105,6 +105,7 @@ Cada rubrica manual deve suportar:
 2. A base de cálculo da GAE/GAS suporta composição dinâmica por checkboxes com valores em tempo real: por padrão legal estrito, apenas o Vencimento Básico permanece selecionado (`gratIncideVencimento: true`).
 3. Outros créditos (GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS, Abono de Permanência, rubricas manuais de crédito e ajustes avulsos) são exibidos para permitir seleção pelo usuário em caso de peculiaridades administrativas ou judiciais, mas **não devem ficar selecionados por padrão** (todos os demais permanecem `false` por padrão).
 4. Suporte a opção de inclusão ou exclusão da gratificação na base de cálculo da contribuição previdenciária (`incidirPSSGrat`).
+5. Na troca explícita de GAE/GAS, o padrão de PSS vem de `power_config.payroll_rules.specific_gratification_pss_defaults` (GAE incluída; GAS excluída por padrão, ressalvados opção e enquadramento aplicáveis). Manter ajustes manuais e snapshots ao abrir o card; não confundir estes padrões RPPS com regras de Funpresp. A migration preparada exige aplicação no banco para ativar os padrões.
 
 ### 4.4 Diarias
 

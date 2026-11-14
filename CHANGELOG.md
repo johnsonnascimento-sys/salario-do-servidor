@@ -3,6 +3,11 @@
 
 # Changelog
 
+## Seleção previdenciária de GAE/GAS — 14/11/2026
+- Trocas explícitas do tipo usam padrões de PSS configurados por poder: GAE incluída e GAS excluída, mantendo edição manual e snapshots.
+- Adicionada nota fundamentada em STJ (AgInt no REsp 1.849.491/SP) e TNU (Tema 257) após a introdução do card.
+- Migration versionada `20261114_gratification_pss_defaults.sql` preparada para PJU. Sem sua aplicação no banco, o card informa a ausência do padrão e mantém a seleção manual existente.
+
 ## Correção da associação de botões às categorias — 14/11/2026
 - Corrigida a associação no catálogo: horas extras e substituição em **Serviço Extraordinário e Substituições**; GAACTA e Licença Compensatória em **Gratificações**.
 
