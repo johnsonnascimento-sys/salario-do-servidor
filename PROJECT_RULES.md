@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 14/11/2026 14:22
+Atualizado em: 14/11/2026 14:32
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -324,4 +324,5 @@ Cada rubrica manual deve suportar:
    - Script PowerShell: `.\git-sync.ps1` (ou `.\git-sync.ps1 "mensagem"` / `.\git-sync.ps1 -Watch`).
    - Git aliases: `git sync` e `git autopush`.
    - Git Hook (`.git/hooks/post-commit`): envio automático para `origin/main` após qualquer commit local.
+   - Extensão IDE (GitDoc - `vsls-contrib.gitdoc`): configurada e ativada no workspace e no perfil do usuário (`gitdoc.enabled: true`, `gitdoc.autoPush: "onCommit"`, `gitdoc.pushMode: "push"`), executando commit e push automáticos no GitHub ao salvar ou concluir edições locais.
 

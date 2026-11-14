@@ -3,7 +3,9 @@
 
 # Changelog
 
-## Ferramenta de commit e push automáticos para o GitHub — 14/11/2026
+## Extensão e automação de commit e push para o GitHub — 14/11/2026
+- Ativada e configurada a extensão GitDoc (`vsls-contrib.gitdoc`) no Antigravity IDE (perfil de usuário e workspace), realizando auto-commit e auto-push no GitHub a cada salvamento ou término de atualização local.
+- Adicionadas recomendações de extensões (`vsls-contrib.gitdoc`, `eamodio.gitlens`, `github.vscode-pull-request-github`) em `.vscode/extensions.json`.
 - Adicionado script `scripts/git-sync.mjs` para automação completa de sincronização, commit semântico e push para o GitHub.
 - Configurados comandos npm `sync`, `sync:watch` (monitoramento contínuo) e `git:push`.
 - Criado wrapper PowerShell `git-sync.ps1`, Git hook `post-commit`, tasks do VS Code e aliases locais (`git sync` e `git autopush`).
