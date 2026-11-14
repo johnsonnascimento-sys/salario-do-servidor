@@ -144,7 +144,11 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
             </p>
 
             {/* Composição da Base da Remuneração (similar ao 13º e GAACTA) */}
-            <div className="space-y-3 p-4 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-700">
+            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
+                <summary className="cursor-pointer text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    Composição da remuneração de referência (Férias) — {formatCurrency(totalBaseApurada)}
+                </summary>
+                <div className="mt-3 space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className={styles.label}>
                         Composição da Remuneração de Referência (Férias)
@@ -362,7 +366,8 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                         <span className={styles.internalTotalValue}>{formatCurrency(tercoCalculado)}</span>
                     </div>
                 </div>
-            </div>
+                </div>
+            </details>
 
             {/* Configuração de recebimento no mês e valor */}
             <div className="flex items-center justify-between pt-1">

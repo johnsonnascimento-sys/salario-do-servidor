@@ -153,7 +153,11 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
             </p>
 
             {/* Composição da Base da Remuneração (similar ao GAACTA) */}
-            <div className="space-y-3 p-4 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-700">
+            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
+                <summary className="cursor-pointer text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    Composição da remuneração de referência (13º) — {formatCurrency(totalBaseApurada)}
+                </summary>
+                <div className="mt-3 space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className={styles.label}>
                         Composição da Remuneração de Referência (13º)
@@ -365,7 +369,8 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                     <span className={styles.internalTotalLabel}>Base apurada da remuneração (13º)</span>
                     <span className={styles.internalTotalValue}>{formatCurrency(totalBaseApurada)}</span>
                 </div>
-            </div>
+                </div>
+            </details>
 
             {/* Seção de Adiantamento e Parcelas */}
             <div className="flex justify-end">
