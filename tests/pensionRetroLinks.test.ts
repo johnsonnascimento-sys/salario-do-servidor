@@ -45,6 +45,20 @@ const parameters = () => ({ ...mapStateToAgencyParams({ ...INITIAL_STATE, anoRef
 const pending = (action: () => unknown, pattern?: RegExp) => assert.throws(action, error =>
     error instanceof PensionCalculationPendingError && (!pattern || pattern.test(error.message)));
 
+test('linked participant audit uses original URP even when current config has a different value', () => {
+    const p = parameters();
+    p.agencyConfig!.previdenciaComplementar!.urpByCompetence = { '2026-01': 999 };
+    p.pensionRetroEntries = [entry({ regimePrev: 'antigo', participacao: 'vinculado',
+        salarioParticipacaoVinculado: 1000, inicioVinculado: '2026-01', contribuicaoRppsRecolhida: 600,
+        contribuicaoComplementarRecolhida: 0 })];
+    const memory = calculatePensionRetroactives(p)[0];
+    assert.equal(memory.complementar, 60);
+    assert.deepEqual(memory.urpReference, { competencia: '2026-01', valor: 100, fonte: 'fonte sintética',
+        unidadesMinimas: 10, minimo: 1000 });
+    delete p.agencyConfig!.previdenciaComplementar!.historicalRules![0].configuration.urpByCompetence!['2026-01'];
+    pending(() => calculatePensionRetroactives(p), /URP.*2026-01/);
+});
+
 test('linked historical calculation uses its own regime, rate, table and source, not today inputs', async () => {
     const p = parameters();
     const memory = calculatePensionRetroactives(p)[0];

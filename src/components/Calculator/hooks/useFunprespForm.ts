@@ -1,3 +1,4 @@
+import { resolvePensionUrp, validateLinkedPensionSalary } from '../../../services/agency/engine/modules/pensionUrp';
 import { useMemo } from 'react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { PensionParticipation } from '../../../types/pension';
@@ -58,17 +59,10 @@ export const useFunprespForm = ({ state, update, previdenciaComplementar: config
         }
         if (state.funprespParticipacao === 'vinculado') {
             const competence = `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}`;
-            const inicio = state.funprespVinculadaInicio ?? '';
-            if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(inicio) || inicio > competence) {
-                return 'Informe a competência de inscrição ou eleição da base, anterior ou igual à folha.';
-            }
-            const urpCompetence = inicio.slice(0, 4) === String(state.anoRef) ? inicio : `${state.anoRef - 1}-11`;
-            if (!config.urpByCompetence?.[urpCompetence] || !config.urpSourcesByCompetence?.[urpCompetence]) {
-                return `Participação vinculada pendente: falta cadastrar a URP e sua fonte para ${urpCompetence}.`;
-            }
-            if (!Number.isFinite(state.funprespBaseIntegral) || (state.funprespBaseIntegral ?? 0) <= 0) {
-                return 'Informe a remuneração de participação escolhida no plano. Os limites serão conferidos pelo motor.';
-            }
+            const resolution = resolvePensionUrp(config, competence, state.funprespVinculadaInicio ?? '');
+            if (!resolution.reference) return `Participação vinculada pendente: ${resolution.error}`;
+            const salaryError = validateLinkedPensionSalary(state.funprespBaseIntegral, resolution.reference);
+            if (salaryError) return salaryError;
         }
         return funprespAdditionalValidationError;
     }, [config, funprespNormalOptions, state, funprespAdditionalValidationError]);

@@ -1,9 +1,14 @@
-import type { PensionMemory, PensionRubricAssessment } from '../types/pension';
+import type { PensionMemory, PensionRubricAssessment, PensionUrpReference } from '../types/pension';
 
 /** Informational rows, deliberately separate from credit/debit payroll rows. */
 export const buildPensionAuditRows = (memory?: PensionMemory): Array<[string, string | number]> => {
     if (!memory) return [];
     const rows: Array<[string, string | number]> = [];
+    const urp = (reference?: PensionUrpReference) => {
+        if (reference) rows.push(['Competência de referência da URP', reference.competencia],
+            ['Valor da URP', reference.valor], ['Fonte da URP', reference.fonte],
+            ['Quantidade mínima de URPs', reference.unidadesMinimas], ['Remuneração mínima em URP', reference.minimo]);
+    };
     const assessments = (items: PensionRubricAssessment[] = []) => {
         for (const rule of items) {
             rows.push(['Enquadramento da rubrica (ID)', rule.rubricaId], ['Natureza previdenciária (ID)', rule.ruleId],
@@ -26,11 +31,13 @@ export const buildPensionAuditRows = (memory?: PensionMemory): Array<[string, st
             ['Pagamento externo (informativo)', item.aporteExterno],
             ['Patrocínio (informativo)', item.patrocinador], ['Desconto Funpresp na folha', item.descontoFolha],
             ['Dedução de IR na folha', item.dedutivelIRFolha], ['Parcela sujeita ao limite anual', item.deducaoSujeitaLimiteAnual]);
+        urp(item.urpReference);
         for (const warning of item.avisos || []) rows.push(['Pendência / observação', warning]);
         for (const [key, value] of Object.entries(item.componentes)) rows.push([`Componente ${key}`, value]);
         assessments(item.enquadramentos);
     }
     for (const item of memory.retroativos) {
+        urp(item.urpReference);
         rows.push(['Destino IR do retroativo', item.destinoIR]);
         for (const [key, value] of Object.entries(item.entrada || {})) {
             if (key === 'vinculos') continue;

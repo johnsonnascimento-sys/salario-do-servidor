@@ -71,3 +71,24 @@ test('linked historical allocation and provenance survive XLSX and PDF export wi
  assert.match(pdf, /PROTOCOL-ORIGINAL/);
  assert.match(pdf, /2025-07-20/);
 });
+
+
+test('URP provenance survives real PDF and XLSX exports; old memories remain readable', async () => {
+ const reference = { competencia: '2026-10', valor: 205.83, fonte: 'https://www.funprespjud.com.br/urp/index.php', unidadesMinimas: 10, minimo: 2058.30 };
+ const linked: PensionMemory = { mensal: { ...memory.mensal, participacao: 'vinculado', urpReference: reference },
+  retroativos: [{ id: 'retro', competencia: '2026-10', tipo: 'mensal', modo: 'completo', destinoIR: 'ea',
+   rpps: 0, complementar: 0, urpReference: reference }] };
+ assert.equal(buildPensionAuditRows(memory).some(([label]) => label === 'Fonte da URP'), false);
+ assert.equal(buildPensionAuditRows(linked).filter(([label]) => label === 'Fonte da URP').length, 2);
+ (globalThis as any).__pensionFiles = [];
+ exportToExcel({ ...state, pensionMemory: linked }, rows, null);
+ const workbook = XLSX.read(await (globalThis as any).__pensionFiles[0].blob.arrayBuffer(), { type: 'array' });
+ const audit = XLSX.utils.sheet_to_json(workbook.Sheets['Memória previdenciária'], { header: 1 }) as any[][];
+ assert.ok(audit.some(([label, value]) => label === 'Remuneração mínima em URP' && value === 2058.30));
+ assert.ok(audit.some(([label, value]) => label === 'Fonte da URP' && value === reference.fonte));
+ (globalThis as any).__pensionFiles = [];
+ exportToPDF({ ...state, pensionMemory: linked }, rows, null);
+ const pdf = new TextDecoder('latin1').decode(await (globalThis as any).__pensionFiles[0].blob.arrayBuffer());
+ assert.match(pdf, /urp\/index.php/);
+ assert.match(pdf, /2026-10/);
+});

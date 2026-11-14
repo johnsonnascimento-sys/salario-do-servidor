@@ -3,6 +3,12 @@
 
 # Changelog
 
+## Funpresp-Jud — referência URP e orientação de limites — 14/11/2026
+- Centralizada no motor a resolução temporal da URP e a validação do mínimo vinculado, com mensagens em reais, competência e fonte; a tela também informa o máximo elegível sem substituir entradas.
+- Memórias novas e exportações PDF/XLSX registram a referência utilizada no mensal, 13º e retroativos completos; snapshots antigos continuam legíveis.
+- Preparada, sem aplicação em produção, a migration `20261114_pju_urp_november.sql`: URP de R$ 206,11 publicada em 12/11/2026, com versionamento, preservação do JSON anterior e bloqueio de conflitos. Snapshots de regras históricas não são reescritos.
+- Homologação local e limites registrados em `src/docs/HOMOLOGACAO_URP_2026-11-14.md`, incluindo uma falha preexistente da suíte ampliada de rubricas manuais.
+
 ## Extensão e automação de commit e push para o GitHub — 14/11/2026
 - Ativada e configurada a extensão GitDoc (`vsls-contrib.gitdoc`) no Antigravity IDE (perfil de usuário e workspace), realizando auto-commit e auto-push no GitHub a cada salvamento ou término de atualização local.
 - Adicionadas recomendações de extensões (`vsls-contrib.gitdoc`, `eamodio.gitlens`, `github.vscode-pull-request-github`) em `.vscode/extensions.json`.

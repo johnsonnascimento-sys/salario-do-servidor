@@ -66,9 +66,9 @@ test('UI oferece modalidades e opções opt-in com confirmação de simulação 
     assert.deepEqual(calls, [['funprespRevisarOpcoes', false]]);
     tree.unmount();
 });
-test('nova simulação oferece cadastramento de competência sem preencher dados históricos automaticamente', () => {
+test('rubrica histórica oferece cadastramento de competência sem preencher dados históricos automaticamente', () => {
     const calls: any[] = [];
-    const tree = create(React.createElement(PensionRetroForm, { state: state(), styles: {}, pssTableOptions: [], update: (key, value) => calls.push([key, value]) }));
+    const tree = create(React.createElement(PensionRetroForm, { state: state({ rubricasExtras: [{ id: 'retro', descricao: 'Retroativo', tipo: 'C', valor: 100, incideIR: false, incidePSS: false, isEA: false, incideFunpresp: true, funprespCompetenciaSeparada: true }] }), styles: {}, pssTableOptions: [], update: (key, value) => calls.push([key, value]) }));
     const add = tree.root.findAllByType('button').find(button => button.children.join('') === 'Adicionar competência');
     assert.ok(add);
     act(() => add!.props.onClick());
@@ -255,4 +255,31 @@ test('legendas mensais e de múltiplos retroativos são independentes e têm ids
     assert.deepEqual(tree.root.findByType(PensionRetroForm).findAllByType('p').map(p => p.children.join('')), before);
     assert.equal(tree.root.findByType(DynamicPayrollTaxSection).findByType(PensionParticipationSelect).props.value, 'nao');
     tree.unmount();
+});
+
+
+test('URP orienta o mínimo e máximo sem substituir valores nem restaurar resumo anterior', () => {
+    const calls: any[] = [];
+    const input = state({ funprespParticipacao: 'vinculado', funprespAliq: .06,
+        funprespVinculadaInicio: '2026-06', funprespBaseIntegral: 20 });
+    const hook = renderHook(input);
+    assert.match(hook.value.funprespValidationError!, /mínimo.*24,00/);
+    const props = { styles: {}, state: input, update: (key: any, value: any) => calls.push([key, value]),
+        handleRegimePrevChange: () => {}, showFunprespSection: true, previdenciaComplementar: config,
+        funprespNormalOptions: [.06], handleFunprespParticipacaoChange: () => {},
+        pensionContext: { base: 100, teto: 1000, regimePrev: 'antigo' as const, allowed: ['nao', 'vinculado'] as any, unavailableReasons: {}, componentes: {} },
+        calculationReady: false };
+    const tree = create(React.createElement(DynamicPayrollTaxSection, props));
+    const amount = tree.root.findAllByType('input').find(input => input.props['aria-describedby'] === 'funpresp-urp-reference')!;
+    assert.equal(amount.props.value, 20);
+    assert.equal(amount.props['aria-invalid'], true);
+    assert.ok(JSON.stringify(tree.toJSON()).includes('2026-06'));
+    assert.match(tree.root.findByProps({ role: 'alert' }).children.join(''), /mínimo.*24,00/);
+    act(() => tree.update(React.createElement(DynamicPayrollTaxSection, { ...props, state: { ...input, funprespBaseIntegral: 101 } })));
+    assert.match(tree.root.findByProps({ role: 'alert' }).children.join(''), /exceder.*100,00/);
+    act(() => tree.update(React.createElement(DynamicPayrollTaxSection, { ...props, state: { ...input, funprespBaseIntegral: 24 } })));
+    assert.equal(tree.root.findAllByProps({ role: 'alert' }).length, 0);
+    assert.equal(tree.root.findAllByProps({ 'aria-label': 'Resumo compartilhado da Funpresp' }).length, 0);
+    assert.deepEqual(calls, []);
+    tree.unmount(); hook.tree.unmount();
 });

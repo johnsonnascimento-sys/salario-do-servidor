@@ -1,3 +1,4 @@
+import { resolvePensionUrp, validateLinkedPensionSalary } from './pensionUrp';
 import type { CourtConfig } from '../../../../types';
 import type { PensionCalculationMemory, PensionParticipation, PensionRetroMemory } from '../../../../types/pension';
 import type { IAgencyCalculationParams } from '../types';
@@ -136,18 +137,13 @@ export const calculateComplementaryPension = (
     if (tipo === '13' && !config.includeThirteenth) return memory;
     if (participation === 'patrocinado') memory.baseComplementar = Math.max(0, baseComplementarIntegral - teto);
     else {
-        const competence = params.competencia || '';
-        const start = params.funprespVinculadaInicio || '';
-        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(start) || start > competence) fail('informe o início da participação vinculada, anterior ou igual à competência.');
-        const urpCompetence = start.slice(0, 4) === competence.slice(0, 4)
-            ? start : `${Number(competence.slice(0, 4)) - 1}-11`;
-        const urp = config.urpByCompetence?.[urpCompetence];
-        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(competence) || !Number.isFinite(urp) || !(urp! > 0) || !config.urpSourcesByCompetence?.[urpCompetence]) {
-            fail('modalidade vinculada exige URP e fonte oficial da competência.');
-        }
+        const resolution = resolvePensionUrp(config, params.competencia || '', params.funprespVinculadaInicio || '');
+        if (!resolution.reference) fail(resolution.error!);
+        const reference = resolution.reference!;
         const declared = nonnegative(params.funprespBaseIntegral, 'salário de participação vinculado');
-        if (!Number.isFinite(config.minimumUrpUnits) || !(config.minimumUrpUnits! > 0) || declared < urp! * config.minimumUrpUnits!) fail('salário de participação vinculado inferior ao mínimo em URP configurado.');
-        if (declared > baseComplementarIntegral) fail('salário de participação vinculado não pode exceder a remuneração integral elegível.');
+        const salaryError = validateLinkedPensionSalary(declared, reference, baseComplementarIntegral);
+        if (salaryError) fail(salaryError);
+        memory.urpReference = reference;
         memory.baseComplementarIntegral = declared;
         memory.baseComplementar = declared;
     }
@@ -188,7 +184,7 @@ export const calculatePensionRetroactives = (params: IAgencyCalculationParams): 
                 return { id: resolved.id, competencia: resolved.competencia, tipo: resolved.tipo!, destinoIR: resolved.destinoIR!, modo: 'completo',
                     rpps, complementar, justificativa: resolved.justificativa, entrada: resolved,
                     regraHistoricaId: prepared.rule.id, fonteHistorica: prepared.rule.source, teto: table.teto_rgps,
-                    enquadramentos: prepared.enquadramentos,
+                    enquadramentos: prepared.enquadramentos, urpReference: complementary.urpReference,
                     baseRppsDevida: resolved.baseRppsDevida, baseComplementarDevida: resolved.baseComplementarDevida } as PensionRetroMemory;
             } catch (error) {
                 if (error instanceof PensionCalculationPendingError) throw error;
@@ -208,6 +204,7 @@ export const calculatePensionRetroactives = (params: IAgencyCalculationParams): 
         if (competenceKeys.has(key)) fail('agrupe todos os ajustes da mesma competência e espécie em um lançamento.');
         competenceKeys.add(key);
         let rpps: number, complementar: number;
+        let urpReference: PensionCalculationMemory['urpReference'];
         if (entry.modo === 'manual') {
             if (!entry.justificativa?.trim()) fail('ajuste manual exige justificativa documental.');
             rpps = nonnegative(entry.ajusteRpps ?? 0, 'ajuste RPPS');
@@ -235,11 +232,12 @@ export const calculatePensionRetroactives = (params: IAgencyCalculationParams): 
             };
             const complementary = calculateComplementaryPension(historical, base,
                 nonnegative(entry.baseComplementarDevida, 'base complementar devida'), tipo);
+            urpReference = complementary.urpReference;
             rpps = roundPension(calculatePss(complementary.baseRpps, table) - paidPss);
             complementar = roundPension(complementary.descontoFolha - paidComplementary);
             if (rpps < 0 || complementar < 0) fail('recolhimento superior ao devido: restituição deve ser tratada separadamente.');
         }
         return { id: entry.id, competencia: entry.competencia, tipo, destinoIR, modo: entry.modo || 'completo',
-            rpps: roundPension(rpps), complementar: roundPension(complementar), justificativa: entry.justificativa, entrada: { ...entry } };
+            rpps: roundPension(rpps), complementar: roundPension(complementar), justificativa: entry.justificativa, entrada: { ...entry }, urpReference };
     });
 };

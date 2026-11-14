@@ -45,7 +45,16 @@ export interface PensionRetroEntry {
     regraHistoricaId?: string;
 }
 
+export interface PensionUrpReference {
+    competencia: string;
+    valor: number;
+    fonte: string;
+    unidadesMinimas: number;
+    minimo: number;
+}
+
 export interface PensionCalculationMemory {
+    urpReference?: PensionUrpReference;
     competencia: string;
     tipo: 'mensal' | '13';
     participacao: PensionParticipation;
@@ -71,6 +80,7 @@ export interface PensionCalculationMemory {
 }
 
 export interface PensionRetroMemory {
+    urpReference?: PensionUrpReference;
     id: string;
     competencia: string;
     modo: 'completo' | 'manual';

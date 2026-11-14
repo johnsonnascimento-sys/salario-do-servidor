@@ -66,7 +66,7 @@ A classificação individual de GAS/AQ e a autorização correspondente devem re
 
 ## URP e contribuição vinculada
 
-Fonte: [tabela oficial da Funpresp-Jud](https://www.funprespjud.com.br/urp/index.php), reconferida em 05/11/2026. Datas são as publicações da tabela; não interpolar períodos ausentes. Novembro/2026 ainda não consta no candidato.
+Fonte: [tabela oficial da Funpresp-Jud](https://www.funprespjud.com.br/urp/index.php), reconferida em 14/11/2026. Datas são as publicações da tabela; não interpolar períodos ausentes. O candidato de 05/11 não continha novembro/2026. A migration candidata `20261114_pju_urp_november.sql` acrescenta esse parâmetro apenas à configuração mensal, sem aplicação em produção nesta entrega nem reescrita de snapshots históricos. Publicação da URP de novembro: 12/11/2026.
 
 | Mês de publicação | URP (R$) |
 | --- | ---: |
@@ -82,8 +82,11 @@ Fonte: [tabela oficial da Funpresp-Jud](https://www.funprespjud.com.br/urp/index
 | Agosto/2026 | 204,81 |
 | Setembro/2026 | 204,15 |
 | Outubro/2026 | 205,83 |
+| Novembro/2026 | 206,11 |
 
 Nova escolha usa a URP de referência da inscrição. Uma remuneração já eleita no mínimo não é reajustada a cada oscilação mensal: vigora até dezembro, e janeiro considera novembro anterior. Em 2026, o mínimo anual dessa situação é R$ 1.970,00. A distinção é confirmada no [comunicado oficial sobre atualização](https://www.funprespjud.com.br/atualizacao-a-partir-de-janeiro-de-2016-do-valor-da-remuneracao-de-participacao-escolhida-em-urp/). Sem referência e fonte suficientes, a simulação vinculada deve apresentar pendência, nunca inventar URP.
+
+A implementação de 14/11 centraliza essa resolução em `pensionUrp`, utilizada pelo motor e pelo formulário. A mensagem distingue parâmetro ausente/inválido de remuneração fora dos limites, informa o mínimo em reais e preserva as entradas. A memória opcional `urpReference` registra competência, valor, fonte, unidades mínimas e mínimo aplicado; exportações novas e resumos compartilhados apresentam esses dados. Memórias antigas sem o campo permanecem legíveis. Uma eleição em novembro pode produzir efeitos apenas em janeiro; o usuário informa a referência da base efetivamente vigente na folha, sem alteração automática da data ou do valor. Evidências e limites em [Homologação URP de 14/11/2026](./HOMOLOGACAO_URP_2026-11-14.md).
 
 ## Conciliação anonimizada dos anexos
 

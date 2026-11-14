@@ -1,3 +1,5 @@
+import { resolvePensionUrp, validateLinkedPensionSalary } from '../../services/agency/engine/modules/pensionUrp';
+import { toReferenceMonthIndex } from './referenceDateUtils';
 import React, { useEffect, useState } from 'react';
 import { PensionRegimeSelect } from './PensionRegimeSelect';
 import type { PensionContext } from '../../services/agency/engine/modules/pensionContext';
@@ -33,6 +35,9 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady
 }) => {
     const participates = state.funprespParticipacao !== 'nao';
+    const urp = state.funprespParticipacao === 'vinculado' ? resolvePensionUrp(config,
+        `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}`, state.funprespVinculadaInicio ?? '') : null;
+    const linkedError = urp?.reference ? validateLinkedPensionSalary(state.funprespBaseIntegral, urp.reference, pensionContext?.base) : urp?.error;
     const optionalItems = [
         ['fc', 'funprespIncluirFC', 'FC/CJ'], ['gas', 'funprespIncluirGAS', 'GAS'],
         ['gae', 'funprespIncluirGAE', 'GAE'], ['aqTreino', 'funprespIncluirAQTreino', 'AQ de treinamento']
@@ -78,14 +83,24 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     </select>
                 </label>}
                 {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Remuneração de participação escolhida (R$)
-                    <input type="number" className={styles.input} min={0} step="0.01" value={state.funprespBaseIntegral ?? ''} onChange={e => update('funprespBaseIntegral', toPositiveNumber(e.target.value))} />
+                    <input type="number" className={styles.input} min={0} step="0.01" aria-describedby="funpresp-urp-reference" aria-invalid={Boolean(linkedError)} value={state.funprespBaseIntegral ?? ''} onChange={e => update('funprespBaseIntegral', toPositiveNumber(e.target.value))} />
                 </label>}
                 {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Competência de inscrição ou eleição da base
                     <input type="month" className={styles.input} value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
                 </label>}
             </div>
+            {urp?.reference && <p id="funpresp-urp-reference" className={PENSION_HELP_CLASS}>
+                Mínimo: {formatCurrency(urp.reference.minimo)} ({urp.reference.unidadesMinimas} URPs).
+                {' '}URP de referência: {formatCurrency(urp.reference.valor)} — {urp.reference.competencia}.
+                {' '}<a href={/^https?:\/\//i.test(urp.reference.fonte) ? urp.reference.fonte : undefined} target="_blank" rel="noopener noreferrer" className="underline">Fonte oficial</a>
+                {pensionContext && <> Máximo pela base elegível: {formatCurrency(pensionContext.base)}.</>}
+            </p>}
+            {state.funprespParticipacao === 'vinculado' && <p className={PENSION_HELP_CLASS}>
+                Informe a competência de referência da base vigente nesta folha conforme seu cadastro no plano.
+                Uma eleição feita em novembro pode produzir efeitos em janeiro do ano seguinte. A data e o valor informados não são alterados automaticamente.
+            </p>}
             {!pensionContext && <p role="status" className={PENSION_HELP_CLASS}>Aguarde a base previdenciária ou confira os dados salariais para escolher sua participação.</p>}
-            {!selectionRequired && funprespValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespValidationError}</p>}
+            {!selectionRequired && (linkedError || funprespValidationError) && <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedError || funprespValidationError}</p>}
             {participates && calculationReady && state.pensionMemory && <details className="group rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                     <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>

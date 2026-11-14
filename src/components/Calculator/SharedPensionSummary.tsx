@@ -1,10 +1,14 @@
 import React from 'react';
-import type { PensionCalculationMemory, PensionMemory, PensionRubricAssessment } from '../../types/pension';
+import type { PensionCalculationMemory, PensionMemory, PensionRubricAssessment, PensionUrpReference } from '../../types/pension';
 import type { Rubrica } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 
 /** Informational breakdown only: the payroll engine already accounts for the deductions. */
 export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: Rubrica[]; scope?: 'monthly' | 'thirteenth' | 'historical'; historicalEntryId?: string; embedded?: boolean }> = ({ memory, rubricas = [], scope, historicalEntryId, embedded = false }) => {
+    const urp = (reference?: PensionUrpReference) => reference && <p className="mt-2 break-words">
+        URP de referência: {reference.competencia} — {formatCurrency(reference.valor)}.
+        {' '}Mínimo: {formatCurrency(reference.minimo)} ({reference.unidadesMinimas} URPs). Fonte: {reference.fonte}
+    </p>;
     const assessments = (items: PensionRubricAssessment[] = []) => items.length > 0 && <details className="mt-2">
         <summary>Enquadramentos e fontes das rubricas</summary>
         {items.map(item => <div key={item.rubricaId} className="mt-2 break-words">
@@ -32,6 +36,7 @@ export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: 
                     <dt>{label}</dt><dd className="font-mono">{formatCurrency(value)}</dd>
                 </div>)}
             </dl>
+            {urp(item.urpReference)}
             {assessments(item.enquadramentos)}
         </section>;
     };
@@ -48,6 +53,7 @@ export const SharedPensionSummary: React.FC<{ memory: PensionMemory; rubricas?: 
                 <span>{rubricas.find(rubrica => rubrica.id === link.rubricaId)?.descricao.trim() || 'Rubrica vinculada'}</span>
                 <span className="font-mono">{formatCurrency(link.valor)}</span>
             </div>)}
+            {urp(entry.urpReference)}
             {entry.fonteHistorica && <p>Fonte: {entry.fonteHistorica}</p>}
             {assessments(entry.enquadramentos)}
         </section>) : []),
