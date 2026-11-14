@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Correção da associação de botões às categorias — 14/11/2026
+- Corrigida a associação no catálogo: horas extras e substituição em **Serviço Extraordinário e Substituições**; GAACTA e Licença Compensatória em **Gratificações**.
+
 ## Reorganização das categorias de trabalho e gratificações — 14/11/2026
 - Separadas as categorias **Serviço Extraordinário e Substituições** (horas extras e substituição de função) e **Gratificações** (GAE/GAS, GAACTA e Licença Compensatória).
 

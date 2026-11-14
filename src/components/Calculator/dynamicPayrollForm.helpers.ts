@@ -92,21 +92,21 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         id: 'hora_extra',
         label: 'Serviço Extraordinário (Horas Extras)',
         description: 'Cálculo de 50% e 100% com divisor da jornada ordinária ou especial',
-        category: 'gratificacoes',
+        category: 'trabalho',
         tags: ['hora', 'extra', 'he', 'servico', 'extraordinario', '50%', '100%']
     },
     {
         id: 'substituicao',
         label: 'Substituição de Função',
         description: 'Substituição de titular de cargo em comissão ou função de confiança',
-        category: 'gratificacoes',
+        category: 'trabalho',
         tags: ['substituicao', 'funcao', 'cargo', 'comissao', 'titular', 'dias', 'fc', 'cj']
     },
     {
         id: 'gaacta',
         label: 'Gratificação de Alta Complexidade (GAACTA)',
         description: 'Gratificação de 15% sobre remuneração de CJ (Res. STM 397/26 e JF)',
-        category: 'trabalho',
+        category: 'gratificacoes',
         tags: ['gaacta', 'alta', 'complexidade', 'cj', '15%']
     },
     {
@@ -120,7 +120,7 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         id: 'licenca',
         label: 'Licença Compensatória',
         description: 'Indenização de dias de licença compensatória (Res. STM 376/2025 - Revogada pela Res. STM 397/2026)',
-        category: 'trabalho',
+        category: 'gratificacoes',
         tags: ['licenca', 'compensatoria', 'dias', 'acervo', 'stm', '376', 'revogada']
     },
     {
