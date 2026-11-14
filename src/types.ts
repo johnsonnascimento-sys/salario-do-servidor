@@ -813,7 +813,7 @@ export const INITIAL_STATE: CalculatorState = {
   pensaoIncideAQTitulo: true,
   pensaoIncideAQTreino: true,
   pensaoIncideGrat: true,
-  pensaoIncideGAACTA: true,
+  pensaoIncideGAACTA: false,
   pensaoIncideVPNI: true,
   pensaoIncideATS: true,
   pensaoIncideAbono: true,

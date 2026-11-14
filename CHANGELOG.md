@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Pensão alimentícia — padrão da GAACTA — 14/11/2026
+- A GAACTA inicia desmarcada na composição da base da pensão, seguindo o padrão das demais verbas indenizatórias citadas.
+
 ## Nota de incidências da GAACTA — 14/11/2026
 - Removida do card a nota sobre natureza indenizatória e isenção de PSS/IRRF, a pedido do usuário.
 

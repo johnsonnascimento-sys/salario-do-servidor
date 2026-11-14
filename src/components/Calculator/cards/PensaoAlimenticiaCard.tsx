@@ -71,7 +71,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
     const incideAQTitulo = state.pensaoIncideAQTitulo !== false;
     const incideAQTreino = state.pensaoIncideAQTreino !== false;
     const incideGrat = state.pensaoIncideGrat !== false;
-    const incideGAACTA = state.pensaoIncideGAACTA !== false;
+    const incideGAACTA = state.pensaoIncideGAACTA === true;
     const incideVPNI = state.pensaoIncideVPNI !== false;
     const incideATS = state.pensaoIncideATS !== false;
     const incideAbono = state.pensaoIncideAbono !== false;
