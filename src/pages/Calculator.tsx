@@ -60,6 +60,16 @@ export default function Calculator() {
         loggedUserName,
     } = useCalculator();
 
+    const emptyRetroDraftIds = (state.pensionRetroEntries ?? []).filter(entry =>
+        entry.competencia === '' && entry.modo === 'completo' && entry.tipo === 'mensal' &&
+        Array.isArray(entry.vinculos) && entry.vinculos.length === 0 &&
+        Object.keys(entry).every(key => ['id', 'competencia', 'modo', 'tipo', 'vinculos'].includes(key))
+    ).map(entry => entry.id);
+    const hasHistoricalRubrics = state.rubricasExtras.some(rubrica => Number(rubrica.valor) > 0 &&
+        (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)));
+    const onlyEmptyRetroDrafts = !hasHistoricalRubrics && emptyRetroDraftIds.length > 0 &&
+        emptyRetroDraftIds.length === (state.pensionRetroEntries ?? []).length;
+
     const location = useLocation();
     const navigationState = location.state as CalculatorNavigationState | null;
     const editPayslipId = new URLSearchParams(location.search).get('editPayslipId') || '';
@@ -266,9 +276,16 @@ export default function Calculator() {
                     </div>}
                     {calculationPending && <div id="calculator-pension-pending" role="status" aria-live="polite" className="rounded-xl border border-warning-300 bg-warning-50 dark:bg-warning-900/20 p-4 text-body text-warning-700 dark:text-warning-300">
                         <p className="font-semibold">Apuração pendente</p>
-                        <p className="mt-1">{calculationPending.message}</p>
-                        <p className="mt-2">Há dados de uma competência anterior incompletos. Revise ou remova a competência salva na seção de verbas retroativas. Seus dados foram mantidos.</p>
-                        <a href="#pension-retro-form" className="mt-2 inline-block font-semibold underline">Revisar contribuição de verbas retroativas</a>
+                        {onlyEmptyRetroDrafts ? <>
+                            <p className="mt-1">Há uma competência anterior vazia no rascunho, sem verba retroativa vinculada. Ela impede a conclusão do cálculo.</p>
+                            <button type="button" className="mt-2 font-semibold underline" onClick={() =>
+                                update('pensionRetroEntries', (state.pensionRetroEntries ?? []).filter(entry => !emptyRetroDraftIds.includes(entry.id)))
+                            }>Descartar competência vazia</button>
+                        </> : <>
+                            <p className="mt-1">{calculationPending.message}</p>
+                            <p className="mt-2">Revise os dados da competência anterior na seção de verbas retroativas. Seus dados foram mantidos.</p>
+                            <a href="#pension-retro-form" className="mt-2 inline-block font-semibold underline">Revisar contribuição de verbas retroativas</a>
+                        </>}
                         <ul className="mt-2 list-disc pl-5">
                             {state.rubricasExtras.filter(rubrica => calculationPending.rubricaIds.includes(rubrica.id)).map(rubrica =>
                                 <li key={rubrica.id}>{rubrica.descricao.trim() || 'Rubrica manual sem descrição'}</li>)}
