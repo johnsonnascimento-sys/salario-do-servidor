@@ -65,9 +65,10 @@ export interface PresetCatalogItem {
 export const PRESET_CATEGORIES = [
     {
         id: 'trabalho',
-        title: 'Trabalho Extraordinário & Funções',
-        subtitle: 'Horas extras, substituições de chefia, gratificações e licença compensatória'
+        title: 'Serviço Extraordinário e Substituições',
+        subtitle: 'Horas extras e substituição de função'
     },
+    { id: 'gratificacoes', title: 'Gratificações', subtitle: 'GAE / GAS, GAACTA e Licença Compensatória' },
     {
         id: 'direitos',
         title: 'Direitos Periódicos',
@@ -83,7 +84,6 @@ export const PRESET_CATEGORIES = [
         title: 'Benefícios & Vantagens',
         subtitle: 'Abono de permanência e vantagens pessoais (VPNI/ATS)'
     },
-    { id: 'gratificacoes', title: 'Gratificações específicas', subtitle: 'GAE e GAS conforme o cargo e a atividade' },
     { id: 'descontos', title: 'Descontos', subtitle: 'Descontos e obrigações da folha' }
 ] as const;
 
@@ -92,14 +92,14 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         id: 'hora_extra',
         label: 'Serviço Extraordinário (Horas Extras)',
         description: 'Cálculo de 50% e 100% com divisor da jornada ordinária ou especial',
-        category: 'trabalho',
+        category: 'gratificacoes',
         tags: ['hora', 'extra', 'he', 'servico', 'extraordinario', '50%', '100%']
     },
     {
         id: 'substituicao',
         label: 'Substituição de Função',
         description: 'Substituição de titular de cargo em comissão ou função de confiança',
-        category: 'trabalho',
+        category: 'gratificacoes',
         tags: ['substituicao', 'funcao', 'cargo', 'comissao', 'titular', 'dias', 'fc', 'cj']
     },
     {
