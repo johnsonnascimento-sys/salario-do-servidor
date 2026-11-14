@@ -360,24 +360,6 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                 </div>
             </div>
 
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-2">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                    Incidências na Folha Mensal
-                </div>
-                <div className="flex items-center gap-6 flex-wrap">
-                    <label className={styles.checkboxLabel}>
-                        <input
-                            type="checkbox"
-                            className={styles.checkbox}
-                            checked={!entry.isEA && !entry.excluirIR}
-                            onChange={e => updateEntry(entry.id, { excluirIR: !e.target.checked, isEA: false })}
-                        />
-                        <span>Incidir no Imposto de Renda (IR Mensal)</span>
-                    </label>
-                    {entry.isEA && <span className="text-body-xs text-primary font-medium">IR de Exercício Anterior (IR-EA / RRA) ativo</span>}
-                </div>
-            </div>
-
             <details className="group pt-1" open={entry.isEA || entry.excluirIR || undefined}>
                 <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary rounded">
                     <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />

@@ -3,6 +3,10 @@
 
 # Changelog
 
+## Simplificação do card de HE — 14/11/2026
+- Removido o contêiner de IR mensal; a incidência padrão permanece implícita e as opções de EA e exclusão de IR continuam na seção avançada.
+
+
 ## Organização tributária do card de HE — 14/11/2026
 - Incidência de IR mensal em contêiner próprio e opções de IR-EA e exclusão de IR em seção recolhível, seguindo a identidade do card de crédito.
 - Preservados os meses de EA, a exclusividade entre os modos de IR e o isolamento entre instâncias. Sem opção de PSS para horas extras.
