@@ -605,11 +605,11 @@ test('OvertimeCard: IR mensal, EA e exclusão são exclusivos e isolados por ins
     });
     const ea = 'Incluir na base do IR de Exercício Anterior (IR-EA / RRA)';
     assert.equal(JSON.stringify(tree.toJSON()).includes('Incidências na Folha Mensal'), false);
-    assert.equal(tree.root.findAllByType('details')[0].props.open, undefined);
+    assert.equal(tree.root.findAllByType('details')[1].props.open, undefined);
     assert.equal(JSON.stringify(tree.toJSON()).includes('PSS'), false);
     change(ea, true);
     assert.deepEqual(entries[0].competenciasEA, ['2025-12']);
-    assert.equal(tree.root.findAllByType('details')[0].props.open, true);
+    assert.equal(tree.root.findAllByType('details')[1].props.open, true);
     change(ea, false);
     assert.equal(entries[0].isEA, false);
     assert.equal(entries[0].excluirIR, false);

@@ -3,6 +3,10 @@
 
 # Changelog
 
+## Jornada e divisor avançados no card de HE — 14/11/2026
+- Jornada semanal e divisor mensal agora ficam recolhidos em Opções avançadas de jornada; o divisor aplicado permanece visível no resumo. A seção inicia aberta em jornada personalizada.
+
+
 ## Organização tributária do card de Substituição — 14/11/2026
 - Opções de IR-EA, exclusão de IR e PSS-EA agrupadas em seção recolhível no padrão de HE. Competências e valor documentado mantidos no mesmo grupo; dias por função continuam na área principal.
 

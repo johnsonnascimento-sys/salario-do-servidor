@@ -161,7 +161,14 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         </div>
                     )}
 
-                    {/* Bloco de Jornada e Divisor */}
+                    <details className="group" open={selectedOption === 'custom' || undefined}>
+                        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                            <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
+                            <span>Opções avançadas de jornada</span>
+                            <span className="font-normal text-neutral-500 dark:text-neutral-400">Divisor aplicado: {currentDivisor}</span>
+                            <ChevronDown className="w-3.5 h-3.5 shrink-0 group-open:rotate-180" aria-hidden="true" />
+                        </summary>
+                        <div className="mt-2.5">
                     <div className="bg-white/80 dark:bg-neutral-800/80 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 space-y-3">
                         <div className="flex items-center justify-between">
                             <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
@@ -234,6 +241,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             </div>
                         )}
                     </div>
+
+                        </div>
+                    </details>
 
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                         {isJMU && (
