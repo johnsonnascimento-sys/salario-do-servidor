@@ -1,7 +1,7 @@
 {
   "recommendations": [
+    "vsls-contrib.gitdoc",
     "eamodio.gitlens",
     "github.vscode-pull-request-github"
   ]
 }
-

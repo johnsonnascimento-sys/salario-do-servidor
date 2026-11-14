@@ -4,6 +4,13 @@
   "git.autoStash": true,
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
-  "git.postCommitCommand": "push"
+  "git.postCommitCommand": "push",
+  "gitdoc.enabled": true,
+  "gitdoc.autoPush": "onCommit",
+  "gitdoc.pushMode": "push",
+  "gitdoc.autoPull": "onPush",
+  "gitdoc.commitValidationLevel": "none",
+  "gitdoc.autoCommitDelay": 15000,
+  "gitdoc.pullOnOpen": true,
+  "gitdoc.commitOnClose": true
 }
-
