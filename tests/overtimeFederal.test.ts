@@ -67,6 +67,7 @@ const makeMockConfig = (overtimeMonthHours = 200): CourtConfig => ({
             tecnico: { C13: 9052.83 }
         },
         funcoes: {
+            fc1: 1000,
             fc5: 2662.06,
             cj2: 8822.98,
             sem_funcao: 0
@@ -91,6 +92,62 @@ const makeMockConfig = (overtimeMonthHours = 200): CourtConfig => ({
         noFunctionLabel: 'Sem Função',
         cargoLabels: {}
     }
+});
+
+test('HE em substituição zera destinos inferiores/iguais e aceita apenas destinos superiores', async () => {
+    const base = {
+        periodo: 0, cargo: 'analista', padrao: 'C13', funcao: 'fc5',
+        tabelaPSS: '2026', tabelaIR: '2025_maio', regimePrev: 'rpc',
+        recebeAbono: false, gratEspecificaTipo: 'nenhuma',
+        aqTituloVR: 0, aqTreinoVR: 0, aqTituloPerc: 0, aqTreinoPerc: 0,
+        agencyConfig: makeMockConfig(200)
+    };
+    const calculate = (funcao: string, target: string, gratEspecificaTipo = 'nenhuma') => calculateOvertime({
+        ...base, funcao, gratEspecificaTipo,
+        overtimeEntries: [{ id: 'he-subst', qtd50: 9, qtd100: 9, usarSubstituicaoFuncao: true,
+            horasPorFuncao: { [target]: { qtd50: 10, qtd100: 5 } }, isEA: false, excluirIR: false }]
+    });
+    for (const target of ['fc1', 'fc5', 'sem_funcao', 'inexistente']) {
+        const result = await calculate('fc5', target);
+        assert.equal(result.heTotal, 0, `Destino ${target} não deve remunerar HE nesse modo, mesmo com horas globais residuais`);
+        assert.equal(result.heVal50, 0);
+        assert.equal(result.heVal100, 0);
+    }
+    const superior = await calculate('fc5', 'cj2');
+    const normalCJ = await calculateOvertime({ ...base, funcao: 'cj2', overtimeEntries: [
+        { id: 'he-normal', qtd50: 10, qtd100: 5, usarSubstituicaoFuncao: false, isEA: false, excluirIR: false }
+    ] });
+    assert.equal(superior.heTotal, normalCJ.heTotal);
+    assert.ok(superior.heTotal > 0);
+    assert.deepEqual(superior.entries[0].funcoesSubstituicaoElegiveis, ['cj2']);
+    const imported = await calculateOvertime({ ...base, overtimeEntries: [
+        { id: 'he-antiga', qtd50: 10, qtd100: 10, usarSubstituicaoFuncao: true,
+            horasPorFuncao: { fc1: { qtd50: 10, qtd100: 5 } }, valorBrutoManual: 1000, isEA: true, excluirIR: false }
+    ] });
+    assert.equal(imported.heTotal, 0, 'Valor manual antigo não pode contornar a elegibilidade no modo de substituição');
+    assert.equal((await calculate('cj2', 'fc5')).heTotal, 0);
+    assert.equal((await calculate('cj2', 'cj2')).heTotal, 0);
+    assert.ok((await calculate('sem_funcao', 'fc1')).heTotal > 0);
+    for (const grat of ['gae', 'gas']) {
+        assert.equal((await calculate('sem_funcao', 'fc1', grat)).heTotal, 0);
+        assert.ok((await calculate('sem_funcao', 'cj2', grat)).heTotal > 0);
+    }
+});
+
+test('OvertimeCard bloqueia destinos sem diferença inclusive em lançamentos já preenchidos', () => {
+    const tree = create(React.createElement(OvertimeCard, {
+        entry: { id: 'he', qtd50: 0, qtd100: 0, usarSubstituicaoFuncao: true, isEA: false, excluirIR: false,
+            horasPorFuncao: { fc1: { qtd50: 10, qtd100: 5 } } },
+        updateEntry: () => {}, functionKeys: ['fc1', 'fc5', 'cj2'], eligibleFunctionKeys: ['cj2'],
+        competenciaReferencia: '2026-11', styles: {}, courtConfig: makeMockConfig()
+    }));
+    for (const key of ['FC1', 'FC5']) {
+        for (const rate of ['50', '100']) {
+            assert.equal(tree.root.findByProps({ 'aria-label': `${key} — Horas (${rate}%)` }).props.disabled, true);
+        }
+    }
+    assert.equal(tree.root.findByProps({ 'aria-label': 'CJ2 — Horas (50%)' }).props.disabled, false);
+    tree.unmount();
 });
 
 // =========================================================================

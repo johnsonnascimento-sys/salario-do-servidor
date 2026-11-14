@@ -7,6 +7,7 @@ interface OvertimeCardProps {
     entry: OvertimeEntry;
     updateEntry: (id: string, patch: Partial<OvertimeEntry>) => void;
     functionKeys: string[];
+    eligibleFunctionKeys?: string[];
     competenciaReferencia: string;
     styles: any;
     courtConfig?: CourtConfig;
@@ -18,6 +19,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     entry,
     updateEntry,
     functionKeys,
+    eligibleFunctionKeys = [],
     competenciaReferencia,
     styles,
     courtConfig,
@@ -33,9 +35,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
     const currentDivisor = entry.divisor && entry.divisor > 0 ? entry.divisor : defaultDivisor;
 
-    const totalHoras: number = usarSubstituicaoFuncao && entry.horasPorFuncao
-        ? Object.values(entry.horasPorFuncao as Record<string, { qtd50?: number; qtd100?: number }>).reduce(
-            (acc: number, h) => acc + (Number(h?.qtd50) || 0) + (Number(h?.qtd100) || 0),
+    const totalHoras: number = usarSubstituicaoFuncao
+        ? Object.entries((entry.horasPorFuncao || {}) as Record<string, { qtd50?: number; qtd100?: number }>).reduce(
+            (acc: number, [key, h]) => acc + (eligibleFunctionKeys.includes(key) ? (Number(h?.qtd50) || 0) + (Number(h?.qtd100) || 0) : 0),
             0
         )
         : (Number(entry.qtd50) || 0) + (Number(entry.qtd100) || 0);
@@ -306,6 +308,9 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         </div>
                     ) : (
                         <div className="mt-4 border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden">
+                            <p className="p-3 text-body-xs text-neutral-500 dark:text-neutral-400">
+                                Apenas funções que geram diferença de substituição estão habilitadas. Funções menores ou iguais não geram valor neste modo. Para calcular horas extras pela sua função atual, desmarque a opção de substituição.
+                            </p>
                             <div className="hidden sm:grid bg-neutral-50 dark:bg-neutral-900/40 p-2 text-body-xs font-semibold text-neutral-600 dark:text-neutral-300 grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2">
                                 <div>Função substituída no dia</div>
                                 <div className="text-center">Horas (50%)</div>
@@ -313,6 +318,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             </div>
                             <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
                                 {functionKeys.map((func) => {
+                                    const eligible = eligibleFunctionKeys.includes(func);
                                     const h50 = entry.horasPorFuncao?.[func]?.qtd50 || 0;
                                     const h100 = entry.horasPorFuncao?.[func]?.qtd100 || 0;
 
@@ -323,6 +329,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                         >
                                             <div className="text-body-xs font-medium text-neutral-700 dark:text-neutral-300 break-words">
                                                 {func.toUpperCase()}
+                                                {!eligible && <span className="block text-label text-neutral-500 font-normal">Sem diferença de substituição</span>}
                                             </div>
                                             <div className="grid grid-cols-2 gap-2 sm:contents">
                                                 <div className="sm:hidden text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
@@ -332,6 +339,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                     type="number"
                                                     min="0"
                                                     value={h50 || ''}
+                                                    disabled={!eligible}
+                                                    aria-label={`${func.toUpperCase()} — Horas (50%)`}
                                                     onChange={e => {
                                                         const val = Math.max(0, Number(e.target.value) || 0);
                                                         const current = entry.horasPorFuncao || {};
@@ -342,7 +351,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                             }
                                                         });
                                                     }}
-                                                    className={`${styles.input} text-center h-8`}
+                                                    className={`${styles.input} text-center h-8 disabled:opacity-40 disabled:cursor-not-allowed`}
                                                     placeholder="0"
                                                 />
                                                 <div className="sm:hidden text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
@@ -352,6 +361,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                     type="number"
                                                     min="0"
                                                     value={h100 || ''}
+                                                    disabled={!eligible}
+                                                    aria-label={`${func.toUpperCase()} — Horas (100%)`}
                                                     onChange={e => {
                                                         const val = Math.max(0, Number(e.target.value) || 0);
                                                         const current = entry.horasPorFuncao || {};
@@ -362,7 +373,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                             }
                                                         });
                                                     }}
-                                                    className={`${styles.input} text-center h-8`}
+                                                    className={`${styles.input} text-center h-8 disabled:opacity-40 disabled:cursor-not-allowed`}
                                                     placeholder="0"
                                                 />
                                             </div>

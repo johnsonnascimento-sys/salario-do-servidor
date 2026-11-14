@@ -29,6 +29,7 @@ export interface OvertimeResult {
         valorHoraNormal?: number;
         valorHora50?: number;
         valorHora100?: number;
+        funcoesSubstituicaoElegiveis?: string[];
     }>;
 }
 
@@ -71,6 +72,9 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     // precisa superar a função atual acrescida da gratificação específica.
     const baseAbatimentoSubstituicao =
         (isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0)) + gratVal;
+    const funcoesSubstituicaoElegiveis = Object.keys(funcoes).filter(key =>
+        !isNoFunction(key, config) && funcoes[key] > baseAbatimentoSubstituicao
+    );
 
     // Função auxiliar para calcular o valor da baseHE para uma função específica (a própria ou substituída)
     const calcHEForFunction = (funcKey: string, q50: number, q100: number, divisor: number) => {
@@ -122,7 +126,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             const qtd100Global = Math.max(0, Number(entry.qtd100 || 0));
             
             // Calcula as horas inseridas no escopo "global" do card usando a função titular
-            if (qtd50Global > 0 || qtd100Global > 0) {
+            if (!entry.usarSubstituicaoFuncao && (qtd50Global > 0 || qtd100Global > 0)) {
                 const res = calcHEForFunction(params.funcao, qtd50Global, qtd100Global, entryDivisor);
                 heVal50 += res.v50;
                 heVal100 += res.v100;
@@ -131,14 +135,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             // Se houver grid de horas por função, calcula dinamicamente para cada uma
             if (entry.usarSubstituicaoFuncao && entry.horasPorFuncao) {
                 for (const [funcKey, horas] of Object.entries(entry.horasPorFuncao)) {
+                    if (!funcoesSubstituicaoElegiveis.includes(funcKey)) continue;
                     const h50 = Math.max(0, Number(horas.qtd50 || 0));
                     const h100 = Math.max(0, Number(horas.qtd100 || 0));
                     if (h50 > 0 || h100 > 0) {
-                        const valorFuncaoSubstituida = isNoFunction(funcKey, config) ? 0 : (funcoes[funcKey] || 0);
-                        const funcaoParaRemunerar = valorFuncaoSubstituida > baseAbatimentoSubstituicao
-                            ? funcKey
-                            : params.funcao;
-                        const res = calcHEForFunction(funcaoParaRemunerar, h50, h100, entryDivisor);
+                        const res = calcHEForFunction(funcKey, h50, h100, entryDivisor);
                         heVal50 += res.v50;
                         heVal100 += res.v100;
                     }
@@ -148,7 +149,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             heVal50 = roundCurrency(heVal50);
             heVal100 = roundCurrency(heVal100);
             let heTotal = sumCurrency([heVal50, heVal100]);
-            if (entry.valorBrutoManual !== undefined) {
+            if (entry.valorBrutoManual !== undefined && !entry.usarSubstituicaoFuncao) {
                 if (!Number.isFinite(entry.valorBrutoManual) || entry.valorBrutoManual < 0) {
                     throw new Error('IR-EA: valor bruto manual de hora extra inválido.');
                 }
@@ -174,7 +175,8 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 divisor: entryDivisor,
                 valorHoraNormal,
                 valorHora50,
-                valorHora100
+                valorHora100,
+                funcoesSubstituicaoElegiveis
             };
         });
 

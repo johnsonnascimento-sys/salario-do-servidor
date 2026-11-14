@@ -64,6 +64,7 @@ export interface CalculatedOvertimeEntry {
     valorHoraNormal?: number;
     valorHora50?: number;
     valorHora100?: number;
+    funcoesSubstituicaoElegiveis?: string[];
 }
 
 export interface CalculatedSubstitutionEntry {

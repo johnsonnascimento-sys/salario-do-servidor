@@ -3,6 +3,10 @@
 
 # Changelog
 
+## Bloqueio de HE em substituições sem diferença — 14/11/2026
+- Corrigida a interpretação anterior: destinos inferiores ou iguais passam a gerar zero no modo de substituição, em vez de usar a função titular. Campos inelegíveis ficam desabilitados a partir do resultado do motor; lançamentos antigos e horas globais residuais não contornam a restrição.
+- Acrescentados testes de regressão de motor e interface para FC/CJ, servidor sem função e GAE/GAS.
+
 ## Horas extras durante substituição de função — 14/11/2026
 - O HE usa a remuneração da função substituída somente quando ela supera o limite aplicado no card de Substituição; funções abaixo desse limite preservam o cálculo pela função titular.
 
