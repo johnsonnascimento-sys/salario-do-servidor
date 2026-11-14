@@ -136,7 +136,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
         <div className="space-y-4">
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
                 <summary className="cursor-pointer text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                    Composição da Base da Remuneração — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    Composição da base de cálculo da hora extra — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </summary>
                 <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">
                     Selecione as parcelas para calcular a hora extra neste card. Na substituição, a parcela FC/CJ acompanha a função substituída elegível; os valores abaixo representam a função atual.

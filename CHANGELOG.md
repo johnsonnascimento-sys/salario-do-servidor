@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Rótulos e composição recolhível — 14/11/2026
+- HE: título ajustado para “Composição da base de cálculo da hora extra”. GAACTA: parcelas selecionadas recolhidas em container expansível.
+
 ## VPNI dinâmica na base de HE — 14/11/2026
 - Removidas as opções legadas VPNI — Lei e VPNI — Decisão da composição de HE. A VPNI passa a ser selecionada pelos créditos dinâmicos adicionados em Benefícios & Vantagens, por ID do card, sem somar os campos antigos à base de HE.
 

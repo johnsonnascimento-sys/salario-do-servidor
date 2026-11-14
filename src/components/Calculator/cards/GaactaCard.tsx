@@ -151,7 +151,11 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-3 p-4 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                    <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40">
+                        <summary className="cursor-pointer px-4 py-3 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                            Parcelas selecionadas para a base da GAACTA
+                        </summary>
+                        <div className="space-y-3 p-4 pt-1">
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                             Selecione as parcelas que compõem a remuneração para fins de aplicação da GAACTA:
                         </p>
@@ -309,7 +313,8 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                                 />
                             </div>
                         </div>
-                    </div>
+                        </div>
+                    </details>
                 )}
             </div>
 
