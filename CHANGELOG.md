@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Cabeçalho da base da GAACTA — 14/11/2026
+- Removido o título antigo e o subtotal separado. O container recolhível agora apresenta “Composição da base de cálculo da GAACTA - R$ …”, tanto na composição por parcelas quanto na base manual.
+
 ## Rótulos e composição recolhível — 14/11/2026
 - HE: título ajustado para “Composição da base de cálculo da hora extra”. GAACTA: parcelas selecionadas recolhidas em container expansível.
 
