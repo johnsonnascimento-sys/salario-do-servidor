@@ -28,12 +28,13 @@ interface DynamicPayrollTaxSectionProps {
     pensionContext?: PensionContext | null;
     selectionRequired?: boolean;
     calculationReady?: boolean;
+    deducaoPorDependente?: number;
 }
 
 export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> = ({
     styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
-    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady
+    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady, deducaoPorDependente
 }) => {
     const participates = state.funprespParticipacao !== 'nao';
     const urp = state.funprespParticipacao === 'vinculado' ? resolvePensionUrp(config,
@@ -169,6 +170,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <div className="flex flex-wrap justify-between gap-2"><dt>Regime previdenciário</dt><dd>{state.regimePrev === 'rpc' || state.regimePrev === 'migrado' ? 'RPPS limitado ao teto do RGPS' : 'RPPS sem teto do RGPS'}</dd></div>
                     <div className="flex flex-wrap justify-between gap-2"><dt>PSS sobre FC/CJ</dt><dd>{state.pssSobreFC ? 'Incluído' : 'Não incluído'}</dd></div>
                     <div className="flex flex-wrap justify-between gap-2"><dt>Dependentes informados para IR</dt><dd className="font-mono">{state.dependentes}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-2"><dt>Abatimento mensal dos dependentes (IR)</dt><dd className="font-mono">{formatCurrency(state.dependentes * (deducaoPorDependente ?? 0))}</dd></div>
                     {showFunprespSection && <div className="flex flex-wrap justify-between gap-2"><dt>Participação na Funpresp</dt><dd>{state.funprespParticipacao === 'nao' ? 'Não participa' : state.funprespParticipacao === 'patrocinado' ? 'Patrocinada — com contrapartida' : 'Vinculada — sem contrapartida'}</dd></div>}
                 </dl>
                 {calculationReady ? <>

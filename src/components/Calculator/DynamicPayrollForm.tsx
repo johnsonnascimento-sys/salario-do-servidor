@@ -293,6 +293,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     pensionContext={pensionContexts?.monthly ?? null}
                     selectionRequired={pensionSelection.incompatible}
                     calculationReady={calculationReady}
+                    deducaoPorDependente={courtConfig.values?.deducao_dep ?? 0}
                 />
 
             </div>
