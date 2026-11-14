@@ -304,17 +304,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <div className={styles.card}>
                 <h3 className={`${styles.sectionTitle} relative`}>
                     <Sparkles className="w-4 h-4 text-primary" />
-                    Adicionais, Verbas e Benefícios
+                    Adicionais, Verbas, Benefícios e Pensão Alimentícia
                     <span className="relative inline-flex items-center group">
                         <button
                             type="button"
-                            aria-label="Informações sobre adicionais, verbas e benefícios"
+                            aria-label="Informações sobre adicionais, verbas, benefícios e pensão alimentícia"
                             className="rounded p-1 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
                         >
                             <Info className="w-4 h-4" />
                         </button>
                         <span role="tooltip" className="pointer-events-none hidden fixed left-4 right-4 top-1/3 z-tooltip rounded-lg border border-neutral-200 bg-white p-3 text-left text-body-xs font-normal normal-case tracking-normal text-neutral-700 shadow-lg group-hover:block group-focus-within:block sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-1 sm:w-72 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
-                            Adicione ao formulário itens pré-definidos de remuneração (Horas Extras, Férias, 13º Salário, Diárias, Substituição, Auxílios e Gratificações) para informar os dados e calcular seus valores na simulação.
+                            Adicione ao formulário itens pré-definidos de remuneração e alimentos (Horas Extras, Férias, 13º Salário, Diárias, Substituição, Auxílios, Gratificações e Pensão Alimentícia) para informar os dados e calcular seus valores na simulação.
                         </span>
                     </span>
                 </h3>

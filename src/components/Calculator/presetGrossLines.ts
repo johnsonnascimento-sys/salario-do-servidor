@@ -358,6 +358,33 @@ export const buildPresetGrossLines = ({
                 { label: 'GAACTA (indenizatória)', value: roundCurrency(state.gaactaValor || 0) }
             ];
         }
+        case 'pensao': {
+            const baseBruta = roundCurrency(state.pensaoBaseBruta || 0);
+            const deducoes = roundCurrency(state.pensaoTotalDeducoes || 0);
+            const baseLiquida = roundCurrency(state.pensaoBaseCalculo || 0);
+            const valorFinal = roundCurrency(state.pensao || 0);
+            const lines: PresetGrossLine[] = [
+                { label: 'Base bruta apurada da pensão', value: baseBruta }
+            ];
+            if (deducoes > 0) {
+                lines.push({ label: 'Deduções acordadas da base', value: deducoes, isDiscount: true });
+            }
+            if (state.pensaoTipo === 'percentual') {
+                lines.push({ label: 'Base líquida de incidência', value: baseLiquida });
+                lines.push({
+                    label: `Pensão alimentícia (${state.pensaoPercentual ?? 30}%)`,
+                    value: valorFinal,
+                    isDiscount: true
+                });
+            } else {
+                lines.push({
+                    label: 'Pensão alimentícia (valor fixo)',
+                    value: valorFinal,
+                    isDiscount: true
+                });
+            }
+            return lines;
+        }
         default:
             return [];
     }

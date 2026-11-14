@@ -175,7 +175,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         // Legacy manual deduction fields are reset to 0; custom discounts belong in Rubricas Manuais.
         emprestimos: 0,
         planoSaude: 0,
-        pensao: 0,
+        pensao: safeSnapshot.pensaoAlimenticiaAtiva ? Number(safeSnapshot.pensao || 0) : 0,
     };
     const inferredFunctionFromSubstDias = Object.entries(merged.substDias || {}).find(([, days]) => Number(days || 0) > 0)?.[0] || '';
     const inferredFunctionFromEntries = Array.isArray(merged.substitutionEntries)

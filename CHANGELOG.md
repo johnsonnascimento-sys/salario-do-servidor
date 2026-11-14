@@ -3,6 +3,17 @@
 
 # Changelog
 
+## Card e Módulo de Pensão Alimentícia com Composição Dinâmica da Base — 14/11/2026
+- UI & Cálculo (PensaoAlimenticiaCard, DynamicPayrollForm, dynamicPayrollForm.helpers, PresetControlsSection, presetGrossLines, useDynamicPresetInstances):
+  - **Renomeação da Seção Central**: Atualizada a seção para **"Adicionais, Verbas, Benefícios e Pensão Alimentícia"** com tooltips e aria-labels correspondentes.
+  - **Botão e Preset no Catálogo**: Adicionada opção pré-definida `pensao` (*Pensão Alimentícia*) na categoria `'beneficios'`, mantendo rigorosa ordenação alfabética canônica em `PREDEFINED_OPTIONS` e ícone representativo (`Scale`).
+  - **Card Interativo de Pensão Alimentícia (`PensaoAlimenticiaCard.tsx`)**:
+    - **Modalidades Percentual (%) e Valor Fixo (R$)**: Alternância dinâmica por seletor, com campo monetário no modo fixo e alíquota com atalhos numéricos em 1 clique (`15%`, `20%`, `25%`, `30%`, `33,33%`, `50%`) no modo percentual.
+    - **Composição da Base Bruta**: Checkboxes para seleção individual de todas as parcelas remuneratórias da folha (Vencimento, GAJ, FC/CJ, AQ Título, AQ Treino, GAE/GAS, GAACTA, VPNI, ATS, 13º Salário, 1/3 de Férias, Abono de Permanência, Horas Extras, Substituição de Função e créditos avulsos criados dinamicamente em *Lançamentos e Ajustes Avulsos*).
+    - **Deduções da Base de Cálculo (Cálculo sobre o Líquido)**: Checkboxes para abater da base da pensão os descontos legais obrigatórios (IRRF e PSS), Previdência Complementar (Funpresp) e rubricas de desconto criadas pelo usuário (como Plano de Saúde, Coparticipação, Mensalidades, etc.), além de campo para outros ajustes acordados judicialmente.
+    - **Resumo Matemático e Fechamento**: Apuração clara de Base Bruta, Total de Deduções, Base Líquida, Alíquota e Valor Final da Pensão, integrando automaticamente o desconto no holerite (linha `PENSÃO ALIMENTÍCIA (D)`).
+  - **Testes Unitários Automatizados**: Criada suíte de testes dedicada `test:alimony` cobrindo 100% dos cenários de cálculo percentual, líquido com IR/PSS e plano de saúde, fixo, ordenação alfabética e fechamento.
+
 ## Enriquecimento de Descrições e Sugestões em Lançamentos Avulsos — 13/11/2026
 - UI & Usabilidade (ManualRubricasSection):
   - **Descrições e Exemplos Expandidos no Cabeçalho e Estado Vazio**: Subtítulo e texto orientativo atualizados para destacar explicitamente verbas frequentes da folha do PJU: empréstimos consignados, planos de saúde (mensalidade e coparticipação), pensões judiciais, mensalidades sindicais, além de créditos como VPNI, ATS, acertos e diferenças retroativas.

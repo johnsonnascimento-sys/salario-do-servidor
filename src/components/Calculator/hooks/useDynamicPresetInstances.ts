@@ -443,6 +443,14 @@ export const useDynamicPresetInstances = ({
                 update('diariasExtAlimentacao', false);
                 update('diariasExtTransporte', false);
                 break;
+            case 'pensao':
+                update('pensaoAlimenticiaAtiva', false);
+                update('pensao', 0);
+                update('pensaoValorFixo', 0);
+                update('pensaoBaseBruta', 0);
+                update('pensaoTotalDeducoes', 0);
+                update('pensaoBaseCalculo', 0);
+                break;
         }
     };
 
@@ -493,6 +501,11 @@ export const useDynamicPresetInstances = ({
         }
         if (preset === 'gaacta') {
             update('gaactaAtivo', true);
+        }
+        if (preset === 'pensao') {
+            update('pensaoAlimenticiaAtiva', true);
+            if (!state.pensaoTipo) update('pensaoTipo', 'percentual');
+            if (!state.pensaoPercentual) update('pensaoPercentual', 30);
         }
         if (enabledPresetIds.has(preset)) return;
         setEnabledPresets(prev => [

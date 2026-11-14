@@ -9,6 +9,7 @@ import { LicenseCard } from './cards/LicenseCard';
 import { TransportIndemnityCard } from './cards/TransportIndemnityCard';
 import { DailiesCard } from './cards/DailiesCard';
 import { GaactaCard } from './cards/GaactaCard';
+import { PensaoAlimenticiaCard } from './cards/PensaoAlimenticiaCard';
 import { SimplePresetFields } from './SimplePresetFields';
 import { resolveOvertimeEntry, resolveSubstitutionEntry } from './presetEntryResolvers';
 import { UnlinkedPresetEntryNotice } from './UnlinkedPresetEntryNotice';
@@ -133,6 +134,18 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     if (presetId === 'diarias') {
         return (
             <DailiesCard
+                state={state}
+                update={update}
+                styles={styles}
+                courtConfig={courtConfig}
+                competenciaReferencia={competenciaReferencia}
+            />
+        );
+    }
+
+    if (presetId === 'pensao') {
+        return (
+            <PensaoAlimenticiaCard
                 state={state}
                 update={update}
                 styles={styles}

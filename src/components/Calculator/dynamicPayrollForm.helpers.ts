@@ -15,7 +15,8 @@ export type PredefinedRubricId =
     | 'pre_escolar'
     | 'aux_transporte'
     | 'diarias'
-    | 'indenizacao_transporte';
+    | 'indenizacao_transporte'
+    | 'pensao';
 
 export interface PresetGrossLine {
     label: string;
@@ -43,6 +44,7 @@ export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }
     { id: 'hora_extra', label: 'Horas Extras' },
     { id: 'indenizacao_transporte', label: 'Indenização de Transporte' },
     { id: 'licenca', label: 'Licenca Compensatoria' },
+    { id: 'pensao', label: 'Pensão Alimentícia' },
     { id: 'substituicao', label: 'Substituicao' }
 ];
 
@@ -181,6 +183,13 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: 'Adicional por Tempo de Serviço (Anuênios)',
         category: 'beneficios',
         tags: ['ats', 'anuenios', 'tempo', 'servico', 'adicional']
+    },
+    {
+        id: 'pensao',
+        label: 'Pensão Alimentícia',
+        description: 'Cálculo por percentual sobre remuneração/líquido ou valor fixo',
+        category: 'beneficios',
+        tags: ['pensao', 'alimenticia', 'alimentos', 'judicial', 'desconto', '%', 'fixo']
     }
 ];
 
@@ -360,6 +369,8 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
             return state.diariasQtd > 0 || state.diariasEmbarque !== 'nenhum' ||
                 Boolean(state.diariasDataInicio || state.diariasDataFim) ||
                 (Array.isArray(state.diariasTrechosTransporte) && state.diariasTrechosTransporte.length > 0);
+        case 'pensao':
+            return Boolean(state.pensaoAlimenticiaAtiva || (state.pensao && state.pensao > 0));
         default:
             return false;
     }

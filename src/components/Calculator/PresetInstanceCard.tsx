@@ -115,6 +115,11 @@ const getPresetHeaderInfo = (
             return {
                 title: 'Auxílio Transporte'
             };
+        case 'pensao':
+            return {
+                title: 'Pensão Alimentícia',
+                normBadge: 'Decisão Judicial / Acordo'
+            };
         default:
             return { title: fallbackLabel };
     }

@@ -19,7 +19,8 @@ import {
     GripVertical,
     ArrowDownRight,
     X,
-    Sparkles
+    Sparkles,
+    Scale
 } from 'lucide-react';
 import { Rubrica } from '../../types';
 import {
@@ -69,7 +70,8 @@ const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
     aux_transporte: Bus,
     vantagens: FileSpreadsheet,
     vpni: FileSpreadsheet,
-    ats: Award
+    ats: Award,
+    pensao: Scale
 };
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({

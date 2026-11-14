@@ -443,6 +443,40 @@ export interface CalculatorState {
   decimoOutrasParcelas?: number;
   decimoRubricasInclusas?: Record<string, boolean>;
 
+  // Composição da Base e Cálculo da Pensão Alimentícia
+  pensaoAlimenticiaAtiva?: boolean;
+  pensaoTipo?: 'percentual' | 'fixo';
+  pensaoPercentual?: number;
+  pensaoValorFixo?: number;
+  pensaoBaseBruta?: number;
+  pensaoTotalDeducoes?: number;
+  pensaoBaseCalculo?: number;
+
+  // Parcelas de crédito incidentes na base da pensão
+  pensaoIncideVencimento?: boolean;
+  pensaoIncideGAJ?: boolean;
+  pensaoIncideFuncao?: boolean;
+  pensaoIncideAQTitulo?: boolean;
+  pensaoIncideAQTreino?: boolean;
+  pensaoIncideGrat?: boolean;
+  pensaoIncideGAACTA?: boolean;
+  pensaoIncideVPNI?: boolean;
+  pensaoIncideATS?: boolean;
+  pensaoIncideAbono?: boolean;
+  pensaoIncide13?: boolean;
+  pensaoIncideFerias?: boolean;
+  pensaoIncideHoraExtra?: boolean;
+  pensaoIncideSubstituicao?: boolean;
+  pensaoRubricasCreditoInclusas?: Record<string, boolean>;
+  pensaoOutrasParcelas?: number;
+
+  // Deduções da base da pensão (cálculo sobre o líquido)
+  pensaoDeduzirIRRF?: boolean;
+  pensaoDeduzirPSS?: boolean;
+  pensaoDeduzirFunpresp?: boolean;
+  pensaoRubricasDescontoInclusas?: Record<string, boolean>;
+  pensaoOutrosDescontosDedutiveis?: number;
+
   // Specific for November Override (Debit Correction)
   manualDecimoTerceiroNov: boolean;
   decimoTerceiroNovVenc: number;
@@ -763,6 +797,35 @@ export const INITIAL_STATE: CalculatorState = {
   decimoIncideGrat: true,
   decimoOutrasParcelas: 0,
   decimoRubricasInclusas: {},
+
+  pensaoAlimenticiaAtiva: false,
+  pensaoTipo: 'percentual',
+  pensaoPercentual: 30,
+  pensaoValorFixo: 0,
+  pensaoBaseBruta: 0,
+  pensaoTotalDeducoes: 0,
+  pensaoBaseCalculo: 0,
+  pensaoIncideVencimento: true,
+  pensaoIncideGAJ: true,
+  pensaoIncideFuncao: true,
+  pensaoIncideAQTitulo: true,
+  pensaoIncideAQTreino: true,
+  pensaoIncideGrat: true,
+  pensaoIncideGAACTA: true,
+  pensaoIncideVPNI: true,
+  pensaoIncideATS: true,
+  pensaoIncideAbono: true,
+  pensaoIncide13: true,
+  pensaoIncideFerias: true,
+  pensaoIncideHoraExtra: true,
+  pensaoIncideSubstituicao: true,
+  pensaoRubricasCreditoInclusas: {},
+  pensaoOutrasParcelas: 0,
+  pensaoDeduzirIRRF: true,
+  pensaoDeduzirPSS: true,
+  pensaoDeduzirFunpresp: false,
+  pensaoRubricasDescontoInclusas: {},
+  pensaoOutrosDescontosDedutiveis: 0,
 
   manualDecimoTerceiroNov: false,
   decimoTerceiroNovVenc: 0,
