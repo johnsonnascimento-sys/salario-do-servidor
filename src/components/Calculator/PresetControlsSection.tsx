@@ -237,15 +237,12 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                         if (itemsInCategory.length === 0) return null;
 
                         return (
-                            <div key={category.id} className="space-y-2">
-                                <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-                                    <h4 className="text-[12px] font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                                        {category.title}
-                                    </h4>
-                                    <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
-                                        • {category.subtitle}
-                                    </span>
-                                </div>
+                            <details key={category.id} open={Boolean(searchTerm)} className="group rounded-xl border border-neutral-200 bg-neutral-50/60 dark:border-neutral-700 dark:bg-neutral-900/30">
+                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+                                    <span className="min-w-0"><span className="block text-[12px] font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">{category.title}</span><span className="mt-0.5 block text-[11px] text-neutral-500 dark:text-neutral-400">{category.subtitle}</span></span>
+                                    <span className="shrink-0 rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{itemsInCategory.length}{itemsInCategory.some(item => (activeCounts[item.id] || 0) > 0) ? ` · ${itemsInCategory.reduce((sum, item) => sum + (activeCounts[item.id] || 0), 0)} ativa(s)` : ''}</span>
+                                </summary>
+                                <div className="space-y-2 px-3 pb-3">
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-2.5">
                                     {itemsInCategory.map(item => {
@@ -326,7 +323,8 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                         );
                                     })}
                                 </div>
-                            </div>
+                                </div>
+                            </details>
                         );
                     })}
                 </div>
