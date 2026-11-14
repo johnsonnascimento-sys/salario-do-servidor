@@ -305,7 +305,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <div className={styles.card}>
                 <h3 className={`${styles.sectionTitle} relative`}>
                     <Sparkles className="w-4 h-4 text-primary" />
-                    Adicionais, Verbas, Benefícios e Pensão Alimentícia
+                    Adicionais, Verbas, Benefícios e Descontos
                     <span className="relative inline-flex items-center group">
                         <button
                             type="button"

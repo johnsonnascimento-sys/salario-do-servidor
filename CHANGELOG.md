@@ -3,6 +3,9 @@
 
 # Changelog
 
+## Ajustes visuais e organização do catálogo — 14/11/2026
+- O estado de espera do card de pensão segue o padrão visual da calculadora, a categoria Descontos foi movida para o fim e a seção foi renomeada para **Adicionais, Verbas, Benefícios e Descontos**.
+
 ## Categoria própria para pensão alimentícia — 14/11/2026
 - Criada a categoria **Descontos** no catálogo de rubricas predefinidas, que agora reúne o botão Pensão Alimentícia.
 

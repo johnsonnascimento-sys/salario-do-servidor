@@ -179,7 +179,12 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
     const atalhosPercentual = [15, 20, 25, 30, 33.33, 50];
 
     if (!calculationReady) {
-        return <p role="status">Aguardando o cálculo da folha para apurar a pensão...</p>;
+        return (
+            <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-body-xs text-neutral-600 dark:bg-primary/10 dark:text-neutral-300">
+                <span aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                <span className="font-medium">Aguardando o cálculo da folha para apurar a pensão...</span>
+            </div>
+        );
     }
 
     return (

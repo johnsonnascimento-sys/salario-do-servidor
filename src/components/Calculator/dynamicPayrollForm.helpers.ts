@@ -63,7 +63,6 @@ export interface PresetCatalogItem {
 }
 
 export const PRESET_CATEGORIES = [
-    { id: 'descontos', title: 'Descontos', subtitle: 'Descontos e obrigações da folha' },
     {
         id: 'trabalho',
         title: 'Trabalho Extraordinário & Funções',
@@ -83,7 +82,8 @@ export const PRESET_CATEGORIES = [
         id: 'beneficios',
         title: 'Benefícios & Vantagens',
         subtitle: 'Abono de permanência e vantagens pessoais (VPNI/ATS)'
-    }
+    },
+    { id: 'descontos', title: 'Descontos', subtitle: 'Descontos e obrigações da folha' }
 ] as const;
 
 export const PRESET_CATALOG: PresetCatalogItem[] = [
