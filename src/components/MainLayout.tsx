@@ -22,7 +22,7 @@ const MainLayout: React.FC = () => {
         <div className="font-display bg-background-light dark:bg-background-dark text-neutral-900 dark:text-neutral-100 min-h-screen flex flex-col transition-colors duration-300">
             <header className="sticky top-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="hidden h-20 md:flex md:items-center md:justify-between">
+                    <div className="hidden h-20 lg:flex lg:items-center lg:justify-between">
                         <div className="flex min-w-0 items-center gap-8">
                             <Link to="/beta-access" className="flex min-w-0 shrink-0 items-center gap-3">
                                 <img src={logo} alt="Salário do Servidor" className="w-16 h-16 object-contain shrink-0" />
@@ -41,6 +41,7 @@ const MainLayout: React.FC = () => {
                         <div className="flex items-center gap-4 shrink-0">
                             <button
                                 onClick={toggleTheme}
+                                aria-label={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
                                 className="p-2 rounded-full hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800 transition-colors"
                             >
                                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -55,21 +56,22 @@ const MainLayout: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="py-3 md:hidden">
-                        <div className="flex items-start justify-between gap-3">
+                    <div className="py-3 lg:hidden">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0 flex-1">
                                 <Link to="/beta-access" className="flex min-w-0 items-center gap-2">
                                     <img src={logo} alt="Salário do Servidor" className="w-14 h-14 object-contain shrink-0" />
-                                    <span className="min-w-0 text-[1.6rem] font-extrabold leading-[0.95] tracking-tight text-neutral-800 dark:text-white">
+                                    <span className="min-w-0 text-h3 font-extrabold leading-tight tracking-tight text-neutral-800 dark:text-white">
                                         Salário do <span className="gradient-text">Servidor</span>
                                     </span>
                                 </Link>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center justify-end gap-2 shrink-0">
                                 <button
                                     onClick={toggleTheme}
-                                    className="p-2 rounded-full hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800 transition-colors"
+                                    aria-label={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
+                                    className="min-h-11 min-w-11 flex items-center justify-center p-2 rounded-full hover:bg-neutral-100 dark:bg-transparent dark:hover:bg-neutral-800 transition-colors"
                                 >
                                     {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                                 </button>
@@ -77,13 +79,10 @@ const MainLayout: React.FC = () => {
                                     <Heart className="w-4 h-4" />
                                     Apoiar
                                 </Link>
+                                <Link to="/acesso" className="btn btn-sm px-3 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-body leading-tight text-center">
+                                    Minha Área
+                                </Link>
                             </div>
-                        </div>
-
-                        <div className="mt-3 flex justify-end">
-                            <Link to="/acesso" className="btn btn-sm px-3 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs leading-tight text-center">
-                                Minha Área
-                            </Link>
                         </div>
                     </div>
                 </div>
@@ -139,8 +138,8 @@ const MainLayout: React.FC = () => {
                             <h4 className="text-white font-bold mb-6 text-body-xl">Contato</h4>
                             <ul className="space-y-4 text-body">
                                 <li className="flex items-center gap-3">
-                                    <Mail className="w-5 h-5 text-primary" />
-                                    contato@salariodoservidor.com.br
+                                    <Mail className="w-5 h-5 shrink-0 text-primary" />
+                                    <span className="min-w-0 break-all">contato@salariodoservidor.com.br</span>
                                 </li>
                                 <li className="flex items-center gap-3">
                                     <MapPin className="w-5 h-5 text-primary" />

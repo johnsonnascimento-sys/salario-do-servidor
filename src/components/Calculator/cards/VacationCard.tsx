@@ -435,7 +435,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                                     }}
                                 />
                                 <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
+                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300 min-w-0 break-words" title={label}>
                                         {label}
                                     </span>
                                     <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold shrink-0">

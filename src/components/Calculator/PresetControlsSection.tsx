@@ -218,7 +218,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                     )}
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <div className="flex max-w-full flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
                     <button
                         type="button"
                         onClick={() => setReorderMode(prev => !prev)}
@@ -259,7 +259,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
                         return (
                             <details key={category.id} open={Boolean(searchTerm)} className="group rounded-xl border border-neutral-200 bg-neutral-50/60 dark:border-neutral-700 dark:bg-neutral-900/30">
-                                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600">
+                                <summary className="flex min-h-11 cursor-pointer list-none flex-col items-start justify-between gap-3 px-4 py-3 sm:flex-row sm:items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600">
                                     <span className="min-w-0"><span className="block text-body font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">{category.title}</span><span className="mt-0.5 block text-body text-neutral-500 dark:text-neutral-400">{category.subtitle}</span></span>
                                     <span className="shrink-0 rounded-full bg-neutral-200 px-2 py-0.5 text-body text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{itemsInCategory.length}{itemsInCategory.some(item => (activeCounts[item.id] || 0) > 0) ? ` · ${itemsInCategory.reduce((sum, item) => sum + (activeCounts[item.id] || 0), 0)} ativa(s)` : ''}</span>
                                 </summary>
@@ -296,7 +296,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                                 {item.label}
                                                             </h5>
                                                         </div>
-                                                        <p className="text-body text-neutral-500 dark:text-neutral-400 mt-0.5" title={item.description}>
+                                                        <p className="text-body break-words text-neutral-500 dark:text-neutral-400 mt-0.5" title={item.description}>
                                                             {item.description}
                                                         </p>
                                                     </div>

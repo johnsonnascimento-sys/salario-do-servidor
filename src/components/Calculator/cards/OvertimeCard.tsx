@@ -178,7 +178,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         </summary>
                         <div className="mt-2.5">
                     <div className="bg-white/80 dark:bg-neutral-800/80 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
                                 <Clock className="w-3.5 h-3.5 text-secondary" />
                                 Jornada de Trabalho e Divisor Mensal

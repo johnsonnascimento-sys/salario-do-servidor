@@ -166,7 +166,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     </div>
 
                     {/* Botões de Inserção Livre */}
-                    <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
                         <button
                             type="button"
                             onClick={() => addRubrica({ tipo: 'C', incideIR: true, incidePSS: true })}
@@ -213,7 +213,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </div>
 
                         {/* Filtro de exibição por tipo */}
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
                             <span className="text-body-xs font-medium text-neutral-400 mr-1">Filtrar lista:</span>
                             <button
                                 type="button"

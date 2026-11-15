@@ -205,7 +205,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                     </div>
                 </div>
 
-                <div className="inline-flex rounded-lg p-0.5 bg-neutral-200 dark:bg-neutral-800 shrink-0">
+                <div className="inline-flex flex-wrap rounded-lg p-0.5 bg-neutral-200 dark:bg-neutral-800 shrink-0">
                     <button
                         type="button"
                         aria-pressed={tipo === 'percentual'}
@@ -292,7 +292,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                 checked={incide13}
                                 onChange={e => update('pensaoIncide13', e.target.checked)}
                             />
-                            <span className="flex-1 flex items-center justify-between gap-2">
+                            <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                 <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Gratificação Natalina (13º)</span>
                                 <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valor13)}</span>
                             </span>
@@ -308,7 +308,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                 checked={incideFerias}
                                 onChange={e => update('pensaoIncideFerias', e.target.checked)}
                             />
-                            <span className="flex-1 flex items-center justify-between gap-2">
+                            <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                 <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Férias (1/3 Constitucional)</span>
                                 <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorFerias)}</span>
                             </span>
@@ -322,7 +322,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         summary={`Créditos ${formatCurrency(totalBaseBruta)} · Abatimentos ${formatCurrency(totalDeducoes)}`}>
                         {/* BLOCO 1: Créditos que compõem a Base Bruta */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between">
                                 <span className="text-body-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
                                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                     1. Créditos que compõem a Base Bruta da Pensão:
@@ -341,7 +341,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                         checked={incideVenc}
                                         onChange={e => update('pensaoIncideVencimento', e.target.checked)}
                                     />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
+                                    <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                         <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Vencimento Básico</span>
                                         <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.vencimento)}</span>
                                     </span>
@@ -355,7 +355,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                         checked={incideGAJ}
                                         onChange={e => update('pensaoIncideGAJ', e.target.checked)}
                                     />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
+                                    <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                         <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAJ (Grat. Atividade Judiciária)</span>
                                         <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gaj)}</span>
                                     </span>
@@ -370,7 +370,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideFuncao}
                                             onChange={e => update('pensaoIncideFuncao', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Função / Cargo (FC/CJ)</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(funcaoValorBruta)}</span>
                                         </span>
@@ -386,7 +386,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideAQTitulo}
                                             onChange={e => update('pensaoIncideAQTitulo', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">AQ Título</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.aqTituloValor)}</span>
                                         </span>
@@ -402,7 +402,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideAQTreino}
                                             onChange={e => update('pensaoIncideAQTreino', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">AQ Treinamento</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.aqTreinoValor)}</span>
                                         </span>
@@ -418,7 +418,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideGrat}
                                             onChange={e => update('pensaoIncideGrat', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Gratificação Específica (GAE/GAS)</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gratEspecificaValor)}</span>
                                         </span>
@@ -437,7 +437,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                                 update('pensaoIncideGAACTA', e.target.checked);
                                             }}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAACTA (Alta Complexidade)</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorGAACTA)}</span>
                                         </span>
@@ -453,7 +453,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideVPNI}
                                             onChange={e => update('pensaoIncideVPNI', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">VPNI (Quintos/Incorporação)</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency((state.vpni_lei || 0) + (state.vpni_decisao || 0))}</span>
                                         </span>
@@ -469,7 +469,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideATS}
                                             onChange={e => update('pensaoIncideATS', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">ATS (Anuênios)</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.ats)}</span>
                                         </span>
@@ -485,7 +485,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideAbono}
                                             onChange={e => update('pensaoIncideAbono', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Abono de Permanência</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorAbono)}</span>
                                         </span>
@@ -501,7 +501,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideHoraExtra}
                                             onChange={e => update('pensaoIncideHoraExtra', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Horas Extras</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorHoraExtra)}</span>
                                         </span>
@@ -517,7 +517,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={incideSubstituicao}
                                             onChange={e => update('pensaoIncideSubstituicao', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Substituição de Função</span>
                                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorSubstituicao)}</span>
                                         </span>
@@ -542,8 +542,8 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                                     });
                                                 }}
                                             />
-                                            <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
+                                            <span className="flex-1 flex flex-wrap items-center justify-between gap-2 min-w-0">
+                                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300 min-w-0 break-words" title={label}>
                                                     {label}
                                                 </span>
                                                 <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold shrink-0">
@@ -575,7 +575,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                             </div>
 
                             {/* Subtotal da Base Bruta */}
-                            <div className="p-2.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
+                            <div className="p-2.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 flex flex-wrap items-center justify-between">
                                 <span className="text-body-xs font-bold text-emerald-800 dark:text-emerald-300">
                                     Base Bruta Apurada
                                 </span>
@@ -587,7 +587,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
 
                         {/* BLOCO 2: Deduções da Base (Cálculo sobre o Valor Líquido) */}
                         <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between">
                                 <span className="text-body-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
                                     <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
                                     2. Descontos Dedutíveis da Base (Cálculo sobre o Líquido):
@@ -606,7 +606,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                         checked={deduzirIRRF}
                                         onChange={e => update('pensaoDeduzirIRRF', e.target.checked)}
                                     />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
+                                    <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                         <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
                                             Imposto de Renda (IRRF Mensal)
                                         </span>
@@ -624,7 +624,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                         checked={deduzirPSS}
                                         onChange={e => update('pensaoDeduzirPSS', e.target.checked)}
                                     />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
+                                    <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                         <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
                                             Previdência Oficial (PSS Mensal)
                                         </span>
@@ -643,7 +643,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                             checked={deduzirFunpresp}
                                             onChange={e => update('pensaoDeduzirFunpresp', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
                                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
                                                 Previdência Complementar (Funpresp)
                                             </span>
@@ -672,8 +672,8 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                                     });
                                                 }}
                                             />
-                                            <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
+                                            <span className="flex-1 flex flex-wrap items-center justify-between gap-2 min-w-0">
+                                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300 min-w-0 break-words" title={label}>
                                                     {label}
                                                 </span>
                                                 <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold shrink-0">
@@ -705,7 +705,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                             </div>
 
                             {/* Subtotal das Deduções da Base */}
-                            <div className="p-2.5 rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50 flex items-center justify-between">
+                            <div className="p-2.5 rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50 flex flex-wrap items-center justify-between">
                                 <span className="text-body-xs font-bold text-red-800 dark:text-red-300">
                                     Total de Deduções da Base
                                 </span>
@@ -719,23 +719,23 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                     </Accordion>
 
                     <div className="p-3.5 rounded-xl bg-neutral-100/80 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700/80 space-y-2.5">
-                        <div className="flex items-center justify-between text-body-xs">
+                        <div className="flex flex-wrap items-center justify-between text-body-xs">
                             <span className="text-neutral-600 dark:text-neutral-400">Base Bruta:</span>
                             <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200">{formatCurrency(totalBaseBruta)}</span>
                         </div>
-                        <div className="flex items-center justify-between text-body-xs">
+                        <div className="flex flex-wrap items-center justify-between text-body-xs">
                             <span className="text-neutral-600 dark:text-neutral-400">(-) Descontos Dedutíveis:</span>
                             <span className="font-mono font-semibold text-red-600 dark:text-red-400">- {formatCurrency(totalDeducoes)}</span>
                         </div>
-                        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between text-body-xs font-bold">
+                        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex flex-wrap items-center justify-between text-body-xs font-bold">
                             <span className="text-neutral-800 dark:text-neutral-200">(=) Base Líquida de Incidência:</span>
                             <span className="font-mono text-primary">{formatCurrency(baseLiquida)}</span>
                         </div>
-                        <div className="flex items-center justify-between text-body-xs">
+                        <div className="flex flex-wrap items-center justify-between text-body-xs">
                             <span className="text-neutral-600 dark:text-neutral-400">(×) Alíquota da Pensão:</span>
                             <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">{percentual}%</span>
                         </div>
-                        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+                        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex flex-wrap items-center justify-between">
                             <span className="text-body-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
                                 <HeartHandshake className="w-4 h-4" />
                                 Valor Final da Pensão Alimentícia
@@ -773,7 +773,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         />
                     </div>
 
-                    <div className="pt-2 border-t border-primary/20 flex items-center justify-between">
+                    <div className="pt-2 border-t border-primary/20 flex flex-wrap items-center justify-between">
                         <span className="text-body-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
                             <HeartHandshake className="w-4 h-4" />
                             Valor Final da Pensão Alimentícia

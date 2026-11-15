@@ -48,7 +48,7 @@ export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, c
                 {displayLines.map((line, index) => {
                     const isDiscount = Boolean(line.isDiscount || isDiscountLabel(line.label));
                     return (
-                        <div key={`${line.label}-${index}`} className="flex items-center justify-between gap-3 text-body-xs">
+                        <div key={`${line.label}-${index}`} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-body-xs">
                             <span className="text-neutral-600 dark:text-neutral-300">{line.label}</span>
                             <span className={`font-mono font-semibold ${isDiscount ? 'text-error-600 dark:text-error-400' : 'text-neutral-700 dark:text-neutral-200'}`}>
                                 {line.displayValue ?? formatCurrency(line.value || 0)}

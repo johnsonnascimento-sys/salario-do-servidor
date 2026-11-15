@@ -1,3 +1,9 @@
+## Conferência visual e adaptação da tipografia — 15/11/2026
+
+- Calculadora completa conferida com configuração real, catálogo inteiro, descrições longas, painéis expandidos, cinco larguras e temas claro/escuro; zoom real de 200% verificado.
+- Corrigidas quebras nos filtros, catálogo, composições, totais, memórias e detalhes de descontos, além de sobreposição no cabeçalho compacto e transbordamento do e-mail no rodapé.
+- Typecheck, build Vite e 14 testes existentes de carregamento/configuração aprovados. Repetição visual após o último ajuste pendente por perda de acesso à interface do Windows; escopo, evidências e limite registrados em `src/docs/REVISAO_TIPOGRAFIA_2026-11-15.md`.
+
 ## Uniformidade tipográfica — 14/11/2026
 
 - Unificada a família da interface em Plus Jakarta Sans e incluído o carregamento de JetBrains Mono para os valores monetários.

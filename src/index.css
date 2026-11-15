@@ -48,6 +48,18 @@
         @apply block text-body font-semibold normal-case tracking-normal text-neutral-700 dark:text-neutral-200 mb-1.5;
     }
 
+    .calculator-option {
+        overflow-wrap: anywhere;
+    }
+
+    .calculator-option > .flex {
+        @apply min-w-0 flex-wrap;
+    }
+
+    .calculator-option > input {
+        @apply shrink-0;
+    }
+
     .calculator-workspace :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
         font-size: 1rem;
         min-width: 0;

@@ -51,7 +51,7 @@ const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tota
                     {row.details && row.details.length > 0 ? (
                         <details className="group">
                             <summary className="list-none cursor-pointer">
-                                <div className="flex items-start justify-between gap-3">
+                                <div className="flex flex-wrap items-start justify-between gap-3">
                                     <p className={`text-body font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
                                         {row.label}
                                     </p>
@@ -65,7 +65,7 @@ const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tota
                             </summary>
                             <div className="mt-3 space-y-2 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-900/50">
                                 {row.details.map((detail, detailIndex) => (
-                                    <div key={`${detail.label}-${detailIndex}`} className="flex items-start justify-between gap-3">
+                                    <div key={`${detail.label}-${detailIndex}`} className="flex flex-wrap items-start justify-between gap-3">
                                         <p className="text-body text-neutral-600 dark:text-neutral-300">{detail.label}</p>
                                         <p className="text-body font-semibold text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
                                             {formatCurrency(detail.value)}
@@ -127,7 +127,7 @@ const DesktopSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tot
                                         </summary>
                                         <div className="mt-3 space-y-2">
                                             {row.details.map((detail, detailIndex) => (
-                                                <div key={`${detail.label}-${detailIndex}`} className="flex items-start justify-between gap-3">
+                                                <div key={`${detail.label}-${detailIndex}`} className="flex flex-wrap items-start justify-between gap-3">
                                                     <span className="text-body">{detail.label}</span>
                                                     <span className="text-body font-semibold whitespace-nowrap">
                                                         {formatCurrency(detail.value)}
@@ -177,7 +177,7 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
 
     return (
         <div id="detalhamento" tabIndex={-1} className="scroll-mt-24 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
-            <div className="bg-neutral-800 p-6 flex justify-between items-center">
+            <div className="bg-neutral-800 p-6 flex flex-wrap justify-between items-center gap-3">
                 <h3 className="text-white font-bold text-body-xl flex items-center gap-3">
                     <Receipt className="w-5 h-5" /> Detalhamento
                 </h3>
