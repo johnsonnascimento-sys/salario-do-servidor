@@ -54,13 +54,20 @@ export const IrEaCompetencias: React.FC<Props> = ({
         if (typeof document === 'undefined') return;
         const target = document.getElementById('memoria-ir-ea') || document.getElementById('apuracao-ir-ea');
         if (target) {
+            if (target.closest('[hidden]')) {
+                if (window.location.hash === `#${target.id}`) {
+                    window.dispatchEvent(new HashChangeEvent('hashchange'));
+                } else {
+                    window.location.hash = target.id;
+                }
+            }
             const details = (target.tagName?.toLowerCase() === 'details'
                 ? target
                 : target.querySelector('details') || target.closest('details')) as HTMLDetailsElement | null;
             if (details) {
                 details.open = true;
             }
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            window.requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'center' }));
             target.classList.add('ring-2', 'ring-primary-500', 'transition-all', 'duration-500');
             setTimeout(() => {
                 target.classList.remove('ring-2', 'ring-primary-500');

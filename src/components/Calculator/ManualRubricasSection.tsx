@@ -21,6 +21,7 @@ import { resolvePensionRubricRule } from '../../services/agency/engine/modules/p
 import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 
 interface ManualRubricasSectionProps {
+    mode?: 'C' | 'D';
     rubricas: Rubrica[];
     styles: any;
     totalCreditos: number;
@@ -42,6 +43,7 @@ interface ManualRubricasSectionProps {
 }
 
 export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
+    mode = 'C',
     rubricas,
     styles,
     totalCreditos,
@@ -61,7 +63,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     updateRubrica,
     toPositiveNumber
 }) => {
-    const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'C' | 'D'>('TODOS');
     const [expandedEaCards, setExpandedEaCards] = useState<Record<string, boolean>>({});
 
     const toggleEaCard = (id: string, currentlyExpanded: boolean) => {
@@ -145,10 +146,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
         return lines;
     };
 
-    const filteredRubricas = rubricas.filter(rubrica => {
-        if (filtroTipo === 'TODOS') return true;
-        return rubrica.tipo === filtroTipo;
-    });
+    const filteredRubricas = rubricas.filter(rubrica => rubrica.tipo === mode);
 
     return (
         <div className="space-y-4">
@@ -158,16 +156,16 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     <div>
                         <h3 className={`${styles.sectionTitle} mb-1 flex items-center gap-2`}>
                             <DollarSign className="w-4 h-4 text-primary" />
-                            Lançamentos e Ajustes Avulsos
+                            {mode === 'C' ? 'Créditos avulsos' : 'Descontos avulsos'}
                         </h3>
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                            Lance créditos (VPNI, ATS, acertos e retroativos) ou descontos (empréstimos consignados, planos de saúde, coparticipação, pensões judiciais, mensalidades sindicais e outros ajustes).
+                            {mode === 'C' ? 'Inclua VPNI, ATS, acertos e valores retroativos.' : 'Inclua empréstimos, planos de saúde, pensões e outros descontos.'}
                         </p>
                     </div>
 
                     {/* Botões de Inserção Livre */}
                     <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
-                        <button
+                        {mode === 'C' && <button
                             type="button"
                             onClick={() => addRubrica({ tipo: 'C', incideIR: true, incidePSS: true })}
                             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors text-body-xs font-bold uppercase tracking-wider"
@@ -175,8 +173,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         >
                             <Plus className="w-3.5 h-3.5" />
                             Crédito livre
-                        </button>
-                        <button
+                        </button>}
+                        {mode === 'D' && <button
                             type="button"
                             onClick={() => addRubrica({ tipo: 'D' })}
                             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors text-body-xs font-bold uppercase tracking-wider"
@@ -184,15 +182,15 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         >
                             <Minus className="w-3.5 h-3.5" />
                             Desconto livre
-                        </button>
+                        </button>}
                     </div>
                 </div>
 
                 {/* Resumo de Totalizadores e Filtros Rápidos */}
-                {rubricas.length > 0 && (
+                {filteredRubricas.length > 0 && (
                     <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 mt-4 space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 flex items-center justify-between">
+                            <div hidden={mode !== 'C'} className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 flex items-center justify-between">
                                 <div>
                                     <p className="text-label font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Total Créditos Avulsos</p>
                                     <p className="text-body font-bold font-mono text-emerald-700 dark:text-emerald-400">{formatCurrency(totalCreditos)}</p>
@@ -201,7 +199,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     {rubricas.filter(r => r.tipo === 'C').length} crédito(s)
                                 </span>
                             </div>
-                            <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 flex items-center justify-between">
+                            <div hidden={mode !== 'D'} className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 flex items-center justify-between">
                                 <div>
                                     <p className="text-label font-bold uppercase tracking-widest text-red-700 dark:text-red-400">Total Descontos Avulsos</p>
                                     <p className="text-body font-bold font-mono text-red-700 dark:text-red-400">{formatCurrency(totalDescontos)}</p>
@@ -212,53 +210,16 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             </div>
                         </div>
 
-                        {/* Filtro de exibição por tipo */}
-                        <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-body-xs font-medium text-neutral-400 mr-1">Filtrar lista:</span>
-                            <button
-                                type="button"
-                                onClick={() => setFiltroTipo('TODOS')}
-                                className={`px-2.5 py-1 rounded-lg text-body-xs font-semibold transition-colors ${
-                                    filtroTipo === 'TODOS'
-                                        ? 'bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-900'
-                                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300'
-                                }`}
-                            >
-                                Todos ({rubricas.length})
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setFiltroTipo('C')}
-                                className={`px-2.5 py-1 rounded-lg text-body-xs font-semibold transition-colors ${
-                                    filtroTipo === 'C'
-                                        ? 'bg-emerald-600 text-white shadow-xs'
-                                        : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                }`}
-                            >
-                                Apenas Créditos ({rubricas.filter(r => r.tipo === 'C').length})
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setFiltroTipo('D')}
-                                className={`px-2.5 py-1 rounded-lg text-body-xs font-semibold transition-colors ${
-                                    filtroTipo === 'D'
-                                        ? 'bg-red-600 text-white shadow-xs'
-                                        : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400'
-                                }`}
-                            >
-                                Apenas Descontos ({rubricas.filter(r => r.tipo === 'D').length})
-                            </button>
-                        </div>
                     </div>
                 )}
 
-                {rubricas.length === 0 && (
+                {filteredRubricas.length === 0 && (
                     <div className="py-3 px-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/30 border border-dashed border-neutral-200 dark:border-neutral-800 text-center space-y-1">
                         <p className="text-body-xs text-neutral-600 dark:text-neutral-400">
                             Nenhum lançamento avulso adicionado no momento.
                         </p>
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-500">
-                            Utilize <strong>Crédito livre</strong> para verbas como VPNI, ATS, acertos ou diferenças retroativas; e <strong>Desconto livre</strong> para empréstimos consignados, planos de saúde, coparticipação, mensalidades associativas ou pensões judiciais.
+                            {mode === 'C' ? 'Use Crédito livre para incluir uma verba.' : 'Use Desconto livre para incluir um desconto.'}
                         </p>
                     </div>
                 )}
@@ -620,7 +581,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     </div>
                 );
             })}
-            {calculationReady && pensionMemory && rubricas.some(rubrica => rubrica.tipo === 'C' &&
+            {mode === 'C' && calculationReady && pensionMemory && rubricas.some(rubrica => rubrica.tipo === 'C' &&
                 (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
                     (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao')))) && (
                 <SharedPensionSummary memory={pensionMemory} rubricas={rubricas} />

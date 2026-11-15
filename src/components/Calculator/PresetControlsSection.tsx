@@ -38,6 +38,7 @@ interface PresetOption {
 }
 
 interface PresetControlsSectionProps {
+    mode: 'C' | 'D';
     styles: Record<string, string>;
     selectedPreset: PredefinedRubricId | '';
     setSelectedPreset: (value: PredefinedRubricId | '') => void;
@@ -74,6 +75,7 @@ const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
+    mode,
     styles,
     includePreset,
     reorderMode,
@@ -86,6 +88,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     rubricas = []
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    useEffect(() => setSearchTerm(''), [mode]);
     const pendingFocus = useRef<{ kind: 'preset' | 'manual'; previousIds: string[]; presetId: string } | null>(null);
     const highlightTimer = useRef<ReturnType<typeof setTimeout>>();
     const highlightedElement = useRef<HTMLElement | null>(null);
@@ -143,6 +146,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const filteredCatalog = useMemo(() => {
         const term = normalizeSearch(searchTerm.trim());
         return PRESET_CATALOG.filter(item => {
+            if ((item.category === 'descontos') !== (mode === 'D')) return false;
             if (item.id === 'indenizacao_transporte' && !transportIndemnityEnabled) return false;
             if (item.id === 'gaacta' && !gaactaAvailable) return false;
 
@@ -153,7 +157,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
             const matchTags = item.tags.some(tag => normalizeSearch(tag).includes(term));
             return matchLabel || matchDesc || matchTags;
         });
-    }, [searchTerm, transportIndemnityEnabled, gaactaAvailable]);
+    }, [searchTerm, transportIndemnityEnabled, gaactaAvailable, mode]);
 
     const scrollToPresetCard = (presetId: string) => {
         if (presetId === 'vpni' || presetId === 'ats') {
@@ -180,7 +184,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         includePreset(presetId as PredefinedRubricId);
     };
 
-    const quickItems = PRESET_CATALOG.filter(item => ['hora_extra', 'ferias', 'decimo', 'diarias'].includes(item.id));
+    const quickItems = mode === 'C' ? PRESET_CATALOG.filter(item => ['hora_extra', 'ferias', 'decimo', 'diarias'].includes(item.id)) : [];
 
     return (
         <div className="space-y-4">
@@ -192,7 +196,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                         <Icon className="h-5 w-5 shrink-0" /><span>{item.id === 'hora_extra' ? 'Horas extras' : item.id === 'decimo' ? '13º salário' : item.id === 'diarias' ? 'Diárias' : 'Férias'}{count > 0 ? ` (${count})` : ''}</span>
                     </button>;
                 })}
-                {addRubrica && <button type="button" onClick={() => handleAddManual({ tipo: 'D' })} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 py-3 text-body font-semibold text-neutral-700 hover:border-error-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200"><Minus className="h-5 w-5 shrink-0" />Outros descontos</button>}
+                {mode === 'D' && addRubrica && <button type="button" onClick={() => handleAddManual({ tipo: 'D' })} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 py-3 text-body font-semibold text-neutral-700 hover:border-error-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200"><Minus className="h-5 w-5 shrink-0" />Outros descontos</button>}
             </div>
             {/* Barra superior de ações e busca rápida */}
             <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">

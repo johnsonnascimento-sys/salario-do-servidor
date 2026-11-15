@@ -119,8 +119,11 @@ export default function Calculator() {
     useEffect(() => {
         const handleHashChange = () => {
             const hash = window.location.hash;
-            if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea') setStep(2);
-            else if (hash === '#remuneracao' || hash === '#verbas' || hash === '#funpresp-settings' || hash === '#pension-retro-form' || hash === '#manual-rubricas-section') setStep(1);
+            if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea' || hash === '#memoria-ir-ea') setStep(4);
+            else if (hash === '#funpresp-settings') setStep(1);
+            else if (hash === '#verbas' || hash === '#pension-retro-form' || hash === '#manual-rubricas-section') setStep(2);
+            else if (hash === '#descontos') setStep(3);
+            else if (hash === '#remuneracao') setStep(0);
             else if (hash === '#competencia') setStep(0);
             if (hash && document.getElementById(hash.slice(1))) {
                 window.requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
@@ -326,7 +329,7 @@ export default function Calculator() {
 
                 <CalculatorNavigation step={step} onChange={changeStep} />
                 <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">
-                    {['Competência e perfil', 'Remuneração e verbas', 'Resultado'][step]}
+                    {['Dados principais e qualificação', 'Previdência e dependentes', 'Verbas e créditos', 'Descontos', 'Resultado'][step]}
                 </h2>
                 <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">Preencha seus dados principais e adicione apenas as verbas que se aplicam. Os valores são atualizados automaticamente.</p>
                 {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-primary-300 bg-primary-50 p-4 text-body text-primary-900 dark:bg-primary-950 dark:text-primary-100">
@@ -386,14 +389,14 @@ export default function Calculator() {
                         updateRubrica={updateRubrica}
                         styles={styles}
                     />
-                    <div hidden={step !== 1}>
+                    <div hidden={step !== 4}>
                     <ObservationsSection
                         state={effectiveState}
                         update={update}
                         styles={styles}
                     />
                     </div>
-                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== 2}>
+                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== 4}>
                     <ResultsOverview state={effectiveState} resultRows={resultRows} dailiesResultRows={dailiesResultRows} calculationReady={calculationReady} resultMessage={resultMessage} />
                     {calculationReady ? <ResultsSummary
                         dailiesResultRows={dailiesResultRows}
@@ -426,7 +429,7 @@ export default function Calculator() {
 
                 <div className="mt-6 flex justify-between gap-3">
                     {step > 0 ? <button type="button" onClick={() => changeStep(step - 1)} className="min-h-11 rounded-lg border border-neutral-300 px-5 py-2 font-semibold text-neutral-700 dark:border-neutral-600 dark:text-neutral-100">Voltar</button> : <span />}
-                    {step < 2 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-primary-800 px-5 py-2 font-semibold text-white hover:bg-primary-900">{step === 1 ? 'Ver resultado' : 'Avançar'}</button>}
+                    {step < 4 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-primary-800 px-5 py-2 font-semibold text-white hover:bg-primary-900">{step === 3 ? 'Ver resultado' : 'Avançar'}</button>}
                 </div>
 
                 <ActionFooter

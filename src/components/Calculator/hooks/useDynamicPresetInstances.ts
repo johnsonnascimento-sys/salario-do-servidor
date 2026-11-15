@@ -572,7 +572,13 @@ export const useDynamicPresetInstances = ({
 
     const movePreset = (key: string, direction: -1 | 1) => {
         const index = enabledPresets.findIndex(instance => instance.key === key);
-        const destination = index + direction;
+        if (index < 0) return;
+        const isDiscount = enabledPresets[index].presetId === 'pensao';
+        let destination = index + direction;
+        while (destination >= 0 && destination < enabledPresets.length &&
+            (enabledPresets[destination].presetId === 'pensao') !== isDiscount) {
+            destination += direction;
+        }
         if (index < 0 || destination < 0 || destination >= enabledPresets.length) return;
         const next = [...enabledPresets];
         const [moved] = next.splice(index, 1);

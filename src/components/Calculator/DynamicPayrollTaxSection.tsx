@@ -61,9 +61,14 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
-            <label className={styles.label}>Dependentes (IR)
-                <input id={`${fieldId}-dependentes`} aria-describedby={`${fieldId}-tax-help`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
-            </label>
+            <div>
+                <label htmlFor={`${fieldId}-dependentes`} className={styles.label}>Dependentes (IR)</label>
+                <div className="flex items-stretch gap-2">
+                    <button type="button" aria-label="Remover dependente" disabled={state.dependentes <= 0} onClick={() => update('dependentes', Math.max(0, state.dependentes - 1))} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold disabled:opacity-40 dark:border-neutral-600">−</button>
+                    <input id={`${fieldId}-dependentes`} aria-describedby={`${fieldId}-tax-help`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
+                    <button type="button" aria-label="Adicionar dependente" onClick={() => update('dependentes', state.dependentes + 1)} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold dark:border-neutral-600">+</button>
+                </div>
+            </div>
 
         </div>
         {optionalItems.some(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]) && <fieldset className="mt-3 space-y-2">
