@@ -262,7 +262,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     {step === 0 ? 'Dados principais e qualificação' : 'Previdência e dependentes'}
                 </h2>
 
-                <div hidden={step !== 0}>
+                <div hidden={step !== 0} className="space-y-5">
                 <DynamicPayrollBaseSection
                     styles={styles}
                     state={state}
@@ -308,7 +308,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 </div>
             </section>
 
-            <div hidden={step !== 2 && step !== 3}>
+            <div hidden={step !== 2 && step !== 3} className="space-y-5">
             <section id={step === 3 ? 'descontos' : 'verbas'} tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
                 <h2 className={`${styles.sectionTitle} relative`}>
                     <Sparkles className="w-4 h-4 text-primary" />
