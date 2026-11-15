@@ -1,5 +1,5 @@
 import { getPensionErrorFeedback } from '../utils/pensionFeedback';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
@@ -87,8 +87,26 @@ export default function Calculator() {
     const [restoreError, setRestoreError] = useState('');
     const [saveFeedback, setSaveFeedback] = useState('');
     const [barHeight, setBarHeight] = useState(120);
-    const [step, setStep] = useState(() => window.location.hash === '#resultado' || window.location.hash === '#detalhamento' ? 2 : window.location.hash === '#remuneracao' || window.location.hash === '#verbas' ? 1 : 0);
+    const [step, setStep] = useState(0);
     const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+    const initialScrollDone = useRef(false);
+
+    useLayoutEffect(() => {
+        const previousScrollRestoration = window.history.scrollRestoration;
+        window.history.scrollRestoration = 'manual';
+        if (window.location.hash) {
+            window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+        }
+        window.scrollTo(0, 0);
+        return () => { window.history.scrollRestoration = previousScrollRestoration; };
+    }, []);
+
+    useEffect(() => {
+        if (initialScrollDone.current || loadingConfig || loadingAgency || !restoreReady) return;
+        initialScrollDone.current = true;
+        const frame = window.requestAnimationFrame(() => window.scrollTo(0, 0));
+        return () => window.cancelAnimationFrame(frame);
+    }, [loadingConfig, loadingAgency, restoreReady]);
 
     const changeStep = (nextStep: number) => {
         setStep(nextStep);
