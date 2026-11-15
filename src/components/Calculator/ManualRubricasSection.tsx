@@ -197,7 +197,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     <p className="text-label font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Total Créditos Avulsos</p>
                                     <p className="text-body font-bold font-mono text-emerald-700 dark:text-emerald-400">{formatCurrency(totalCreditos)}</p>
                                 </div>
-                                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                <span className="text-body-xs font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                                     {rubricas.filter(r => r.tipo === 'C').length} crédito(s)
                                 </span>
                             </div>
@@ -206,7 +206,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     <p className="text-label font-bold uppercase tracking-widest text-red-700 dark:text-red-400">Total Descontos Avulsos</p>
                                     <p className="text-body font-bold font-mono text-red-700 dark:text-red-400">{formatCurrency(totalDescontos)}</p>
                                 </div>
-                                <span className="text-[11px] font-semibold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-full">
+                                <span className="text-body-xs font-semibold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-full">
                                     {rubricas.filter(r => r.tipo === 'D').length} desconto(s)
                                 </span>
                             </div>
@@ -214,7 +214,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
                         {/* Filtro de exibição por tipo */}
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-medium text-neutral-400 mr-1">Filtrar lista:</span>
+                            <span className="text-body-xs font-medium text-neutral-400 mr-1">Filtrar lista:</span>
                             <button
                                 type="button"
                                 onClick={() => setFiltroTipo('TODOS')}
@@ -257,7 +257,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         <p className="text-body-xs text-neutral-600 dark:text-neutral-400">
                             Nenhum lançamento avulso adicionado no momento.
                         </p>
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-500">
+                        <p className="text-body-xs text-neutral-500 dark:text-neutral-500">
                             Utilize <strong>Crédito livre</strong> para verbas como VPNI, ATS, acertos ou diferenças retroativas; e <strong>Desconto livre</strong> para empréstimos consignados, planos de saúde, coparticipação, mensalidades associativas ou pensões judiciais.
                         </p>
                     </div>
@@ -300,14 +300,14 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 </span>
 
                                 {isCredito && (
-                                    <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
+                                    <span className="inline-flex items-center gap-1 text-body-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
                                         <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                                         Disponível para compor bases de HE, GAACTA, Férias, 13º e GAE/GAS
                                     </span>
                                 )}
 
                                 {rubrica.isEA && (
-                                    <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded">
+                                    <span className="text-body-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded">
                                         Exercício Anterior (EA)
                                     </span>
                                 )}
@@ -376,7 +376,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                         </>
                                     )}
                                 </datalist>
-                                <div className="flex items-center gap-1.5 flex-wrap mt-1 text-[11px] text-neutral-400 dark:text-neutral-500">
+                                <div className="flex items-center gap-1.5 flex-wrap mt-1 text-body-xs text-neutral-400 dark:text-neutral-500">
                                     <span>Sugestões rápidas:</span>
                                     {isCredito ? (
                                         <>
@@ -425,7 +425,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         {/* Incidências Tributárias Básicas (Imediato) */}
                         {isCredito && (
                             <div className="p-3 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-2">
-                                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                <div className="text-body-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                                     Incidências na folha mensal
                                 </div>
                                 <div className="flex items-center gap-6 flex-wrap">

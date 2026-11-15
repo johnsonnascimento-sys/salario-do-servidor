@@ -199,7 +199,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         <span className="text-body-xs font-bold text-neutral-800 dark:text-neutral-200">
                             Modalidade de Fixação da Pensão
                         </span>
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                             Selecione se os alimentos foram fixados em percentual da remuneração ou em valor nominal fixo
                         </p>
                     </div>
@@ -245,13 +245,13 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                 Percentual da Pensão Alimentícia (%)
                             </label>
                             <div className="flex items-center gap-1 flex-wrap">
-                                <span className="text-[11px] text-neutral-500 dark:text-neutral-400 mr-1">Atalhos:</span>
+                                <span className="text-body-xs text-neutral-500 dark:text-neutral-400 mr-1">Atalhos:</span>
                                 {atalhosPercentual.map(p => (
                                     <button
                                         key={p}
                                         type="button"
                                         onClick={() => update('pensaoPercentual', p)}
-                                        className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${
+                                        className={`px-2 py-0.5 rounded text-body-xs font-bold transition-colors ${
                                             percentual === p
                                                 ? 'bg-primary text-white shadow-xs'
                                                 : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:border-primary/50'
@@ -323,11 +323,11 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         {/* BLOCO 1: Créditos que compõem a Base Bruta */}
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                <span className="text-body-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
                                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                     1. Créditos que compõem a Base Bruta da Pensão:
                                 </span>
-                                <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+                                <span className="text-body-xs text-neutral-400 dark:text-neutral-500">
                                     Marque as parcelas acordadas judicialmente
                                 </span>
                             </div>
@@ -557,7 +557,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
 
                             {/* Outras parcelas / Ajustes na base bruta */}
                             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <label className="text-[11px] text-neutral-600 dark:text-neutral-400">
+                                <label className="text-body-xs text-neutral-600 dark:text-neutral-400">
                                     Outras parcelas / Ajustes na base bruta da pensão:
                                 </label>
                                 <div className="relative w-full sm:w-44">
@@ -588,11 +588,11 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         {/* BLOCO 2: Deduções da Base (Cálculo sobre o Valor Líquido) */}
                         <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
                             <div className="flex items-center justify-between">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                <span className="text-body-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
                                     <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
                                     2. Descontos Dedutíveis da Base (Cálculo sobre o Líquido):
                                 </span>
-                                <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+                                <span className="text-body-xs text-neutral-400 dark:text-neutral-500">
                                     Exclusões legais e acordadas
                                 </span>
                             </div>
@@ -687,7 +687,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
 
                             {/* Outras deduções da base da pensão */}
                             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <label className="text-[11px] text-neutral-600 dark:text-neutral-400">
+                                <label className="text-body-xs text-neutral-600 dark:text-neutral-400">
                                     Outras deduções da base da pensão:
                                 </label>
                                 <div className="relative w-full sm:w-44">
@@ -753,7 +753,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         <label className="text-body-xs font-bold text-primary-900 dark:text-primary-200 block mb-1">
                             Valor Fixo Mensal da Pensão Alimentícia (R$)
                         </label>
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mb-2">
+                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mb-2">
                             Informe o valor exato fixado em decisão judicial ou escritura pública de alimentos.
                         </p>
                     </div>
@@ -785,7 +785,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                 </div>
             )}
 
-            <div className="p-3 bg-neutral-50 dark:bg-neutral-900/30 rounded-xl border border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
+            <div className="p-3 bg-neutral-50 dark:bg-neutral-900/30 rounded-xl border border-neutral-200 dark:border-neutral-800 text-body-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
                 <HeartHandshake className="w-4 h-4 text-primary shrink-0" />
                 <span>
                     O valor apurado de <strong>{formatCurrency(valorCalculado)}</strong> é lançado automaticamente como dedução da folha na linha <em>PENSÃO ALIMENTÍCIA</em>.

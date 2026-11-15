@@ -1,3 +1,10 @@
+## Uniformidade tipográfica — 14/11/2026
+
+- Unificada a família da interface em Plus Jakarta Sans e incluído o carregamento de JetBrains Mono para os valores monetários.
+- Rótulos de Salário Base, GAJ e Auxílio Alimentação compartilham fonte, tamanho de 14 px, peso 600, espaçamento e alinhamento dos valores; formulários reutilizáveis adotam o mesmo rótulo.
+- Escala global de textos auxiliares padronizada em 14 px, eliminando tamanhos avulsos de 10–13 px nos cards de férias, 13º, diárias, pensão, gratificação, IR-EA e rubricas manuais. Títulos dos cards pré-definidos seguem os subtítulos de 18 px.
+- Typecheck e compilação Vite verificados. Conferência visual dos componentes reais com dados fictícios em desktop e celular; estilos computados dos três rótulos idênticos e amostra móvel sem transbordamento. A página completa da calculadora não pôde ser conferida porque a configuração remota do órgão não carregou.
+
 ## Usabilidade da calculadora — 14/11/2026
 
 - Reorganizada a página única com nome para impressão rotulado, identificação do órgão, navegação por competência/remuneração/resultado e atalhos para verbas, mantendo o catálogo completo por categoria e órgão.

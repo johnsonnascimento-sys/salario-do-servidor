@@ -428,13 +428,13 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                                 <button
                                                                     type="button"
                                                                     onClick={clearHolidayDates}
-                                                                    className="text-[11px] text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 underline cursor-pointer font-medium"
+                                                                    className="text-body-xs text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 underline cursor-pointer font-medium"
                                                                 >
                                                                     Limpar marcados ({(state.diariasFeriados || []).length})
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-tight">
+                                                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400 leading-tight">
                                                             Sábados e domingos já são excluídos automaticamente dos descontos. Clique nos dias úteis que foram feriado ou ponto facultativo na sua localidade:
                                                         </p>
                                                         <div className="flex flex-wrap gap-1.5 pt-1">
@@ -455,9 +455,9 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                                     >
                                                                         <span>{day.weekdayLabel}, {day.formattedDate}</span>
                                                                         {isHoliday ? (
-                                                                            <span className="text-[10px] bg-amber-600 dark:bg-amber-500 text-white font-bold px-1 rounded-xs">Feriado</span>
+                                                                            <span className="text-body-xs bg-amber-600 dark:bg-amber-500 text-white font-bold px-1 rounded-xs">Feriado</span>
                                                                         ) : (
-                                                                            isReturnDay && <span className="text-[10px] text-neutral-400 dark:text-neutral-500">(retorno)</span>
+                                                                            isReturnDay && <span className="text-body-xs text-neutral-400 dark:text-neutral-500">(retorno)</span>
                                                                         )}
                                                                     </button>
                                                                 );
@@ -465,7 +465,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 italic pt-1 border-t border-neutral-200 dark:border-neutral-700/80">
+                                                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400 italic pt-1 border-t border-neutral-200 dark:border-neutral-700/80">
                                                         O período selecionado compreende apenas finais de semana (já excluídos automaticamente dos descontos).
                                                     </p>
                                                 )}
@@ -506,7 +506,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         Completo (ida e volta){embarkationValues.full > 0 ? ` - ${formatCurrencyBr(embarkationValues.full)}` : ''}
                                     </option>
                                 </select>
-                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
+                                <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
                                     {embarkationPercentDescription}
                                 </p>
                             </div>
@@ -514,12 +514,12 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label className={styles.label}>{embarkationLabel}</label>
-                                    <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
+                                    <span className="text-body-xs font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
                                         Res. CJF 340/2015 • Anexo
                                     </span>
                                 </div>
 
-                                <p className="text-[12px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                <p className="text-body-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
                                     Assinale os trechos realizados <strong>sem veículo oficial</strong> (art. 17, § 2º). Cada trecho dá direito a 25% do adicional ({formatCurrencyBr(embarkationValues.quarter)}):
                                 </p>
 
@@ -527,7 +527,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     <button
                                         type="button"
                                         onClick={() => handleSelectAllTrechos('todos')}
-                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                        className={`px-2 py-0.5 text-body-xs rounded font-medium transition-colors border ${
                                             selectedTrechos.length === 4
                                                 ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
                                                 : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
@@ -538,7 +538,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     <button
                                         type="button"
                                         onClick={() => handleSelectAllTrechos('ida')}
-                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                        className={`px-2 py-0.5 text-body-xs rounded font-medium transition-colors border ${
                                             selectedTrechos.length === 2 && selectedTrechos.includes('afastamento_origem') && selectedTrechos.includes('afastamento_destino')
                                                 ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
                                                 : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
@@ -549,7 +549,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     <button
                                         type="button"
                                         onClick={() => handleSelectAllTrechos('volta')}
-                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                        className={`px-2 py-0.5 text-body-xs rounded font-medium transition-colors border ${
                                             selectedTrechos.length === 2 && selectedTrechos.includes('retorno_origem') && selectedTrechos.includes('retorno_destino')
                                                 ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700'
                                                 : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
@@ -560,7 +560,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     <button
                                         type="button"
                                         onClick={() => handleSelectAllTrechos('nenhum')}
-                                        className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors border ${
+                                        className={`px-2 py-0.5 text-body-xs rounded font-medium transition-colors border ${
                                             selectedTrechos.length === 0
                                                 ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700'
                                                 : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
@@ -572,14 +572,14 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
                                 <div className="space-y-2 rounded-lg border border-neutral-200 dark:border-neutral-700 p-2.5 bg-neutral-50/50 dark:bg-neutral-900/50">
                                     <div>
-                                        <span className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
+                                        <span className="block text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
                                             I - No afastamento da sede (ida)
                                         </span>
                                         <div className="space-y-1.5 pl-1">
                                             {CJF_TRANSPORTE_TRECHOS.slice(0, 2).map(trecho => {
                                                 const isChecked = selectedTrechos.includes(trecho.id);
                                                 return (
-                                                    <label key={trecho.id} className="flex items-start gap-2 text-[12px] text-neutral-700 dark:text-neutral-300 cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100">
+                                                    <label key={trecho.id} className="flex items-start gap-2 text-body-xs text-neutral-700 dark:text-neutral-300 cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100">
                                                         <input
                                                             type="checkbox"
                                                             className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
@@ -588,7 +588,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                         />
                                                         <div className="flex-1 flex items-center justify-between gap-1">
                                                             <span>{trecho.label}</span>
-                                                            <span className={`text-[11px] font-mono whitespace-nowrap ${isChecked ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                                                            <span className={`text-body-xs font-mono whitespace-nowrap ${isChecked ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-neutral-400 dark:text-neutral-500'}`}>
                                                                 +25% ({formatCurrencyBr(embarkationValues.quarter)})
                                                             </span>
                                                         </div>
@@ -599,14 +599,14 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     </div>
 
                                     <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                                        <span className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
+                                        <span className="block text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
                                             II - No retorno à sede (volta)
                                         </span>
                                         <div className="space-y-1.5 pl-1">
                                             {CJF_TRANSPORTE_TRECHOS.slice(2, 4).map(trecho => {
                                                 const isChecked = selectedTrechos.includes(trecho.id);
                                                 return (
-                                                    <label key={trecho.id} className="flex items-start gap-2 text-[12px] text-neutral-700 dark:text-neutral-300 cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100">
+                                                    <label key={trecho.id} className="flex items-start gap-2 text-body-xs text-neutral-700 dark:text-neutral-300 cursor-pointer hover:text-neutral-900 dark:hover:text-neutral-100">
                                                         <input
                                                             type="checkbox"
                                                             className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
@@ -615,7 +615,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                         />
                                                         <div className="flex-1 flex items-center justify-between gap-1">
                                                             <span>{trecho.label}</span>
-                                                            <span className={`text-[11px] font-mono whitespace-nowrap ${isChecked ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                                                            <span className={`text-body-xs font-mono whitespace-nowrap ${isChecked ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-neutral-400 dark:text-neutral-500'}`}>
                                                                 +25% ({formatCurrencyBr(embarkationValues.quarter)})
                                                             </span>
                                                         </div>
@@ -626,7 +626,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 text-[12px]">
+                                <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 text-body-xs">
                                     <span className="text-neutral-700 dark:text-neutral-300 font-medium">
                                         Total do adicional ({selectedTrechos.length} de 4 trechos):
                                     </span>
@@ -635,7 +635,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                     </span>
                                 </div>
 
-                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                <p className="text-body-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
                                     {embarkationPercentDescription}
                                 </p>
                             </div>
@@ -686,7 +686,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                     </option>
                                                 ))}
                                             </select>
-                                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
                                                 {isJmu
                                                     ? 'O servidor que se deslocar em equipe de trabalho receberá diária correspondente ao maior valor da diária atribuído entre os servidores membros da equipe (art. 8º do Ato Normativo STM nº 799/2024).'
                                                     : 'O servidor que se deslocar em equipe de trabalho receberá diária equivalente ao maior valor pago entre os demais servidores membros da equipe (art. 10, § 1º da Resolução CJF nº 340/2015 c/c art. 6º, § 2º da Resolução CNJ nº 73/2009).'}
@@ -760,7 +760,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                                 </span>
                                             </label>
 
-                                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
                                                 {state.diariasAcompanhamentoIntegral ? (
                                                     isJmu
                                                         ? 'O servidor faz jus a 90% do valor da diária atribuído à autoridade assistida (art. 9º, § 1º do Ato Normativo STM nº 799/2024 c/c art. 6º, § 5º da Resolução CNJ nº 73/2009).'
@@ -826,7 +826,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                 )}
                                 <p>Diária de referência do Ministro do STF: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
                                 {normativeInfo?.notes && normativeInfo.notes.length > 0 && (
-                                    <div className="pt-1 text-[11px] text-neutral-500 border-t border-neutral-200/50 dark:border-neutral-700/50">
+                                    <div className="pt-1 text-body-xs text-neutral-500 border-t border-neutral-200/50 dark:border-neutral-700/50">
                                         {normativeInfo.notes.map((note, idx) => (
                                             <p key={idx}>• {note}</p>
                                         ))}

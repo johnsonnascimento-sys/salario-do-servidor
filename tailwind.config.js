@@ -132,7 +132,7 @@ export default {
                 display: ["Plus Jakarta Sans", "system-ui", "-apple-system", "sans-serif"],
 
                 // Fonte Body (Textos, Parágrafos)
-                sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                sans: ["Plus Jakarta Sans", "system-ui", "-apple-system", "sans-serif"],
 
                 // Fonte Mono (Código, Números)
                 mono: ["JetBrains Mono", "Fira Code", "monospace"],
@@ -157,12 +157,12 @@ export default {
                 'body-xl': ['1.125rem', { lineHeight: '1.75rem' }],                  // 18px
                 'body-lg': ['1rem', { lineHeight: '1.5rem' }],                       // 16px
                 'body': ['0.875rem', { lineHeight: '1.25rem' }],                     // 14px - DEFAULT
-                'body-sm': ['0.8125rem', { lineHeight: '1.25rem' }],                 // 13px
-                'body-xs': ['0.75rem', { lineHeight: '1rem' }],                      // 12px
+                'body-sm': ['0.875rem', { lineHeight: '1.25rem' }],                  // 14px (alias de body)
+                'body-xs': ['0.875rem', { lineHeight: '1.25rem' }],                  // 14px (alias de body)
 
                 // Labels & Captions
-                'label': ['0.625rem', { lineHeight: '1rem', fontWeight: '700', letterSpacing: '0.05em' }], // 10px
-                'caption': ['0.75rem', { lineHeight: '1rem', fontWeight: '500' }],   // 12px
+                'label': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '600' }], // 14px
+                'caption': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '500' }], // 14px
 
                 // Overline (Small caps)
                 'overline': ['0.625rem', { lineHeight: '1rem', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase' }],

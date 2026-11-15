@@ -141,7 +141,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                     <p className="text-neutral-700 dark:text-neutral-300">
                         Por exemplo, para valores recebidos em 2026, a primeira faixa da tabela fica assim:
                     </p>
-                    <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-0.5 text-[11px] pl-1 font-mono">
+                    <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-0.5 text-body-xs pl-1 font-mono">
                         <li><strong>1 mês:</strong> até R$ 2.428,80</li>
                         <li><strong>2 meses:</strong> até R$ 4.857,60</li>
                         <li><strong>3 meses:</strong> até R$ 7.286,40</li>
@@ -152,7 +152,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                     <p className="text-neutral-700 dark:text-neutral-300">
                         Essa regra se aplica aos pagamentos que se enquadram como RRA, em geral referentes a anos anteriores ao recebimento. O imposto final também depende das deduções e das demais regras aplicáveis ao caso.
                     </p>
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 pt-1 border-t border-primary-200/40 dark:border-primary-800/30">
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400 pt-1 border-t border-primary-200/40 dark:border-primary-800/30">
                         {tipo === 'horas_extras' && (
                             <>💡 <em>Você pode adicionar vários meses neste card ou criar um card separado para cada mês (o que também permite controlar o teto mensal de horas).</em></>
                         )}
@@ -213,7 +213,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                                             <p className="font-semibold text-amber-950 dark:text-amber-100">
                                                 Atenção: competência de {month.slice(0, 4)} pertence ao mesmo ano do contracheque ({anoPagamento})
                                             </p>
-                                            <p className="text-[11px] text-amber-800 dark:text-amber-300">
+                                            <p className="text-body-xs text-amber-800 dark:text-amber-300">
                                                 Pela Lei nº 7.713/88 (art. 12-A), a apuração por RRA (faixas de isenção multiplicadas) só é permitida para serviços prestados em <strong>anos anteriores (até dez/{anoMaximoEa})</strong>. Como este mês é de {month.slice(0, 4)}, ele será somado à remuneração mensal normal e <strong>tributado na folha corrente</strong> do mês.
                                             </p>
                                         </div>

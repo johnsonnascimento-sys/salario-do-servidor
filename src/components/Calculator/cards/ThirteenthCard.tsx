@@ -189,7 +189,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 onChange={e => update('adiant13Venc', parseCurrencyInput(e.target.value))}
                                 placeholder="0,00"
                             />
-                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
+                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mt-1">
                                 Valor descontado do adiantamento do cargo no contracheque
                             </p>
                         </div>
@@ -225,7 +225,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                     onChange={e => update('adiant13FC', parseCurrencyInput(e.target.value))}
                                     placeholder="0,00"
                                 />
-                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
+                                <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mt-1">
                                     Valor descontado do adiantamento de FC ou CJ no contracheque
                                 </p>
                             </div>
@@ -251,7 +251,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                     <div className="flex justify-between items-center mb-1">
                         <label className={styles.label}>2ª Parcela (Cargo Efetivo)</label>
                         {state.manualAdiant13 && !customizarSegunda && (
-                            <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                            <span className="text-body-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
                                 Saldo automático
                             </span>
                         )}
@@ -273,7 +273,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                         setCustomizarSegunda(false);
                                         update('segunda13Venc', 1);
                                     }}
-                                    className="text-[11px] text-primary-600 dark:text-primary-400 hover:underline mt-1"
+                                    className="text-body-xs text-primary-600 dark:text-primary-400 hover:underline mt-1"
                                 >
                                     Voltar para cálculo automático do saldo
                                 </button>
@@ -285,7 +285,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                         <span className="text-body-xs font-bold text-neutral-800 dark:text-neutral-200">
                                             {formatCurrency(state.segunda13Venc > 1 ? state.segunda13Venc : saldoVencCalculado)}
                                         </span>
-                                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                                             Integral ({formatCurrency(baseSemFC)}) − Adiantamento ({formatCurrency(state.adiant13Venc || 0)})
                                         </p>
                                     </div>
@@ -295,7 +295,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                             setCustomizarSegunda(true);
                                             update('segunda13Venc', saldoVencCalculado);
                                         }}
-                                        className="text-[11px] text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 underline"
+                                        className="text-body-xs text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 underline"
                                     >
                                         Editar
                                     </button>
@@ -328,7 +328,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                         <div className="flex justify-between items-center mb-1">
                             <label className={styles.label}>2ª Parcela (FC/CJ)</label>
                             {state.manualAdiant13 && !customizarSegunda && (
-                                <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                                <span className="text-body-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
                                     Saldo automático
                                 </span>
                             )}
@@ -350,7 +350,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                             setCustomizarSegunda(false);
                                             update('segunda13FC', 1);
                                         }}
-                                        className="text-[11px] text-primary-600 dark:text-primary-400 hover:underline mt-1"
+                                        className="text-body-xs text-primary-600 dark:text-primary-400 hover:underline mt-1"
                                     >
                                         Voltar para cálculo automático do saldo
                                     </button>
@@ -362,7 +362,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                             <span className="text-body-xs font-bold text-neutral-800 dark:text-neutral-200">
                                                 {formatCurrency(state.segunda13FC > 1 ? state.segunda13FC : saldoFCCalculado)}
                                             </span>
-                                            <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                                                 Integral ({formatCurrency(funcaoValor)}) − Adiantamento ({formatCurrency(state.adiant13FC || 0)})
                                             </p>
                                         </div>
@@ -372,7 +372,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                                 setCustomizarSegunda(true);
                                                 update('segunda13FC', saldoFCCalculado);
                                             }}
-                                            className="text-[11px] text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 underline"
+                                            className="text-body-xs text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 underline"
                                         >
                                             Editar
                                         </button>
@@ -425,7 +425,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                     <span className={styles.label}>
                         Composição da Remuneração de Referência (13º)
                     </span>
-                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                    <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
                         Selecione as parcelas que integram o cálculo
                     </span>
                 </div>
@@ -570,7 +570,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                 <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorAbono)}</span>
                             </span>
                             {!temAbonoAtivo && (
-                                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">
+                                <span className="text-body-xs text-neutral-400 dark:text-neutral-500 font-normal">
                                     (Requer módulo de abono de permanência ativo)
                                 </span>
                             )}

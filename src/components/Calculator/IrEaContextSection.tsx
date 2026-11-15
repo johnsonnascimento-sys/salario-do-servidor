@@ -32,7 +32,7 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
                     </span>
                 </span>
                 {hasOverrides && (
-                    <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                    <span className="text-body-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
                         Ajuste manual ativo
                     </span>
                 )}
@@ -89,7 +89,7 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
                             onChange={event => patch({ referenciaMeses: event.target.value })}
                         />
                     </label>
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                         A Receita Federal exige comprovação documental quando o NM é alterado manualmente em relação ao calendário fiscal.
                     </p>
                 </div>

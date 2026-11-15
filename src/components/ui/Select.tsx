@@ -31,7 +31,7 @@ export const Select: React.FC<SelectProps> = ({
             {label && (
                 <label
                     htmlFor={selectId}
-                    className="block text-body-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5"
+                    className="field-label"
                 >
                     {label}
                 </label>

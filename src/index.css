@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    body {
+        @apply font-sans text-body;
+    }
+
+    input, select, textarea {
+        @apply text-body-lg;
+    }
+}
+
 @layer utilities {
     /* Gradientes */
     .gradient-text {
@@ -34,11 +44,8 @@
 }
 
 @layer components {
-    .calculator-workspace .text-label,
-    .calculator-workspace .text-body-xs,
-    .calculator-workspace .text-body-sm {
-        font-size: 0.875rem;
-        line-height: 1.4;
+    .field-label {
+        @apply block text-body font-semibold normal-case tracking-normal text-neutral-700 dark:text-neutral-200 mb-1.5;
     }
 
     .calculator-workspace :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {

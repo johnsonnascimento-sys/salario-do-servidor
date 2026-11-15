@@ -182,7 +182,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
                     {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
-                    <h3 className="text-body-lg font-bold text-neutral-900 dark:text-neutral-100">
+                    <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
                     </h3>
                     {headerInfo.normBadge && (

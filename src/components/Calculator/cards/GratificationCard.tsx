@@ -150,7 +150,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                     <span className={styles.label}>
                         Composição da Base de Cálculo (GAE / GAS)
                     </span>
-                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                    <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
                         Selecione as parcelas que compõem a base
                     </span>
                 </div>
@@ -281,7 +281,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                                 <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorAbono)}</span>
                             </span>
                             {!temAbonoAtivo && (
-                                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">
+                                <span className="text-body-xs text-neutral-400 dark:text-neutral-500 font-normal">
                                     (Requer módulo de abono de permanência ativo)
                                 </span>
                             )}

@@ -70,16 +70,16 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                <div className="flex flex-col justify-between rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
                     <p className={styles.label}>Salário Base</p>
                     <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(baseVencimento)}</p>
                 </div>
-                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                    <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Gratificação de Atividade Judiciária (GAJ)</p>
+                <div className="flex flex-col justify-between rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                    <p className={styles.label}>Gratificação de Atividade Judiciária (GAJ)</p>
                     <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
                 </div>
-                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                    <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Auxílio Alimentação</p>
+                <div className="flex flex-col justify-between rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                    <p className={styles.label}>Auxílio Alimentação</p>
                     <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(state.auxAlimentacao || 0)}</p>
                 </div>
             </div>

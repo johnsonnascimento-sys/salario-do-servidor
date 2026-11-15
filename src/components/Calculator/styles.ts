@@ -2,7 +2,7 @@
 export const styles = {
     card: "bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow-sm",
     sectionTitle: "text-h4 font-bold text-neutral-900 dark:text-neutral-100 mb-5 flex items-center gap-3",
-    label: "block text-body font-semibold text-neutral-700 dark:text-neutral-200 mb-1.5",
+    label: "field-label",
     input: "w-full min-w-0 min-h-11 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2.5 text-body-lg font-normal normal-case tracking-normal text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all",
     checkboxLabel: "flex min-h-11 items-center gap-2 text-body text-neutral-700 dark:text-neutral-300 cursor-pointer select-none",
     checkbox: "rounded border-neutral-300 text-secondary focus:ring-secondary",
