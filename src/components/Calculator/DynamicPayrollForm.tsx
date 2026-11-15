@@ -27,6 +27,7 @@ import {
 } from './dynamicPayrollForm.helpers';
 
 interface DynamicPayrollFormProps {
+    step: number;
     state: CalculatorState;
     inputState?: CalculatorState;
     updateMany: (patch: Partial<CalculatorState>) => void;
@@ -45,6 +46,7 @@ interface DynamicPayrollFormProps {
 }
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
+    step,
     state,
     inputState,
     updateMany,
@@ -252,12 +254,13 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     return (
         <>
-            <section id="remuneracao" tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
+            <section id="remuneracao" tabIndex={-1} className={`${styles.card} scroll-mt-24`} hidden={step === 2}>
                 <h2 className={styles.sectionTitle}>
                     <Settings className="w-4 h-4" />
                     Remuneração e descontos
                 </h2>
 
+                <div hidden={step !== 0}>
                 <DynamicPayrollBaseSection
                     styles={styles}
                     state={state}
@@ -274,6 +277,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     update={update}
                 />
 
+                </div>
+                <div hidden={step !== 1}>
                 <DynamicPayrollAQSection
                     styles={styles}
                     renderPreset={renderPreset}
@@ -298,8 +303,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     deducaoPorDependente={courtConfig.values?.deducao_dep ?? 0}
                 />
 
+                </div>
             </section>
 
+            <div hidden={step !== 1}>
             <section id="verbas" tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
                 <h2 className={`${styles.sectionTitle} relative`}>
                     <Sparkles className="w-4 h-4 text-primary" />
@@ -395,6 +402,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
                     ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
                 allowNormalization={!pensionSelection.incompatible} />
+            </div>
         </>
     );
 };

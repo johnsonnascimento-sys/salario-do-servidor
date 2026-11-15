@@ -87,6 +87,30 @@ export default function Calculator() {
     const [restoreError, setRestoreError] = useState('');
     const [saveFeedback, setSaveFeedback] = useState('');
     const [barHeight, setBarHeight] = useState(120);
+    const [step, setStep] = useState(() => window.location.hash === '#resultado' || window.location.hash === '#detalhamento' ? 2 : window.location.hash === '#remuneracao' || window.location.hash === '#verbas' ? 1 : 0);
+    const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+
+    const changeStep = (nextStep: number) => {
+        setStep(nextStep);
+        window.requestAnimationFrame(() => {
+            stepHeadingRef.current?.focus();
+            stepHeadingRef.current?.scrollIntoView({ block: 'start' });
+        });
+    };
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea') setStep(2);
+            else if (hash === '#remuneracao' || hash === '#verbas' || hash === '#funpresp-settings' || hash === '#pension-retro-form' || hash === '#manual-rubricas-section') setStep(1);
+            else if (hash === '#competencia') setStep(0);
+            if (hash && document.getElementById(hash.slice(1))) {
+                window.requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
+            }
+        };
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
 
     useEffect(() => {
         if (typeof ResizeObserver === 'undefined') return;
@@ -282,14 +306,17 @@ export default function Calculator() {
                     onClearCalculator={handleClearCalculator}
                 />
 
-                <CalculatorNavigation />
+                <CalculatorNavigation step={step} onChange={changeStep} />
+                <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">
+                    {['Competência e perfil', 'Remuneração e verbas', 'Resultado'][step]}
+                </h2>
                 <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">Preencha seus dados principais e adicione apenas as verbas que se aplicam. Os valores são atualizados automaticamente.</p>
                 {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-primary-300 bg-primary-50 p-4 text-body text-primary-900 dark:bg-primary-950 dark:text-primary-100">
                     <p>{exportError || saveFeedback}</p>
                     {!exportError && <button type="button" aria-label="Fechar mensagem" className="min-h-11 shrink-0 px-2 font-semibold" onClick={() => setSaveFeedback('')}>Fechar</button>}
                 </div>}
                 <div className="space-y-5">
-                    <section id="competencia" tabIndex={-1} aria-label="Competência" className="scroll-mt-28">
+                    <section id="competencia" tabIndex={-1} aria-label="Competência" className="scroll-mt-28" hidden={step !== 0}>
                     <GlobalSettings
                         key={`global-settings-${formKey}`}
                         state={effectiveState}
@@ -323,6 +350,7 @@ export default function Calculator() {
                         <p className="mt-2">O resultado final, o salvamento do holerite e a exportação ficam indisponíveis até a apuração ser concluída.</p>
                     </div>}
                     <DynamicPayrollForm
+                        step={step}
                         calculationReady={calculationReady}
                         pensionPending={Boolean(calculationPending)}
                         updateMany={updateMany}
@@ -340,12 +368,14 @@ export default function Calculator() {
                         updateRubrica={updateRubrica}
                         styles={styles}
                     />
+                    <div hidden={step !== 1}>
                     <ObservationsSection
                         state={effectiveState}
                         update={update}
                         styles={styles}
                     />
-                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5">
+                    </div>
+                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== 2}>
                     <ResultsOverview state={effectiveState} resultRows={resultRows} dailiesResultRows={dailiesResultRows} calculationReady={calculationReady} resultMessage={resultMessage} />
                     {calculationReady ? <ResultsSummary
                         dailiesResultRows={dailiesResultRows}
@@ -374,6 +404,11 @@ export default function Calculator() {
                         </div>
                     )}
                     </section>
+                </div>
+
+                <div className="mt-6 flex justify-between gap-3">
+                    {step > 0 ? <button type="button" onClick={() => changeStep(step - 1)} className="min-h-11 rounded-lg border border-neutral-300 px-5 py-2 font-semibold text-neutral-700 dark:border-neutral-600 dark:text-neutral-100">Voltar</button> : <span />}
+                    {step < 2 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-primary-800 px-5 py-2 font-semibold text-white hover:bg-primary-900">{step === 1 ? 'Ver resultado' : 'Avançar'}</button>}
                 </div>
 
                 <ActionFooter
