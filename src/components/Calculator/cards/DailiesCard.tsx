@@ -1,3 +1,4 @@
+import { Accordion } from '../../ui/Accordion';
 import React, { useMemo } from 'react';
 import { Plane } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
@@ -57,6 +58,7 @@ const isEndBeforeStart = (startDate: string, endDate: string) =>
     isIsoDate(startDate) && isIsoDate(endDate) && endDate < startDate;
 
 export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles, courtConfig, competenciaReferencia }) => {
+    const fieldId = React.useId();
     const dailiesConfig = courtConfig?.dailies;
     const transportWorkdays = Number(courtConfig?.payrollRules?.transportWorkdays || 22);
     const isPeriodMode = state.diariasModoDesconto === 'periodo';
@@ -378,8 +380,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             <div className="space-y-3">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={styles.label}>Data de início</label>
-                                        <input
+                                        <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Data de início</label>
+                                        <input id={`${fieldId}-field-1`}
                                             type="date"
                                             className={styles.input}
                                             value={state.diariasDataInicio}
@@ -388,8 +390,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         />
                                     </div>
                                     <div>
-                                        <label className={styles.label}>Data de fim</label>
-                                        <input
+                                        <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Data de fim</label>
+                                        <input id={`${fieldId}-field-2`}
                                             type="date"
                                             className={styles.input}
                                             value={state.diariasDataFim}
@@ -474,8 +476,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             </div>
                         ) : (
                             <div>
-                                <label className={styles.label}>Quantidade de diarias</label>
-                                <input
+                                <label htmlFor={`${fieldId}-field-3`} className={styles.label}>Quantidade de diarias</label>
+                                <input id={`${fieldId}-field-3`}
                                     type="number"
                                     step="0.5"
                                     min="0"
@@ -490,8 +492,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
 
                         {isJmu ? (
                             <div>
-                                <label className={styles.label}>{embarkationLabel}</label>
-                                <select
+                                <label htmlFor={`${fieldId}-field-4`} className={styles.label}>{embarkationLabel}</label>
+                                <select id={`${fieldId}-field-4`}
                                     className={styles.input}
                                     value={state.diariasEmbarque}
                                     onChange={e => update('diariasEmbarque', e.target.value)}
@@ -775,66 +777,70 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             </div>
                         )}
 
-                        <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
-                            <p>Os valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
-                            <p className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                Valor unitário da diária: {dailyRate > 0 ? formatCurrencyBr(dailyRate) : 'R$ 0,00'}
-                            </p>
-                            {state.diariasAssessoramentoMagistrado && !isMagistrate && assistedAuthorityInfo && (
-                                <p className="text-amber-800 dark:text-amber-300 font-medium">
-                                    ⭐ Diária a {Math.round((assistedAuthorityInfo.percentage ?? 0.8) * 100)}% da autoridade assistida ({assistedAuthorityInfo.authorityLabel}: {formatCurrencyBr(assistedAuthorityInfo.authorityRate)} → servidor: {formatCurrencyBr(assistedAuthorityInfo.serverRate)}).
+                        <Accordion title="Memória e fundamentos das diárias" summary={`Diária unitária ${formatCurrencyBr(dailyRate)}`}>
+                            <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-body-xs text-neutral-600 dark:text-neutral-300 space-y-1">
+                                <p>Os valores de diárias seguem a tabela vigente e não acompanham o mês/ano selecionado.</p>
+                                <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                    Valor unitário da diária: {dailyRate > 0 ? formatCurrencyBr(dailyRate) : 'R$ 0,00'}
                                 </p>
-                            )}
-                            {state.diariasEquipeTrabalho && !isMagistrate && selectedTeamOption && (
-                                <p className="text-blue-800 dark:text-blue-300 font-medium">
-                                    ⭐ Diária equiparada por equipe de trabalho ({selectedTeamOption.label}: {formatCurrencyBr(dailyRate)}) {isJmu ? 'conforme art. 8º do Ato STM 799/2024' : 'conforme art. 10, § 1º da Res. CJF 340/2015 c/c art. 6º, § 2º da Res. CNJ 73/2009'}.
-                                </p>
-                            )}
-                            <p>
-                                {embarkationLabel}: {isJmu ? (
-                                    state.diariasEmbarque === 'completo'
-                                        ? `Completo (${formatCurrencyBr(embarkationValues.full)})`
-                                        : state.diariasEmbarque === 'metade'
-                                            ? `Metade (${formatCurrencyBr(embarkationValues.half)})`
-                                            : 'Nenhum'
-                                ) : (
-                                    selectedTrechos.length > 0
-                                        ? `${selectedTrechos.length} de 4 trechos (${formatCurrencyBr(currentEmbarkationValue)})`
-                                        : 'Nenhum (0 trechos)'
-                                )}.
-                            </p>
-                            <p>Desconto automático de auxílios: fins de semana são desconsiderados automaticamente.</p>
-                            {(state.diariasFeriados || []).length > 0 ? (
-                                <p>Feriados e pontos facultativos indicados: {formatDateList(state.diariasFeriados)}.</p>
-                            ) : (
-                                <p>Nenhum feriado ou ponto facultativo indicado na viagem.</p>
-                            )}
-                            <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
-                            <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
-                            <p>
-                                Regra de retorno:
-                                {discountRules.halfDailyOnBusinessReturnDay ? ' meia diária ativa em qualquer dia' : ' meia diária inativa'} e
-                                {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxílios apenas em dia útil' : ' meio desconto de auxílios inativo'}.
-                            </p>
-                            {ldoCapEnabled && ldoCapValue > 0 && (
+                                {state.diariasAssessoramentoMagistrado && !isMagistrate && assistedAuthorityInfo && (
+                                    <p className="text-amber-800 dark:text-amber-300 font-medium">
+                                        ⭐ Diária a {Math.round((assistedAuthorityInfo.percentage ?? 0.8) * 100)}% da autoridade assistida ({assistedAuthorityInfo.authorityLabel}: {formatCurrencyBr(assistedAuthorityInfo.authorityRate)} → servidor: {formatCurrencyBr(assistedAuthorityInfo.serverRate)}).
+                                    </p>
+                                )}
+                                {state.diariasEquipeTrabalho && !isMagistrate && selectedTeamOption && (
+                                    <p className="text-blue-800 dark:text-blue-300 font-medium">
+                                        ⭐ Diária equiparada por equipe de trabalho ({selectedTeamOption.label}: {formatCurrencyBr(dailyRate)}) {isJmu ? 'conforme art. 8º do Ato STM 799/2024' : 'conforme art. 10, § 1º da Res. CJF 340/2015 c/c art. 6º, § 2º da Res. CNJ 73/2009'}.
+                                    </p>
+                                )}
                                 <p>
-                                    Teto LDO por diária: {formatCurrencyBr(ldoCapValue)}
+                                    {embarkationLabel}: {isJmu ? (
+                                        state.diariasEmbarque === 'completo'
+                                            ? `Completo (${formatCurrencyBr(embarkationValues.full)})`
+                                            : state.diariasEmbarque === 'metade'
+                                                ? `Metade (${formatCurrencyBr(embarkationValues.half)})`
+                                                : 'Nenhum'
+                                    ) : (
+                                        selectedTrechos.length > 0
+                                            ? `${selectedTrechos.length} de 4 trechos (${formatCurrencyBr(currentEmbarkationValue)})`
+                                            : 'Nenhum (0 trechos)'
+                                    )}.
                                 </p>
-                            )}
-                            <p>Diária de referência do Ministro do STF: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
-                            {normativeInfo?.notes && normativeInfo.notes.length > 0 && (
-                                <div className="pt-1 text-[11px] text-neutral-500 border-t border-neutral-200/50 dark:border-neutral-700/50">
-                                    {normativeInfo.notes.map((note, idx) => (
-                                        <p key={idx}>• {note}</p>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                <p>Desconto automático de auxílios: fins de semana são desconsiderados automaticamente.</p>
+                                {(state.diariasFeriados || []).length > 0 ? (
+                                    <p>Feriados e pontos facultativos indicados: {formatDateList(state.diariasFeriados)}.</p>
+                                ) : (
+                                    <p>Nenhum feriado ou ponto facultativo indicado na viagem.</p>
+                                )}
+                                <p>Divisor do auxílio-alimentação: {discountRules.foodDivisor} dias</p>
+                                <p>Divisor do auxílio-transporte: {discountRules.transportDivisor} dias</p>
+                                <p>
+                                    Regra de retorno:
+                                    {discountRules.halfDailyOnBusinessReturnDay ? ' meia diária ativa em qualquer dia' : ' meia diária inativa'} e
+                                    {discountRules.halfDiscountOnBusinessReturnDay ? ' meio desconto de auxílios apenas em dia útil' : ' meio desconto de auxílios inativo'}.
+                                </p>
+                                {ldoCapEnabled && ldoCapValue > 0 && (
+                                    <p>
+                                        Teto LDO por diária: {formatCurrencyBr(ldoCapValue)}
+                                    </p>
+                                )}
+                                <p>Diária de referência do Ministro do STF: {ministerPerDiemValue > 0 ? formatCurrencyBr(ministerPerDiemValue) : 'não configurada'}.</p>
+                                {normativeInfo?.notes && normativeInfo.notes.length > 0 && (
+                                    <div className="pt-1 text-[11px] text-neutral-500 border-t border-neutral-200/50 dark:border-neutral-700/50">
+                                        {normativeInfo.notes.map((note, idx) => (
+                                            <p key={idx}>• {note}</p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </Accordion>
                     </div>
                 </div>
 
-                <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Descontos internos</h4>
+                <Accordion title="Descontos de auxílios nas diárias"
+                    summary={[state.diariasDescontarAlimentacao && 'Alimentação', state.diariasDescontarTransporte && 'Transporte'].filter(Boolean).join(' · ') || 'Sem descontos de auxílios'}
+                    expandWhen={!isPeriodMode && Boolean(state.diariasDescontarAlimentacao || state.diariasDescontarTransporte)}>
+
                     <div className="space-y-4">
                         <div className="flex gap-4 flex-wrap">
                             <label className={styles.checkboxLabel}>
@@ -894,8 +900,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className={styles.label}>Dias para desconto do auxílio-alimentação</label>
-                                        <input
+                                        <label htmlFor={`${fieldId}-field-5`} className={styles.label}>Dias para desconto do auxílio-alimentação</label>
+                                        <input id={`${fieldId}-field-5`}
                                             type="number"
                                             min="0"
                                             step="0.5"
@@ -907,8 +913,8 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                         />
                                     </div>
                                     <div>
-                                        <label className={styles.label}>Dias para desconto do auxílio-transporte</label>
-                                        <input
+                                        <label htmlFor={`${fieldId}-field-6`} className={styles.label}>Dias para desconto do auxílio-transporte</label>
+                                        <input id={`${fieldId}-field-6`}
                                             type="number"
                                             min="0"
                                             step="0.5"
@@ -923,10 +929,11 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             </div>
                         )}
                     </div>
-                </div>
+                </Accordion>
 
-                <div className={styles.innerBox}>
-                    <h4 className={styles.innerBoxTitle}>Auxílios recebidos no deslocamento (glosa)</h4>
+                <Accordion title="Auxílios recebidos no deslocamento (glosa)"
+                    summary={[state.diariasExtHospedagem && 'Hospedagem fornecida', state.diariasExtAlimentacao && 'Alimentação fornecida', state.diariasExtTransporte && 'Transporte fornecido'].filter(Boolean).join(' · ') || 'Nenhum auxílio externo informado'}>
+
                     <div className="space-y-2">
                         <label className={styles.checkboxLabel}>
                             <input
@@ -958,7 +965,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                             Transporte fornecido
                         </label>
                     </div>
-                </div>
+                </Accordion>
             </div>
     );
 };

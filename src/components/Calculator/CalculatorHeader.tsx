@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, RotateCcw, Save, User } from 'lucide-react';
+import { ArrowLeftRight, User } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 
 interface CalculatorHeaderProps {
@@ -19,7 +19,6 @@ interface CalculatorHeaderProps {
 }
 
 export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
-    courtConfig,
     state,
     update,
     navigate,
@@ -27,33 +26,27 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
     isUserAuthenticated,
     loggedUserName,
     agencyName,
-    onSavePayslip,
     onOpenPayslips,
-    savingPayslip,
-    onClearCalculator,
-    calculationReady = true,
 }) => {
     return (
-        <div className="md:flex md:items-center md:justify-between mb-8 gap-4">
-            <div className="flex items-center gap-4 mb-4 md:mb-0">
-                <button
-                    type="button"
-                    aria-label="Voltar para página inicial"
-                    onClick={() => navigate('/')}
-                    className="bg-white dark:bg-neutral-800 p-2 rounded-xl text-neutral-500 hover:text-secondary shadow-sm border border-neutral-200 dark:border-neutral-700 transition-colors"
-                >
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
+        <header className="grid gap-6 mb-6 lg:grid-cols-2 lg:items-end">
+            <div className="min-w-0">
                 <div>
-                    <h1 className="text-h3 font-bold text-neutral-900 dark:text-white">
-                        {agencyName || 'Simulador'}
+                    <h1 className="text-h2 font-bold tracking-tight text-neutral-900 dark:text-white">
+                        Simulador de remuneração
                     </h1>
+                    <p className="mt-2 text-body-lg text-neutral-600 dark:text-neutral-300">{agencyName}</p>
+                    <button type="button" onClick={() => navigate('/beta-access')} className="mt-1 inline-flex min-h-11 items-center gap-2 text-body font-semibold text-primary-800 dark:text-primary-300">
+                        <ArrowLeftRight size={16} aria-hidden="true" /> Trocar órgão
+                    </button>
                 </div>
             </div>
 
             <div className="w-full md:w-auto flex flex-col md:items-end gap-2">
-                <div className="w-full md:w-96">
+                <div className="w-full lg:max-w-md">
+                    <label htmlFor="calculator-print-name" className={styles.label}>Nome para impressão <span className="font-normal">(opcional)</span></label>
                     <input
+                        id="calculator-print-name"
                         type="text"
                         placeholder={isUserAuthenticated ? (loggedUserName || 'Nome para impressão') : 'Nome para impressão (Opcional)'}
                         className={`${styles.input} w-full`}
@@ -64,31 +57,14 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
                 <div className="flex flex-wrap items-center gap-2 justify-end">
                     <button
                         type="button"
-                        onClick={onClearCalculator}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 text-body-xs font-semibold text-neutral-700 dark:text-neutral-200"
-                    >
-                        <RotateCcw className="w-4 h-4" />
-                        Limpar
-                    </button>
-                    <button
-                        type="button"
                         onClick={onOpenPayslips}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 text-body-xs font-semibold text-neutral-700 dark:text-neutral-200"
+                        className="inline-flex min-h-11 items-center gap-2 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 text-body font-semibold text-neutral-700 dark:text-neutral-200"
                     >
                         <User className="w-4 h-4" />
                         Meus Holerites
                     </button>
-                    <button
-                        type="button"
-                        onClick={onSavePayslip}
-                        disabled={savingPayslip || !calculationReady}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary-600 text-white text-body-xs font-semibold disabled:opacity-60"
-                    >
-                        <Save className="w-4 h-4" />
-                        {savingPayslip ? 'Salvando...' : 'Salvar na Minha Área'}
-                    </button>
                 </div>
             </div>
-        </div>
+        </header>
     );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { GripVertical, Info, Trash2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, GripVertical, Info, Trash2 } from 'lucide-react';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
@@ -10,6 +10,11 @@ import { resolveGaactaRule } from '../../services/agency/engine/modules/gaactaCa
 interface PresetInstanceCardProps {
     instance: PresetInstance;
     presetLabel: string;
+    position?: number;
+    instanceNumber?: number;
+    canMoveUp?: boolean;
+    canMoveDown?: boolean;
+    movePreset?: (key: string, direction: -1 | 1) => void;
     reorderMode: boolean;
     draggingPreset: string | null;
     handlePresetDragStart: (key: string) => void;
@@ -128,6 +133,11 @@ const getPresetHeaderInfo = (
 export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     instance,
     presetLabel,
+    position = 0,
+    instanceNumber = 1,
+    canMoveUp = false,
+    canMoveDown = false,
+    movePreset,
     reorderMode,
     draggingPreset,
     handlePresetDragStart,
@@ -169,12 +179,12 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             onDragEnd={handlePresetDragEnd}
             className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-primary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
-            <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
                     {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
-                    <span className="text-body-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
-                        {headerInfo.title}
-                    </span>
+                    <h3 className="text-body-lg font-bold text-neutral-900 dark:text-neutral-100">
+                        {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
+                    </h3>
                     {headerInfo.normBadge && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
@@ -182,7 +192,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     )}
                     {instance.presetId === 'indenizacao_transporte' && (
                         <span ref={infoRef} className="relative inline-flex" onMouseEnter={() => setInfoOpen(true)} onMouseLeave={() => setInfoOpen(false)} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setInfoOpen(false); }} onPointerDown={e => e.stopPropagation()}>
-                            <button type="button" aria-label="Informações sobre indenização de transporte" aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} aria-describedby={infoOpen ? `info-${instance.key}` : undefined} onFocus={() => setInfoOpen(true)} onClick={e => { e.stopPropagation(); setInfoOpen(true); }} className="rounded p-1 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                            <button type="button" aria-label="Informações sobre indenização de transporte" aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} aria-describedby={infoOpen ? `info-${instance.key}` : undefined} onFocus={() => setInfoOpen(true)} onClick={e => { e.stopPropagation(); setInfoOpen(true); }} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                                 <Info className="h-4 w-4" />
                             </button>
                             {infoOpen && <span id={`info-${instance.key}`} role="tooltip" className="fixed left-4 right-4 top-1/3 z-tooltip sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-72 rounded-lg border border-neutral-200 bg-white p-3 text-body-xs normal-case tracking-normal text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
@@ -190,20 +200,22 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                             </span>}
                         </span>
                     )}
-                    {MULTI_INSTANCE_PRESETS.has(instance.presetId) && (
-                        <span className="px-2 py-0.5 rounded-full text-label font-bold uppercase tracking-wide bg-neutral-100 text-neutral-600 border border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700">
-                            Múltiplo
-                        </span>
-                    )}
+
                 </div>
+                <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
+                    {reorderMode && movePreset && <>
+                        <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
+                        <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
+                    </>}
                 <button
                     type="button"
                     onClick={() => removePreset(instance)}
-                    className="text-neutral-400 hover:text-error-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
-                    aria-label={`Remover ${headerInfo.title}`}
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-500 hover:text-error-500 p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
+                    aria-label={`Remover ${headerInfo.title}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? `, instância ${instanceNumber}` : ''}`}
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
+                </div>
             </div>
 
             <PresetCardContent

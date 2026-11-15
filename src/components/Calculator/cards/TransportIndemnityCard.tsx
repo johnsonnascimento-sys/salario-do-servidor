@@ -1,3 +1,4 @@
+import { Accordion } from '../../ui/Accordion';
 import React from 'react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { formatCurrency } from '../../../utils/calculations';
@@ -114,15 +115,18 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, compete
                 Conte os dias em que houve diligência externa, e não a quantidade de mandados. Várias diligências na mesma data contam como um dia.
             </p>
 
-            {isCJF ? (
-                <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                    Considere apenas dias de efetivo serviço externo, excluindo férias, licenças e demais afastamentos, ainda que considerados em lei como de efetivo exercício (art. 56, parágrafo único). Não computar dias que servirem de base ao cálculo de diárias (art. 55, § 2º). É vedado suprimento de fundos ou uso de veículo oficial para a finalidade (art. 57). A prestação dos serviços depende de atestação pelo titular da unidade (art. 56); este valor é uma simulação.
-                </p>
-            ) : (
-                <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                    Considere apenas dias elegíveis, excluindo afastamentos e demais impedimentos, inclusive os dias incompatíveis com diárias. O pagamento depende de comprovação e atestação; este valor é uma simulação.
-                </p>
-            )}
+            <Accordion title="Condições e fundamentos da indenização">
+                {isCJF ? (
+                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                        Considere apenas dias de efetivo serviço externo, excluindo férias, licenças e demais afastamentos, ainda que considerados em lei como de efetivo exercício (art. 56, parágrafo único). Não computar dias que servirem de base ao cálculo de diárias (art. 55, § 2º). É vedado suprimento de fundos ou uso de veículo oficial para a finalidade (art. 57). A prestação dos serviços depende de atestação pelo titular da unidade (art. 56); este valor é uma simulação.
+                    </p>
+                ) : (
+                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                        Considere apenas dias elegíveis, excluindo afastamentos e demais impedimentos, inclusive os dias incompatíveis com diárias. O pagamento depende de comprovação e atestação; este valor é uma simulação.
+                    </p>
+                )}
+
+            </Accordion>
 
             {memory && !['unavailable', 'invalid', 'inactive'].includes(memory.status) && (
                 <p className="text-body-sm font-semibold" role="status">

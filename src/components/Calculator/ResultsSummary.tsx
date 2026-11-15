@@ -6,11 +6,14 @@ import React from 'react';
 import { Receipt } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
-import { groupPayslipRowsForDisplay, PayslipDisplayRow } from '../../utils/payslipRows';
+import { PayslipDisplayRow } from '../../utils/payslipRows';
+import { getPayrollPresentation } from '../../utils/payrollPresentation';
+import type { PayslipResultRow } from '../../types/user';
 
 interface ResultsSummaryProps {
     state: CalculatorState;
-    resultRows: Array<{ label: string; value: number; type: 'C' | 'D' }>;
+    resultRows: PayslipResultRow[];
+    dailiesResultRows?: PayslipResultRow[];
     update?: (key: keyof CalculatorState, value: any) => void;
     calculationError?: string | null;
     courtConfig?: CourtConfig;
@@ -38,7 +41,7 @@ const labelToneClasses = (type: 'C' | 'D') => (
 const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, totals }) => (
     <section className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
         <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900">
-            <p className="text-body-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+            <p className="text-body font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 {title}
             </p>
         </div>
@@ -49,22 +52,22 @@ const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tota
                         <details className="group">
                             <summary className="list-none cursor-pointer">
                                 <div className="flex items-start justify-between gap-3">
-                                    <p className={`text-body-xs font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
+                                    <p className={`text-body font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
                                         {row.label}
                                     </p>
                                     <p className="text-right font-mono text-body font-semibold text-neutral-700 dark:text-neutral-200 break-all">
                                         {formatCurrency(row.value)}
                                     </p>
                                 </div>
-                                <p className="mt-1 text-body-xs text-neutral-500 group-open:hidden">
+                                <p className="mt-1 text-body text-neutral-500 group-open:hidden">
                                     Ver detalhamento
                                 </p>
                             </summary>
                             <div className="mt-3 space-y-2 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-900/50">
                                 {row.details.map((detail, detailIndex) => (
                                     <div key={`${detail.label}-${detailIndex}`} className="flex items-start justify-between gap-3">
-                                        <p className="text-body-xs text-neutral-600 dark:text-neutral-300">{detail.label}</p>
-                                        <p className="text-body-xs font-semibold text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
+                                        <p className="text-body text-neutral-600 dark:text-neutral-300">{detail.label}</p>
+                                        <p className="text-body font-semibold text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
                                             {formatCurrency(detail.value)}
                                         </p>
                                     </div>
@@ -73,7 +76,7 @@ const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tota
                         </details>
                     ) : (
                         <>
-                            <p className={`text-body-xs font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
+                            <p className={`text-body font-bold leading-snug break-words ${labelToneClasses(row.type)}`}>
                                 {row.label}
                             </p>
                             <p className="mt-1 text-right font-mono text-body font-semibold text-neutral-700 dark:text-neutral-200 break-all">
@@ -85,7 +88,7 @@ const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tota
             ))}
             {totals.map((total, idx) => (
                 <div key={`${total.label}-${idx}`} className="px-4 py-4 bg-neutral-50/50 dark:bg-neutral-900/50">
-                    <p className={`text-body-xs font-bold uppercase tracking-wide break-words ${toneClasses[total.tone || 'default']}`}>
+                    <p className={`text-body font-bold uppercase tracking-wide break-words ${toneClasses[total.tone || 'default']}`}>
                         {total.label}
                     </p>
                     <p className={`mt-1 text-right font-mono font-bold break-all ${toneClasses[total.tone || 'default']}`}>
@@ -100,7 +103,7 @@ const MobileSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tota
 const DesktopSummarySection: React.FC<SummarySectionProps> = ({ title, rows, totals }) => (
     <section className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
         <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-3 dark:border-neutral-700 dark:bg-neutral-900">
-            <p className="text-body-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+            <p className="text-body font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 {title}
             </p>
         </div>
@@ -108,8 +111,8 @@ const DesktopSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tot
             <table className="w-full table-auto text-body">
                 <thead className="bg-white dark:bg-neutral-800 border-b border-neutral-100 dark:border-neutral-700">
                     <tr>
-                        <th scope="col" className="px-6 py-4 text-left font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Rubrica</th>
-                        <th scope="col" className="px-6 py-4 text-right font-bold text-neutral-500 uppercase text-body-xs tracking-wider">Valor</th>
+                        <th scope="col" className="px-6 py-4 text-left font-bold text-neutral-500 uppercase text-body tracking-wider">Rubrica</th>
+                        <th scope="col" className="px-6 py-4 text-right font-bold text-neutral-500 uppercase text-body tracking-wider">Valor</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
@@ -119,14 +122,14 @@ const DesktopSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tot
                                 <div>{row.label}</div>
                                 {row.details && row.details.length > 0 && (
                                     <details className="mt-2 rounded-lg bg-neutral-50 p-3 text-neutral-600 dark:bg-neutral-900/50 dark:text-neutral-300">
-                                        <summary className="cursor-pointer text-body-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                                        <summary className="min-h-11 cursor-pointer text-body font-semibold text-neutral-500 dark:text-neutral-400">
                                             Ver detalhamento
                                         </summary>
                                         <div className="mt-3 space-y-2">
                                             {row.details.map((detail, detailIndex) => (
                                                 <div key={`${detail.label}-${detailIndex}`} className="flex items-start justify-between gap-3">
-                                                    <span className="text-body-xs">{detail.label}</span>
-                                                    <span className="text-body-xs font-semibold whitespace-nowrap">
+                                                    <span className="text-body">{detail.label}</span>
+                                                    <span className="text-body font-semibold whitespace-nowrap">
                                                         {formatCurrency(detail.value)}
                                                     </span>
                                                 </div>
@@ -156,46 +159,14 @@ const DesktopSummarySection: React.FC<SummarySectionProps> = ({ title, rows, tot
     </section>
 );
 
-export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRows, update, calculationError, courtConfig, styles }) => {
-    const normalizeLabel = (label: string) =>
-        label
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toUpperCase();
-
-    const isDailiesRow = (label: string) => {
-        const normalized = normalizeLabel(label);
-        return (
-            normalized.includes('DIARIA') ||
-            normalized.includes('ABATIMENTO BENEF. EXTERNO') ||
-            normalized.includes('DESLOCAMENTO') ||
-            normalized.includes('EMBARQUE')
-        );
-    };
-
-    const payrollRows = groupPayslipRowsForDisplay(resultRows.filter((row) => !isDailiesRow(row.label)), state);
-    const dailiesRows = groupPayslipRowsForDisplay(resultRows.filter((row) => isDailiesRow(row.label)), state);
-
-    const payrollCredits = payrollRows
-        .filter((row) => row.type === 'C')
-        .reduce((acc, row) => acc + row.value, 0);
-    const payrollDebits = payrollRows
-        .filter((row) => row.type === 'D')
-        .reduce((acc, row) => acc + row.value, 0);
-
-    const dailiesCredits = dailiesRows
-        .filter((row) => row.type === 'C')
-        .reduce((acc, row) => acc + row.value, 0);
-    const dailiesDebits = dailiesRows
-        .filter((row) => row.type === 'D')
-        .reduce((acc, row) => acc + row.value, 0);
-
-    const dailiesNet = dailiesRows.length > 0 ? state.diariasValorTotal : 0;
+export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRows, dailiesResultRows, update, calculationError, courtConfig, styles }) => {
+    const { payrollRows, dailiesRows, payrollCredits, payrollDebits, payrollNet,
+        dailiesCredits, dailiesDebits, dailiesNet } = getPayrollPresentation(state, resultRows, dailiesResultRows);
 
     const payrollTotals = [
         { label: 'Total Créditos (Holerite)', value: payrollCredits },
         { label: 'Total Débitos (Holerite)', value: payrollDebits, tone: 'error' as const },
-        { label: 'Total Líquido (Holerite)', value: payrollCredits - payrollDebits },
+        { label: 'Total Líquido (Holerite)', value: payrollNet },
     ];
 
     const dailiesTotals = [
@@ -205,12 +176,12 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
     ];
 
     return (
-        <div className="mt-8 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xl overflow-hidden mb-24">
+        <div id="detalhamento" tabIndex={-1} className="scroll-mt-24 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm overflow-hidden">
             <div className="bg-neutral-800 p-6 flex justify-between items-center">
-                <h3 className="text-white font-bold text-body-xl uppercase tracking-wider flex items-center gap-3">
+                <h3 className="text-white font-bold text-body-xl flex items-center gap-3">
                     <Receipt className="w-5 h-5" /> Detalhamento
                 </h3>
-                <span className="bg-white/10 dark:bg-neutral-900/40 text-white px-3 py-1 rounded-full text-body-xs font-mono border border-white/20">
+                <span className="bg-white/10 dark:bg-neutral-900/40 text-white px-3 py-1 rounded-full text-body font-mono border border-white/20">
                     Ref: {state.mesRef}/{state.anoRef}
                 </span>
             </div>
@@ -252,7 +223,7 @@ export const ResultsSummary: React.FC<ResultsSummaryProps> = ({ state, resultRow
 
                 {(state.pensionMemory || (state.irEaMemory && state.irEaMemory.status === 'ready')) && (
                     <div className="pt-6 border-t border-neutral-200 dark:border-neutral-700 space-y-4">
-                        <h4 className="text-body-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                        <h4 className="text-body font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest flex items-center gap-2">
                             Auditoria e Memória de Cálculo
                         </h4>
                         <div className="space-y-3">

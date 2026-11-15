@@ -1,3 +1,13 @@
+## Usabilidade da calculadora — 14/11/2026
+
+- Reorganizada a página única com nome para impressão rotulado, identificação do órgão, navegação por competência/remuneração/resultado e atalhos para verbas, mantendo o catálogo completo por categoria e órgão.
+- Cards preservam campos principais e escolhas condicionais, recolhem composições e opções complementares com resumos e mantêm o conteúdo montado. Rubricas manuais abrem novas pendências sem deslocar o foco; a memória previdenciária alimenta os resumos compartilhados.
+- Instâncias repetidas possuem destinos e campos exclusivos, foco após inclusão e alternativa ao arraste por botões de mover para cima/baixo. VPNI, ATS e descontos livres mantêm os lançamentos manuais independentes.
+- Síntese diferencia líquido do holerite, diárias e total consolidado do motor. A origem das linhas de diárias é preservada na apresentação sem alterar a estrutura persistida; rubricas manuais chamadas Deslocamento/Embarque continuam no holerite.
+- Barras de ações adaptam o espaço de rolagem à altura real, inclusive no celular expandido. Exportação mantém o fluxo de apoio, com diálogo acessível, contenção/retorno de foco e mensagens de falha. Salvamento informa o resultado na própria interface.
+- Verificados typecheck, build, estado/restauração, carregamento, PDF/Excel, ordenação, HE, substituição, férias, 13º, GAE/GAS, GAACTA, pensão, diárias, transporte, IR-EA, configurações e suítes previdenciárias. Regressões específicas cobrem instâncias, conteúdo montado, pendências e origem das diárias.
+- Inspeção visual local com fixture anonimizada e motor real em 360/390/768/1280 px e nos dois temas, sem transbordamento horizontal; PDF e foco do diálogo conferidos. A configuração remota estava indisponível. Salvamento autenticado real e zoom de 200% não foram homologados nesta sessão. A inspeção da confirmação de limpeza foi interrompida pela ferramenta do navegador.
+
 ## Recomendacao de modelos — 10/11/2026
 
 - Configurações tributárias: resumo único ao final do container com regime RPPS, opção de FC/CJ, dependentes IR, PSS e IR mensais e memória da Funpresp. Exibe status durante pendências sem reutilizar resultados anteriores.

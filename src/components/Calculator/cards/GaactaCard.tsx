@@ -27,6 +27,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
     styles,
     courtConfig
 }) => {
+    const fieldId = React.useId();
     const funcaoStr = (state.funcao || '').toLowerCase();
     const isCJ = funcaoStr.startsWith('cj');
     const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
@@ -115,7 +116,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                 </div>
             )}
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40">
-                <summary className="cursor-pointer px-4 py-3 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                <summary className="cursor-pointer px-4 py-3 text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
                     Composição da base de cálculo da GAACTA - R$ {formatCurrency(state.gaactaBaseCalculo || 0)}
                 </summary>
                 <div className="space-y-2 p-4 pt-1">
@@ -135,8 +136,8 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
 
                 {state.gaactaManualBase ? (
                     <div className="p-4 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-2">
-                        <label className={styles.label}>Valor da Base de Cálculo Manual (R$)</label>
-                        <input
+                        <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Valor da Base de Cálculo Manual (R$)</label>
+                        <input id={`${fieldId}-field-1`}
                             type="number"
                             step="0.01"
                             min="0"
@@ -299,7 +300,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                             </label>
                             <div className="relative w-full sm:w-44">
                                 <span className="absolute left-3 top-2.5 text-body-xs font-mono text-neutral-400">R$</span>
-                                <input
+                                <input id={`${fieldId}-gaactaOutrasParcelas`} aria-label="Outras parcelas da base da GAACTA"
                                     type="number"
                                     step="0.01"
                                     min="0"

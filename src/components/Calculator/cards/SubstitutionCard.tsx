@@ -12,6 +12,7 @@ interface SubstitutionCardProps {
 }
 
 export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updateEntry, functionKeys, competenciaReferencia, styles }) => {
+    const fieldId = React.useId();
     const updateDays = (key: string, days: number) => {
         updateEntry(entry.id, { dias: { ...entry.dias, [key]: days } });
     };
@@ -23,8 +24,8 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {functionKeys.map((key) => (
                             <div key={key}>
-                                <label className={styles.label}>{key.toUpperCase()} — dias de substituição</label>
-                                <input
+                                <label htmlFor={`${fieldId}-${key}-dias`} className={styles.label}>{key.toUpperCase()} — dias de substituição</label>
+                                <input id={`${fieldId}-${key}-dias`}
                                     type="number"
                                     className={styles.input}
                                     min={0}
@@ -38,9 +39,12 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                 </div>
             </div>
             <details className="group pt-1" open={entry.isEA || entry.excluirIR || entry.pssIsEA || undefined}>
-                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary rounded">
+                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors rounded min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
                     <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                    <span>Opções Tributárias Avançadas & Exercícios Anteriores (EA)</span>
+                    <span>Opções Tributárias Avançadas e Exercícios Anteriores (EA)</span>
+                    <span className="text-body font-normal">
+                            {[entry.isEA && 'IR de exercícios anteriores', entry.excluirIR && 'Exclusão do IR', entry.pssIsEA && 'PSS de exercícios anteriores'].filter(Boolean).join(' · ') || 'Tributação mensal'}
+                    </span>
                     <ChevronDown className="w-3.5 h-3.5 shrink-0 group-open:rotate-180" aria-hidden="true" />
                 </summary>
                 <div className="mt-2.5 p-3.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-3">

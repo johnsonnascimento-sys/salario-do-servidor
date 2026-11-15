@@ -281,3 +281,47 @@ test('GlobalSettings aplica parcela sancionada em 2027 e alterna com simularDerr
 
     act(() => renderer.unmount());
 });
+
+
+test('reordering and removing repeated entries preserves identities and independent values', () => {
+    const initial = baseState();
+    initial.overtimeEntries = [
+        { id: 'he-first', qtd50: 3, qtd100: 0, divisor: 150, isEA: false, excluirIR: true },
+        { id: 'he-second', qtd50: 0, qtd100: 7, divisor: 200, isEA: true, excluirIR: false, composicaoBase: { vencimento: false } },
+    ];
+    initial.substitutionEntries = [
+        { id: 'subst-first', dias: { fc1: 2 }, isEA: false, excluirIR: false, pssIsEA: false },
+        { id: 'subst-second', dias: { cj1: 5 }, isEA: true, excluirIR: true, pssIsEA: true },
+    ];
+    let current: CalculatorState;
+    let presets: ReturnType<typeof useDynamicPresetInstances>;
+    function Harness() {
+        const [state, setState] = useState(initial);
+        current = state;
+        const update = useCallback((field: keyof CalculatorState, value: unknown) => setState(previous => ({ ...previous, [field]: value })), []);
+        presets = useDynamicPresetInstances({ state, update, updateSubstDays: () => {}, functionKeys: ['fc1', 'cj1'], transportIndemnityEnabled: true, gaactaAvailable: true });
+        return null;
+    }
+    let renderer;
+    act(() => { renderer = create(React.createElement(Harness)); });
+    const originalInstances = [...presets!.enabledPresets];
+    const secondOvertime = originalInstances.find(instance => instance.overtimeEntryId === 'he-second')!;
+    const secondSubstitution = originalInstances.find(instance => instance.substitutionEntryId === 'subst-second')!;
+    act(() => presets!.movePreset(secondOvertime.key, -1));
+    act(() => presets!.movePreset(secondSubstitution.key, -1));
+    assert.deepEqual(current!.overtimeEntries.find(entry => entry.id === 'he-first'), initial.overtimeEntries[0]);
+    assert.deepEqual(current!.overtimeEntries.find(entry => entry.id === 'he-second'), initial.overtimeEntries[1]);
+    assert.deepEqual(current!.substitutionEntries.find(entry => entry.id === 'subst-first'), initial.substitutionEntries[0]);
+    assert.deepEqual(current!.substitutionEntries.find(entry => entry.id === 'subst-second'), initial.substitutionEntries[1]);
+    assert.deepEqual(new Set(presets!.enabledPresets.map(instance => instance.key)), new Set(originalInstances.map(instance => instance.key)));
+    act(() => presets!.includePreset('hora_extra'));
+    assert.equal(current!.overtimeEntries.length, 3);
+    const newOvertime = presets!.enabledPresets.find(instance => !originalInstances.some(original => original.key === instance.key))!;
+    assert.notEqual(newOvertime.overtimeEntryId, 'he-first');
+    act(() => presets!.removePreset(secondOvertime));
+    assert.equal(current!.overtimeEntries.length, 2);
+    assert.equal(current!.overtimeEntries.some(entry => entry.id === 'he-second'), false);
+    assert.deepEqual(current!.overtimeEntries.find(entry => entry.id === 'he-first'), initial.overtimeEntries[0]);
+    assert.deepEqual(current!.substitutionEntries.find(entry => entry.id === 'subst-second'), initial.substitutionEntries[1]);
+    act(() => renderer.unmount());
+});

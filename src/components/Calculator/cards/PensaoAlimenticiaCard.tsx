@@ -1,3 +1,4 @@
+import { Accordion } from '../../ui/Accordion';
 import React, { useMemo, useEffect } from 'react';
 import { Scale, Percent, DollarSign, CheckCircle2, ShieldCheck, HeartHandshake } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
@@ -21,6 +22,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
     courtConfig,
     calculationReady
 }) => {
+    const fieldId = React.useId();
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
     const funcaoValorBruta = useMemo(() => {
         if (!state.funcao || state.funcao === noFunctionCode || !courtConfig?.bases?.funcoes) {
@@ -206,6 +208,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                 <div className="inline-flex rounded-lg p-0.5 bg-neutral-200 dark:bg-neutral-800 shrink-0">
                     <button
                         type="button"
+                        aria-pressed={tipo === 'percentual'}
                         onClick={() => update('pensaoTipo', 'percentual')}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-body-xs font-semibold transition-all ${
                             tipo === 'percentual'
@@ -218,6 +221,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                     </button>
                     <button
                         type="button"
+                        aria-pressed={tipo === 'fixo'}
                         onClick={() => update('pensaoTipo', 'fixo')}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-body-xs font-semibold transition-all ${
                             tipo === 'fixo'
@@ -260,7 +264,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         </div>
 
                         <div className="relative max-w-xs">
-                            <input
+                            <input id={`${fieldId}-pensaoPercentual`} aria-label="Percentual da pensão alimentícia"
                                 type="number"
                                 step="0.01"
                                 min="0"
@@ -276,434 +280,444 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         </div>
                     </div>
 
-                    {/* BLOCO 1: Créditos que compõem a Base Bruta */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                1. Créditos que compõem a Base Bruta da Pensão:
+                    {(valor13 > 0 || valorFerias > 0) && (
+                        <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <legend className={styles.label}>Incidência nas folhas adicionais</legend>
+                    {/* 13º Salário */}
+                    {valor13 > 0 && (
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={incide13}
+                                onChange={e => update('pensaoIncide13', e.target.checked)}
+                            />
+                            <span className="flex-1 flex items-center justify-between gap-2">
+                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Gratificação Natalina (13º)</span>
+                                <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valor13)}</span>
                             </span>
-                            <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
-                                Marque as parcelas acordadas judicialmente
+                        </label>
+                    )}
+
+                    {/* Férias (1/3 Constitucional) */}
+                    {valorFerias > 0 && (
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={incideFerias}
+                                onChange={e => update('pensaoIncideFerias', e.target.checked)}
+                            />
+                            <span className="flex-1 flex items-center justify-between gap-2">
+                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Férias (1/3 Constitucional)</span>
+                                <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorFerias)}</span>
                             </span>
-                        </div>
+                        </label>
+                    )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            {/* Vencimento Básico */}
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.checkbox}
-                                    checked={incideVenc}
-                                    onChange={e => update('pensaoIncideVencimento', e.target.checked)}
-                                />
-                                <span className="flex-1 flex items-center justify-between gap-2">
-                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Vencimento Básico</span>
-                                    <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.vencimento)}</span>
+                        </fieldset>
+                    )}
+
+                    <Accordion title="Composição da base da pensão"
+                        summary={`Créditos ${formatCurrency(totalBaseBruta)} · Abatimentos ${formatCurrency(totalDeducoes)}`}>
+                        {/* BLOCO 1: Créditos que compõem a Base Bruta */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                    1. Créditos que compõem a Base Bruta da Pensão:
                                 </span>
-                            </label>
-
-                            {/* GAJ */}
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.checkbox}
-                                    checked={incideGAJ}
-                                    onChange={e => update('pensaoIncideGAJ', e.target.checked)}
-                                />
-                                <span className="flex-1 flex items-center justify-between gap-2">
-                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAJ (Grat. Atividade Judiciária)</span>
-                                    <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gaj)}</span>
+                                <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+                                    Marque as parcelas acordadas judicialmente
                                 </span>
-                            </label>
+                            </div>
 
-                            {/* Função Comissionada / Cargo em Comissão (FC/CJ) */}
-                            {funcaoValorBruta > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {/* Vencimento Básico */}
                                 <label className={styles.checkboxLabel}>
                                     <input
                                         type="checkbox"
                                         className={styles.checkbox}
-                                        checked={incideFuncao}
-                                        onChange={e => update('pensaoIncideFuncao', e.target.checked)}
+                                        checked={incideVenc}
+                                        onChange={e => update('pensaoIncideVencimento', e.target.checked)}
                                     />
                                     <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Função / Cargo (FC/CJ)</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(funcaoValorBruta)}</span>
+                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Vencimento Básico</span>
+                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.vencimento)}</span>
                                     </span>
                                 </label>
-                            )}
 
-                            {/* AQ Título */}
-                            {(state.aqTituloValor || 0) > 0 && (
+                                {/* GAJ */}
                                 <label className={styles.checkboxLabel}>
                                     <input
                                         type="checkbox"
                                         className={styles.checkbox}
-                                        checked={incideAQTitulo}
-                                        onChange={e => update('pensaoIncideAQTitulo', e.target.checked)}
+                                        checked={incideGAJ}
+                                        onChange={e => update('pensaoIncideGAJ', e.target.checked)}
                                     />
                                     <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">AQ Título</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.aqTituloValor)}</span>
+                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAJ (Grat. Atividade Judiciária)</span>
+                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gaj)}</span>
                                     </span>
                                 </label>
-                            )}
 
-                            {/* AQ Treinamento */}
-                            {(state.aqTreinoValor || 0) > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideAQTreino}
-                                        onChange={e => update('pensaoIncideAQTreino', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">AQ Treinamento</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.aqTreinoValor)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* Gratificação Específica (GAE / GAS) */}
-                            {(state.gratEspecificaValor || 0) > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideGrat}
-                                        onChange={e => update('pensaoIncideGrat', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Gratificação Específica (GAE/GAS)</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gratEspecificaValor)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* GAACTA */}
-                            {valorGAACTA > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideGAACTA}
-                                        onChange={e => {
-                                            update('pensaoGAACTAEscolhaExplicita', true);
-                                            update('pensaoIncideGAACTA', e.target.checked);
-                                        }}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAACTA (Alta Complexidade)</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorGAACTA)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* VPNI */}
-                            {((state.vpni_lei || 0) > 0 || (state.vpni_decisao || 0) > 0) && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideVPNI}
-                                        onChange={e => update('pensaoIncideVPNI', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">VPNI (Quintos/Incorporação)</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency((state.vpni_lei || 0) + (state.vpni_decisao || 0))}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* ATS */}
-                            {(state.ats || 0) > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideATS}
-                                        onChange={e => update('pensaoIncideATS', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">ATS (Anuênios)</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.ats)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* 13º Salário */}
-                            {valor13 > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incide13}
-                                        onChange={e => update('pensaoIncide13', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Gratificação Natalina (13º)</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valor13)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* Férias (1/3 Constitucional) */}
-                            {valorFerias > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideFerias}
-                                        onChange={e => update('pensaoIncideFerias', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Férias (1/3 Constitucional)</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorFerias)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* Abono de Permanência */}
-                            {temAbonoAtivo && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideAbono}
-                                        onChange={e => update('pensaoIncideAbono', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Abono de Permanência</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorAbono)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* Horas Extras */}
-                            {valorHoraExtra > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideHoraExtra}
-                                        onChange={e => update('pensaoIncideHoraExtra', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Horas Extras</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorHoraExtra)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* Substituição de Função */}
-                            {valorSubstituicao > 0 && (
-                                <label className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={incideSubstituicao}
-                                        onChange={e => update('pensaoIncideSubstituicao', e.target.checked)}
-                                    />
-                                    <span className="flex-1 flex items-center justify-between gap-2">
-                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Substituição de Função</span>
-                                        <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorSubstituicao)}</span>
-                                    </span>
-                                </label>
-                            )}
-
-                            {/* Rubricas Manuais Dinâmicas de Crédito */}
-                            {creditRubricas.map((rubrica, idx) => {
-                                const isChecked = Boolean(state.pensaoRubricasCreditoInclusas?.[rubrica.id]);
-                                const label = rubrica.descricao.trim() || `Crédito Dinâmico #${idx + 1}`;
-                                return (
-                                    <label key={rubrica.id} className={styles.checkboxLabel}>
+                                {/* Função Comissionada / Cargo em Comissão (FC/CJ) */}
+                                {funcaoValorBruta > 0 && (
+                                    <label className={styles.checkboxLabel}>
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            checked={isChecked}
-                                            onChange={e => {
-                                                const current = state.pensaoRubricasCreditoInclusas || {};
-                                                update('pensaoRubricasCreditoInclusas', {
-                                                    ...current,
-                                                    [rubrica.id]: e.target.checked
-                                                });
-                                            }}
+                                            checked={incideFuncao}
+                                            onChange={e => update('pensaoIncideFuncao', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
-                                                {label}
-                                            </span>
-                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold shrink-0">
-                                                {formatCurrency(rubrica.valor || 0)}
-                                            </span>
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Função / Cargo (FC/CJ)</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(funcaoValorBruta)}</span>
                                         </span>
                                     </label>
-                                );
-                            })}
-                        </div>
+                                )}
 
-                        {/* Outras parcelas / Ajustes na base bruta */}
-                        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <label className="text-[11px] text-neutral-600 dark:text-neutral-400">
-                                Outras parcelas / Ajustes na base bruta da pensão:
-                            </label>
-                            <div className="relative w-full sm:w-44">
-                                <span className="absolute left-3 top-2.5 text-body-xs font-mono text-neutral-400">R$</span>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className={`${styles.input} pl-9 py-1.5 text-right font-mono text-body-xs`}
-                                    value={state.pensaoOutrasParcelas || ''}
-                                    onChange={e => update('pensaoOutrasParcelas', Math.max(0, parseFloat(e.target.value) || 0))}
-                                    placeholder="0,00"
-                                />
+                                {/* AQ Título */}
+                                {(state.aqTituloValor || 0) > 0 && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideAQTitulo}
+                                            onChange={e => update('pensaoIncideAQTitulo', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">AQ Título</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.aqTituloValor)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* AQ Treinamento */}
+                                {(state.aqTreinoValor || 0) > 0 && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideAQTreino}
+                                            onChange={e => update('pensaoIncideAQTreino', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">AQ Treinamento</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.aqTreinoValor)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* Gratificação Específica (GAE / GAS) */}
+                                {(state.gratEspecificaValor || 0) > 0 && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideGrat}
+                                            onChange={e => update('pensaoIncideGrat', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Gratificação Específica (GAE/GAS)</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gratEspecificaValor)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* GAACTA */}
+                                {valorGAACTA > 0 && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideGAACTA}
+                                            onChange={e => {
+                                                update('pensaoGAACTAEscolhaExplicita', true);
+                                                update('pensaoIncideGAACTA', e.target.checked);
+                                            }}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAACTA (Alta Complexidade)</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorGAACTA)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* VPNI */}
+                                {((state.vpni_lei || 0) > 0 || (state.vpni_decisao || 0) > 0) && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideVPNI}
+                                            onChange={e => update('pensaoIncideVPNI', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">VPNI (Quintos/Incorporação)</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency((state.vpni_lei || 0) + (state.vpni_decisao || 0))}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* ATS */}
+                                {(state.ats || 0) > 0 && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideATS}
+                                            onChange={e => update('pensaoIncideATS', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">ATS (Anuênios)</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.ats)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* Abono de Permanência */}
+                                {temAbonoAtivo && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideAbono}
+                                            onChange={e => update('pensaoIncideAbono', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Abono de Permanência</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorAbono)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* Horas Extras */}
+                                {valorHoraExtra > 0 && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideHoraExtra}
+                                            onChange={e => update('pensaoIncideHoraExtra', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Horas Extras</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorHoraExtra)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* Substituição de Função */}
+                                {valorSubstituicao > 0 && (
+                                    <label className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={incideSubstituicao}
+                                            onChange={e => update('pensaoIncideSubstituicao', e.target.checked)}
+                                        />
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Substituição de Função</span>
+                                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorSubstituicao)}</span>
+                                        </span>
+                                    </label>
+                                )}
+
+                                {/* Rubricas Manuais Dinâmicas de Crédito */}
+                                {creditRubricas.map((rubrica, idx) => {
+                                    const isChecked = Boolean(state.pensaoRubricasCreditoInclusas?.[rubrica.id]);
+                                    const label = rubrica.descricao.trim() || `Crédito Dinâmico #${idx + 1}`;
+                                    return (
+                                        <label key={rubrica.id} className={styles.checkboxLabel}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={isChecked}
+                                                onChange={e => {
+                                                    const current = state.pensaoRubricasCreditoInclusas || {};
+                                                    update('pensaoRubricasCreditoInclusas', {
+                                                        ...current,
+                                                        [rubrica.id]: e.target.checked
+                                                    });
+                                                }}
+                                            />
+                                            <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
+                                                    {label}
+                                                </span>
+                                                <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold shrink-0">
+                                                    {formatCurrency(rubrica.valor || 0)}
+                                                </span>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Outras parcelas / Ajustes na base bruta */}
+                            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <label className="text-[11px] text-neutral-600 dark:text-neutral-400">
+                                    Outras parcelas / Ajustes na base bruta da pensão:
+                                </label>
+                                <div className="relative w-full sm:w-44">
+                                    <span className="absolute left-3 top-2.5 text-body-xs font-mono text-neutral-400">R$</span>
+                                    <input id={`${fieldId}-pensaoOutrasParcelas`} aria-label="Outras parcelas da base bruta da pensão"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        className={`${styles.input} pl-9 py-1.5 text-right font-mono text-body-xs`}
+                                        value={state.pensaoOutrasParcelas || ''}
+                                        onChange={e => update('pensaoOutrasParcelas', Math.max(0, parseFloat(e.target.value) || 0))}
+                                        placeholder="0,00"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Subtotal da Base Bruta */}
+                            <div className="p-2.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
+                                <span className="text-body-xs font-bold text-emerald-800 dark:text-emerald-300">
+                                    Base Bruta Apurada
+                                </span>
+                                <span className="font-mono text-body-xs font-bold text-emerald-800 dark:text-emerald-300">
+                                    {formatCurrency(totalBaseBruta)}
+                                </span>
                             </div>
                         </div>
 
-                        {/* Subtotal da Base Bruta */}
-                        <div className="p-2.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
-                            <span className="text-body-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                Base Bruta Apurada
-                            </span>
-                            <span className="font-mono text-body-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                {formatCurrency(totalBaseBruta)}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* BLOCO 2: Deduções da Base (Cálculo sobre o Valor Líquido) */}
-                    <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
-                                <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
-                                2. Descontos Dedutíveis da Base (Cálculo sobre o Líquido):
-                            </span>
-                            <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
-                                Exclusões legais e acordadas
-                            </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            {/* IRRF Mensal */}
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.checkbox}
-                                    checked={deduzirIRRF}
-                                    onChange={e => update('pensaoDeduzirIRRF', e.target.checked)}
-                                />
-                                <span className="flex-1 flex items-center justify-between gap-2">
-                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
-                                        Imposto de Renda (IRRF Mensal)
-                                    </span>
-                                    <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold">
-                                        - {formatCurrency(valorIRRF)}
-                                    </span>
+                        {/* BLOCO 2: Deduções da Base (Cálculo sobre o Valor Líquido) */}
+                        <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
+                                    2. Descontos Dedutíveis da Base (Cálculo sobre o Líquido):
                                 </span>
-                            </label>
-
-                            {/* PSS / RPPS Mensal */}
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.checkbox}
-                                    checked={deduzirPSS}
-                                    onChange={e => update('pensaoDeduzirPSS', e.target.checked)}
-                                />
-                                <span className="flex-1 flex items-center justify-between gap-2">
-                                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
-                                        Previdência Oficial (PSS Mensal)
-                                    </span>
-                                    <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold">
-                                        - {formatCurrency(valorPSS)}
-                                    </span>
+                                <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+                                    Exclusões legais e acordadas
                                 </span>
-                            </label>
+                            </div>
 
-                            {/* Funpresp */}
-                            {valorFunpresp > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {/* IRRF Mensal */}
                                 <label className={styles.checkboxLabel}>
                                     <input
                                         type="checkbox"
                                         className={styles.checkbox}
-                                        checked={deduzirFunpresp}
-                                        onChange={e => update('pensaoDeduzirFunpresp', e.target.checked)}
+                                        checked={deduzirIRRF}
+                                        onChange={e => update('pensaoDeduzirIRRF', e.target.checked)}
                                     />
                                     <span className="flex-1 flex items-center justify-between gap-2">
                                         <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
-                                            Previdência Complementar (Funpresp)
+                                            Imposto de Renda (IRRF Mensal)
                                         </span>
                                         <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold">
-                                            - {formatCurrency(valorFunpresp)}
+                                            - {formatCurrency(valorIRRF)}
                                         </span>
                                     </span>
                                 </label>
-                            )}
 
-                            {/* Rubricas Manuais Dinâmicas de Desconto (ex: Plano de Saúde, Coparticipação, etc.) */}
-                            {debitRubricas.map((rubrica, idx) => {
-                                const isChecked = Boolean(state.pensaoRubricasDescontoInclusas?.[rubrica.id]);
-                                const label = rubrica.descricao.trim() || `Desconto Dinâmico #${idx + 1}`;
-                                return (
-                                    <label key={rubrica.id} className={styles.checkboxLabel}>
+                                {/* PSS / RPPS Mensal */}
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={deduzirPSS}
+                                        onChange={e => update('pensaoDeduzirPSS', e.target.checked)}
+                                    />
+                                    <span className="flex-1 flex items-center justify-between gap-2">
+                                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
+                                            Previdência Oficial (PSS Mensal)
+                                        </span>
+                                        <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold">
+                                            - {formatCurrency(valorPSS)}
+                                        </span>
+                                    </span>
+                                </label>
+
+                                {/* Funpresp */}
+                                {valorFunpresp > 0 && (
+                                    <label className={styles.checkboxLabel}>
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            checked={isChecked}
-                                            onChange={e => {
-                                                const current = state.pensaoRubricasDescontoInclusas || {};
-                                                update('pensaoRubricasDescontoInclusas', {
-                                                    ...current,
-                                                    [rubrica.id]: e.target.checked
-                                                });
-                                            }}
+                                            checked={deduzirFunpresp}
+                                            onChange={e => update('pensaoDeduzirFunpresp', e.target.checked)}
                                         />
-                                        <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
-                                                {label}
+                                        <span className="flex-1 flex items-center justify-between gap-2">
+                                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
+                                                Previdência Complementar (Funpresp)
                                             </span>
-                                            <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold shrink-0">
-                                                - {formatCurrency(rubrica.valor || 0)}
+                                            <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold">
+                                                - {formatCurrency(valorFunpresp)}
                                             </span>
                                         </span>
                                     </label>
-                                );
-                            })}
-                        </div>
+                                )}
 
-                        {/* Outras deduções da base da pensão */}
-                        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <label className="text-[11px] text-neutral-600 dark:text-neutral-400">
-                                Outras deduções da base da pensão:
-                            </label>
-                            <div className="relative w-full sm:w-44">
-                                <span className="absolute left-3 top-2.5 text-body-xs font-mono text-neutral-400">R$</span>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className={`${styles.input} pl-9 py-1.5 text-right font-mono text-body-xs`}
-                                    value={state.pensaoOutrosDescontosDedutiveis || ''}
-                                    onChange={e => update('pensaoOutrosDescontosDedutiveis', Math.max(0, parseFloat(e.target.value) || 0))}
-                                    placeholder="0,00"
-                                />
+                                {/* Rubricas Manuais Dinâmicas de Desconto (ex: Plano de Saúde, Coparticipação, etc.) */}
+                                {debitRubricas.map((rubrica, idx) => {
+                                    const isChecked = Boolean(state.pensaoRubricasDescontoInclusas?.[rubrica.id]);
+                                    const label = rubrica.descricao.trim() || `Desconto Dinâmico #${idx + 1}`;
+                                    return (
+                                        <label key={rubrica.id} className={styles.checkboxLabel}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={isChecked}
+                                                onChange={e => {
+                                                    const current = state.pensaoRubricasDescontoInclusas || {};
+                                                    update('pensaoRubricasDescontoInclusas', {
+                                                        ...current,
+                                                        [rubrica.id]: e.target.checked
+                                                    });
+                                                }}
+                                            />
+                                            <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300 truncate" title={label}>
+                                                    {label}
+                                                </span>
+                                                <span className="font-mono text-body-xs text-red-600 dark:text-red-400 font-semibold shrink-0">
+                                                    - {formatCurrency(rubrica.valor || 0)}
+                                                </span>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Outras deduções da base da pensão */}
+                            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <label className="text-[11px] text-neutral-600 dark:text-neutral-400">
+                                    Outras deduções da base da pensão:
+                                </label>
+                                <div className="relative w-full sm:w-44">
+                                    <span className="absolute left-3 top-2.5 text-body-xs font-mono text-neutral-400">R$</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        className={`${styles.input} pl-9 py-1.5 text-right font-mono text-body-xs`}
+                                        value={state.pensaoOutrosDescontosDedutiveis || ''}
+                                        onChange={e => update('pensaoOutrosDescontosDedutiveis', Math.max(0, parseFloat(e.target.value) || 0))}
+                                        placeholder="0,00"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Subtotal das Deduções da Base */}
+                            <div className="p-2.5 rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50 flex items-center justify-between">
+                                <span className="text-body-xs font-bold text-red-800 dark:text-red-300">
+                                    Total de Deduções da Base
+                                </span>
+                                <span className="font-mono text-body-xs font-bold text-red-800 dark:text-red-300">
+                                    - {formatCurrency(totalDeducoes)}
+                                </span>
                             </div>
                         </div>
 
-                        {/* Subtotal das Deduções da Base */}
-                        <div className="p-2.5 rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-800/50 flex items-center justify-between">
-                            <span className="text-body-xs font-bold text-red-800 dark:text-red-300">
-                                Total de Deduções da Base
-                            </span>
-                            <span className="font-mono text-body-xs font-bold text-red-800 dark:text-red-300">
-                                - {formatCurrency(totalDeducoes)}
-                            </span>
-                        </div>
-                    </div>
+                        {/* BLOCO 3: Resumo Matemático e Fechamento */}
+                    </Accordion>
 
-                    {/* BLOCO 3: Resumo Matemático e Fechamento */}
                     <div className="p-3.5 rounded-xl bg-neutral-100/80 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700/80 space-y-2.5">
                         <div className="flex items-center justify-between text-body-xs">
                             <span className="text-neutral-600 dark:text-neutral-400">Base Bruta:</span>
@@ -748,7 +762,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono font-bold text-neutral-400 text-body-xs">
                             R$
                         </span>
-                        <input
+                        <input id={`${fieldId}-pensaoValorFixo`} aria-label="Valor fixo da pensão alimentícia"
                             type="number"
                             step="0.01"
                             min="0"

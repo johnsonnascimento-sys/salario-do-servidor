@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { Info, Settings, Sparkles } from 'lucide-react';
+import { Settings, Sparkles } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { ManualRubricasSection } from './ManualRubricasSection';
@@ -99,6 +99,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const {
         enabledPresets,
+        movePreset,
+        reorderAnnouncement,
         availablePresets,
         selectedPreset,
         setSelectedPreset,
@@ -250,11 +252,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     return (
         <>
-            <div className={styles.card}>
-                <h3 className={styles.sectionTitle}>
+            <section id="remuneracao" tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
+                <h2 className={styles.sectionTitle}>
                     <Settings className="w-4 h-4" />
-                    Formulário dinâmico do holerite
-                </h3>
+                    Remuneração e descontos
+                </h2>
 
                 <DynamicPayrollBaseSection
                     styles={styles}
@@ -296,25 +298,13 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     deducaoPorDependente={courtConfig.values?.deducao_dep ?? 0}
                 />
 
-            </div>
+            </section>
 
-            <div className={styles.card}>
-                <h3 className={`${styles.sectionTitle} relative`}>
+            <section id="verbas" tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
+                <h2 className={`${styles.sectionTitle} relative`}>
                     <Sparkles className="w-4 h-4 text-primary" />
-                    Adicionais, Verbas, Benefícios e Descontos
-                    <span className="relative inline-flex items-center group">
-                        <button
-                            type="button"
-                            aria-label="Informações sobre adicionais, verbas, benefícios e pensão alimentícia"
-                            className="rounded p-1 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
-                        >
-                            <Info className="w-4 h-4" />
-                        </button>
-                        <span role="tooltip" className="pointer-events-none hidden fixed left-4 right-4 top-1/3 z-tooltip rounded-lg border border-neutral-200 bg-white p-3 text-left text-body-xs font-normal normal-case tracking-normal text-neutral-700 shadow-lg group-hover:block group-focus-within:block sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-1 sm:w-72 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
-                            Adicione ao formulário itens pré-definidos de remuneração e alimentos (Horas Extras, Férias, 13º Salário, Diárias, Substituição, Auxílios, Gratificações e Pensão Alimentícia) para informar os dados e calcular seus valores na simulação.
-                        </span>
-                    </span>
-                </h3>
+                    Adicionar verbas à simulação
+                </h2>
 
                 <PresetControlsSection
                     styles={styles}
@@ -332,20 +322,28 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     addRubrica={addRubrica}
                     rubricas={state.rubricasExtras}
                 />
-            </div>
+            </section>
 
-            {enabledPresets.map(instance => {
+            <p role="status" aria-live="polite" className="sr-only">{reorderAnnouncement}</p>
+            {enabledPresets.map((instance, index) => {
                 const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
                 if (!preset) return null;
 
                 return (
                     <div
-                        id={`preset-card-${instance.presetId}`}
+                        id={`preset-card-${instance.key}`}
+                        data-preset-id={instance.presetId}
+                        tabIndex={-1}
                         key={instance.key}
                         className="scroll-mt-20 transition-all duration-300"
                     >
                         <PresetInstanceCard
                             instance={instance}
+                            position={index}
+                            instanceNumber={enabledPresets.filter(item => item.presetId === instance.presetId).findIndex(item => item.key === instance.key) + 1}
+                            canMoveUp={index > 0}
+                            canMoveDown={index < enabledPresets.length - 1}
+                            movePreset={movePreset}
                             presetLabel={preset.label}
                             reorderMode={reorderMode}
                             draggingPreset={draggingPreset}
@@ -378,6 +376,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     funprespParticipacao={state.funprespParticipacao}
                     pensionRetroEntries={(inputState ?? state).pensionRetroEntries}
                     pensionConfig={courtConfig.previdenciaComplementar}
+                    pensionMemory={calculationReady ? state.pensionMemory : undefined}
                     competencia={pensionParams.competencia}
                     irEaEntryTax={state.irEaEntryTax}
                     irEaCurrentYearKeys={state.irEaCurrentYearKeys}

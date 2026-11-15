@@ -107,6 +107,7 @@ export const useDynamicPresetInstances = ({
     }, [enabledPresets, transportIndemnityEnabled, selectedPreset]);
     const [reorderMode, setReorderMode] = useState(false);
     const [draggingPreset, setDraggingPreset] = useState<string | null>(null);
+    const [reorderAnnouncement, setReorderAnnouncement] = useState('');
 
     const hasLegacyOvertime =
         (state.heQtd50 || 0) > 0 ||
@@ -569,12 +570,25 @@ export const useDynamicPresetInstances = ({
         });
     };
 
+    const movePreset = (key: string, direction: -1 | 1) => {
+        const index = enabledPresets.findIndex(instance => instance.key === key);
+        const destination = index + direction;
+        if (index < 0 || destination < 0 || destination >= enabledPresets.length) return;
+        const next = [...enabledPresets];
+        const [moved] = next.splice(index, 1);
+        next.splice(destination, 0, moved);
+        setEnabledPresets(next);
+        setReorderAnnouncement(`Card movido para a posição ${destination + 1} de ${next.length}.`);
+    };
+
     const handlePresetDragEnd = () => {
         setDraggingPreset(null);
     };
 
     return {
         enabledPresets,
+        movePreset,
+        reorderAnnouncement,
         availablePresets,
         selectedPreset,
         setSelectedPreset,

@@ -17,6 +17,7 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
     styles,
     isNovoAQ
 }) => {
+    const fieldId = React.useId();
     if (presetId === 'aq') {
         return (
             <div className="space-y-3">
@@ -24,8 +25,8 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
                     {isNovoAQ ? (
                         <>
                             <div>
-                                <label className={styles.label}>Titulos (VR)</label>
-                                <select className={styles.input} value={state.aqTituloVR} onChange={e => update('aqTituloVR', Number(e.target.value))}>
+                                <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Titulos (VR)</label>
+                                <select id={`${fieldId}-field-1`} className={styles.input} value={state.aqTituloVR} onChange={e => update('aqTituloVR', Number(e.target.value))}>
                                     <option value={0}>Nenhum</option>
                                     <option value={1.0}>Especializacao (1.0x VR)</option>
                                     <option value={2.0}>2x Especializacao (2.0x VR)</option>
@@ -34,8 +35,8 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
                                 </select>
                             </div>
                             <div>
-                                <label className={styles.label}>Treinamento (VR)</label>
-                                <select className={styles.input} value={state.aqTreinoVR} onChange={e => update('aqTreinoVR', Number(e.target.value))}>
+                                <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Treinamento (VR)</label>
+                                <select id={`${fieldId}-field-2`} className={styles.input} value={state.aqTreinoVR} onChange={e => update('aqTreinoVR', Number(e.target.value))}>
                                     <option value={0}>Nenhum</option>
                                     <option value={0.2}>120h (0.2x VR)</option>
                                     <option value={0.4}>240h (0.4x VR)</option>
@@ -46,8 +47,8 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
                     ) : (
                         <>
                             <div>
-                                <label className={styles.label}>Titulos (%)</label>
-                                <select className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
+                                <label htmlFor={`${fieldId}-field-3`} className={styles.label}>Titulos (%)</label>
+                                <select id={`${fieldId}-field-3`} className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
                                     <option value={0}>0%</option>
                                     <option value={0.05}>5% (Graduacao)</option>
                                     <option value={0.075}>7.5% (Especializacao)</option>
@@ -56,8 +57,8 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
                                 </select>
                             </div>
                             <div>
-                                <label className={styles.label}>Treinamento (%)</label>
-                                <select className={styles.input} value={state.aqTreinoPerc} onChange={e => update('aqTreinoPerc', Number(e.target.value))}>
+                                <label htmlFor={`${fieldId}-field-4`} className={styles.label}>Treinamento (%)</label>
+                                <select id={`${fieldId}-field-4`} className={styles.input} value={state.aqTreinoPerc} onChange={e => update('aqTreinoPerc', Number(e.target.value))}>
                                     <option value={0}>0%</option>
                                     <option value={0.01}>1% (120h)</option>
                                     <option value={0.02}>2% (240h)</option>
@@ -76,8 +77,8 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
             <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className={styles.label}>Tipo</label>
-                        <select className={styles.input} value={state.gratEspecificaTipo} onChange={e => update('gratEspecificaTipo', e.target.value)}>
+                        <label htmlFor={`${fieldId}-field-5`} className={styles.label}>Tipo</label>
+                        <select id={`${fieldId}-field-5`} className={styles.input} value={state.gratEspecificaTipo} onChange={e => update('gratEspecificaTipo', e.target.value)}>
                             <option value="0">Nenhuma</option>
                             <option value="gae">GAE (35%)</option>
                             <option value="gas">GAS (35%)</option>
@@ -102,16 +103,16 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
             <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className={styles.label}>VPNI (Lei)</label>
-                        <input type="number" className={styles.input} value={state.vpni_lei} onChange={e => update('vpni_lei', toPositiveNumber(e.target.value))} />
+                        <label htmlFor={`${fieldId}-field-6`} className={styles.label}>VPNI (Lei)</label>
+                        <input id={`${fieldId}-field-6`} type="number" className={styles.input} value={state.vpni_lei} onChange={e => update('vpni_lei', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
-                        <label className={styles.label}>VPNI (Decisao)</label>
-                        <input type="number" className={styles.input} value={state.vpni_decisao} onChange={e => update('vpni_decisao', toPositiveNumber(e.target.value))} />
+                        <label htmlFor={`${fieldId}-field-7`} className={styles.label}>VPNI (Decisao)</label>
+                        <input id={`${fieldId}-field-7`} type="number" className={styles.input} value={state.vpni_decisao} onChange={e => update('vpni_decisao', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
-                        <label className={styles.label}>ATS</label>
-                        <input type="number" className={styles.input} value={state.ats} onChange={e => update('ats', toPositiveNumber(e.target.value))} />
+                        <label htmlFor={`${fieldId}-field-8`} className={styles.label}>ATS</label>
+                        <input id={`${fieldId}-field-8`} type="number" className={styles.input} value={state.ats} onChange={e => update('ats', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
             </div>
@@ -146,12 +147,12 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
             <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className={styles.label}>Qtd. dependentes</label>
-                        <input type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
+                        <label htmlFor={`${fieldId}-field-9`} className={styles.label}>Qtd. dependentes</label>
+                        <input id={`${fieldId}-field-9`} type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
-                        <label className={styles.label}>Cota pre-escolar</label>
-                        <input type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
+                        <label htmlFor={`${fieldId}-field-10`} className={styles.label}>Cota pre-escolar</label>
+                        <input id={`${fieldId}-field-10`} type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
             </div>
@@ -162,8 +163,8 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
         return (
             <div className="space-y-3">
                 <div>
-                    <label className={styles.label}>Gasto mensal de transporte</label>
-                    <input type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
+                    <label htmlFor={`${fieldId}-field-11`} className={styles.label}>Gasto mensal de transporte</label>
+                    <input id={`${fieldId}-field-11`} type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
                 </div>
             </div>
         );

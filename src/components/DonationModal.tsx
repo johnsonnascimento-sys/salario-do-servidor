@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { Heart, X, Clock, FileText, QrCode, Table } from 'lucide-react';
 import { getPixKey, getPixQrCode } from '../services/settingsService';
 
@@ -23,18 +23,37 @@ export default function DonationModal({
     const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [qrLoadError, setQrLoadError] = useState(false);
+    const [pixError, setPixError] = useState('');
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const titleId = useId();
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        dialogRef.current?.focus();
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            if (previousFocus?.isConnected) previousFocus.focus();
+        };
+    }, [isOpen]);
 
     // Load Pix data on open
     useEffect(() => {
         if (isOpen) {
+            let active = true;
             setCountdown(countdownSeconds);
             setIsReady(false);
             setQrLoadError(false);
+            setPixError('');
 
             Promise.all([getPixKey(), getPixQrCode()]).then(([key, qr]) => {
+                if (!active) return;
                 setPixKey(key);
                 setQrCodeUrl(qr);
-            });
+            }).catch(() => { if (active) setPixError('Os dados de apoio estão indisponíveis. Seu download será liberado normalmente.'); });
+            return () => { active = false; };
         }
     }, [isOpen, countdownSeconds]);
 
@@ -61,6 +80,7 @@ export default function DonationModal({
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
             console.error('Erro ao copiar:', err);
+            setPixError('Não foi possível copiar a chave. Selecione e copie o texto exibido.');
         }
     };
 
@@ -72,11 +92,27 @@ export default function DonationModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white dark:bg-neutral-800 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+                onKeyDown={event => {
+                    if (event.key === 'Escape') { event.preventDefault(); onClose(); }
+                    if (event.key !== 'Tab') return;
+                    const controls = Array.from<HTMLElement>(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), [tabindex="0"]') ?? []).filter(element => element.getClientRects().length > 0);
+                    const first = controls[0];
+                    const last = controls[controls.length - 1];
+                    if (!first) { event.preventDefault(); return; }
+                    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+                        event.preventDefault(); last.focus();
+                    } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialogRef.current)) {
+                        event.preventDefault(); first.focus();
+                    }
+                }}
+                className="bg-white dark:bg-neutral-800 rounded-3xl max-w-lg w-full max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-300">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-error-500 to-error-600 p-6 text-white relative">
                     <button
+                        type="button"
+                        aria-label="Fechar exportação"
                         onClick={onClose}
                         className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/20 dark:bg-transparent dark:hover:bg-neutral-900/40 transition-colors"
                     >
@@ -87,7 +123,7 @@ export default function DonationModal({
                             <Heart className="w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-h4 font-bold">Apoie o Projeto!</h2>
+                            <h2 id={titleId} className="text-h4 font-bold">Apoie o Projeto!</h2>
                             <p className="text-body text-white/80">
                                 Seu download será liberado em instantes
                             </p>
@@ -97,6 +133,7 @@ export default function DonationModal({
 
                 {/* Content */}
                 <div className="p-6 space-y-6">
+                    {pixError && <p role="status" className="text-body text-neutral-700 dark:text-neutral-200">{pixError}</p>}
                     <p className="text-neutral-600 dark:text-neutral-300 text-body leading-relaxed">
                         O <strong>Salário do Servidor</strong> é mantido por uma única pessoa, com recursos próprios.
                         Se esta ferramenta te ajudou, considere fazer uma contribuição via Pix.

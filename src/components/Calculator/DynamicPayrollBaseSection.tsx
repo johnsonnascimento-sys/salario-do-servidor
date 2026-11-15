@@ -32,54 +32,57 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
     gaj,
     handleCargoChange,
     update
-}) => (
-    <div className={styles.innerBox}>
-        <h4 className={styles.innerBoxTitle}>Base obrigatória</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label className={styles.label}>Cargo</label>
-                <select className={styles.input} value={state.cargo} onChange={e => handleCargoChange(e.target.value)}>
-                    {cargoOptions.map(cargo => (
-                        <option key={cargo} value={cargo}>
-                            {cargoLabels?.[cargo] || cargo.toUpperCase()}
-                        </option>
-                    ))}
-                </select>
+}) => {
+    const fieldId = React.useId();
+    return (
+        <div className={styles.innerBox}>
+            <h4 className={styles.innerBoxTitle}>Dados principais</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label htmlFor={`${fieldId}-cargo`} className={styles.label}>Cargo</label>
+                    <select id={`${fieldId}-cargo`} className={styles.input} value={state.cargo} onChange={e => handleCargoChange(e.target.value)}>
+                        {cargoOptions.map(cargo => (
+                            <option key={cargo} value={cargo}>
+                                {cargoLabels?.[cargo] || cargo.toUpperCase()}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor={`${fieldId}-padrao`} className={styles.label}>Classe/Padrão</label>
+                    <select id={`${fieldId}-padrao`} className={styles.input} value={state.padrao} onChange={e => update('padrao', e.target.value)}>
+                        {padroes.map(padrao => (
+                            <option key={padrao} value={padrao}>{padrao}</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor={`${fieldId}-funcao`} className={styles.label}>Função (FC/CJ)</label>
+                    <select id={`${fieldId}-funcao`} className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
+                        {noFunctionCode && <option value={noFunctionCode}>{noFunctionLabel}</option>}
+                        {functionKeys.map(funcao => (
+                            <option key={funcao} value={funcao}>
+                                {funcao.toUpperCase()} - {formatCurrency(functionValues[funcao])}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
-            <div>
-                <label className={styles.label}>Classe/Padrão</label>
-                <select className={styles.input} value={state.padrao} onChange={e => update('padrao', e.target.value)}>
-                    {padroes.map(padrao => (
-                        <option key={padrao} value={padrao}>{padrao}</option>
-                    ))}
-                </select>
-            </div>
-            <div>
-                <label className={styles.label}>Função (FC/CJ)</label>
-                <select className={styles.input} value={state.funcao} onChange={e => update('funcao', e.target.value)}>
-                    {noFunctionCode && <option value={noFunctionCode}>{noFunctionLabel}</option>}
-                    {functionKeys.map(funcao => (
-                        <option key={funcao} value={funcao}>
-                            {funcao.toUpperCase()} - {formatCurrency(functionValues[funcao])}
-                        </option>
-                    ))}
-                </select>
-            </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                <p className={styles.label}>Salário Base</p>
-                <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(baseVencimento)}</p>
-            </div>
-            <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">GAJ (140%)</p>
-                <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
-            </div>
-            <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
-                <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Auxílio Alimentação</p>
-                <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(state.auxAlimentacao || 0)}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                    <p className={styles.label}>Salário Base</p>
+                    <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(baseVencimento)}</p>
+                </div>
+                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                    <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Gratificação de Atividade Judiciária (GAJ)</p>
+                    <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(gaj)}</p>
+                </div>
+                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3">
+                    <p className="text-label font-bold text-neutral-500 uppercase tracking-widest">Auxílio Alimentação</p>
+                    <p className="text-body font-bold text-neutral-800 dark:text-neutral-100 font-mono">{formatCurrency(state.auxAlimentacao || 0)}</p>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};

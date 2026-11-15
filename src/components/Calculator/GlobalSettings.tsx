@@ -70,7 +70,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     preserveRestoredGlobals = false,
 }) => {
     const compactInput = `${styles.input} py-2 px-3 text-body`;
-    const compactLabel = 'block text-label font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-1';
+    const compactLabel = styles.label;
 
     const schedules = useMemo(
         () => [...(courtConfig.adjustment_schedule || [])].sort((a, b) => a.period - b.period),
@@ -347,7 +347,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
             <div className="flex items-center justify-between gap-4 flex-wrap relative z-10 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
                 <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                    <h3 className="text-body font-bold text-neutral-800 dark:text-neutral-100">
+                    <h3 className="text-h4 font-bold text-neutral-800 dark:text-neutral-100">
                         Mês e ano da folha
                     </h3>
                 </div>
@@ -370,10 +370,12 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 <div>
-                    <label className={compactLabel}>Competência do Holerite</label>
+                    <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
                     <div className="flex gap-2">
                         <select
-                            className={compactInput}
+                            id="payroll-month"
+                            aria-label="Mês da folha"
+                            className={`${styles.input} flex-1`}
                             value={monthLabelByNumber(clampedReference.month)}
                             onChange={e => update('mesRef', e.target.value)}
                         >
@@ -383,7 +385,9 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                         </select>
 
                         <select
-                            className={`${compactInput} w-32 font-mono font-semibold`}
+                            id="payroll-year"
+                            aria-label="Ano da folha"
+                            className={`${styles.input} !w-28 shrink-0 font-mono font-semibold`}
                             value={clampedReference.year}
                             onChange={e => update('anoRef', Number(e.target.value))}
                         >

@@ -36,6 +36,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
     funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady, deducaoPorDependente
 }) => {
+    const fieldId = React.useId();
     const participates = state.funprespParticipacao !== 'nao';
     const urp = state.funprespParticipacao === 'vinculado' ? resolvePensionUrp(config,
         `${state.anoRef}-${String(toReferenceMonthIndex(state.mesRef)).padStart(2, '0')}`, state.funprespVinculadaInicio ?? '') : null;
@@ -55,12 +56,13 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         optionalItems.filter(([rule, field]) => config?.incidenceRules?.[rule] && state[field]).length +
         Number(state.funprespFacul > 0) + Number((state.funprespFaculValor ?? 0) > 0) : 0);
     return <div className={styles.innerBox}>
-        <h4 className={styles.innerBoxTitle}>Configurações tributárias</h4>
+        <h4 className={styles.innerBoxTitle}>Previdência e dependentes</h4>
+        <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">IR é o Imposto de Renda. PSS é a contribuição previdenciária do servidor. Valores de exercícios anteriores (EA) são tratados nos respectivos lançamentos e competências.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
             <label className={styles.label}>Dependentes (IR)
-                <input type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
+                <input id={`${fieldId}-dependentes`} aria-describedby={`${fieldId}-tax-help`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
             </label>
 
         </div>
@@ -81,17 +83,17 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     disabled={!pensionContext}
                     allowed={pensionContext?.allowed ?? []} unavailableReasons={pensionContext?.unavailableReasons} />
                 {participates && <label className={styles.label}>Alíquota {state.funprespParticipacao === 'vinculado' ? 'vinculada' : 'normal patrocinada'}
-                    <select className={styles.input} value={state.funprespAliq} onChange={e => update('funprespAliq', Number(e.target.value))}>
+                    <select id={`${fieldId}-funprespAliq`} className={styles.input} value={state.funprespAliq} onChange={e => update('funprespAliq', Number(e.target.value))}>
                         {!funprespNormalOptions.includes(state.funprespAliq) && <option value={state.funprespAliq}>Selecione a alíquota</option>}
                         {funprespNormalOptions.map(rate => <option key={rate} value={rate}>{toPercentLabel(rate)}</option>)}
                     </select>
                 </label>}
                 {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Base de contribuição escolhida no plano (R$)
-                    <input type="number" className={styles.input} min={0} step="0.01" aria-describedby="funpresp-urp-reference" aria-invalid={Boolean(linkedError && !linkedFeedback?.configuration)} value={state.funprespBaseIntegral ?? ''} onChange={e => update('funprespBaseIntegral', toPositiveNumber(e.target.value))} />
+                    <input id={`${fieldId}-funprespBaseIntegral`} type="number" className={styles.input} min={0} step="0.01" aria-describedby="funpresp-urp-reference" aria-invalid={Boolean(linkedError && !linkedFeedback?.configuration)} value={state.funprespBaseIntegral ?? ''} onChange={e => update('funprespBaseIntegral', toPositiveNumber(e.target.value))} />
                     <span className={PENSION_HELP_CLASS}>É o valor sobre o qual a alíquota será aplicada. Não informe aqui o desconto mensal do contracheque.</span>
                 </label>}
                 {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Mês e ano da inscrição ou alteração da base
-                    <input type="month" className={styles.input} aria-describedby="funpresp-date-help" value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
+                    <input id={`${fieldId}-funprespVinculadaInicio`} type="month" className={styles.input} aria-describedby="funpresp-date-help" value={state.funprespVinculadaInicio ?? ''} onChange={e => update('funprespVinculadaInicio', e.target.value)} />
                 </label>}
             </div>
             {urp?.reference && <p id="funpresp-urp-reference" className={PENSION_HELP_CLASS}>
@@ -118,12 +120,12 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 </div> : <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedFeedback?.message || linkedError || funprespValidationError}</p>)}
         </fieldset>}
         <details className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
-            open={optionsOpen} onToggle={event => setOptionsOpen(event.currentTarget.open)}>
-            <summary className="cursor-pointer text-body-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
+            open={optionsOpen} id={`${fieldId}-options`} onToggle={event => setOptionsOpen(event.currentTarget.open)}>
+            <summary className="cursor-pointer min-h-11 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
                 Opções adicionais de previdência ({activeOptions} {activeOptions === 1 ? 'ativa' : 'ativas'})
             </summary>
             <label className={styles.checkboxLabel}>
-                <input type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
+                <input id={`${fieldId}-pssSobreFC`} type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
                 <span>PSS sobre FC/CJ (RPPS)</span>
             </label>
             {showFunprespSection && config && participates && <>
@@ -143,13 +145,13 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 </fieldset>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <label className={styles.label}>Facultativa regular (%)
-                        <input type="number" className={styles.input} min={0} max={config.facultativeRate.max === undefined ? undefined : config.facultativeRate.max * 100} step={config.facultativeRate.step === undefined ? 'any' : config.facultativeRate.step * 100} value={Number((state.funprespFacul * 100).toFixed(6))} onChange={e => update('funprespFacul', toDecimalRateFromPercentInput(e.target.value))} />
+                        <input id={`${fieldId}-funprespFacul`} type="number" className={styles.input} min={0} max={config.facultativeRate.max === undefined ? undefined : config.facultativeRate.max * 100} step={config.facultativeRate.step === undefined ? 'any' : config.facultativeRate.step * 100} value={Number((state.funprespFacul * 100).toFixed(6))} onChange={e => update('funprespFacul', toDecimalRateFromPercentInput(e.target.value))} />
                     </label>
                     <label className={styles.label}>Aporte esporádico (R$)
-                        <input type="number" className={styles.input} min={0} step="0.01" value={state.funprespFaculValor ?? 0} onChange={e => update('funprespFaculValor', toPositiveNumber(e.target.value))} />
+                        <input id={`${fieldId}-funprespFaculValor`} type="number" className={styles.input} min={0} step="0.01" value={state.funprespFaculValor ?? 0} onChange={e => update('funprespFaculValor', toPositiveNumber(e.target.value))} />
                     </label>
                     <label className={styles.label}>Pagamento das facultativas e do aporte
-                        <select className={styles.input} value={state.funprespFaculForma ?? 'folha'} onChange={e => update('funprespFaculForma', e.target.value)}>
+                        <select id={`${fieldId}-funprespFaculForma`} className={styles.input} value={state.funprespFaculForma ?? 'folha'} onChange={e => update('funprespFaculForma', e.target.value)}>
                             <option value="folha">Desconto em folha</option>
                             <option value="externo">Pagamento externo</option>
                         </select>

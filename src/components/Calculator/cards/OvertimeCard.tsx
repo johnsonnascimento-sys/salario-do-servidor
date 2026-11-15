@@ -30,6 +30,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     gaactaAtivo,
     gaactaRecesso
 }) => {
+    const fieldId = React.useId();
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
 
     const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
@@ -134,27 +135,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
     return (
         <div className="space-y-4">
-            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
-                <summary className="cursor-pointer text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                    Composição da base de cálculo da hora extra — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </summary>
-                <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">
-                    Selecione as parcelas para calcular a hora extra neste card. Na substituição, a parcela FC/CJ acompanha a função substituída elegível; os valores abaixo representam a função atual.
-                </p>
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {baseItems.map(part => (
-                        <label key={part.key} className={styles.checkboxLabel}>
-                            <input type="checkbox" className={styles.checkbox} checked={part.selecionado} aria-label={`Incluir ${part.label} na base de HE`}
-                                onChange={e => updateEntry(entry.id, { composicaoBase: { ...entry.composicaoBase, [part.key]: e.target.checked } })} />
-                            <span className="flex flex-1 justify-between gap-2 text-body-xs">
-                                <span>{part.label}</span>
-                                <span className="font-mono">{part.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                            </span>
-                        </label>
-                    ))}
-                </div>
-                <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">GAACTA e créditos dinâmicos entram somente quando selecionados. A seleção é uma opção da simulação e deve refletir as parcelas admitidas na sua folha.</p>
-            </details>
+
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     {gaactaAtivo && !gaactaRecesso && (
@@ -189,7 +170,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     )}
 
                     <details className="group" open={selectedOption === 'custom' || undefined}>
-                        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
                             <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
                             <span>Opções avançadas de jornada</span>
                             <span className="font-normal text-neutral-500 dark:text-neutral-400">Divisor aplicado: {currentDivisor}</span>
@@ -209,8 +190,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label className={styles.label}>Carga Horária Semanal</label>
-                                <select
+                                <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Carga Horária Semanal</label>
+                                <select id={`${fieldId}-field-1`}
                                     className={styles.input}
                                     value={selectedOption}
                                     onChange={e => handleJornadaChange(e.target.value)}
@@ -235,8 +216,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             </div>
 
                             <div>
-                                <label className={styles.label}>Divisor Mensal Efetivo</label>
-                                <input
+                                <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Divisor Mensal Efetivo</label>
+                                <input id={`${fieldId}-field-2`}
                                     type="number"
                                     min="1"
                                     step="any"
@@ -251,8 +232,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
                         {selectedOption === 'custom' && (
                             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center gap-3 flex-wrap">
-                                <label className={`${styles.label} mb-0 shrink-0`}>Jornada semanal (h):</label>
-                                <input
+                                <label htmlFor={`${fieldId}-field-3`} className={`${styles.label} mb-0 shrink-0`}>Jornada semanal (h):</label>
+                                <input id={`${fieldId}-field-3`}
                                     type="number"
                                     min="1"
                                     max="80"
@@ -311,8 +292,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     {!usarSubstituicaoFuncao ? (
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label className={styles.label}>Qtd. Horas (50%)</label>
-                                <input
+                                <label htmlFor={`${fieldId}-field-4`} className={styles.label}>Qtd. Horas (50%)</label>
+                                <input id={`${fieldId}-field-4`}
                                     type="number"
                                     className={styles.input}
                                     min={0}
@@ -321,8 +302,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                 />
                             </div>
                             <div>
-                                <label className={styles.label}>Qtd. Horas (100%)</label>
-                                <input
+                                <label htmlFor={`${fieldId}-field-5`} className={styles.label}>Qtd. Horas (100%)</label>
+                                <input id={`${fieldId}-field-5`}
                                     type="number"
                                     className={styles.input}
                                     min={0}
@@ -412,9 +393,12 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
             </div>
 
             <details className="group pt-1" open={entry.isEA || entry.excluirIR || undefined}>
-                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary rounded">
+                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors rounded min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
                     <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                    <span>Opções Tributárias Avançadas & Exercícios Anteriores (EA)</span>
+                    <span>Opções Tributárias Avançadas e Exercícios Anteriores (EA)</span>
+                    <span className="text-body font-normal">
+                            {[entry.isEA && 'IR de exercícios anteriores', entry.excluirIR && 'Exclusão do IR'].filter(Boolean).join(' · ') || 'Tributação mensal'}
+                    </span>
                     <ChevronDown className="w-3.5 h-3.5 shrink-0 group-open:rotate-180" aria-hidden="true" />
                 </summary>
                 <div className="mt-2.5 p-3.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-3">
@@ -463,6 +447,28 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         />
                     )}
                 </div>
+            </details>
+
+            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
+                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
+                    Composição da base de cálculo da hora extra — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </summary>
+                <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">
+                    Selecione as parcelas para calcular a hora extra neste card. Na substituição, a parcela FC/CJ acompanha a função substituída elegível; os valores abaixo representam a função atual.
+                </p>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {baseItems.map(part => (
+                        <label key={part.key} className={styles.checkboxLabel}>
+                            <input type="checkbox" className={styles.checkbox} checked={part.selecionado} aria-label={`Incluir ${part.label} na base de HE`}
+                                onChange={e => updateEntry(entry.id, { composicaoBase: { ...entry.composicaoBase, [part.key]: e.target.checked } })} />
+                            <span className="flex flex-1 justify-between gap-2 text-body-xs">
+                                <span>{part.label}</span>
+                                <span className="font-mono">{part.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            </span>
+                        </label>
+                    ))}
+                </div>
+                <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">GAACTA e créditos dinâmicos entram somente quando selecionados. A seleção é uma opção da simulação e deve refletir as parcelas admitidas na sua folha.</p>
             </details>
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     DollarSign,
     Minus,
@@ -13,8 +13,9 @@ import { Rubrica, RubricaTaxDetail, PrevidenciaComplementarConfig } from '../../
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { formatCurrency } from '../../utils/calculations';
-import type { PensionParticipation, PensionRetroEntry } from '../../types/pension';
+import type { PensionMemory, PensionParticipation, PensionRetroEntry } from '../../types/pension';
 import { getPensionRubricDistribution } from '../../services/agency/engine/modules/pensionPending';
+import { SharedPensionSummary } from './SharedPensionSummary';
 import { PensionRubricFields } from './PensionRubricFields';
 import { resolvePensionRubricRule } from '../../services/agency/engine/modules/pensionCatalog';
 import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
@@ -29,6 +30,7 @@ interface ManualRubricasSectionProps {
     funprespParticipacao: PensionParticipation;
     pensionRetroEntries?: PensionRetroEntry[];
     pensionConfig?: PrevidenciaComplementarConfig;
+    pensionMemory?: PensionMemory;
     competencia?: string;
     irEaEntryTax?: Record<string, number>;
     irEaCurrentYearKeys?: string[];
@@ -52,6 +54,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     funprespParticipacao,
     pensionRetroEntries = [],
     pensionConfig,
+    pensionMemory,
     competencia = '',
     addRubrica,
     removeRubrica,
@@ -61,11 +64,41 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'C' | 'D'>('TODOS');
     const [expandedEaCards, setExpandedEaCards] = useState<Record<string, boolean>>({});
 
-    const toggleEaCard = (id: string) => {
-        setExpandedEaCards(prev => ({ ...prev, [id]: !prev[id] }));
+    const toggleEaCard = (id: string, currentlyExpanded: boolean) => {
+        setExpandedEaCards(prev => ({ ...prev, [id]: !currentlyExpanded }));
     };
 
     const distributed = getPensionRubricDistribution({ pensionRetroEntries });
+    const classifications = Object.fromEntries(rubricas.map(rubrica => {
+        try {
+            return [rubrica.id, resolvePensionRubricRule(pensionConfig, rubrica.pensionRubricId, competencia).classification];
+        } catch {
+            return [rubrica.id, undefined];
+        }
+    }));
+    const pendingSections = rubricas.flatMap(rubrica => {
+        const reasons: string[] = [];
+        const historical = Boolean(rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada));
+        const needsClassification = rubrica.tipo === 'C' && rubrica.valor > 0 &&
+            (funprespParticipacao !== 'nao' || historical || rubrica.incideFunpresp);
+        if (needsClassification && (!classifications[rubrica.id] || classifications[rubrica.id] === 'pendente')) reasons.push('natureza');
+        if (rubrica.incideFunpresp && (historical || classifications[rubrica.id] === 'facultativa') &&
+            (!rubrica.pensionOptionDate || !rubrica.pensionOptionReference || !rubrica.pensionOptionAmountConfirmed)) reasons.push('opcao');
+        if (historical && Math.abs((distributed[rubrica.id] ?? 0) - Number(rubrica.valor || 0)) > 0.005) reasons.push('historico');
+        if (rubrica.isEA && ((!rubrica.competenciasEA?.length) || (rubrica.tipo === 'D' && !rubrica.fundamentoDeducaoEA?.trim()))) reasons.push('exercicios-anteriores');
+        return reasons.map(reason => `${rubrica.id}:${reason}`);
+    });
+    const pendingSignature = JSON.stringify(pendingSections);
+    const previousPendingSections = useRef(new Set<string>());
+    useEffect(() => {
+        const pending: string[] = JSON.parse(pendingSignature);
+        const newlyPending = pending.filter(key => !previousPendingSections.current.has(key));
+        previousPendingSections.current = new Set(pending);
+        if (newlyPending.length === 0) return;
+        const ids = new Set(newlyPending.map(key => key.slice(0, key.lastIndexOf(':'))));
+        setExpandedEaCards(previous => ({ ...previous, ...Object.fromEntries([...ids].map(id => [id, true])) }));
+    }, [pendingSignature]);
+
 
     const getRubricaLines = (rubrica: Rubrica, index: number): PresetGrossLine[] => {
         const valor = Number(rubrica.valor) || 0;
@@ -237,12 +270,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     rubrica.pssCompetenciaSeparada ||
                     (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)
                 );
-                let classification: string | undefined;
-                try {
-                    classification = resolvePensionRubricRule(pensionConfig, rubrica.pensionRubricId, competencia).classification;
-                } catch {
-                    /* Classificação pendente. */
-                }
+                const classification = classifications[rubrica.id];
 
                 const isExpanded = expandedEaCards[rubrica.id] ?? (rubrica.isEA || rubrica.pssCompetenciaSeparada || rubrica.funprespCompetenciaSeparada);
                 const isCredito = rubrica.tipo === 'C';
@@ -250,6 +278,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 return (
                     <div
                         key={rubrica.id}
+                        id={`manual-rubrica-${rubrica.id}`}
+                        tabIndex={-1}
                         className={`${styles.card} space-y-3.5 border-l-4 transition-all ${
                             isCredito
                                 ? 'border-l-emerald-500 shadow-xs'
@@ -266,7 +296,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                             : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
                                     }`}
                                 >
-                                    {isCredito ? 'Crédito (+)' : 'Desconto (-)'} #{index + 1}
+                                    {isCredito ? 'Crédito' : 'Desconto'} #{index + 1}
                                 </span>
 
                                 {isCredito && (
@@ -297,20 +327,22 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         {/* Campos Principais: Tipo, Descrição e Valor */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
-                                <label className={styles.label}>Natureza</label>
+                                <label htmlFor={`manual-type-${rubrica.id}`} className={styles.label}>Natureza</label>
                                 <select
+                                    id={`manual-type-${rubrica.id}`}
                                     className={styles.input}
                                     value={rubrica.tipo}
                                     onChange={e => updateRubrica(rubrica.id, 'tipo', e.target.value as Rubrica['tipo'])}
                                 >
                                     <option value="C">Crédito (+)</option>
-                                    <option value="D">Desconto (-)</option>
+                                    <option value="D">Desconto</option>
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <label className={styles.label}>Descrição da Verba</label>
+                                <label htmlFor={`manual-description-${rubrica.id}`} className={styles.label}>Descrição da verba</label>
                                 <input
                                     type="text"
+                                    id={`manual-description-${rubrica.id}`}
                                     list={`sugestoes-${rubrica.id}`}
                                     className={styles.input}
                                     value={rubrica.descricao}
@@ -376,8 +408,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 </div>
                             </div>
                             <div>
-                                <label className={styles.label}>Valor (R$)</label>
+                                <label htmlFor={`manual-value-${rubrica.id}`} className={styles.label}>Valor (R$)</label>
                                 <input
+                                    id={`manual-value-${rubrica.id}`}
                                     type="number"
                                     min="0"
                                     step="0.01"
@@ -393,7 +426,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         {isCredito && (
                             <div className="p-3 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-2">
                                 <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                                    Incidências na Folha Mensal
+                                    Incidências na folha mensal
                                 </div>
                                 <div className="flex items-center gap-6 flex-wrap">
                                     <label className={styles.checkboxLabel}>
@@ -434,16 +467,26 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         <div className="pt-1">
                             <button
                                 type="button"
-                                onClick={() => toggleEaCard(rubrica.id)}
-                                className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors py-1"
+                                id={`manual-advanced-trigger-${rubrica.id}`}
+                                aria-expanded={Boolean(isExpanded)}
+                                aria-controls={`manual-advanced-${rubrica.id}`}
+                                onClick={() => toggleEaCard(rubrica.id, Boolean(isExpanded))}
+                                className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
                             >
                                 <SlidersHorizontal className="w-3.5 h-3.5" />
-                                <span>Opções Tributárias Avançadas & Exercícios Anteriores (EA)</span>
+                                <span className="text-left">
+                                    <span className="block">Opções tributárias e exercícios anteriores (EA)</span>
+                                    <span className="mt-1 block font-normal">
+                                        {[rubrica.isEA && 'IR de exercícios anteriores', rubrica.pssCompetenciaSeparada && 'PSS por competência original',
+                                            rubrica.incideFunpresp && 'Incluída na Funpresp', rubrica.funprespCompetenciaSeparada && 'Funpresp por competência original']
+                                            .filter(Boolean).join(' · ') || 'Sem incidências adicionais selecionadas'}
+                                    </span>
+                                </span>
                                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
 
-                            {isExpanded && (
-                                <div className="mt-2.5 p-3.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-3 animate-in fade-in duration-150">
+                                <div id={`manual-advanced-${rubrica.id}`} hidden={!isExpanded}
+                                    aria-labelledby={`manual-advanced-trigger-${rubrica.id}`} className="mt-2.5 p-3.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-3 animate-in fade-in duration-150">
                                     <div className="flex items-center gap-4 flex-wrap">
                                         <label className={styles.checkboxLabel}>
                                             <input
@@ -538,7 +581,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                         updateRubrica={updateRubrica}
                                     />
                                 </div>
-                            )}
                         </div>
 
                         {calculationReady && <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />}
@@ -578,6 +620,11 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     </div>
                 );
             })}
+            {calculationReady && pensionMemory && rubricas.some(rubrica => rubrica.tipo === 'C' &&
+                (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
+                    (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao')))) && (
+                <SharedPensionSummary memory={pensionMemory} rubricas={rubricas} />
+            )}
         </div>
     );
 };

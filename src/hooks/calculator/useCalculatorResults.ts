@@ -237,9 +237,9 @@ export const useCalculatorResults = (
         [state, calculatedState]
     );
 
-    const resultRows = useMemo(() => {
+    const resultGroups = useMemo(() => {
         if (!courtConfig || calculationStatus !== 'ready') {
-            return [];
+            return { resultRows: [], dailiesResultRows: [] };
         }
 
         const rows: Array<{ label: string; value: number; type: 'C' | 'D' }> = [];
@@ -346,6 +346,8 @@ export const useCalculatorResults = (
         if (effectiveState.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: effectiveState.planoSaude, type: 'D' });
         if (effectiveState.pensao > 0) rows.push({ label: 'PENSÃO ALIMENTÍCIA', value: effectiveState.pensao, type: 'D' });
 
+        // Preserve row identity for presentation without changing the persisted row format.
+        const dailiesStart = rows.length;
         const embarkationLabel = (courtConfig?.dailies?.embarkationLabel?.trim() || 'Adicional de embarque');
         const embarkationLabelUpper = embarkationLabel.toUpperCase();
         const diariasAdicionalEmbarque = resolveDailiesEmbarkationAdditional({
@@ -367,6 +369,8 @@ export const useCalculatorResults = (
         if (effectiveState.diariasGlosa > 0) rows.push({ label: 'ABATIMENTO BENEF. EXTERNO (ART. 4º)', value: effectiveState.diariasGlosa, type: 'D' });
         if (effectiveState.diariasDescAlim > 0) rows.push({ label: 'RESTITUIÇÃO AUX. ALIM. (DIÁRIAS)', value: effectiveState.diariasDescAlim, type: 'D' });
         if (effectiveState.diariasDescTransp > 0) rows.push({ label: 'RESTITUIÇÃO AUX. TRANSP. (DIÁRIAS)', value: effectiveState.diariasDescTransp, type: 'D' });
+
+        const dailiesResultRows = rows.slice(dailiesStart);
 
         effectiveState.rubricasExtras.forEach((r, index) => {
             if (r.valor <= 0) {
@@ -392,9 +396,10 @@ export const useCalculatorResults = (
 
         const creditRows = rows.filter(row => row.type === 'C');
         const debitRows = rows.filter(row => row.type === 'D');
-        return [...creditRows, ...debitRows];
+        return { resultRows: [...creditRows, ...debitRows], dailiesResultRows };
     }, [effectiveState, courtConfig, currentTables, calculationStatus]);
 
-    return { calculatedState, resultRows, calculationStatus, calculationError, calculationPending,
+    const { resultRows, dailiesResultRows } = resultGroups;
+    return { calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending,
         pensionContexts: isCurrent ? completed.pensionContexts ?? null : null };
 };

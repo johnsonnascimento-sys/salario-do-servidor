@@ -1,3 +1,4 @@
+import { Accordion } from '../../ui/Accordion';
 import React, { useEffect, useMemo } from 'react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { formatCurrency } from '../../../utils/calculations';
@@ -18,6 +19,7 @@ const parseCurrencyInput = (value: string) => {
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
 export const VacationCard: React.FC<VacationCardProps> = ({ state, update, styles, courtConfig }) => {
+    const fieldId = React.useId();
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
     const funcaoValorBruta = useMemo(() => {
         if (!state.funcao || state.funcao === noFunctionCode || !courtConfig?.bases?.funcoes) {
@@ -143,9 +145,118 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                 O adicional de 1/3 de férias corresponde a um terço da remuneração de referência do servidor no período de usufruto (art. 7º, XVII, da CF/88 c/c art. 76 da Lei nº 8.112/1990).
             </p>
 
-            {/* Composição da Base da Remuneração (similar ao 13º e GAACTA) */}
+            {/* Configuração de recebimento no mês e valor */}
+            <h4 className={styles.innerBoxTitle}>Adicional de férias no mês</h4>
+
+            {state.manualFerias ? (
+                <div className="relative">
+                    <input
+                        type="text"
+                        id={`${fieldId}-adicional`}
+                        aria-label="Valor manual do adicional de férias"
+                        className={styles.input}
+                        data-calculator="true"
+                        value={state.ferias1_3 ? state.ferias1_3.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                        onChange={e => update('ferias1_3', parseCurrencyInput(e.target.value))}
+                        placeholder="0,00"
+                    />
+                </div>
+            ) : (
+                <div
+                    className={styles.innerBox + ' cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors'}
+                    role="checkbox"
+                    aria-label="Receber adicional de férias no mês"
+                    aria-checked={state.ferias1_3 > 0}
+                    tabIndex={0}
+                    onKeyDown={event => {
+                        if (event.key === ' ' || event.key === 'Enter') {
+                            event.preventDefault();
+                            update('ferias1_3', state.ferias1_3 > 0 ? 0 : 1);
+                        }
+                    }}
+                    onClick={() => update('ferias1_3', state.ferias1_3 > 0 ? 0 : 1)}
+                >
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            checked={state.ferias1_3 > 0}
+                            tabIndex={-1}
+                            aria-hidden="true"
+                            readOnly
+                            className={styles.checkbox}
+                        />
+                        <div className="flex-1">
+                            <div className="flex justify-between items-center">
+                                <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber adicional no mês</span>
+                                <span className={styles.valueDisplay}>{formatCurrency(state.ferias1_3)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Seção de férias recebidas anteriormente */}
+            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700">
+                <label className={styles.checkboxLabel}>
+                    <input
+                        type="checkbox"
+                        checked={state.feriasAntecipadas}
+                        onChange={e => handleFeriasAntecipadasChange(e.target.checked)}
+                        className={styles.checkbox}
+                    />
+                    Recebido 1/3 de férias em um mês anterior
+                </label>
+                <p className="text-label text-neutral-400 mt-1 ml-6">
+                    Marque se recebeu o pagamento no contracheque anterior.
+                </p>
+
+                {state.feriasAntecipadas && (
+                    <div className="mt-3 ml-6 space-y-2">
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                checked={state.feriasDescManual}
+                                onChange={e => handleFeriasDescManualChange(e.target.checked)}
+                                className={styles.checkbox}
+                            />
+                            Alterar valor do desconto manualmente
+                        </label>
+                        <div className="flex items-center justify-between gap-3">
+                            <span className="text-label text-neutral-500 dark:text-neutral-400">
+                                Desconto aplicado
+                            </span>
+                            <span className={styles.valueDisplay}>
+                                {formatCurrency(state.feriasDescManual ? state.feriasDesc : state.ferias1_3)}
+                            </span>
+                        </div>
+                        {state.feriasDescManual && (
+                            <input
+                                type="text"
+                                id={`${fieldId}-desconto`}
+                                aria-label="Valor manual do desconto de férias antecipadas"
+                                className={styles.input}
+                                data-calculator="true"
+                                value={state.feriasDesc ? state.feriasDesc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                                onChange={e => update('feriasDesc', parseCurrencyInput(e.target.value))}
+                                placeholder="0,00"
+                            />
+                        )}
+                    </div>
+                )}
+            </div>
+
+            <Accordion title="Edição manual do adicional de férias"
+                summary={state.manualFerias ? 'Valor manual ativo' : 'Valor automático pela composição selecionada'}
+                defaultOpen={state.manualFerias}>
+                <label className={styles.checkboxLabel}>
+                    <input type="checkbox" checked={state.manualFerias}
+                        onChange={e => update('manualFerias', e.target.checked)} className={styles.checkbox} />
+                    Informar valor manual do adicional
+                </label>
+            </Accordion>
+
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
-                <summary className="cursor-pointer text-body-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
                     Composição da remuneração de referência (Férias) — {formatCurrency(totalBaseApurada)}
                 </summary>
                 <div className="mt-3 space-y-3">
@@ -343,7 +454,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                     </label>
                     <div className="relative w-full sm:w-44">
                         <span className="absolute left-3 top-2.5 text-body-xs font-mono text-neutral-400">R$</span>
-                        <input
+                        <input id={`${fieldId}-feriasOutrasParcelas`} aria-label="Outras parcelas da base de férias"
                             type="number"
                             step="0.01"
                             min="0"
@@ -368,101 +479,6 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state, update, style
                 </div>
                 </div>
             </details>
-
-            {/* Configuração de recebimento no mês e valor */}
-            <div className="flex items-center justify-between pt-1">
-                <label className={styles.label}>Adicional 1/3 Férias (Mês Atual)</label>
-                <label className={styles.checkboxLabel}>
-                    <input
-                        type="checkbox"
-                        checked={state.manualFerias}
-                        onChange={e => update('manualFerias', e.target.checked)}
-                        className={styles.checkbox}
-                    />
-                    Manual
-                </label>
-            </div>
-
-            {state.manualFerias ? (
-                <div className="relative">
-                    <input
-                        type="text"
-                        className={styles.input}
-                        data-calculator="true"
-                        value={state.ferias1_3 ? state.ferias1_3.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                        onChange={e => update('ferias1_3', parseCurrencyInput(e.target.value))}
-                        placeholder="0,00"
-                    />
-                </div>
-            ) : (
-                <div
-                    className={styles.innerBox + ' cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors'}
-                    onClick={() => update('ferias1_3', state.ferias1_3 > 0 ? 0 : 1)}
-                >
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="checkbox"
-                            checked={state.ferias1_3 > 0}
-                            readOnly
-                            className={styles.checkbox}
-                        />
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center">
-                                <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">Receber adicional no mês</span>
-                                <span className={styles.valueDisplay}>{formatCurrency(state.ferias1_3)}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Seção de férias recebidas anteriormente */}
-            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700">
-                <label className={styles.checkboxLabel}>
-                    <input
-                        type="checkbox"
-                        checked={state.feriasAntecipadas}
-                        onChange={e => handleFeriasAntecipadasChange(e.target.checked)}
-                        className={styles.checkbox}
-                    />
-                    Recebido 1/3 de férias em um mês anterior
-                </label>
-                <p className="text-label text-neutral-400 mt-1 ml-6">
-                    Marque se recebeu o pagamento no contracheque anterior.
-                </p>
-
-                {state.feriasAntecipadas && (
-                    <div className="mt-3 ml-6 space-y-2">
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                checked={state.feriasDescManual}
-                                onChange={e => handleFeriasDescManualChange(e.target.checked)}
-                                className={styles.checkbox}
-                            />
-                            Alterar valor do desconto manualmente
-                        </label>
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="text-label text-neutral-500 dark:text-neutral-400">
-                                Desconto aplicado
-                            </span>
-                            <span className={styles.valueDisplay}>
-                                {formatCurrency(state.feriasDescManual ? state.feriasDesc : state.ferias1_3)}
-                            </span>
-                        </div>
-                        {state.feriasDescManual && (
-                            <input
-                                type="text"
-                                className={styles.input}
-                                data-calculator="true"
-                                value={state.feriasDesc ? state.feriasDesc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('feriasDesc', parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                            />
-                        )}
-                    </div>
-                )}
-            </div>
         </div>
     );
 };

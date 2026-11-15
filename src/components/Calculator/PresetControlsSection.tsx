@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Clock,
     ArrowLeftRight,
@@ -20,16 +20,15 @@ import {
     ArrowDownRight,
     X,
     Sparkles,
+    Minus,
     Scale
 } from 'lucide-react';
 import { Rubrica } from '../../types';
 import {
     PredefinedRubricId,
     MULTI_INSTANCE_PRESETS,
-    MULTI_INSTANCE_HINT_LABEL,
     PRESET_CATEGORIES,
     PRESET_CATALOG,
-    PresetCatalogItem,
     PresetInstance
 } from './dynamicPayrollForm.helpers';
 
@@ -76,7 +75,6 @@ const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     styles,
-    availablePresets,
     includePreset,
     reorderMode,
     setReorderMode,
@@ -88,6 +86,34 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     rubricas = []
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const pendingFocus = useRef<{ kind: 'preset' | 'manual'; previousIds: string[]; presetId: string } | null>(null);
+    const highlightTimer = useRef<ReturnType<typeof setTimeout>>();
+    const highlightedElement = useRef<HTMLElement | null>(null);
+    const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+    const focusCard = (id: string) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        highlightedElement.current?.classList.remove('ring-2', 'ring-primary-600', 'ring-offset-2');
+        clearTimeout(highlightTimer.current);
+        element.focus({ preventScroll: true });
+        element.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+        element.classList.add('ring-2', 'ring-primary-600', 'ring-offset-2');
+        highlightedElement.current = element;
+        highlightTimer.current = setTimeout(() => element.classList.remove('ring-2', 'ring-primary-600', 'ring-offset-2'), 1800);
+    };
+
+    useEffect(() => () => clearTimeout(highlightTimer.current), []);
+    useEffect(() => {
+        const pending = pendingFocus.current;
+        if (!pending) return;
+        const added = pending.kind === 'preset'
+            ? enabledPresets.find(instance => instance.presetId === pending.presetId && !pending.previousIds.includes(instance.key))
+            : rubricas.find(rubrica => !pending.previousIds.includes(rubrica.id));
+        if (!added) return;
+        pendingFocus.current = null;
+        focusCard('key' in added ? `preset-card-${added.key}` : `manual-rubrica-${added.id}`);
+    }, [enabledPresets, rubricas]);
 
     // Contagem de instâncias ativas por presetId e atalhos manuais (VPNI, ATS)
     const activeCounts = useMemo(() => {
@@ -115,82 +141,77 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
     // Filtra o catálogo com base no termo de busca e disponibilidade do órgão
     const filteredCatalog = useMemo(() => {
-        const term = searchTerm.trim().toLowerCase();
+        const term = normalizeSearch(searchTerm.trim());
         return PRESET_CATALOG.filter(item => {
             if (item.id === 'indenizacao_transporte' && !transportIndemnityEnabled) return false;
             if (item.id === 'gaacta' && !gaactaAvailable) return false;
 
             if (!term) return true;
 
-            const matchLabel = item.label.toLowerCase().includes(term);
-            const matchDesc = item.description.toLowerCase().includes(term);
-            const matchTags = item.tags.some(tag => tag.toLowerCase().includes(term));
+            const matchLabel = normalizeSearch(item.label).includes(term);
+            const matchDesc = normalizeSearch(item.description).includes(term);
+            const matchTags = item.tags.some(tag => normalizeSearch(tag).includes(term));
             return matchLabel || matchDesc || matchTags;
         });
     }, [searchTerm, transportIndemnityEnabled, gaactaAvailable]);
 
-    const scrollToManualRubricasSection = () => {
-        const el = document.getElementById('manual-rubricas-section');
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.classList.add('ring-2', 'ring-primary', 'shadow-md');
-            setTimeout(() => {
-                el.classList.remove('ring-2', 'ring-primary', 'shadow-md');
-            }, 1800);
-        }
-    };
-
     const scrollToPresetCard = (presetId: string) => {
         if (presetId === 'vpni' || presetId === 'ats') {
-            scrollToManualRubricasSection();
+            const rubrica = rubricas.find(item => item.tipo === 'C' && item.descricao.trim().toLowerCase().startsWith(presetId));
+            if (rubrica) focusCard(`manual-rubrica-${rubrica.id}`);
             return;
         }
-        const el = document.getElementById(`preset-card-${presetId}`);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-2', 'ring-primary', 'shadow-md');
-            setTimeout(() => {
-                el.classList.remove('ring-2', 'ring-primary', 'shadow-md');
-            }, 1800);
-        }
+        const instance = enabledPresets.find(item => item.presetId === presetId);
+        if (instance) focusCard(`preset-card-${instance.key}`);
+    };
+
+    const handleAddManual = (payload: Partial<Rubrica>) => {
+        if (!addRubrica) return;
+        pendingFocus.current = { kind: 'manual', previousIds: rubricas.map(item => item.id), presetId: '' };
+        addRubrica(payload);
     };
 
     const handleAddPreset = (presetId: string) => {
-        if (presetId === 'vpni') {
-            addRubrica?.({ descricao: 'VPNI', tipo: 'C', incideIR: true, incidePSS: true });
-            setTimeout(scrollToManualRubricasSection, 120);
+        if (presetId === 'vpni' || presetId === 'ats') {
+            handleAddManual({ descricao: presetId.toUpperCase(), tipo: 'C', incideIR: true, incidePSS: true });
             return;
         }
-        if (presetId === 'ats') {
-            addRubrica?.({ descricao: 'ATS', tipo: 'C', incideIR: true, incidePSS: true });
-            setTimeout(scrollToManualRubricasSection, 120);
-            return;
-        }
+        pendingFocus.current = { kind: 'preset', previousIds: enabledPresets.map(item => item.key), presetId };
         includePreset(presetId as PredefinedRubricId);
-        setTimeout(() => {
-            scrollToPresetCard(presetId);
-        }, 120);
     };
+
+    const quickItems = PRESET_CATALOG.filter(item => ['hora_extra', 'ferias', 'decimo', 'diarias'].includes(item.id));
 
     return (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Atalhos de verbas">
+                {quickItems.map(item => {
+                    const Icon = PRESET_ICONS[item.id];
+                    const count = activeCounts[item.id] || 0;
+                    return <button key={item.id} type="button" onClick={() => count ? scrollToPresetCard(item.id) : handleAddPreset(item.id)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 py-3 text-body font-semibold text-primary-800 hover:border-primary-600 hover:bg-primary-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-primary-200 dark:hover:bg-neutral-700">
+                        <Icon className="h-5 w-5 shrink-0" /><span>{item.id === 'hora_extra' ? 'Horas extras' : item.id === 'decimo' ? '13º salário' : item.id === 'diarias' ? 'Diárias' : 'Férias'}{count > 0 ? ` (${count})` : ''}</span>
+                    </button>;
+                })}
+                {addRubrica && <button type="button" onClick={() => handleAddManual({ tipo: 'D' })} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 py-3 text-body font-semibold text-neutral-700 hover:border-error-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200"><Minus className="h-5 w-5 shrink-0" />Outros descontos</button>}
+            </div>
             {/* Barra superior de ações e busca rápida */}
             <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
                 <div className="relative flex-1 min-w-0">
                     <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
-                        type="text"
+                        type="search"
+                        aria-label="Buscar verba ou adicional"
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         placeholder="Buscar verba ou adicional (ex.: hora extra, férias, diárias, 13º)..."
-                        className={`${styles.input} pl-9 pr-8 text-body-xs w-full`}
+                        className={`${styles.input} pl-9 pr-12 w-full`}
                     />
                     {searchTerm && (
                         <button
                             type="button"
                             onClick={() => setSearchTerm('')}
                             aria-label="Limpar busca"
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                            className="absolute right-0 top-1/2 min-h-11 min-w-11 flex items-center justify-center -translate-y-1/2 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-200"
                         >
                             <X className="w-3.5 h-3.5" />
                         </button>
@@ -202,7 +223,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                         type="button"
                         onClick={() => setReorderMode(prev => !prev)}
                         disabled={enabledPresetCount < 2 && !reorderMode}
-                        className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-body-xs font-bold uppercase tracking-wider transition-colors shrink-0 disabled:opacity-40 ${
+                        className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-body font-bold uppercase tracking-wider transition-colors shrink-0 disabled:opacity-40 ${
                             reorderMode
                                 ? 'bg-primary text-white shadow-sm'
                                 : 'bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-700'
@@ -216,10 +237,10 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
             </div>
 
             {reorderMode && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-body-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-body text-amber-800 dark:text-amber-300 flex items-center gap-2">
                     <GripVertical className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                     <span>
-                        <strong>Modo de Reordenação Ativo:</strong> Arraste os cards abaixo usando o ícone lateral para reorganizar a ordem de exibição na folha.
+                        Use os botões de mover para cima e para baixo em cada card, ou arraste para reorganizar a exibição.
                     </span>
                 </div>
             )}
@@ -228,7 +249,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
             {filteredCatalog.length === 0 ? (
                 <div className="p-6 text-center text-neutral-400 dark:text-neutral-500 bg-neutral-50 dark:bg-neutral-900/30 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
                     <Search className="w-6 h-6 mx-auto mb-2 opacity-40" />
-                    <p className="text-body-xs">Nenhum adicional ou verba encontrada para &ldquo;{searchTerm}&rdquo;.</p>
+                    <p className="text-body">Nenhum adicional ou verba encontrada para &ldquo;{searchTerm}&rdquo;.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -238,13 +259,13 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
                         return (
                             <details key={category.id} open={Boolean(searchTerm)} className="group rounded-xl border border-neutral-200 bg-neutral-50/60 dark:border-neutral-700 dark:bg-neutral-900/30">
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
-                                    <span className="min-w-0"><span className="block text-[12px] font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">{category.title}</span><span className="mt-0.5 block text-[11px] text-neutral-500 dark:text-neutral-400">{category.subtitle}</span></span>
-                                    <span className="shrink-0 rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{itemsInCategory.length}{itemsInCategory.some(item => (activeCounts[item.id] || 0) > 0) ? ` · ${itemsInCategory.reduce((sum, item) => sum + (activeCounts[item.id] || 0), 0)} ativa(s)` : ''}</span>
+                                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600">
+                                    <span className="min-w-0"><span className="block text-body font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">{category.title}</span><span className="mt-0.5 block text-body text-neutral-500 dark:text-neutral-400">{category.subtitle}</span></span>
+                                    <span className="shrink-0 rounded-full bg-neutral-200 px-2 py-0.5 text-body text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{itemsInCategory.length}{itemsInCategory.some(item => (activeCounts[item.id] || 0) > 0) ? ` · ${itemsInCategory.reduce((sum, item) => sum + (activeCounts[item.id] || 0), 0)} ativa(s)` : ''}</span>
                                 </summary>
                                 <div className="space-y-2 px-3 pb-3">
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-2.5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5">
                                     {itemsInCategory.map(item => {
                                         const count = activeCounts[item.id] || 0;
                                         const isAdded = count > 0;
@@ -271,24 +292,24 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center justify-between gap-1">
-                                                            <h5 className="text-body-xs font-semibold text-neutral-800 dark:text-neutral-200 leading-snug truncate" title={item.label}>
+                                                            <h5 className="text-body font-semibold text-neutral-800 dark:text-neutral-200 leading-snug break-words" title={item.label}>
                                                                 {item.label}
                                                             </h5>
                                                         </div>
-                                                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5" title={item.description}>
+                                                        <p className="text-body text-neutral-500 dark:text-neutral-400 mt-0.5" title={item.description}>
                                                             {item.description}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 {/* Rodapé do chip: Ações e Status */}
-                                                <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between gap-2">
+                                                <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800/80 flex flex-wrap items-center justify-between gap-2">
                                                     {isAdded ? (
                                                         <>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => scrollToPresetCard(item.id)}
-                                                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
+                                                                className="inline-flex min-h-11 items-center gap-1 text-body font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
                                                                 title="Rolar suavemente até o card aberto na tela"
                                                             >
                                                                 <Check className="w-3.5 h-3.5" />
@@ -300,7 +321,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleAddPreset(item.id)}
-                                                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold uppercase transition-colors"
+                                                                    className="inline-flex min-h-11 items-center gap-1 px-3 py-2 rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-body font-bold uppercase transition-colors"
                                                                     title="Adicionar mais uma instância deste card"
                                                                 >
                                                                     <Plus className="w-3 h-3" />
@@ -312,7 +333,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                         <button
                                                             type="button"
                                                             onClick={() => handleAddPreset(item.id)}
-                                                            className="w-full inline-flex items-center justify-center gap-1.5 py-1 px-2.5 rounded-lg bg-neutral-100 hover:bg-primary hover:text-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-primary dark:hover:text-white transition-colors text-body-xs font-semibold"
+                                                            className="w-full inline-flex min-h-11 items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-neutral-100 hover:bg-primary hover:text-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-primary dark:hover:text-white transition-colors text-body font-semibold"
                                                         >
                                                             <Plus className="w-3.5 h-3.5" />
                                                             <span>Adicionar</span>
@@ -330,13 +351,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                 </div>
             )}
 
-            {enabledPresetCount === 0 && (
-                <div className="p-4 bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl text-center">
-                    <p className="text-body-xs text-primary-800 dark:text-primary-300">
-                        💡 <strong>Dica:</strong> Clique em qualquer um dos botões acima (ex.: <em>Horas Extras</em>, <em>Férias</em> ou <em>13º Salário</em>) para adicionar a verba à sua simulação com 1 clique.
-                    </p>
-                </div>
-            )}
+
         </div>
     );
 };

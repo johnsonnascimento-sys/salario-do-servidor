@@ -34,6 +34,42 @@
 }
 
 @layer components {
+    .calculator-workspace .text-label,
+    .calculator-workspace .text-body-xs,
+    .calculator-workspace .text-body-sm {
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    .calculator-workspace :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+        font-size: 1rem;
+        min-width: 0;
+    }
+
+    .calculator-workspace :is(button, summary) {
+        min-height: 44px;
+    }
+
+    .calculator-workspace :is(button, summary, a, input, select, textarea):focus-visible {
+        outline: 2px solid #0f766e;
+        outline-offset: 3px;
+    }
+
+    .calculator-workspace [id] {
+        scroll-margin-top: 7rem;
+        scroll-margin-bottom: calc(var(--calculator-bar-height, 120px) + 1rem);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .calculator-workspace *,
+        .calculator-workspace *::before,
+        .calculator-workspace *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0s !important;
+            animation-duration: 0s !important;
+        }
+    }
+
     /* Botões */
     .btn {
         @apply inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 rounded-xl;

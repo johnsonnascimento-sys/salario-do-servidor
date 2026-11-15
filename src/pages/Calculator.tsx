@@ -8,6 +8,8 @@ import { CalculatorHeader } from '../components/Calculator/CalculatorHeader';
 import { DynamicPayrollForm } from '../components/Calculator/DynamicPayrollForm';
 import { ObservationsSection } from '../components/Calculator/ObservationsSection';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
+import { ResultsOverview } from '../components/Calculator/ResultsOverview';
+import { CalculatorNavigation } from '../components/Calculator/CalculatorNavigation';
 import { IrEaContextSection } from '../components/Calculator/IrEaContextSection';
 import { toReferenceMonthIndex } from '../components/Calculator/referenceDateUtils';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
@@ -42,6 +44,8 @@ export default function Calculator() {
         courtConfig,
         loadingConfig,
         resultRows,
+        dailiesResultRows,
+        exportError,
         donationModalOpen,
         setDonationModalOpen,
         handleDonationComplete,
@@ -81,6 +85,18 @@ export default function Calculator() {
     const [formKey, setFormKey] = useState(0);
     const [restoreReady, setRestoreReady] = useState(!(editPayslipId || restoreSnapshot?.calculatorState));
     const [restoreError, setRestoreError] = useState('');
+    const [saveFeedback, setSaveFeedback] = useState('');
+    const [barHeight, setBarHeight] = useState(120);
+
+    useEffect(() => {
+        if (typeof ResizeObserver === 'undefined') return;
+        const bars = Array.from(document.querySelectorAll<HTMLElement>('[data-calculator-results-bar]'));
+        const measure = () => setBarHeight(Math.max(0, ...bars.map(bar => bar.getBoundingClientRect().height)));
+        const observer = new ResizeObserver(measure);
+        bars.forEach(bar => observer.observe(bar));
+        measure();
+        return () => observer.disconnect();
+    }, [loadingAgency, loadingConfig, restoreReady, restoreError, agencyError, configError]);
 
     useEffect(() => {
         let active = true;
@@ -167,16 +183,16 @@ export default function Calculator() {
         try {
             const result = await saveCurrentPayslip();
             if (result.success) {
-                alert(result.mode === 'updated'
+                setSaveFeedback(result.mode === 'updated'
                     ? 'Holerite atualizado com sucesso na sua área.'
                     : 'Holerite salvo com sucesso na sua área.');
             } else if (result.reason === 'auth') {
-                alert('Faça login para salvar holerites na sua área.');
+                setSaveFeedback('Faça login para salvar holerites na sua área.');
             } else {
-                alert('Aguarde a conclusão do cálculo antes de salvar.');
+                setSaveFeedback('Aguarde a conclusão do cálculo antes de salvar.');
             }
         } catch (error) {
-            alert((error as Error).message || 'Falha ao salvar holerite.');
+            setSaveFeedback((error as Error).message || 'Falha ao salvar holerite. Tente novamente.');
         }
     };
 
@@ -195,6 +211,7 @@ export default function Calculator() {
         }
 
         setState(hydrateCalculatorState(INITIAL_STATE));
+        setSaveFeedback('Os dados da calculadora foram limpos.');
         setFormKey((prev) => prev + 1);
         lastRestoreSourceRef.current = 'blank';
     };
@@ -236,6 +253,7 @@ export default function Calculator() {
         return (
         <>
             <MobileResultsBar
+                resultLabel={dailiesResultRows.length > 0 ? 'Total estimado' : 'Líquido do holerite'}
                 calculationReady={calculationReady}
                 resultMessage={resultMessage}
                 savingPayslip={savingPayslip}
@@ -247,7 +265,7 @@ export default function Calculator() {
                 onClearCalculator={handleClearCalculator}
             />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-28 lg:pb-32">
+            <div className="calculator-workspace max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6" style={{ paddingBottom: barHeight + 40, '--calculator-bar-height': `${barHeight}px` } as React.CSSProperties}>
                 <CalculatorHeader
                     calculationReady={calculationReady}
                     courtConfig={courtConfig}
@@ -264,7 +282,14 @@ export default function Calculator() {
                     onClearCalculator={handleClearCalculator}
                 />
 
-                <div className="space-y-8 max-w-5xl mx-auto">
+                <CalculatorNavigation />
+                <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">Preencha seus dados principais e adicione apenas as verbas que se aplicam. Os valores são atualizados automaticamente.</p>
+                {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-primary-300 bg-primary-50 p-4 text-body text-primary-900 dark:bg-primary-950 dark:text-primary-100">
+                    <p>{exportError || saveFeedback}</p>
+                    {!exportError && <button type="button" aria-label="Fechar mensagem" className="min-h-11 shrink-0 px-2 font-semibold" onClick={() => setSaveFeedback('')}>Fechar</button>}
+                </div>}
+                <div className="space-y-5">
+                    <section id="competencia" tabIndex={-1} aria-label="Competência" className="scroll-mt-28">
                     <GlobalSettings
                         key={`global-settings-${formKey}`}
                         state={effectiveState}
@@ -273,6 +298,7 @@ export default function Calculator() {
                         styles={styles}
                         preserveRestoredGlobals={preserveRestoredGlobals}
                     />
+                    </section>
                     {calculationStatus === 'error' && <div id="calculator-error" role="alert" aria-live="polite" className="rounded-xl border border-error-300 bg-error-50 dark:bg-error-900/20 p-4 text-body text-error-700 dark:text-error-300">
                         <p className="font-semibold">{pensionFeedback?.title || 'Não foi possível calcular esta simulação'}</p>
                         <p className="mt-1">{displayCalculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
@@ -319,7 +345,10 @@ export default function Calculator() {
                         update={update}
                         styles={styles}
                     />
+                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5">
+                    <ResultsOverview state={effectiveState} resultRows={resultRows} dailiesResultRows={dailiesResultRows} calculationReady={calculationReady} resultMessage={resultMessage} />
                     {calculationReady ? <ResultsSummary
+                        dailiesResultRows={dailiesResultRows}
                         state={effectiveState}
                         resultRows={resultRows}
                         update={update}
@@ -344,9 +373,11 @@ export default function Calculator() {
                             />
                         </div>
                     )}
+                    </section>
                 </div>
 
                 <ActionFooter
+                    resultLabel={dailiesResultRows.length > 0 ? 'Total estimado' : 'Líquido do holerite'}
                     errorDetail={pensionFeedback?.configuration ? 'Seus dados estão preservados. A equipe do site precisa atualizar a tabela da Funpresp.' : displayCalculationError}
                     calculationReady={calculationReady}
                     resultMessage={resultMessage}

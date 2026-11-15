@@ -6,6 +6,8 @@ import { useCalculatorConfig } from '../src/hooks/calculator/useCalculatorConfig
 import { useCalculatorResults } from '../src/hooks/calculator/useCalculatorResults';
 import { CalculatorState, CourtConfig, INITIAL_STATE } from '../src/types';
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
+import { getPayrollPresentation } from '../src/utils/payrollPresentation';
+import { ResultsOverview } from '../src/components/Calculator/ResultsOverview';
 
 // Synthetic but complete input for the real eligibility preflight, before the deferred engine stub.
 const config = { bases: { salario: { teste: { A1: 6000 } }, funcoes: {} }, values: {},
@@ -171,4 +173,50 @@ test('anonymized November payslip retains inputs and net amount through restorat
     assert.equal(roundTrip.tabelaIR, restored.tabelaIR);
     assert.equal(roundTrip.tabelaPSS, restored.tabelaPSS);
     await act(async () => { tree.unmount(); });
+});
+
+
+test('payroll presentation uses origin for daily rows and hides previous totals while recalculating', async () => {
+    const calls: Array<ReturnType<typeof deferred>> = [];
+    const engine = { calculateTotal: () => { const pending = deferred(); calls.push(pending); return pending.promise; } } as unknown as AgencyCalculationEngine;
+    let state: CalculatorState = { ...INITIAL_STATE, cargo: 'teste', padrao: 'A1', funcao: '0', tabelaPSS: 'teste', auxAlimentacao: 0,
+        rubricasExtras: ['Deslocamento', 'Embarque', 'DIÁRIAS (SEM ADICIONAL DE EMBARQUE)'].map((descricao, index) => ({
+            id: `manual-${index}`, tipo: 'C', descricao, valor: 100, incideIR: false, incidePSS: false, isEA: false,
+        })) };
+    let latest!: ReturnType<typeof useCalculatorResults>;
+    function Probe() { latest = useCalculatorResults(state, engine, config, agency); return null; }
+    let tree!: ReturnType<typeof create>;
+    await act(async () => { tree = create(React.createElement(Probe)); });
+    await act(async () => { calls[0].resolve({ netSalary: 7100, totalDeductions: 200,
+        breakdown: { vencimento: 6000, diariasBruto: 1000, diariasValor: 800, diariasDescAlim: 200 } }); });
+    assert.equal(latest.calculationStatus, 'ready');
+    assert.equal(latest.dailiesResultRows.length, 2);
+    assert.ok(latest.dailiesResultRows.every(row => latest.resultRows.includes(row)));
+    assert.ok(latest.resultRows.every(row => Object.keys(row).sort().join(',') === 'label,type,value'));
+    const presentation = getPayrollPresentation({ ...state, ...latest.calculatedState }, latest.resultRows, latest.dailiesResultRows);
+    assert.equal(presentation.payrollCredits, 6300);
+    assert.equal(presentation.payrollDebits, 0);
+    assert.equal(presentation.payrollNet, 6300);
+    assert.equal(presentation.dailiesNet, 800);
+    assert.equal(presentation.totalNet, 7100);
+    assert.equal(presentation.dailiesCredits, 1000);
+    assert.equal(presentation.dailiesDebits, 200);
+    for (const description of state.rubricasExtras.map(row => row.descricao.toUpperCase())) {
+        assert.ok(presentation.payrollRows.some(row => row.label === description && row.value === 100));
+    }
+    let overview!: ReturnType<typeof create>;
+    await act(async () => { overview = create(React.createElement(ResultsOverview, {
+        state: { ...state, ...latest.calculatedState }, resultRows: latest.resultRows, dailiesResultRows: latest.dailiesResultRows,
+        calculationReady: false, resultMessage: 'Apuração pendente',
+    })); });
+    const markup = JSON.stringify(overview.toJSON());
+    assert.ok(markup.includes('Apuração pendente'));
+    assert.ok(!markup.includes('6.300'));
+    assert.ok(!markup.includes('7.100'));
+    state = { ...state, dependentes: 1 };
+    await act(async () => { tree.update(React.createElement(Probe)); });
+    assert.equal(latest.calculationStatus, 'calculating');
+    assert.deepEqual(latest.resultRows, []);
+    assert.deepEqual(latest.dailiesResultRows, []);
+    await act(async () => { tree.unmount(); overview.unmount(); });
 });

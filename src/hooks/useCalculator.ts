@@ -37,6 +37,7 @@ export const useCalculator = () => {
     const { user } = useUserAuth();
     const [savingPayslip, setSavingPayslip] = useState(false);
     const [loggedUserName, setLoggedUserName] = useState('');
+    const [exportError, setExportError] = useState<string | null>(null);
 
     const {
         state,
@@ -69,7 +70,7 @@ export const useCalculator = () => {
         handleDonationComplete: handleDonationCompleteBase
     } = useCalculatorExport();
 
-    const { calculatedState, resultRows, calculationStatus, calculationError, calculationPending, pensionContexts } = useCalculatorResults(
+    const { calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending, pensionContexts } = useCalculatorResults(
         state,
         agencyService,
         courtConfig,
@@ -81,12 +82,23 @@ export const useCalculator = () => {
     if (!calculationReady) {
         PERSISTED_CALCULATED_INPUT_KEYS.forEach((key) => { effectiveState[key] = state[key]; });
     }
-    const initiateExportPDF = () => { if (calculationReady) initiateExportPDFBase(); };
-    const initiateExportExcel = () => { if (calculationReady) initiateExportExcelBase(); };
+    const initiateExportPDF = () => {
+        if (calculationReady) {
+            setExportError(null);
+            initiateExportPDFBase();
+        }
+    };
+    const initiateExportExcel = () => {
+        if (calculationReady) {
+            setExportError(null);
+            initiateExportExcelBase();
+        }
+    };
 
     const handleDonationComplete = () => {
         if (!calculationReady) return;
         handleDonationCompleteBase(effectiveState, resultRows, courtConfig).catch((error) => {
+            setExportError('Não foi possível gerar o arquivo. Seus dados foram mantidos. Selecione PDF ou Excel para tentar novamente.');
             console.error('Falha ao exportar arquivo:', error);
         });
     };
@@ -215,6 +227,8 @@ export const useCalculator = () => {
         courtConfig,
         loadingConfig,
         resultRows,
+        dailiesResultRows,
+        exportError,
         donationModalOpen,
         setDonationModalOpen,
         handleDonationComplete,

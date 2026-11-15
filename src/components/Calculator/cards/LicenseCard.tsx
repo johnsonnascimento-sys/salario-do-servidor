@@ -1,3 +1,4 @@
+import { Accordion } from '../../ui/Accordion';
 import React from 'react';
 import { CalculatorState } from '../../../types';
 
@@ -9,6 +10,7 @@ interface LicenseCardProps {
 }
 
 export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, styles }) => {
+    const fieldId = React.useId();
     return (
         <div className="space-y-4">
             <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-body-xs text-amber-800 dark:text-amber-300">
@@ -18,8 +20,8 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, styles 
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     <div>
-                        <label className={styles.label}>Qtd. Dias a indenizar</label>
-                        <input
+                        <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Qtd. Dias a indenizar</label>
+                        <input id={`${fieldId}-field-1`}
                             type="number"
                             min="0"
                             step="1"
@@ -33,15 +35,18 @@ export const LicenseCard: React.FC<LicenseCardProps> = ({ state, update, styles 
                         />
                     </div>
 
-                    <label className={styles.checkboxLabel}>
-                        <input
-                            type="checkbox"
-                            checked={state.incluirAbonoLicenca}
-                            onChange={e => update('incluirAbonoLicenca', e.target.checked)}
-                            className={styles.checkbox}
-                        />
-                        <span>Incluir abono na base?</span>
-                    </label>
+                    <Accordion title="Composição da base"
+                        summary={state.incluirAbonoLicenca ? 'Abono incluído' : 'Abono excluído'}>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                checked={state.incluirAbonoLicenca}
+                                onChange={e => update('incluirAbonoLicenca', e.target.checked)}
+                                className={styles.checkbox}
+                            />
+                            <span>Incluir abono na base?</span>
+                        </label>
+                    </Accordion>
                 </div>
             </div>
         </div>

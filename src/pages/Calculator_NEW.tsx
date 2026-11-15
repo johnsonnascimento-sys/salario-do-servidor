@@ -20,6 +20,7 @@ export default function Calculator() {
         loadingConfig,
         configError,
         resultRows,
+        dailiesResultRows,
         donationModalOpen,
         setDonationModalOpen,
     handleDonationComplete,
@@ -102,6 +103,7 @@ export default function Calculator() {
       </div>
 
       <ResultsSummary
+        dailiesResultRows={dailiesResultRows}
         state={state}
         resultRows={resultRows}
       />

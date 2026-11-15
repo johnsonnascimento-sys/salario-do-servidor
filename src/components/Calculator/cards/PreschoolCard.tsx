@@ -9,6 +9,7 @@ interface PreschoolCardProps {
 }
 
 export const PreschoolCard: React.FC<PreschoolCardProps> = ({ state, update, styles }) => {
+    const fieldId = React.useId();
     return (
         <div className={styles.card}>
             <h3 className={styles.sectionTitle}>
@@ -20,31 +21,34 @@ export const PreschoolCard: React.FC<PreschoolCardProps> = ({ state, update, sty
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className={styles.label}>Qtd. Dependentes (Pré-Escolar)</label>
-                            <input
+                            <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Qtd. Dependentes (Pré-Escolar)</label>
+                            <input id={`${fieldId}-field-1`}
                                 type="number"
+                                min="0"
                                 className={styles.input}
                                 value={state.auxPreEscolarQtd}
-                                onChange={e => update('auxPreEscolarQtd', Number(e.target.value))}
+                                onChange={e => update('auxPreEscolarQtd', Math.max(0, Number(e.target.value) || 0))}
                             />
                         </div>
                         <div>
-                            <label className={styles.label}>Cota-Parte Pré-Escolar</label>
-                            <input
+                            <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Cota-Parte Pré-Escolar</label>
+                            <input id={`${fieldId}-field-2`}
                                 type="number"
+                                min="0"
                                 className={styles.input}
                                 value={state.cotaPreEscolar}
-                                onChange={e => update('cotaPreEscolar', Number(e.target.value))}
+                                onChange={e => update('cotaPreEscolar', Math.max(0, Number(e.target.value) || 0))}
                             />
                         </div>
                     </div>
                     <div>
-                        <label className={styles.label}>Gasto Mensal com Transporte (R$)</label>
-                        <input
+                        <label htmlFor={`${fieldId}-field-3`} className={styles.label}>Gasto Mensal com Transporte (R$)</label>
+                        <input id={`${fieldId}-field-3`}
                             type="number"
+                                min="0"
                             className={styles.input}
                             value={state.auxTransporteGasto}
-                            onChange={e => update('auxTransporteGasto', Number(e.target.value))}
+                            onChange={e => update('auxTransporteGasto', Math.max(0, Number(e.target.value) || 0))}
                         />
                     </div>
                 </div>
