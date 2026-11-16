@@ -29,6 +29,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
 }) => {
     const fieldId = React.useId();
     const [draft, setDraft] = React.useState<CalculatorState | null>(null);
+    const [dismissedWarning, setDismissedWarning] = React.useState<string | null>(null);
     const state = draft ?? savedState;
     const update = (field: keyof CalculatorState, value: any) => {
         if (draft) setDraft(current => current ? { ...current, [field]: value } : current);
@@ -59,6 +60,9 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
         (state.heQtd100 && state.heQtd100 > 0) ||
         (state.overtimeEntries && state.overtimeEntries.some(e => (e.qtd50 > 0 || e.qtd100 > 0)))
     );
+    const warningKey = JSON.stringify([state.heQtd50, state.heQtd100, state.overtimeEntries, state.gaactaRecesso, state.mesRef, state.anoRef]);
+    React.useEffect(() => { setDismissedWarning(null); }, [warningKey, hasOvertime]);
+    const warningDismissed = dismissedWarning === warningKey;
     const temAbonoAtivo = Boolean(state.recebeAbono);
     const valorAbono = temAbonoAtivo
         ? (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0)
@@ -85,35 +89,28 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                 </div>
             )}
 
-            {/* Alerta de Incompatibilidade com Servico Extraordinario */}
-            {hasOvertime && !state.gaactaRecesso && (
-                <div className="p-3 rounded-xl bg-error-50 dark:bg-error-950/30 border border-error-200 dark:border-error-800/60 text-body-xs text-error-800 dark:text-error-300 flex items-start gap-2.5">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-error-600 dark:text-error-400 mt-0.5" />
-                    <div className="space-y-0.5">
-                        <span className="font-bold text-body-xs block text-error-900 dark:text-error-200">
-                            Incompatibilidade Legal com Horas Extras
-                        </span>
-                        <p className="text-body-xs text-error-800 dark:text-error-300">
-                            O art. 6º da Resolução STM nº 397/2026 estabelece que o acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário. Em período concomitante, o servidor deverá <strong>optar</strong> entre a GAACTA e as Horas Extras (salvo se realizado no recesso judiciário).
-                        </p>
-                    </div>
+            {hasOvertime && (
+                <div className="space-y-3">
+                    {!state.gaactaRecesso && (warningDismissed ? (
+                        <button type="button" onClick={() => setDismissedWarning(null)} className="text-body-xs font-semibold text-error-700 underline dark:text-error-300">
+                            Incompatibilidade com horas extras — ver alerta
+                        </button>
+                    ) : (
+                        <div role="alert" className="p-3 rounded-xl bg-error-50 dark:bg-error-950/30 border border-error-200 dark:border-error-800/60 text-body-xs text-error-800 dark:text-error-300 flex items-start gap-2.5">
+                            <AlertTriangle className="w-4 h-4 shrink-0 text-error-600 dark:text-error-400 mt-0.5" />
+                            <div className="flex-1 space-y-0.5">
+                                <span className="font-bold text-body-xs block text-error-900 dark:text-error-200">Incompatibilidade Legal com Horas Extras</span>
+                                <p>O art. 6º da Resolução STM nº 397/2026 estabelece que o acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário. Em período concomitante, o servidor deverá <strong>optar</strong> entre a GAACTA e as Horas Extras (salvo se realizado no recesso judiciário).</p>
+                            </div>
+                            <button type="button" onClick={() => setDismissedWarning(warningKey)} className="shrink-0 underline font-semibold" aria-label="Fechar alerta de incompatibilidade">Fechar</button>
+                        </div>
+                    ))}
+                    <label className={styles.checkboxLabel}>
+                        <input type="checkbox" className={styles.checkbox} checked={Boolean(state.gaactaRecesso)} onChange={e => update('gaactaRecesso', e.target.checked)} />
+                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Período de recesso judiciário (permite acúmulo excepcional com horas extras — art. 6º)</span>
+                    </label>
                 </div>
             )}
-
-            {/* Checkbox de Recesso Judiciário */}
-            <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-700">
-                <label className={styles.checkboxLabel}>
-                    <input
-                        type="checkbox"
-                        className={styles.checkbox}
-                        checked={Boolean(state.gaactaRecesso)}
-                        onChange={e => update('gaactaRecesso', e.target.checked)}
-                    />
-                    <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
-                        Período de recesso judiciário (permite acúmulo excepcional com horas extras — art. 6º)
-                    </span>
-                </label>
-            </div>
 
             {/* Seleção de Itens da Remuneração */}
             {!gaactaRule && (
