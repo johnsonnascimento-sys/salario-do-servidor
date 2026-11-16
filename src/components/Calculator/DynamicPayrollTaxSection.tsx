@@ -55,10 +55,9 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     const activeOptions = Number(Boolean(state.pssSobreFC)) + (participates && showFunprespSection ?
         optionalItems.filter(([rule, field]) => config?.incidenceRules?.[rule] && state[field]).length +
         Number(state.funprespFacul > 0) + Number((state.funprespFaculValor ?? 0) > 0) : 0);
-    return <div className={styles.innerBox}>
-        <h4 className={styles.innerBoxTitle}>Previdência e dependentes</h4>
+    return <div className="space-y-4">
         <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">IR é o Imposto de Renda. PSS é a contribuição previdenciária do servidor. Valores de exercícios anteriores (EA) são tratados nos respectivos lançamentos e competências.</p>
-        <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+        <section className={styles.card}>
             <h5 className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe o enquadramento da sua contribuição ao RPPS.</p>
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
@@ -72,7 +71,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 <span>{label} — inclusão salva</span>
             </label>)}
         </fieldset>}
-        {showFunprespSection && config && <fieldset id="funpresp-settings" tabIndex={-1} className="mt-4 space-y-3 scroll-mt-24 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4">
+        {showFunprespSection && config && <fieldset id="funpresp-settings" tabIndex={-1} className={`${styles.card} space-y-3 scroll-mt-24`}>
             <legend className={styles.innerBoxTitle}>Funpresp-Jud</legend>
             <p className={PENSION_HELP_CLASS}>Use os dados da sua adesão ao plano. A participação na Funpresp é uma escolha separada do regime previdenciário acima.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -117,7 +116,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <details className="mt-2"><summary className="cursor-pointer underline">Informações para suporte</summary><p className="mt-2 break-words">{linkedError}</p></details>
                 </div> : <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedFeedback?.message || linkedError || funprespValidationError}</p>)}
         </fieldset>}
-        <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+        <section className={styles.card}>
             <h5 className="mb-1 text-h5 font-semibold">Dependentes para IR</h5>
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe a quantidade de dependentes considerados no imposto de renda.</p>
             <div className="max-w-xs">

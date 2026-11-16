@@ -256,10 +256,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     return (
         <>
-            <section id="remuneracao" tabIndex={-1} className={`${styles.card} scroll-mt-24`} hidden={step > 1}>
-                <h2 className={styles.sectionTitle}>
+            <section id="remuneracao" tabIndex={-1} className={`${step === 0 ? styles.card : ""} scroll-mt-24`} hidden={step > 1}>
+                <h2 className={styles.sectionTitle} hidden={step !== 0}>
                     <Settings className="w-4 h-4" />
-                    {step === 0 ? 'Dados principais e qualificação' : 'Previdência e dependentes'}
+                    Dados principais e qualificação
                 </h2>
 
                 <div hidden={step !== 0} className="space-y-5">
