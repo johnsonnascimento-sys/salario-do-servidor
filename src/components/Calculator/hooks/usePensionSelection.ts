@@ -3,6 +3,7 @@ import type { IAgencyCalculationParams } from '../../../services/agency/engine/t
 import type { PensionParticipation } from '../../../types/pension';
 import { buildPensionContext, type PensionContext } from '../../../services/agency/engine/modules/pensionContext';
 import { selectPensionRegime } from '../PensionRegimeSelect';
+import { buildRateOptions } from '../dynamicPayrollForm.helpers';
 
 export type PensionSelectionPatch = Partial<Pick<IAgencyCalculationParams,
     'regimePrev' | 'funprespParticipacao' | 'funprespAliq' | 'funprespBaseIntegral' | 'funprespVinculadaInicio'>>;
@@ -32,8 +33,23 @@ export const usePensionSelection = ({ params, context, onApply, tipo = 'mensal',
         },
         handleParticipationChange: (value: PensionParticipation) => {
             if (!context || !context.allowed.includes(value)) return;
-            // Required linked fields and rate are edited inline and validated by the engine.
-            onApply({ funprespParticipacao: value });
+            const patch: PensionSelectionPatch = { funprespParticipacao: value };
+            if (value !== 'nao' && value !== params.funprespParticipacao) {
+                const config = params.agencyConfig?.previdenciaComplementar;
+                const rule = value === 'patrocinado' ? config?.sponsoredRate : config?.linkedRate;
+                const options = rule ? buildRateOptions(rule.min, rule.max, rule.step) : [];
+                const permitted = (rate: number | undefined) => Boolean(rule && Number.isFinite(rate) &&
+                    rate! >= rule.min && rate! <= rule.max && Number.isFinite(rule.step) && rule.step > 0 &&
+                    Math.abs((rate! - rule.min) / rule.step - Math.round((rate! - rule.min) / rule.step)) <= 1e-6 &&
+                    options.some(option => Math.abs(option - rate!) < 1e-9));
+                if (!permitted(params.funprespAliq)) {
+                    const suggested = value === 'patrocinado' ? config?.sponsoredRate.defaultRpc : rule?.min;
+                    if (permitted(suggested)) patch.funprespAliq = suggested;
+                }
+            }
+            // Apply the configured rate with the explicit choice, before recalculating.
+            // Loading saved simulations never replaces their chosen rate.
+            onApply(patch);
         },
     };
 };

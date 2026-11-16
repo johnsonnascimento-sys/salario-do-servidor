@@ -80,10 +80,11 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     disabled={!pensionContext}
                     allowed={pensionContext?.allowed ?? []} unavailableReasons={pensionContext?.unavailableReasons} />
                 {participates && <label className={styles.label}>Alíquota {state.funprespParticipacao === 'vinculado' ? 'vinculada' : 'normal patrocinada'}
-                    <select id={`${fieldId}-funprespAliq`} className={styles.input} value={state.funprespAliq} onChange={e => update('funprespAliq', Number(e.target.value))}>
+                    <select id={`${fieldId}-funprespAliq`} aria-invalid={!funprespNormalOptions.includes(state.funprespAliq)} aria-describedby={!funprespNormalOptions.includes(state.funprespAliq) ? `${fieldId}-rate-help` : undefined} className={styles.input} value={state.funprespAliq} onChange={e => update('funprespAliq', Number(e.target.value))}>
                         {!funprespNormalOptions.includes(state.funprespAliq) && <option value={state.funprespAliq}>Selecione a alíquota</option>}
                         {funprespNormalOptions.map(rate => <option key={rate} value={rate}>{toPercentLabel(rate)}</option>)}
                     </select>
+                    {!funprespNormalOptions.includes(state.funprespAliq) && <span id={`${fieldId}-rate-help`} className="block mt-1 text-body-xs text-error-600 dark:text-error-400">Selecione o percentual da sua adesão entre as alíquotas permitidas.</span>}
                 </label>}
                 {state.funprespParticipacao === 'vinculado' && <label className={styles.label}>Base de contribuição escolhida no plano (R$)
                     <input id={`${fieldId}-funprespBaseIntegral`} type="number" className={styles.input} min={0} step="0.01" aria-describedby="funpresp-urp-reference" aria-invalid={Boolean(linkedError && !linkedFeedback?.configuration)} value={state.funprespBaseIntegral ?? ''} onChange={e => update('funprespBaseIntegral', toPositiveNumber(e.target.value))} />

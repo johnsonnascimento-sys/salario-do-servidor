@@ -1,3 +1,8 @@
+## Correção da alíquota na seleção da Funpresp — 16/11/2026
+
+- A troca explícita de modalidade aplica participação e alíquota em um único patch, usando o padrão válido da configuração mensal ou histórica quando a taxa anterior é incompatível.
+- Alíquotas válidas e snapshots carregados são preservados; configurações inválidas continuam bloqueadas pelo motor. Mensagens orientam a revisão do percentual no card Funpresp-Jud.
+
 ## Conferência visual e adaptação da tipografia — 15/11/2026
 
 - Calculadora completa conferida com configuração real, catálogo inteiro, descrições longas, painéis expandidos, cinco larguras e temas claro/escuro; zoom real de 200% verificado.

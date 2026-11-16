@@ -51,7 +51,7 @@ test('vinculada permitida pode ser selecionada antes de preencher os dados no fo
     const Probe = () => { selection = usePensionSelection({ params, context, onApply: p => patches.push(p) }); return null; };
     const hook = create(React.createElement(Probe));
     act(() => selection.handleParticipationChange('vinculado'));
-    assert.deepEqual(patches, [{ funprespParticipacao: 'vinculado' }]);
+    assert.deepEqual(patches, [{ funprespParticipacao: 'vinculado', funprespAliq: .05 }]);
     assert.equal(hook.root.findAllByType('dialog').length, 0);
     hook.unmount();
 });
@@ -182,4 +182,26 @@ test('enquadramentos legados e modalidades válidas não sofrem correção no ca
         assert.deepEqual(patches, []);
         tree.unmount();
     }
+});
+
+for (const scenario of [
+    { name: 'inicializa zero com padrão patrocinado', initial: 0, expected: .03 },
+    { name: 'preserva alíquota válida escolhida', initial: .04, expected: undefined },
+    { name: 'substitui taxa incompatível da modalidade anterior', initial: .06, expected: .03 },
+    { name: 'mantém bloqueio se padrão configurado é inválido', initial: 0, expected: undefined, invalid: true },
+]) test(`seleção explícita: ${scenario.name}`, () => {
+    const params = paramsFor(state({ funprespParticipacao: 'nao', funprespAliq: scenario.initial }));
+    if (scenario.invalid) params.agencyConfig = { ...params.agencyConfig!, previdenciaComplementar: {
+        ...config.previdenciaComplementar!, sponsoredRate: { ...config.previdenciaComplementar!.sponsoredRate, defaultRpc: .09 }
+    } };
+    const patches: any[] = [];
+    let selection!: ReturnType<typeof usePensionSelection>;
+    const Probe = () => { selection = usePensionSelection({ params, context: buildPensionContext(params, 9000), onApply: p => patches.push(p) }); return null; };
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(React.createElement(Probe)); });
+    assert.deepEqual(patches, [], 'montagem não modifica dados salvos');
+    act(() => selection.handleParticipationChange('patrocinado'));
+    assert.deepEqual(patches, [{ funprespParticipacao: 'patrocinado', ...(scenario.expected === undefined ? {} : { funprespAliq: scenario.expected }) }]);
+    assert.equal(params.funprespAliq, scenario.initial);
+    tree.unmount();
 });

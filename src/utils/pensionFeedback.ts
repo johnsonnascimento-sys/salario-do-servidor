@@ -2,6 +2,10 @@
 export const getPensionErrorFeedback = (error?: string | null): { title: string; message: string; configuration: boolean } | null => {
     if (!error) return null;
     const detail = error.replace(/^Participação vinculada pendente:\s*/i, '').replace(/^Previdência:\s*/i, '');
+    if (/^alíquota normal fora (dos limites|da grade) configurad/i.test(detail)) return {
+        title: 'Confira a alíquota da Funpresp', configuration: false,
+        message: 'Na etapa Previdência, selecione uma alíquota permitida no card Funpresp-Jud para a sua modalidade de participação. Confira o percentual no cadastro do plano. Seus dados foram mantidos.',
+    };
     const missing = detail.match(/^modalidade vinculada exige URP e fonte oficial da competência (\d{4})-(\d{2})/i);
     if (missing) {
         const month = Number(missing[2]);
