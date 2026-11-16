@@ -10,7 +10,6 @@ import { ChevronDown } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import { PensionParticipation } from '../../types/pension';
 import { toDecimalRateFromPercentInput, toPercentLabel, toPositiveNumber } from './dynamicPayrollForm.helpers';
-import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { getPensionErrorFeedback } from '../../utils/pensionFeedback';
@@ -66,6 +65,11 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         ? groupPayslipRowsForDisplay(resultRows, state).filter(row => row.type === 'D' && row.label.startsWith('IMPOSTO DE RENDA'))
         : [];
     const irDiscountTotal = irDiscountRows.reduce((total, row) => total + row.value, 0);
+    const pensionDiscountRows = calculationReady
+        ? groupPayslipRowsForDisplay(resultRows, state).filter(row => row.type === 'D' &&
+            (row.label.startsWith('CONTRIBUIÇÃO RPPS') || row.label.startsWith('FUNPRESP-JUD')))
+        : [];
+    const pensionDiscountTotal = pensionDiscountRows.reduce((total, row) => total + row.value, 0);
     return <div className="space-y-4">
         <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">{activeSection === 'pension'
             ? 'Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.'
@@ -205,9 +209,17 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 {calculationReady ? <>
                     <dl className="space-y-1.5 border-t border-neutral-200 pt-2 dark:border-neutral-700">
                         {state.pensionMemory?.mensal && <div className="flex flex-wrap justify-between gap-2"><dt>Base de contribuição RPPS mensal</dt><dd className="font-mono font-semibold">{formatCurrency(state.pensionMemory.mensal.baseRpps)}</dd></div>}
-                        <div className="flex flex-wrap justify-between gap-2"><dt>Contribuição RPPS (PSS) mensal</dt><dd className="font-mono font-semibold text-error-600 dark:text-error-400">{formatCurrency(state.pssMensal)}</dd></div>
                     </dl>
-                    {showFunprespSection && participates && state.pensionMemory && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="monthly" embedded />}
+                    {pensionDiscountRows.length > 0 ? <div className="space-y-2 border-t border-neutral-200 pt-2 dark:border-neutral-700">
+                        {pensionDiscountRows.map(row => <div key={row.label} className="space-y-1">
+                            <div className="flex flex-wrap justify-between gap-2"><dt>{row.label}</dt><dd className="font-mono font-semibold text-error-600 dark:text-error-400">{formatCurrency(row.value)}</dd></div>
+                            {row.details?.map((detail, index) => <div key={`${row.label}-${detail.label}-${index}`} className="flex flex-wrap justify-between gap-2 pl-3 text-neutral-600 dark:text-neutral-300">
+                                <dt>{detail.label}</dt><dd className="font-mono">{formatCurrency(detail.value)}</dd>
+                            </div>)}
+                        </div>)}
+                        <div className="flex flex-wrap justify-between gap-2 border-t border-neutral-200 pt-2 font-semibold dark:border-neutral-700"><dt>Total de descontos previdenciários</dt><dd className="font-mono text-error-600 dark:text-error-400">{formatCurrency(pensionDiscountTotal)}</dd></div>
+                    </div> : <p className="border-t border-neutral-200 pt-2 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">Não há descontos previdenciários nesta simulação.</p>}
+                    <p className="text-neutral-600 dark:text-neutral-300">Os valores e detalhamentos seguem as mesmas rubricas previdenciárias do detalhamento final do holerite, incluindo PSS e Funpresp quando aplicáveis.</p>
                 </> : <p role="status" className="pt-2 text-neutral-600 dark:text-neutral-300">{calculationError ? 'Resolva as pendências da simulação para consultar os valores deste resumo.' : 'Aguardando o cálculo atual para exibir a contribuição.'}</p>}
             </div>
         </details>
