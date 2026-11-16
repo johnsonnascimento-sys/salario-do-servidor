@@ -112,8 +112,8 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                         { value: 'gas', label: 'GAS — Atividade de segurança' }
                     ].map(option => {
                         const selected = option.value === '0' ? !isGratAtiva : state.gratEspecificaTipo === option.value;
-                        return <label key={option.value} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-body font-medium ${selected ? 'border-primary bg-primary-50 text-primary-800 dark:bg-primary-900/30 dark:text-primary-100' : 'border-neutral-200 text-neutral-700 dark:border-neutral-700 dark:text-neutral-200'}`}>
-                            <input type="radio" name={`${fieldId}-gratificacao`} value={option.value} checked={selected} className="accent-primary"
+                        return <label key={option.value} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-body font-medium ${selected ? 'border-secondary-500 bg-secondary-50 text-secondary-900 dark:border-secondary-400 dark:bg-secondary-950/30 dark:text-secondary-100' : 'border-neutral-200 text-neutral-700 dark:border-neutral-700 dark:text-neutral-200'}`}>
+                            <input type="radio" name={`${fieldId}-gratificacao`} value={option.value} checked={selected} className="accent-secondary"
                                 onChange={e => {
                                     const patch = getGratificationSelectionPatch(e.target.value, courtConfig);
                                     Object.entries(patch).forEach(([field, value]) => update(field as keyof CalculatorState, value));
@@ -145,7 +145,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
             {/* Composição da Base da Remuneração (similar ao 13º e GAACTA) */}
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
                 <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
-                    Composição da base de cálculo <span className="ml-2 text-primary">Personalizar</span>
+                    Composição da base de cálculo <span className="ml-2 text-neutral-500 dark:text-neutral-400">Personalizar</span>
                 </summary>
                 <div className="mt-3 space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -357,10 +357,10 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
             </details>
 
             <details className="text-body text-neutral-600 dark:text-neutral-300">
-                <summary className="min-h-11 cursor-pointer py-2 font-semibold text-primary underline">Entenda a GAE e a GAS</summary>
+                <summary className="min-h-11 cursor-pointer py-2 font-semibold text-neutral-700 dark:text-neutral-200">Entenda a GAE e a GAS</summary>
                 <div className="space-y-3 pb-2 text-body-xs">
                     <p>A Gratificação de Atividade Externa (GAE) e a Gratificação de Atividade de Segurança (GAS) correspondem a 35% do vencimento básico do servidor (arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006). Por padrão legal, apenas o vencimento básico permanece selecionado.</p>
-                    <p>A GAE integra a remuneração do cargo e compõe a base do PSS. A GAS depende do exercício da atividade de segurança e fica fora dessa base por padrão, ressalvados a opção de inclusão e o enquadramento previdenciário aplicável. Fontes: <a className="text-primary underline" href="https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?dt_publicacao=24%2F09%2F2020&num_registro=201903436453" target="_blank" rel="noopener noreferrer">STJ, AgInt no REsp 1.849.491/SP</a> e <a className="text-primary underline" href="https://www.cjf.jus.br/cjf/noticias/2020/11-novembro/gratificacao-de-atividade-de-seguranca-nao-incorpora-aos-proventos-de-aposentadoria-do-servidor-publico" target="_blank" rel="noopener noreferrer">TNU, Tema 257</a>.</p>
+                    <p>A GAE integra a remuneração do cargo e compõe a base do PSS. A GAS depende do exercício da atividade de segurança e fica fora dessa base por padrão, ressalvados a opção de inclusão e o enquadramento previdenciário aplicável. Fontes: <a className="text-secondary-700 underline dark:text-secondary-300" href="https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?dt_publicacao=24%2F09%2F2020&num_registro=201903436453" target="_blank" rel="noopener noreferrer">STJ, AgInt no REsp 1.849.491/SP</a> e <a className="text-secondary-700 underline dark:text-secondary-300" href="https://www.cjf.jus.br/cjf/noticias/2020/11-novembro/gratificacao-de-atividade-de-seguranca-nao-incorpora-aos-proventos-de-aposentadoria-do-servidor-publico" target="_blank" rel="noopener noreferrer">TNU, Tema 257</a>.</p>
                 </div>
             </details>
 
