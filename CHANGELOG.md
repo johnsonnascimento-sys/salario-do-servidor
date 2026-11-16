@@ -1,3 +1,7 @@
+## Composição do ATS nas horas extras — 16/11/2026
+
+- Removido o campo legado de ATS da composição de horas extras; o ATS lançado como crédito dinâmico permanece disponível para seleção por instância. Seleções antigas do campo legado não entram diretamente na base de HE.
+
 ## Versionamento da revisão do cronograma PJU — 16/11/2026
 
 - Versionada como preparada, sem execução no banco nesta tarefa, a migration `20261029_review_pju_adjustment_status.sql`, com status explícitos das parcelas do cronograma e referências da revisão de 29/10/2026.

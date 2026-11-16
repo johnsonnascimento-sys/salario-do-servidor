@@ -103,7 +103,6 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             item('aqTitulo', 'AQ Títulos', aqTituloVal),
             item('aqTreino', 'AQ Treinamento', aqTreinoVal),
             item('grat', 'GAE / GAS', gratVal),
-            item('ats', 'ATS', params.ats || 0),
             item('abono', 'Abono de Permanência', abonoMensal),
             item('gaacta', 'GAACTA', gaacta.valor, false),
             ...(params.rubricasExtras || []).filter(r => r.tipo === 'C').map((r, index) =>

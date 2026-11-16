@@ -180,6 +180,16 @@ test('HE: composição por card, créditos por ID, abono e GAACTA sem resultado 
         overtimeEntries: [{ ...params.overtimeEntries[0], composicaoBase: { ...off, vpniLei: true, vpniDecisao: true, 'rubrica:credito': true } }] });
     assert.equal(legacyVpni.heTotal, 75, 'VPNI entra pelo crédito dinâmico sem somar os campos legados');
     assert.equal(legacyVpni.entries[0].composicaoBase?.some(part => ['vpniLei', 'vpniDecisao'].includes(part.key)), false);
+    const dynamicAts = await calculateOvertime({ ...params, ats: 9999, recebeAbono: false,
+        rubricasExtras: [{ id: 'ats-dinamico', tipo: 'C', descricao: 'ATS', valor: 500 }],
+        overtimeEntries: [{ ...params.overtimeEntries[0], composicaoBase: { ...off, ats: true, 'rubrica:ats-dinamico': true } }] });
+    assert.equal(dynamicAts.heTotal, 37.5, 'HE usa somente o ATS dinâmico selecionado');
+    assert.equal(dynamicAts.entries[0].composicaoBase?.some(part => part.key === 'ats'), false);
+    assert.equal(dynamicAts.entries[0].composicaoBase?.find(part => part.key === 'rubrica:ats-dinamico')?.valor, 500);
+    const unselectedAts = await calculateOvertime({ ...params, ats: 9999, recebeAbono: false,
+        rubricasExtras: [{ id: 'ats-dinamico', tipo: 'C', descricao: 'ATS', valor: 500 }],
+        overtimeEntries: [{ ...params.overtimeEntries[0], composicaoBase: { ...off, ats: true } }] });
+    assert.equal(unselectedAts.heTotal, 0, 'ATS dinâmico não entra sem seleção, mesmo com seleção legada');
     params.gaactaManualBase = false;
     params.gaactaIncideAbono = true;
     params.rubricasExtras[0].incidePSS = true;
