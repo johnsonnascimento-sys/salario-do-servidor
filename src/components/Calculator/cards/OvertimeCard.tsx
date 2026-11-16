@@ -276,11 +276,11 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             </div>
                         </div>
                     ) : (
-                        <div className="mt-4 border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden">
+                        <div className="mt-4">
                             <p className="p-3 text-body-xs text-neutral-500 dark:text-neutral-400">
                                 Apenas funções que geram diferença de substituição estão habilitadas. Funções menores ou iguais não geram valor neste modo. Para calcular horas extras pela sua função atual, desmarque a opção de substituição.
                             </p>
-                            <div className="p-3 border-t border-neutral-200 dark:border-neutral-700 space-y-2">
+                            <div className="py-3 border-y border-neutral-200 dark:border-neutral-700 space-y-2">
                                 <label htmlFor={`${fieldId}-function-select`} className={styles.label}>Selecione a função substituída</label>
                                 <div className="flex flex-col sm:flex-row gap-2">
                                     <select id={`${fieldId}-function-select`} ref={functionSelectRef}

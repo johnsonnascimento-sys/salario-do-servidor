@@ -59,8 +59,8 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
 
     return (
         <div className="space-y-4">
-            <div className="border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden">
-                <div className="p-3 space-y-2">
+            <div>
+                <div className="py-3 space-y-2 border-y border-neutral-200 dark:border-neutral-700">
                     <label htmlFor={`${fieldId}-function-select`} className={styles.label}>Selecione a função substituída</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <select id={`${fieldId}-function-select`} ref={selectRef} className={`${styles.input} min-w-0 flex-1`}
@@ -93,7 +93,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                         const inCatalog = functionKeys.includes(key);
                         const eligible = eligibleFunctionKeys.includes(key);
                         const detail = functionDetails.find(item => item.funcao === key);
-                        return <div key={key} className="border-t border-neutral-200 dark:border-neutral-700 p-3 space-y-3">
+                        return <div key={key} className="border-b border-neutral-200 dark:border-neutral-700 py-3 space-y-3">
                             <div className="flex items-center justify-between gap-2">
                                 <div className="min-w-0 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 break-words">
                                     {key.toUpperCase()}
