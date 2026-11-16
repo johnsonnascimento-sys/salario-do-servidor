@@ -151,7 +151,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     return (
         <div className="space-y-4">
             {/* Bloco Central de Controle de Lançamentos Avulsos */}
-            <div className={styles.card}>
+            {(mode !== 'C' || filteredRubricas.length > 0) && <div className={styles.card}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <h3 className={`${styles.sectionTitle} mb-1 flex items-center gap-2`}>
@@ -202,7 +202,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </p>
                     </div>
                 )}
-            </div>
+            </div>}
 
             {/* Listagem de Cards de Rubricas Individuais */}
             {filteredRubricas.map((rubrica, index) => {
