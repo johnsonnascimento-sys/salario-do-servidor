@@ -241,7 +241,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                     {/* Alíquota / Porcentagem e Atalhos Rápidos */}
                     <div className="p-3 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/20 space-y-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <label className="text-body-xs font-bold text-primary-900 dark:text-primary-200">
+                            <label className="text-body-xs font-bold text-secondary-900 dark:text-secondary-200">
                                 Percentual da Pensão Alimentícia (%)
                             </label>
                             <div className="flex items-center gap-1 flex-wrap">
@@ -750,7 +750,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                 /* Modo Valor Fixo (R$) */
                 <div className="space-y-3 p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/20">
                     <div>
-                        <label className="text-body-xs font-bold text-primary-900 dark:text-primary-200 block mb-1">
+                        <label className="text-body-xs font-bold text-secondary-900 dark:text-secondary-200 block mb-1">
                             Valor Fixo Mensal da Pensão Alimentícia (R$)
                         </label>
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mb-2">

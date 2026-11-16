@@ -749,7 +749,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state, update, styles,
                                             <label className="flex items-start gap-2 cursor-pointer text-caption text-neutral-700 dark:text-neutral-300 pt-1">
                                                 <input
                                                     type="checkbox"
-                                                    className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600 text-primary-600 focus:ring-primary-500 dark:bg-neutral-800"
+                                                    className="mt-0.5 rounded border-neutral-300 dark:border-neutral-600 text-secondary-600 focus:ring-secondary-500 dark:bg-neutral-800"
                                                     checked={Boolean(state.diariasAcompanhamentoIntegral)}
                                                     onChange={e => update('diariasAcompanhamentoIntegral', e.target.checked)}
                                                 />

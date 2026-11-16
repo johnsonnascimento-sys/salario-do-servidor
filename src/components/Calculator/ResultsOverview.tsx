@@ -22,16 +22,16 @@ export const ResultsOverview: React.FC<ResultsOverviewProps> = ({
 
     return (
         <section aria-labelledby="resultado-estimado-title" aria-busy={!calculationReady}
-            className="rounded-2xl border border-primary-800 bg-primary-900 p-5 text-white shadow-sm sm:p-6">
+            className="rounded-2xl border border-secondary-800 bg-secondary-900 p-5 text-white shadow-sm sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
-                    <Calculator className="mt-1 h-8 w-8 shrink-0 text-primary-200" aria-hidden="true" />
+                    <Calculator className="mt-1 h-8 w-8 shrink-0 text-secondary-200" aria-hidden="true" />
                     <div className="min-w-0">
                         <h2 id="resultado-estimado-title" className="text-body-lg font-semibold">Resultado estimado</h2>
                         <p className="mt-1 text-h2 font-bold tabular-nums break-words sm:text-h1" role="status">
                             {calculationReady ? formatCurrency(summary.payrollNet) : resultMessage}
                         </p>
-                        <p className="mt-1 text-body text-primary-100">Líquido do holerite · {state.mesRef}/{state.anoRef}</p>
+                        <p className="mt-1 text-body text-secondary-100">Líquido do holerite · {state.mesRef}/{state.anoRef}</p>
                     </div>
                 </div>
                 {calculationReady && <>
@@ -45,7 +45,7 @@ export const ResultsOverview: React.FC<ResultsOverviewProps> = ({
                             <dd className="font-semibold tabular-nums">{formatCurrency(summary.payrollDebits)}</dd>
                         </div>
                     </dl>
-                    <a href={detailHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-primary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+                    <a href={detailHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-secondary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
                         Ver detalhamento <ArrowDown size={18} aria-hidden="true" />
                     </a>
                 </>}

@@ -48,14 +48,14 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
     };
     const items = (compact: boolean) => sections.map(({ label, Icon }, index) => (
         <button key={label} type="button" onClick={() => { setMobileOpen(false); onChange(index); }} aria-current={step === index ? 'step' : undefined} aria-label={compact ? label : undefined} title={compact ? label : undefined}
-            className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${step === index ? 'bg-primary-800 text-white' : 'text-neutral-700 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700'}`}>
+            className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 ${step === index ? 'bg-secondary-800 text-white' : 'text-neutral-700 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700'}`}>
             <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />{!compact && <span>{label}</span>}
         </button>
     ));
     return <nav aria-label="Etapas da simulação" className={`min-w-0 lg:shrink-0 ${collapsed ? 'lg:w-16' : 'lg:w-56'}`}>
         <div className="lg:hidden">
             <p className="mb-3 text-body-sm font-semibold text-neutral-600 dark:text-neutral-300">Etapa {step + 1} de {sections.length}: {sections[step].label}</p>
-            <button ref={triggerRef} type="button" aria-expanded={mobileOpen} aria-controls="calculator-mobile-navigation" onClick={() => setMobileOpen(true)} style={{ bottom: 'calc(var(--calculator-bar-height, 100px) + 1rem)' }} className="fixed right-4 z-40 flex min-h-11 items-center gap-2 rounded-2xl bg-primary-800 px-4 py-3 font-bold text-white shadow-xl hover:bg-primary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-700">
+            <button ref={triggerRef} type="button" aria-expanded={mobileOpen} aria-controls="calculator-mobile-navigation" onClick={() => setMobileOpen(true)} style={{ bottom: 'calc(var(--calculator-bar-height, 100px) + 1rem)' }} className="fixed right-4 z-40 flex min-h-11 items-center gap-2 rounded-2xl bg-secondary-800 px-4 py-3 font-bold text-white shadow-xl hover:bg-secondary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary-700">
                 <List className="h-5 w-5" aria-hidden="true" /> Etapas
             </button>
             {mobileOpen && <div className="fixed inset-0 z-[60] flex items-end bg-neutral-950/60" onClick={event => { if (event.target === event.currentTarget) closeMobile(); }}>

@@ -312,11 +312,11 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
     return (
         <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm space-y-5">
-            <div className="absolute top-0 right-0 w-28 h-28 bg-primary-500/5 dark:bg-primary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-28 h-28 bg-secondary-500/5 dark:bg-secondary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
 
             <div className="flex items-center justify-between gap-4 flex-wrap relative z-10 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
                 <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    <Calendar className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
                     <h3 className="text-h4 font-bold text-neutral-800 dark:text-neutral-100">
                         Mês e ano da folha
                     </h3>
@@ -360,7 +360,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
                 <div className="flex flex-col justify-center rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-700/60 p-3.5">
                     <div className="flex items-start gap-2">
-                        <Info className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
+                        <Info className="w-4 h-4 text-secondary-500 shrink-0 mt-0.5" />
                         <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 Enquadramento Normativo:

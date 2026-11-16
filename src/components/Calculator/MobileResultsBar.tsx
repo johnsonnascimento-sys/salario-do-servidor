@@ -36,7 +36,7 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
                     </div>
                     <button type="button" onClick={() => setIsAccordionOpen(previous => !previous)}
                         aria-expanded={isAccordionOpen} aria-controls={panelId}
-                        className="flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-3 py-2 text-body font-semibold text-primary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                        className="flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-3 py-2 text-body font-semibold text-secondary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                         Exportar {isAccordionOpen ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
                     </button>
                 </div>

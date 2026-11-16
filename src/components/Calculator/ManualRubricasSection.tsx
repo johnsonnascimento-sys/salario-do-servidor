@@ -399,7 +399,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 aria-expanded={Boolean(isExpanded)}
                                 aria-controls={`manual-advanced-${rubrica.id}`}
                                 onClick={() => toggleEaCard(rubrica.id, Boolean(isExpanded))}
-                                className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
+                                className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700"
                             >
                                 <SlidersHorizontal className="w-3.5 h-3.5" />
                                 <span className="text-left">

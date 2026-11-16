@@ -170,7 +170,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     )}
 
                     <details className="group" open={selectedOption === 'custom' || undefined}>
-                        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
+                        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                             <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
                             <span>Opções avançadas de jornada</span>
                             <span className="font-normal text-neutral-500 dark:text-neutral-400">Divisor aplicado: {currentDivisor}</span>
@@ -393,7 +393,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
             </div>
 
             <details className="group pt-1" open={entry.isEA || entry.excluirIR || undefined}>
-                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors rounded min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
+                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors rounded min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                     <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     <span>Opções Tributárias Avançadas e Exercícios Anteriores (EA)</span>
                     <span className="text-body font-normal">
@@ -450,7 +450,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
             </details>
 
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
-                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
+                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                     Composição da base de cálculo da hora extra — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </summary>
                 <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">

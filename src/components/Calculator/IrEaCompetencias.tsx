@@ -68,9 +68,9 @@ export const IrEaCompetencias: React.FC<Props> = ({
                 details.open = true;
             }
             window.requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-            target.classList.add('ring-2', 'ring-primary-500', 'transition-all', 'duration-500');
+            target.classList.add('ring-2', 'ring-secondary-500', 'transition-all', 'duration-500');
             setTimeout(() => {
-                target.classList.remove('ring-2', 'ring-primary-500');
+                target.classList.remove('ring-2', 'ring-secondary-500');
             }, 2000);
         }
     };
@@ -133,10 +133,10 @@ export const IrEaCompetencias: React.FC<Props> = ({
                 Informe em qual(is) mês(es) de anos anteriores o serviço foi prestado para usufruir da tabela especial de RRA.
             </p>
 
-            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-primary-50/70 dark:bg-primary-950/30 border border-primary-200/80 dark:border-primary-800/50 text-body-xs text-primary-950 dark:text-primary-200">
-                <Info className="w-4 h-4 shrink-0 mt-0.5 text-primary-600 dark:text-primary-400" />
+            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-secondary-50/70 dark:bg-secondary-950/30 border border-secondary-200/80 dark:border-secondary-800/50 text-body-xs text-secondary-950 dark:text-secondary-200">
+                <Info className="w-4 h-4 shrink-0 mt-0.5 text-secondary-600 dark:text-secondary-400" />
                 <div className="space-y-2 leading-relaxed">
-                    <p className="font-semibold text-primary-900 dark:text-primary-100">
+                    <p className="font-semibold text-secondary-900 dark:text-secondary-100">
                         Por que informar os meses trabalhados? (RRA — Lei nº 7.713/88)
                     </p>
                     <p className="text-neutral-700 dark:text-neutral-300">
@@ -159,7 +159,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                     <p className="text-neutral-700 dark:text-neutral-300">
                         Essa regra se aplica aos pagamentos que se enquadram como RRA, em geral referentes a anos anteriores ao recebimento. O imposto final também depende das deduções e das demais regras aplicáveis ao caso.
                     </p>
-                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400 pt-1 border-t border-primary-200/40 dark:border-primary-800/30">
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400 pt-1 border-t border-secondary-200/40 dark:border-secondary-800/30">
                         {tipo === 'horas_extras' && (
                             <>💡 <em>Você pode adicionar vários meses neste card ou criar um card separado para cada mês (o que também permite controlar o teto mensal de horas).</em></>
                         )}
@@ -243,7 +243,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                 <button
                     type="button"
                     onClick={scrollToIrEa}
-                    className="inline-flex items-center gap-1 text-body-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer"
+                    className="inline-flex items-center gap-1 text-body-xs font-semibold text-secondary-600 dark:text-secondary-400 hover:underline cursor-pointer"
                 >
                     <span>Ver Memória do IR-EA</span>
                     <ArrowDown className="w-3.5 h-3.5" />

@@ -89,13 +89,13 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const focusCard = (id: string) => {
         const element = document.getElementById(id);
         if (!element) return;
-        highlightedElement.current?.classList.remove('ring-2', 'ring-primary-600', 'ring-offset-2');
+        highlightedElement.current?.classList.remove('ring-2', 'ring-secondary-600', 'ring-offset-2');
         clearTimeout(highlightTimer.current);
         element.focus({ preventScroll: true });
         element.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-        element.classList.add('ring-2', 'ring-primary-600', 'ring-offset-2');
+        element.classList.add('ring-2', 'ring-secondary-600', 'ring-offset-2');
         highlightedElement.current = element;
-        highlightTimer.current = setTimeout(() => element.classList.remove('ring-2', 'ring-primary-600', 'ring-offset-2'), 1800);
+        highlightTimer.current = setTimeout(() => element.classList.remove('ring-2', 'ring-secondary-600', 'ring-offset-2'), 1800);
     };
 
     useEffect(() => () => clearTimeout(highlightTimer.current), []);
@@ -225,7 +225,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
                         return (
                             <details key={category.id} open={Boolean(searchTerm)} className="group rounded-xl border border-neutral-200 bg-neutral-50/60 dark:border-neutral-700 dark:bg-neutral-900/30">
-                                <summary className="flex min-h-11 cursor-pointer list-none flex-col items-start justify-between gap-3 px-4 py-3 sm:flex-row sm:items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-600">
+                                <summary className="flex min-h-11 cursor-pointer list-none flex-col items-start justify-between gap-3 px-4 py-3 sm:flex-row sm:items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-600">
                                     <span className="min-w-0"><span className="block text-body font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">{category.title}</span><span className="mt-0.5 block text-body text-neutral-500 dark:text-neutral-400">{category.subtitle}</span></span>
                                     <span className="shrink-0 rounded-full bg-neutral-200 px-2 py-0.5 text-body text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{itemsInCategory.length}{itemsInCategory.some(item => (activeCounts[item.id] || 0) > 0) ? ` · ${itemsInCategory.reduce((sum, item) => sum + (activeCounts[item.id] || 0), 0)} ativa(s)` : ''}</span>
                                 </summary>

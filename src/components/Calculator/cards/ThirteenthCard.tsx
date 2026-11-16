@@ -168,7 +168,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
 
             {/* Seção de Adiantamento e Parcelas */}
             {state.manualAdiant13 && (
-                <div className="bg-primary-50 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-800 rounded-lg p-3 text-body-xs text-primary-800 dark:text-primary-300">
+                <div className="bg-secondary-50 dark:bg-secondary-950/30 border border-secondary-200 dark:border-secondary-800 rounded-lg p-3 text-body-xs text-secondary-800 dark:text-secondary-300">
                     💡 <strong>Como preencher:</strong> Informe nos campos de <em>Adiantamento</em> o valor que foi descontado no seu contracheque a título de adiantamento da 1ª parcela (cargo efetivo e função comissionada ou cargo em comissão - FC/CJ). A calculadora apura automaticamente o <strong>saldo da 2ª parcela</strong> para garantir que a base integral e as retenções tributárias (IRRF e PSS) fechem em 100%.
                 </div>
             )}
@@ -273,7 +273,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                         setCustomizarSegunda(false);
                                         update('segunda13Venc', 1);
                                     }}
-                                    className="text-body-xs text-primary-600 dark:text-primary-400 hover:underline mt-1"
+                                    className="text-body-xs text-secondary-600 dark:text-secondary-400 hover:underline mt-1"
                                 >
                                     Voltar para cálculo automático do saldo
                                 </button>
@@ -295,7 +295,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                             setCustomizarSegunda(true);
                                             update('segunda13Venc', saldoVencCalculado);
                                         }}
-                                        className="text-body-xs text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 underline"
+                                        className="text-body-xs text-neutral-500 hover:text-secondary-600 dark:hover:text-secondary-400 underline"
                                     >
                                         Editar
                                     </button>
@@ -350,7 +350,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                             setCustomizarSegunda(false);
                                             update('segunda13FC', 1);
                                         }}
-                                        className="text-body-xs text-primary-600 dark:text-primary-400 hover:underline mt-1"
+                                        className="text-body-xs text-secondary-600 dark:text-secondary-400 hover:underline mt-1"
                                     >
                                         Voltar para cálculo automático do saldo
                                     </button>
@@ -372,7 +372,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                                                 setCustomizarSegunda(true);
                                                 update('segunda13FC', saldoFCCalculado);
                                             }}
-                                            className="text-body-xs text-neutral-500 hover:text-primary-600 dark:hover:text-primary-400 underline"
+                                            className="text-body-xs text-neutral-500 hover:text-secondary-600 dark:hover:text-secondary-400 underline"
                                         >
                                             Editar
                                         </button>
@@ -417,7 +417,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
 
 
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
-                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
+                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                     Composição da remuneração de referência (13º) — {formatCurrency(totalBaseApurada)}
                 </summary>
                 <div className="mt-3 space-y-3">

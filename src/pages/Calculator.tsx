@@ -338,7 +338,7 @@ export default function Calculator() {
                                     : step === 7
                                     ? 'Confira o valor líquido estimado e o detalhamento dos créditos e descontos da simulação.'
                                     : 'Preencha seus dados principais. Os valores são atualizados automaticamente.'}</p>
-                {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-primary-300 bg-primary-50 p-4 text-body text-primary-900 dark:bg-primary-950 dark:text-primary-100">
+                {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-secondary-300 bg-secondary-50 p-4 text-body text-secondary-900 dark:bg-secondary-950 dark:text-secondary-100">
                     <p>{exportError || saveFeedback}</p>
                     {!exportError && <button type="button" aria-label="Fechar mensagem" className="min-h-11 shrink-0 px-2 font-semibold" onClick={() => setSaveFeedback('')}>Fechar</button>}
                 </div>}
@@ -436,7 +436,7 @@ export default function Calculator() {
 
                 <div className="mt-6 flex justify-between gap-3">
                     {step > 0 ? <button type="button" onClick={() => changeStep(step - 1)} className="min-h-11 rounded-lg border border-neutral-300 px-5 py-2 font-semibold text-neutral-700 dark:border-neutral-600 dark:text-neutral-100">Voltar</button> : <span />}
-                    {step < 7 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-primary-800 px-5 py-2 font-semibold text-white hover:bg-primary-900">{step === 6 ? 'Ver resultado' : 'Avançar'}</button>}
+                    {step < 7 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-secondary-800 px-5 py-2 font-semibold text-white hover:bg-secondary-900">{step === 6 ? 'Ver resultado' : 'Avançar'}</button>}
                 </div>
 
                 </div>

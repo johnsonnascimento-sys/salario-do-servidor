@@ -74,7 +74,7 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
                         <button
                             type="button"
                             onClick={() => patch({ mesesRraInformados: undefined, referenciaMeses: undefined })}
-                            className="text-body-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer"
+                            className="text-body-xs font-semibold text-secondary-600 dark:text-secondary-400 hover:underline cursor-pointer"
                         >
                             ↺ Voltar para contagem automática
                         </button>
@@ -106,7 +106,7 @@ export const IrEaContextSection: React.FC<Props> = ({ value: providedValue, onCh
                             type="checkbox"
                             checked={isDeduzirDeps}
                             onChange={event => patch({ deduzirDependentes: event.target.checked })}
-                            className="rounded border-neutral-300 dark:border-dark-border h-4 w-4 text-primary-600 focus:ring-primary-500"
+                            className="rounded border-neutral-300 dark:border-dark-border h-4 w-4 text-secondary-600 focus:ring-secondary-500"
                         />
                         Deduzir dependentes na base do IR-EA ({dependentes} {dependentes === 1 ? 'dependente' : 'dependentes'} = {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotalDeps)})
                     </label>
