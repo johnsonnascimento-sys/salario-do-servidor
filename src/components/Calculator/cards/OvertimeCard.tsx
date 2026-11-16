@@ -32,8 +32,11 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     const fieldId = React.useId();
     const [draft, setDraft] = React.useState<OvertimeEntry | null>(null);
     const [dismissedGaactaWarning, setDismissedGaactaWarning] = React.useState(false);
-    const entry = savedEntry;
-    const updateEntry = saveEntry;
+    const entry = draft ?? savedEntry;
+    const updateEntry = (id: string, patch: Partial<OvertimeEntry>) => {
+        if (draft) setDraft(current => current ? { ...current, ...patch } : current);
+        else saveEntry(id, patch);
+    };
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
 
     const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
@@ -139,8 +142,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     return (
         <div className="space-y-4">
             {!draft && <>
-            <div className={styles.innerBox}>
-                <div className="space-y-4">
+            <div className="space-y-4">
                     {gaactaAtivo && !gaactaRecesso && !dismissedGaactaWarning && (
                         <div className="p-3 rounded-xl bg-error-50 dark:bg-error-950/30 border border-error-200 dark:border-error-800/60 text-body-xs text-error-800 dark:text-error-300 flex items-start gap-2.5">
                             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-error-600 dark:text-error-400" />
@@ -173,92 +175,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         </div>
                     )}
 
-                </div>
             </div>
-                    <details className="group" open={selectedOption === 'custom' || undefined}>
-                        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
-                            <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
-                            <span>Opções avançadas de jornada</span>
-                            <span className="font-normal text-neutral-500 dark:text-neutral-400">Divisor aplicado: {currentDivisor}</span>
-                            <ChevronDown className="w-3.5 h-3.5 shrink-0 group-open:rotate-180" aria-hidden="true" />
-                        </summary>
-                        <div className="mt-2.5">
-                    <div className="bg-white/80 dark:bg-neutral-800/80 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-secondary" />
-                                Jornada de Trabalho e Divisor Mensal
-                            </span>
-                            <span className="text-label text-neutral-400 font-normal">
-                                {isJMU ? 'Res. STM 374/2025, art. 7º: (Jornada ÷ 6) × 30' : 'Res. CJF 4/2008, art. 46: (Jornada ÷ 6) × 30'}
-                            </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Carga Horária Semanal</label>
-                                <select id={`${fieldId}-field-1`}
-                                    className={styles.input}
-                                    value={selectedOption}
-                                    onChange={e => handleJornadaChange(e.target.value)}
-                                >
-                                    {isJMU ? (
-                                        <>
-                                            <option value="35">35h semanais (Divisor 175) — Padrão da JMU (art. 7º, § 1º, I)</option>
-                                            <option value="30">30h semanais (Divisor 150) — Jornada especial (art. 7º, § 1º, II)</option>
-                                            <option value="20">20h semanais (Divisor 100) — Jornada especial (art. 7º, § 1º, III)</option>
-                                            <option value="custom">Outra jornada personalizada (art. 7º, § 2º)...</option>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <option value="40">40h semanais (Divisor 200) — Padrão da JF (art. 46, § 1º)</option>
-                                            <option value="35">35h semanais (Divisor 175) — Jornada especial de 35h</option>
-                                            <option value="30">30h semanais (Divisor 150) — Jornada especial de 30h</option>
-                                            <option value="20">20h semanais (Divisor 100) — Médicos / Odontólogos (Lei 9.436/97)</option>
-                                            <option value="custom">Outra jornada personalizada...</option>
-                                        </>
-                                    )}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Divisor Mensal Efetivo</label>
-                                <input id={`${fieldId}-field-2`}
-                                    type="number"
-                                    min="1"
-                                    step="any"
-                                    className={styles.input}
-                                    value={entry.divisor !== undefined ? entry.divisor : (entry.jornadaPersonalizada ? '' : defaultDivisor)}
-                                    placeholder={String(defaultDivisor)}
-                                    onChange={e => handleDivisorChange(e.target.value)}
-                                    title="Divisor mensal correspondente à jornada para cálculo da hora normal"
-                                />
-                            </div>
-                        </div>
-
-                        {selectedOption === 'custom' && (
-                            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center gap-3 flex-wrap">
-                                <label htmlFor={`${fieldId}-field-3`} className={`${styles.label} mb-0 shrink-0`}>Jornada semanal (h):</label>
-                                <input id={`${fieldId}-field-3`}
-                                    type="number"
-                                    min="1"
-                                    max="80"
-                                    step="0.5"
-                                    className={`${styles.input} max-w-[120px] py-1.5 h-9`}
-                                    value={entry.jornadaSemanal ?? ''}
-                                    placeholder="Ex: 25"
-                                    onChange={e => handleCustomJornadaChange(e.target.value)}
-                                />
-                                <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                                    Fórmula: ({entry.jornadaSemanal ?? 0} ÷ 6) × 30 = <strong>{currentDivisor}</strong>
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                        </div>
-                    </details>
-
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <div className="flex flex-col gap-1">
                             <label className={styles.checkboxLabel}>
@@ -449,6 +366,90 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
             </>}
             {draft && <section className="space-y-4" aria-label="Personalizar cálculo de Serviço Extraordinário">
                 <h4 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personalizar Serviço Extraordinário</h4>
+                    <details className="group" open={selectedOption === 'custom' || undefined}>
+                        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
+                            <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
+                            <span>Opções avançadas de jornada</span>
+                            <span className="font-normal text-neutral-500 dark:text-neutral-400">Divisor aplicado: {currentDivisor}</span>
+                            <ChevronDown className="w-3.5 h-3.5 shrink-0 group-open:rotate-180" aria-hidden="true" />
+                        </summary>
+                        <div className="mt-2.5">
+                    <div className="bg-white/80 dark:bg-neutral-800/80 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-secondary" />
+                                Jornada de Trabalho e Divisor Mensal
+                            </span>
+                            <span className="text-label text-neutral-400 font-normal">
+                                {isJMU ? 'Res. STM 374/2025, art. 7º: (Jornada ÷ 6) × 30' : 'Res. CJF 4/2008, art. 46: (Jornada ÷ 6) × 30'}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Carga Horária Semanal</label>
+                                <select id={`${fieldId}-field-1`}
+                                    className={styles.input}
+                                    value={selectedOption}
+                                    onChange={e => handleJornadaChange(e.target.value)}
+                                >
+                                    {isJMU ? (
+                                        <>
+                                            <option value="35">35h semanais (Divisor 175) — Padrão da JMU (art. 7º, § 1º, I)</option>
+                                            <option value="30">30h semanais (Divisor 150) — Jornada especial (art. 7º, § 1º, II)</option>
+                                            <option value="20">20h semanais (Divisor 100) — Jornada especial (art. 7º, § 1º, III)</option>
+                                            <option value="custom">Outra jornada personalizada (art. 7º, § 2º)...</option>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <option value="40">40h semanais (Divisor 200) — Padrão da JF (art. 46, § 1º)</option>
+                                            <option value="35">35h semanais (Divisor 175) — Jornada especial de 35h</option>
+                                            <option value="30">30h semanais (Divisor 150) — Jornada especial de 30h</option>
+                                            <option value="20">20h semanais (Divisor 100) — Médicos / Odontólogos (Lei 9.436/97)</option>
+                                            <option value="custom">Outra jornada personalizada...</option>
+                                        </>
+                                    )}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Divisor Mensal Efetivo</label>
+                                <input id={`${fieldId}-field-2`}
+                                    type="number"
+                                    min="1"
+                                    step="any"
+                                    className={styles.input}
+                                    value={entry.divisor !== undefined ? entry.divisor : (entry.jornadaPersonalizada ? '' : defaultDivisor)}
+                                    placeholder={String(defaultDivisor)}
+                                    onChange={e => handleDivisorChange(e.target.value)}
+                                    title="Divisor mensal correspondente à jornada para cálculo da hora normal"
+                                />
+                            </div>
+                        </div>
+
+                        {selectedOption === 'custom' && (
+                            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-700/60 flex items-center gap-3 flex-wrap">
+                                <label htmlFor={`${fieldId}-field-3`} className={`${styles.label} mb-0 shrink-0`}>Jornada semanal (h):</label>
+                                <input id={`${fieldId}-field-3`}
+                                    type="number"
+                                    min="1"
+                                    max="80"
+                                    step="0.5"
+                                    className={`${styles.input} max-w-[120px] py-1.5 h-9`}
+                                    value={entry.jornadaSemanal ?? ''}
+                                    placeholder="Ex: 25"
+                                    onChange={e => handleCustomJornadaChange(e.target.value)}
+                                />
+                                <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                                    Fórmula: ({entry.jornadaSemanal ?? 0} ÷ 6) × 30 = <strong>{currentDivisor}</strong>
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                        </div>
+                    </details>
+
             <div className="space-y-3">
                 <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">
                     Selecione as parcelas que compõem a remuneração para fins de cálculo da hora extra:
@@ -469,7 +470,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
             </div>
                 <div className="flex flex-wrap justify-end gap-2">
                     <button type="button" className="min-h-11 rounded-lg border border-neutral-300 px-4 py-2 dark:border-neutral-600" onClick={() => setDraft(null)}>Cancelar</button>
-                    <button type="button" className="min-h-11 rounded-lg bg-neutral-800 px-4 py-2 font-semibold text-white dark:bg-neutral-200 dark:text-neutral-900" onClick={() => { saveEntry(savedEntry.id, { composicaoBase: draft.composicaoBase }); setDraft(null); }}>Aplicar ajustes</button>
+                    <button type="button" className="min-h-11 rounded-lg bg-neutral-800 px-4 py-2 font-semibold text-white dark:bg-neutral-200 dark:text-neutral-900" onClick={() => { saveEntry(savedEntry.id, { composicaoBase: draft.composicaoBase, jornadaPersonalizada: draft.jornadaPersonalizada, jornadaSemanal: draft.jornadaSemanal, divisor: draft.divisor }); setDraft(null); }}>Aplicar ajustes</button>
                 </div>
             </section>}
 

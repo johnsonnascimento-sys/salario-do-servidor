@@ -204,10 +204,10 @@ test('OvertimeCard atualiza composição somente na instância selecionada e man
     const open = () => act(() => tree.root.findAllByType('button').find(button => button.children.includes('Personalizar cálculo'))!.props.onClick());
     open();
     const editor = tree.root.findByProps({ 'aria-label': 'Personalizar cálculo de Serviço Extraordinário' });
-    assert.equal(editor.findAllByType('details').length, 0, 'Parcelas ficam visíveis sem accordion');
-    assert.ok(editor.findAllByType('input').every(input => input.props.type === 'checkbox'), 'O editor contém somente parcelas da base');
-    assert.equal(tree.root.findAllByType('input').length, 1, 'Ao personalizar, os campos da tela normal são substituídos pela composição da base');
-    assert.equal(tree.root.findAllByType('details').length, 0, 'Jornada e tributação não aparecem durante a personalização');
+    assert.equal(editor.findAllByType('details').length, 1, 'Jornada avançada está disponível na personalização');
+    assert.equal(editor.findAllByType('input').filter(input => input.props.type === 'checkbox').length, 1);
+    assert.equal(JSON.stringify(tree.toJSON()).includes('Qtd. Horas (50%)'), false);
+    assert.equal(JSON.stringify(tree.toJSON()).includes('Opções Tributárias'), false);
     assert.equal(JSON.stringify(tree.toJSON()).includes('Prestado no recesso forense'), false);
     act(() => tree.root.findByProps({ 'aria-label': 'Incluir Abono de Permanência na base de HE' }).props.onChange({ target: { checked: false } }));
     assert.equal(patch, undefined, 'Edição da base só é aplicada ao confirmar');
@@ -216,7 +216,8 @@ test('OvertimeCard atualiza composição somente na instância selecionada e man
     open();
     act(() => tree.root.findByProps({ 'aria-label': 'Incluir Abono de Permanência na base de HE' }).props.onChange({ target: { checked: false } }));
     act(() => tree.root.findAllByType('button').find(button => button.children.includes('Aplicar ajustes'))!.props.onClick());
-    assert.deepEqual(patch, { id: 'he-base', value: { composicaoBase: { gaj: false, abono: false } } });
+    assert.equal(patch.id, 'he-base');
+    assert.deepEqual(patch.value.composicaoBase, { gaj: false, abono: false });
     tree.unmount();
 });
 
@@ -622,89 +623,25 @@ test('PresetGrossSummary: Memória de cálculo unitária incorporada ao resumo c
 // =========================================================================
 // Teste 10: Seleção e persistência do modo "Outra jornada personalizada"
 // =========================================================================
-test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo custom, exibe input e calcula divisor', () => {
-    let currentEntry: any = {
-        id: 'he-test',
-        qtd50: 10,
-        qtd100: 0,
-        isEA: false,
-        excluirIR: false,
-        usarSubstituicaoFuncao: false
-    };
-
-    const updateEntry = (id: string, patch: any) => {
-        currentEntry = { ...currentEntry, ...patch };
-    };
-
-    const styles = { label: 'label', input: 'input', checkbox: 'cb', checkboxLabel: 'cbl' };
-    const courtConfig = { orgSlug: 'jmu' } as CourtConfig;
-
-    let tree = create(React.createElement(OvertimeCard, {
-        entry: currentEntry,
-        updateEntry,
-        functionKeys: [],
-        competenciaReferencia: '2026-11',
-        styles,
-        courtConfig
-    }));
-
-    // 1. Inicialmente no padrão JMU (35h / divisor 175)
-    let select = tree.root.findByType('select');
-    assert.equal(select.props.value, '35');
-    assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), false);
-
-    // 2. Usuário seleciona "Outra jornada personalizada"
-    act(() => {
-        select.props.onChange({ target: { value: 'custom' } });
-    });
-    assert.equal(currentEntry.jornadaPersonalizada, true);
-
-    // Re-renderiza com o estado atualizado
-    tree.update(React.createElement(OvertimeCard, {
-        entry: currentEntry,
-        updateEntry,
-        functionKeys: [],
-        competenciaReferencia: '2026-11',
-        styles,
-        courtConfig
-    }));
-
-    select = tree.root.findByType('select');
-    assert.equal(select.props.value, 'custom', 'Select não deve retroceder para 35');
-    assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), true, 'Painel customizado deve ser exibido');
-
-    // 3. Usuário digita jornada semanal de 25h
-    const customHoursInput = tree.root.findAllByType('input').find(i => i.props.placeholder === 'Ex: 25');
-    assert.ok(customHoursInput);
-    act(() => {
-        customHoursInput.props.onChange({ target: { value: '25' } });
-    });
-    assert.equal(currentEntry.jornadaSemanal, 25);
-    assert.equal(currentEntry.divisor, 125, 'Divisor calculado por (25 ÷ 6) × 30 deve ser 125');
-
-    // 4. Usuário alterna de volta para jornada de 30h padrão
-    act(() => {
-        select.props.onChange({ target: { value: '30' } });
-    });
-    assert.equal(currentEntry.jornadaPersonalizada, false);
-    assert.equal(currentEntry.jornadaSemanal, 30);
-    assert.equal(currentEntry.divisor, 150);
-
-    tree.update(React.createElement(OvertimeCard, {
-        entry: currentEntry,
-        updateEntry,
-        functionKeys: [],
-        competenciaReferencia: '2026-11',
-        styles,
-        courtConfig
-    }));
-    select = tree.root.findByType('select');
-    assert.equal(select.props.value, '30');
-    assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), false);
-
+test('OvertimeCard: jornada personalizada é aplicada somente ao confirmar', () => {
+    const entry: any = { id: 'he', qtd50: 0, qtd100: 0, divisor: 175, jornadaSemanal: 35, jornadaPersonalizada: false };
+    let patch: any;
+    const tree = create(React.createElement(OvertimeCard, { entry, updateEntry: (_id, value) => { patch = value; }, functionKeys: [], competenciaReferencia: '2026-11', styles: {}, courtConfig: makeMockConfig() }));
+    const click = (text: string) => act(() => tree.root.findAllByType('button').find(button => button.children.includes(text))!.props.onClick());
+    click('Personalizar cálculo');
+    act(() => tree.root.findByType('select').props.onChange({ target: { value: 'custom' } }));
+    act(() => tree.root.findAllByType('input').find(input => input.props.placeholder === 'Ex: 25')!.props.onChange({ target: { value: '25' } }));
+    assert.equal(patch, undefined);
+    click('Cancelar');
+    assert.equal(patch, undefined);
+    click('Personalizar cálculo');
+    act(() => tree.root.findByType('select').props.onChange({ target: { value: 'custom' } }));
+    act(() => tree.root.findAllByType('input').find(input => input.props.placeholder === 'Ex: 25')!.props.onChange({ target: { value: '25' } }));
+    click('Aplicar ajustes');
+    assert.equal(patch.jornadaSemanal, 25);
+    assert.equal(patch.divisor, 125);
     tree.unmount();
 });
-
 
 test('OvertimeCard: IR mensal, EA e exclusão são exclusivos e isolados por instância', () => {
     let entries: any[] = [
