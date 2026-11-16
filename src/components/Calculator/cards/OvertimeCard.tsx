@@ -196,9 +196,11 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                 />
                                 <span>Calcular horas extras durante substituição de função</span>
                             </label>
-                            <p className="pl-6 text-body-xs text-neutral-500 dark:text-neutral-400">
-                                Use quando as horas extras foram realizadas enquanto você substituía o titular. Informe as horas por função/cargo substituído.
-                            </p>
+                            {usarSubstituicaoFuncao && (
+                                <p className="pl-6 text-body-xs text-neutral-500 dark:text-neutral-400">
+                                    Informe as horas correspondentes a cada função ou cargo substituído.
+                                </p>
+                            )}
                         </div>
                     </div>
 
@@ -353,25 +355,25 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     <details className="group" open={selectedOption === 'custom' || undefined}>
                         <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                             <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
-                            <span>Opções avançadas de jornada</span>
-                            <span className="font-normal text-neutral-500 dark:text-neutral-400">Divisor aplicado: {currentDivisor}</span>
+                            <span>Jornada e divisor</span>
+                            <span className="font-normal text-neutral-500 dark:text-neutral-400">Divisor: {currentDivisor}</span>
                             <ChevronDown className="w-3.5 h-3.5 shrink-0 group-open:rotate-180" aria-hidden="true" />
                         </summary>
                         <div className="mt-2.5">
                     <div className="bg-white/80 dark:bg-neutral-800/80 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="text-body-xs font-semibold text-neutral-700 dark:text-neutral-200 flex items-center gap-1.5">
                                 <Clock className="w-3.5 h-3.5 text-secondary" />
-                                Jornada de Trabalho e Divisor Mensal
+                                Jornada semanal e divisor mensal
                             </span>
-                            <span className="text-label text-neutral-400 font-normal">
+                            <span className="text-label text-neutral-500 dark:text-neutral-400 font-normal">
                                 {isJMU ? 'Res. STM 374/2025, art. 7º: (Jornada ÷ 6) × 30' : 'Res. CJF 4/2008, art. 46: (Jornada ÷ 6) × 30'}
                             </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Carga Horária Semanal</label>
+                                <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Jornada semanal</label>
                                 <select id={`${fieldId}-field-1`}
                                     className={styles.input}
                                     value={selectedOption}
@@ -397,7 +399,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             </div>
 
                             <div>
-                                <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Divisor Mensal Efetivo</label>
+                                <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Divisor mensal</label>
                                 <input id={`${fieldId}-field-2`}
                                     type="number"
                                     min="1"
