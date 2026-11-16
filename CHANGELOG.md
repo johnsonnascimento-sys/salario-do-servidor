@@ -1,3 +1,7 @@
+## Ícone de ajuda do Adicional de Qualificação — 16/11/2026
+
+- Atualizado o símbolo do ícone de informações do AQ para interrogação, alinhando-o aos demais cards.
+
 ## Norma da Gratificação Específica no ícone de informações — 16/11/2026
 
 - Removido o badge normativo do cabeçalho de GAE/GAS e incluída a norma e uma explicação resumida no painel do ícone “?”, seguindo o padrão de Diárias de Viagem.
