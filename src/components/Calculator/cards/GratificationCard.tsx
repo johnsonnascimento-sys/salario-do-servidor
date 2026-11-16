@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { SlidersHorizontal } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { formatCurrency } from '../../../utils/calculations';
 import { getGratificationSelectionPatch } from '../../../utils/gratificationSelection';
@@ -132,8 +133,8 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                     })}
                 </div>
             </fieldset>
-            {isGratAtiva && <div className="flex flex-wrap items-center gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(savedState)}>Personalizar cálculo</button>
+            {isGratAtiva && <div className="flex flex-wrap items-center justify-end gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(savedState)}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo</button>
             </div>}
             </>}
             {draft && <section className="space-y-4" aria-label="Personalizar cálculo">
