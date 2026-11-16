@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { UserRound, Shield, ReceiptText, PlusCircle, MinusCircle, FileText, PanelLeftClose, PanelLeftOpen, ChevronDown } from 'lucide-react';
+import { UserRound, Award, Shield, ReceiptText, PlusCircle, MinusCircle, FileText, PanelLeftClose, PanelLeftOpen, ChevronDown } from 'lucide-react';
 
 const sections = [
-    { label: 'Dados e AQ', Icon: UserRound },
+    { label: 'Dados básicos', Icon: UserRound },
+    { label: 'Adicional de Qualificação (AQ)', Icon: Award },
     { label: 'Previdência', Icon: Shield },
     { label: 'Imposto de Renda', Icon: ReceiptText },
     { label: 'Créditos', Icon: PlusCircle },
