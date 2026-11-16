@@ -281,14 +281,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     <div className="mb-3 flex flex-wrap items-center gap-2">
                         <h4 className={`${styles.innerBoxTitle} !mb-0`}>Gratificação específica (GAE / GAS)</h4>
                         <details className="relative">
-                            <summary aria-label="Sobre GAE e GAS" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">i</span></summary>
+                            <summary aria-label="Sobre GAE e GAS" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">?</span></summary>
                             <div className="absolute left-0 top-full z-20 mt-1 w-72 max-w-[min(18rem,80vw)] rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
                                 <p className="font-semibold">Quando escolher cada opção?</p>
                                 <p className="mt-2"><strong>GAE:</strong> para atividade externa vinculada às atribuições do cargo.</p>
                                 <p className="mt-2"><strong>GAS:</strong> para atividade de segurança vinculada às atribuições do cargo.</p>
+                                <p className="mt-2">Norma: Lei nº 11.416/2006, arts. 16 e 17.</p>
                             </div>
                         </details>
-                        <a href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11416.htm" target="_blank" rel="noopener noreferrer" className="rounded border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-body-xs font-medium text-neutral-500 hover:underline dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">Lei 11.416/06, arts. 16 e 17</a>
                     </div>
                     {renderPreset(GRATIFICATION_INSTANCE)}
                     <div className="mt-2"><PresetGrossSummary compact lines={getPresetGrossLines(GRATIFICATION_INSTANCE)} /></div>
