@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useMatch } from 'react-router-dom';
 import { Sun, Moon, Heart, Mail, MapPin } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { VersionBadge } from './ui/VersionBadge';
 
 const MainLayout: React.FC = () => {
     const [isDark, setIsDark] = useState(false);
+    const isCalculator = useMatch('/simulador/:slug');
 
     useEffect(() => {
         if (document.documentElement.classList.contains('dark')) {
@@ -20,7 +21,7 @@ const MainLayout: React.FC = () => {
 
     return (
         <div className="font-display bg-background-light dark:bg-background-dark text-neutral-900 dark:text-neutral-100 min-h-screen flex flex-col transition-colors duration-300">
-            <header className="sticky top-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
+            <header className={`${isCalculator ? "" : "sticky top-0 z-50 "}bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="hidden h-20 lg:flex lg:items-center lg:justify-between">
                         <div className="flex min-w-0 items-center gap-8">
