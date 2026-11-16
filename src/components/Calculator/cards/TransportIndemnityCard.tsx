@@ -15,7 +15,7 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, styles 
     const maxDays = memory?.maxDays || 31;
 
     return (
-        <div className={`${styles.innerBox} space-y-3`}>
+        <div className="space-y-3">
             {memory?.transitionWarning && (
                 <p role="status" className="rounded-lg border border-warning-200 bg-warning-50 p-3 text-body-sm text-warning-700 dark:border-warning-700 dark:bg-warning-950 dark:text-warning-200">
                     {memory.transitionWarning}
@@ -27,7 +27,7 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, styles 
                 </p>
             )}
 
-            <div>
+            <div className="max-w-xs">
                 <label htmlFor="transporte-indenizacao-dias" className={styles.label}>
                     Dias de serviço externo no mês
                 </label>
