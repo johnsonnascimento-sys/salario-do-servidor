@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Calendar, Settings, Scale, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
+import { Calendar, Settings, Scale, AlertCircle, Info } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../types';
 import {
     MONTH_TOKEN_TO_INDEX,
@@ -308,37 +308,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         return schedules.find(s => s.period === state.periodo);
     }, [schedules, state.periodo]);
 
-    const legalStatusBadge = useMemo(() => {
-        if (state.simularDerrubadaVeto && isAnoComVeto) {
-            return {
-                title: 'Cenário Projetado (Veto Derrubado)',
-                detail: currentScheduleEntry?.label || `Período ${state.periodo}`,
-                isVetoProjection: true,
-            };
-        }
 
-        if (state.periodo >= 2) {
-            return {
-                title: 'Lei nº 15.293/2025 em vigor',
-                detail: currentScheduleEntry?.label || 'Parcela Julho/2026 (+8%)',
-                isVetoProjection: false,
-            };
-        }
-
-        if (state.periodo === 1) {
-            return {
-                title: 'Lei nº 11.416/2006 (Novo AQ)',
-                detail: 'Janeiro a Junho/2026',
-                isVetoProjection: false,
-            };
-        }
-
-        return {
-            title: 'Lei nº 11.416/2006',
-            detail: currentScheduleEntry?.label || 'Tabela Vigente',
-            isVetoProjection: false,
-        };
-    }, [state.periodo, state.simularDerrubadaVeto, isAnoComVeto, currentScheduleEntry]);
 
     return (
         <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm space-y-5">
@@ -352,20 +322,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                     </h3>
                 </div>
 
-                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-body-xs font-semibold ${
-                    legalStatusBadge.isVetoProjection
-                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30'
-                        : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
-                }`}>
-                    {legalStatusBadge.isVetoProjection ? (
-                        <AlertCircle className="w-3.5 h-3.5" />
-                    ) : (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                    )}
-                    <span>{legalStatusBadge.title}</span>
-                    <span className="opacity-60">•</span>
-                    <span className="font-normal">{legalStatusBadge.detail}</span>
-                </div>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
@@ -408,13 +365,13 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 Enquadramento Normativo:
                             </span>{' '}
-                            {legalStatusBadge.isVetoProjection ? (
+                            {state.simularDerrubadaVeto && clampedReference.year >= 2027 ? (
                                 <span>
                                     Cálculo condicional com simulação de derrubada do Veto nº 45/2025.
                                 </span>
                             ) : clampedReference.year >= 2026 ? (
                                 <span>
-                                    Aplicação integral da <strong>Lei nº 15.293/2025</strong> com vigência da parcela de reajuste promulgada.
+                                    Aplicação da <strong>Lei nº 15.293/2025</strong> com vigência da parcela de reajuste promulgada.
                                 </span>
                             ) : (
                                 <span>
