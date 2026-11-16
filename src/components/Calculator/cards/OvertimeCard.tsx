@@ -31,6 +31,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 }) => {
     const fieldId = React.useId();
     const [draft, setDraft] = React.useState<OvertimeEntry | null>(null);
+    const [dismissedGaactaWarning, setDismissedGaactaWarning] = React.useState(false);
     const entry = savedEntry;
     const updateEntry = saveEntry;
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
@@ -140,15 +141,16 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
             <div className={styles.innerBox}>
                 <div className="space-y-4">
-                    {gaactaAtivo && !gaactaRecesso && (
+                    {gaactaAtivo && !gaactaRecesso && !dismissedGaactaWarning && (
                         <div className="p-3 rounded-xl bg-error-50 dark:bg-error-950/30 border border-error-200 dark:border-error-800/60 text-body-xs text-error-800 dark:text-error-300 flex items-start gap-2.5">
                             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-error-600 dark:text-error-400" />
-                            <div className="space-y-0.5">
+                            <div className="flex-1 space-y-0.5">
                                 <span className="font-bold text-body-xs block text-error-900 dark:text-error-200">Incompatibilidade Legal (Res. STM nº 397/2026, art. 6º)</span>
                                 <p className="text-body-xs text-error-800 dark:text-error-300">
                                     O acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário. Em período concomitante, o servidor deverá <strong>optar</strong> entre a GAACTA e o serviço extraordinário (salvo no período do recesso judiciário).
                                 </p>
                             </div>
+                            <button type="button" onClick={() => setDismissedGaactaWarning(true)} className="shrink-0 font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-error-600" aria-label="Fechar alerta de incompatibilidade com a GAACTA">Fechar</button>
                         </div>
                     )}
                     {isExcedido && (
