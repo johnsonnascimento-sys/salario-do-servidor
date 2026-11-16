@@ -1,3 +1,7 @@
+## Norma da Gratificação Específica no ícone de informações — 16/11/2026
+
+- Removido o badge normativo do cabeçalho de GAE/GAS e incluída a norma e uma explicação resumida no painel do ícone “?”, seguindo o padrão de Diárias de Viagem.
+
 ## Remodelação do card Diárias de Viagem — 16/11/2026
 
 - Layout alinhado ao 13º: campos essenciais, condições aplicadas e totais em linhas simples, sem caixas internas. Norma e orientações ficam no ícone de interrogação; memória e resumo financeiro reunidos em Ver detalhamento do cálculo.

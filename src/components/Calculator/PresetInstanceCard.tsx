@@ -196,7 +196,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     <h3 className="min-w-0 text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
                     </h3>
-                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && (
+                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias', 'gratificacao'].includes(instance.presetId) && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
                         </span>
@@ -210,7 +210,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                             </div>
                         </details>
                     )}
-                    {['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && (
+                    {['decimo', 'substituicao', 'ferias', 'diarias', 'gratificacao'].includes(instance.presetId) && (
                         <span ref={infoRef} className="relative inline-flex">
                             <button type="button" aria-label={`Informações sobre ${headerInfo.title}`}
                                 aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} onClick={() => setInfoOpen(open => !open)}
@@ -226,6 +226,9 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                                 </> : instance.presetId === 'ferias' ? <>
                                 <span className="mt-2 block">O adicional de 1/3 de férias corresponde a um terço da remuneração de referência do servidor no período de usufruto (art. 7º, XVII, da CF/88 c/c art. 76 da Lei nº 8.112/1990).</span>
                                 <span className="mt-2 block">Use Personalizar cálculo para escolher a composição, informar um valor manual ou ajustar o desconto por recebimento anterior.</span>
+                                </> : instance.presetId === 'gratificacao' ? <>
+                                <span className="mt-2 block">A GAE e a GAS correspondem a 35% do vencimento básico, conforme os arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006.</span>
+                                <span className="mt-2 block">Use Personalizar cálculo para conferir a composição da base e os ajustes aplicados.</span>
                                 </> : <span className="mt-2 block">Adicione as funções substituídas e informe os dias correspondentes. Consulte Ver detalhamento do cálculo para conferir a diferença remuneratória, o divisor aplicado e os descontos da simulação.</span>}
                             </span>}
                         </span>
