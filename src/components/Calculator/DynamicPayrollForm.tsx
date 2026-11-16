@@ -310,6 +310,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     <Sparkles className="w-4 h-4 text-primary" />
                     {step === 3 ? 'Adicionar descontos' : 'Adicionar verbas à simulação'}
                 </h2>
+                <p className="mb-4 text-body text-neutral-600 dark:text-neutral-300">{step === 3
+                    ? 'As categorias reúnem os descontos disponíveis. Abra uma para conferir os itens ou pesquise pelo nome; use o botão Adicionar do item escolhido. Desconto avulso serve para lançar um item que não está no catálogo.'
+                    : 'As categorias reúnem créditos e adicionais disponíveis. Abra uma para conferir os itens ou pesquise pelo nome; use o botão Adicionar do item escolhido. Crédito avulso serve para lançar um item que não está no catálogo.'}</p>
 
                 <PresetControlsSection
                     mode={step === 3 ? 'D' : 'C'}

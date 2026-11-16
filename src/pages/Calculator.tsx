@@ -333,7 +333,11 @@ export default function Calculator() {
                 <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">
                     {['Dados principais e qualificação', 'Previdência e dependentes', 'Verbas e créditos', 'Descontos', 'Resultado'][step]}
                 </h2>
-                <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">Preencha seus dados principais e adicione apenas as verbas que se aplicam. Os valores são atualizados automaticamente.</p>
+                <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">{step === 2
+                    ? 'Adicione os créditos que fazem parte da sua folha. Abra uma categoria ou pesquise pelo nome; depois, selecione Adicionar no item correspondente. Se não encontrar um crédito no catálogo, use Adicionar crédito avulso.'
+                    : step === 3
+                        ? 'Adicione os descontos que aparecem na sua folha. Abra uma categoria ou pesquise pelo nome; depois, selecione Adicionar no item correspondente. Para um desconto que não aparece no catálogo, use Adicionar desconto avulso.'
+                        : 'Preencha seus dados principais e adicione apenas as verbas que se aplicam. Os valores são atualizados automaticamente.'}</p>
                 {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-primary-300 bg-primary-50 p-4 text-body text-primary-900 dark:bg-primary-950 dark:text-primary-100">
                     <p>{exportError || saveFeedback}</p>
                     {!exportError && <button type="button" aria-label="Fechar mensagem" className="min-h-11 shrink-0 px-2 font-semibold" onClick={() => setSaveFeedback('')}>Fechar</button>}
