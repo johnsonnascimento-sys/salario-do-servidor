@@ -17,6 +17,15 @@ const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 export const GratificationCard: React.FC<GratificationCardProps> = ({ state: savedState, update: saveField, styles, courtConfig }) => {
     const fieldId = React.useId();
     const [draft, setDraft] = React.useState<CalculatorState | null>(null);
+    const cardContentRef = React.useRef<HTMLDivElement>(null);
+    const wasEditing = React.useRef(false);
+    React.useLayoutEffect(() => {
+        const isEditing = Boolean(draft);
+        if (isEditing !== wasEditing.current) {
+            cardContentRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+            wasEditing.current = isEditing;
+        }
+    }, [Boolean(draft)]);
     const state = draft ?? savedState;
     const update = (field: keyof CalculatorState, value: any) => {
         if (draft) setDraft(current => current ? { ...current, [field]: value } : current);
@@ -110,7 +119,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
     }, [isGratAtiva, totalBaseApurada, specificGratRate]);
 
     return (
-        <div className="space-y-4">
+        <div ref={cardContentRef} className="space-y-4 scroll-mt-4">
             {!draft && <p className="text-body text-neutral-600 dark:text-neutral-300">Qual gratificação se aplica ao seu cargo?</p>}
             {!draft && <>
             <fieldset>

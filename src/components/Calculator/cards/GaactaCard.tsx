@@ -30,6 +30,15 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
     const fieldId = React.useId();
     const [draft, setDraft] = React.useState<CalculatorState | null>(null);
     const [dismissedWarning, setDismissedWarning] = React.useState<string | null>(null);
+    const cardContentRef = React.useRef<HTMLDivElement>(null);
+    const wasEditing = React.useRef(false);
+    React.useLayoutEffect(() => {
+        const isEditing = Boolean(draft);
+        if (isEditing !== wasEditing.current) {
+            cardContentRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+            wasEditing.current = isEditing;
+        }
+    }, [Boolean(draft)]);
     const state = draft ?? savedState;
     const update = (field: keyof CalculatorState, value: any) => {
         if (draft) setDraft(current => current ? { ...current, [field]: value } : current);
@@ -73,7 +82,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
     }, [state.rubricasExtras]);
 
     return (
-        <div className="space-y-4">
+        <div ref={cardContentRef} className="space-y-4 scroll-mt-4">
             {/* Alerta de Elegibilidade: Privativo de CJ */}
             {!isCJ && (
                 <div className="p-3 rounded-xl bg-warning-50 dark:bg-warning-950/30 border border-warning-200 dark:border-warning-800/60 text-body-xs text-warning-800 dark:text-warning-300 flex items-start gap-2.5">

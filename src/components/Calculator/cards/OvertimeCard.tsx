@@ -33,6 +33,15 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     const [taxOpen, setTaxOpen] = React.useState(Boolean(savedEntry.isEA || savedEntry.excluirIR));
     const [draft, setDraft] = React.useState<OvertimeEntry | null>(null);
     const [dismissedGaactaWarning, setDismissedGaactaWarning] = React.useState(false);
+    const cardContentRef = React.useRef<HTMLDivElement>(null);
+    const wasEditing = React.useRef(false);
+    React.useLayoutEffect(() => {
+        const isEditing = Boolean(draft);
+        if (isEditing !== wasEditing.current) {
+            cardContentRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+            wasEditing.current = isEditing;
+        }
+    }, [Boolean(draft)]);
     const entry = draft ?? savedEntry;
     const updateEntry = (id: string, patch: Partial<OvertimeEntry>) => {
         if (draft) setDraft(current => current ? { ...current, ...patch } : current);
@@ -141,7 +150,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     };
 
     return (
-        <div className="space-y-4">
+        <div ref={cardContentRef} className="space-y-4 scroll-mt-4">
             {!draft && <>
             <div className="space-y-4">
                     {gaactaAtivo && !gaactaRecesso && !dismissedGaactaWarning && (
