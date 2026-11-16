@@ -71,8 +71,8 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 <span>{label} — inclusão salva</span>
             </label>)}
         </fieldset>}
-        {showFunprespSection && config && <fieldset id="funpresp-settings" tabIndex={-1} className={`${styles.card} space-y-3 scroll-mt-24`}>
-            <legend className={styles.innerBoxTitle}>Funpresp-Jud</legend>
+        {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.card} space-y-3 scroll-mt-24`}>
+            <h5 id={`${fieldId}-funpresp-title`} className="mb-1 text-h5 font-semibold">Funpresp-Jud</h5>
             <p className={PENSION_HELP_CLASS}>Use os dados da sua adesão ao plano. A participação na Funpresp é uma escolha separada do regime previdenciário acima.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PensionParticipationSelect className={styles.input} labelClassName={styles.label} compact
@@ -115,7 +115,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <p className="mt-2">O resultado completo ficará disponível depois dessa atualização. Você pode continuar preenchendo as outras verbas; seu rascunho será mantido.</p>
                     <details className="mt-2"><summary className="cursor-pointer underline">Informações para suporte</summary><p className="mt-2 break-words">{linkedError}</p></details>
                 </div> : <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedFeedback?.message || linkedError || funprespValidationError}</p>)}
-        </fieldset>}
+        </section>}
         <section className={styles.card}>
             <h5 className="mb-1 text-h5 font-semibold">Dependentes para IR</h5>
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe a quantidade de dependentes considerados no imposto de renda.</p>
