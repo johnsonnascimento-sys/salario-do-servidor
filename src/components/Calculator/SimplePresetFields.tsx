@@ -27,19 +27,14 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
             { label: 'Treinamento (%)', field: 'aqTreinoPerc' as const, options: [[0, 'Nenhum'], [0.01, '120h (1%)'], [0.02, '240h (2%)'], [0.03, '360h (3%)']] as const }
         ];
         return (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {groups.map(group => (
-                    <fieldset key={group.field}>
-                        <legend className={`${styles.label} mb-2`}>{group.label}</legend>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            {group.options.map(([value, label]) => (
-                                <label key={value} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-body font-medium ${state[group.field] === value ? 'border-neutral-600 bg-neutral-100 text-neutral-900 dark:border-neutral-400 dark:bg-neutral-700 dark:text-neutral-100' : 'border-neutral-200 text-neutral-700 dark:border-neutral-700 dark:text-neutral-200'}`}>
-                                    <input type="radio" name={`${fieldId}-${group.field}`} value={value} checked={state[group.field] === value} onChange={() => update(group.field, value)} className="accent-neutral-700 dark:accent-neutral-300" />
-                                    <span>{label}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </fieldset>
+                    <div key={group.field}>
+                        <label htmlFor={`${fieldId}-${group.field}`} className={styles.label}>{group.label}</label>
+                        <select id={`${fieldId}-${group.field}`} className={styles.input} value={state[group.field]} onChange={e => update(group.field, Number(e.target.value))}>
+                            {group.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                        </select>
+                    </div>
                 ))}
             </div>
         );
