@@ -317,7 +317,7 @@ export default function Calculator() {
                     agencyName={agencyName}
                 />
 
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+                <div className="flex flex-col gap-5 min-[960px]:flex-row min-[960px]:items-start">
                 <CalculatorNavigation step={step} onChange={changeStep} />
                 <div className="min-w-0 flex-1">
                 <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">

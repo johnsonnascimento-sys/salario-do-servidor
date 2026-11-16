@@ -25,7 +25,7 @@ export const MobileResultsBar: React.FC<MobileResultsBarProps> = ({
     const actionClass = 'flex min-h-11 items-center justify-center gap-2 rounded-lg bg-secondary-800 px-3 py-3 text-body font-semibold text-white hover:bg-secondary-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white';
 
     return (
-        <div data-calculator-results-bar className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-secondary-950 text-white shadow-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div data-calculator-results-bar className="min-[960px]:hidden fixed bottom-0 left-0 right-0 z-50 bg-secondary-950 text-white shadow-xl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="border-t border-secondary-800 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0" aria-live="polite" aria-atomic="true">

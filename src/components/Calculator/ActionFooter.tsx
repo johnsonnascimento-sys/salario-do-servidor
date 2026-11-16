@@ -34,7 +34,7 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
     const buttonClass = 'inline-flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-body font-semibold text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50';
 
     return (
-        <div data-calculator-results-bar className="hidden lg:block fixed bottom-0 left-0 right-0 bg-secondary-950 border-t border-secondary-800 py-3 px-6 z-50 text-white shadow-xl">
+        <div data-calculator-results-bar className="hidden min-[960px]:block fixed bottom-0 left-0 right-0 bg-secondary-950 border-t border-secondary-800 py-3 px-6 z-50 text-white shadow-xl">
             <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
                 <div className="min-w-0" aria-live="polite" aria-atomic="true">
                     <p className="text-body text-secondary-100">{resultLabel}</p>
