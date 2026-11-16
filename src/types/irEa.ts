@@ -53,7 +53,18 @@ export interface IrEaMemory {
     avisos: string[];
 }
 
+export interface OvertimeFunctionDetail {
+    funcao: string;
+    elegivel: boolean;
+    qtd50: number;
+    qtd100: number;
+    heVal50: number;
+    heVal100: number;
+    heTotal: number;
+}
+
 export interface CalculatedOvertimeEntry {
+    detalhamentoPorFuncao?: OvertimeFunctionDetail[];
     composicaoBase?: Array<{ key: string; label: string; valor: number; selecionado: boolean }>;
     baseRemuneracao?: number;
     id: string;

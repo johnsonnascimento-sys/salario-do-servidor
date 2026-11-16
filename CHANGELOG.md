@@ -885,3 +885,10 @@
 ## Rubricas pré-definidas — 10/11/2026
 - UI: opções do seletor de rubricas pré-definidas organizadas alfabeticamente e incluído ícone informativo sobre sua finalidade.
 
+## Funções escolhidas nas horas extras de substituição — 16/11/2026
+
+- Substituída a tabela de todas as FCs/CJs por seletor e botão Adicionar função. Somente funções adicionadas exibem horas a 50%/100%, subtotal bruto e opção de remoção, com prevenção de duplicações e layout adaptado ao celular.
+- Seleções e horas são preservadas ao alternar o modo e restaurar snapshots, inclusive funções zeradas, inelegíveis ou ausentes do catálogo. Elegibilidade continua devolvida pelo motor; entradas sem direito não geram valor e permanecem disponíveis para revisão/remoção.
+- Motor passa a devolver detalhamento por função, conciliado por maiores restos em cada modalidade, sem alterar os totais agregados, incidências ou créditos do holerite. Subtotais anteriores ficam ocultos durante recálculo.
+- Validação: 22 testes de HE/interface, 24 de estado/restauração e 5 de carregamento aprovados, além de typecheck e build. Revisão independente de regras/cálculo sem bloqueadores; corrigido retorno do foco após remoção. Conferência dos componentes reais com motor e dados fictícios em desktop e 360/390 px, temas claro/escuro, sem transbordamento horizontal; salvamento autenticado e configuração publicada não homologados nesta conferência.
+

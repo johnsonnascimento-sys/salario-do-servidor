@@ -181,6 +181,8 @@ export const useDynamicPresetInstances = ({
                 ...Object.keys(current?.horasPorFuncao || {})
             ]);
             const horasPorFuncaoEqual = Array.from(horasPorFuncaoKeys).every((key) => (
+                Object.prototype.hasOwnProperty.call(entry.horasPorFuncao || {}, key) ===
+                    Object.prototype.hasOwnProperty.call(current?.horasPorFuncao || {}, key) &&
                 (entry.horasPorFuncao?.[key]?.qtd50 || 0) === (current?.horasPorFuncao?.[key]?.qtd50 || 0) &&
                 (entry.horasPorFuncao?.[key]?.qtd100 || 0) === (current?.horasPorFuncao?.[key]?.qtd100 || 0)
             ));

@@ -8,6 +8,7 @@
  */
 
 import { CourtConfig, OvertimeEntry } from '../../../../types';
+import type { OvertimeFunctionDetail } from '../../../../types/irEa';
 import { calculateGaacta } from './gaactaCalculations';
 import { calculateMonthlyPensionContext } from './pensionContext';
 import { hasPensionCeiling, roundPension } from './pensionCalculations';
@@ -35,6 +36,7 @@ export interface OvertimeResult {
         funcoesSubstituicaoElegiveis?: string[];
         composicaoBase?: Array<{ key: string; label: string; valor: number; selecionado: boolean }>;
         baseRemuneracao?: number;
+        detalhamentoPorFuncao?: OvertimeFunctionDetail[];
     }>;
 }
 
@@ -47,6 +49,27 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 const sumCurrency = (values: number[]) => values.reduce((cents, value) => cents + Math.round(value * 100), 0) / 100;
+
+// A memória deve fechar com o agregado já arredondado, sem alterar a folha.
+// Distribui os centavos residuais por modalidade, com desempate pelo código.
+const distributeDetailCents = (
+    details: OvertimeFunctionDetail[], field: 'heVal50' | 'heVal100', total: number
+) => {
+    const allocations = details.map(detail => {
+        const cents = detail[field] * 100;
+        return { detail, cents: Math.floor(cents), remainder: cents - Math.floor(cents) };
+    });
+    let remaining = Math.round(total * 100) - allocations.reduce((sum, item) => sum + item.cents, 0);
+    const ranked = allocations.filter(item => item.detail[field] > 0).sort((a, b) =>
+        b.remainder - a.remainder || (a.detail.funcao < b.detail.funcao ? -1 : a.detail.funcao > b.detail.funcao ? 1 : 0)
+    );
+    for (const item of ranked) {
+        if (remaining <= 0) break;
+        item.cents += 1;
+        remaining -= 1;
+    }
+    for (const item of allocations) item.detail[field] = item.cents / 100;
+};
 
 /**
  * Calcula Hora Extra (50% e 100%)
@@ -130,6 +153,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
         const entries = overtimeEntries.map((entry, index) => {
             let heVal50 = 0;
             let heVal100 = 0;
+            const detalhamentoPorFuncao: OvertimeFunctionDetail[] | undefined = entry.usarSubstituicaoFuncao ? [] : undefined;
 
             const entryDivisor = entry.divisor && entry.divisor > 0 ? Number(entry.divisor) : fallbackDivisor;
 
@@ -146,19 +170,31 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             // Se houver grid de horas por função, calcula dinamicamente para cada uma
             if (entry.usarSubstituicaoFuncao && entry.horasPorFuncao) {
                 for (const [funcKey, horas] of Object.entries(entry.horasPorFuncao)) {
-                    if (!funcoesSubstituicaoElegiveis.includes(funcKey)) continue;
+                    const elegivel = funcoesSubstituicaoElegiveis.includes(funcKey);
                     const h50 = Math.max(0, Number(horas.qtd50 || 0));
                     const h100 = Math.max(0, Number(horas.qtd100 || 0));
-                    if (h50 > 0 || h100 > 0) {
+                    const detail: OvertimeFunctionDetail = {
+                        funcao: funcKey, elegivel, qtd50: h50, qtd100: h100,
+                        heVal50: 0, heVal100: 0, heTotal: 0
+                    };
+                    if (elegivel && (h50 > 0 || h100 > 0)) {
                         const res = calcHEForFunction(funcKey, h50, h100, entryDivisor, entry);
                         heVal50 += res.v50;
                         heVal100 += res.v100;
+                        detail.heVal50 = res.v50;
+                        detail.heVal100 = res.v100;
                     }
+                    detalhamentoPorFuncao!.push(detail);
                 }
             }
 
             heVal50 = roundCurrency(heVal50);
             heVal100 = roundCurrency(heVal100);
+            if (detalhamentoPorFuncao) {
+                distributeDetailCents(detalhamentoPorFuncao, 'heVal50', heVal50);
+                distributeDetailCents(detalhamentoPorFuncao, 'heVal100', heVal100);
+                for (const detail of detalhamentoPorFuncao) detail.heTotal = sumCurrency([detail.heVal50, detail.heVal100]);
+            }
             let heTotal = sumCurrency([heVal50, heVal100]);
             if (entry.valorBrutoManual !== undefined && !entry.usarSubstituicaoFuncao) {
                 if (!Number.isFinite(entry.valorBrutoManual) || entry.valorBrutoManual < 0) {
@@ -188,6 +224,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                 valorHora50,
                 valorHora100,
                 funcoesSubstituicaoElegiveis,
+                detalhamentoPorFuncao,
                 composicaoBase: unitRes.base.items,
                 baseRemuneracao: unitRes.base.total
             };

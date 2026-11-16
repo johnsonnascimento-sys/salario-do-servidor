@@ -141,13 +141,110 @@ test('OvertimeCard bloqueia destinos sem diferença inclusive em lançamentos j�
         updateEntry: () => {}, functionKeys: ['fc1', 'fc5', 'cj2'], eligibleFunctionKeys: ['cj2'],
         competenciaReferencia: '2026-11', styles: {}, courtConfig: makeMockConfig()
     }));
-    for (const key of ['FC1', 'FC5']) {
-        for (const rate of ['50', '100']) {
-            assert.equal(tree.root.findByProps({ 'aria-label': `${key} — Horas (${rate}%)` }).props.disabled, true);
-        }
+    for (const rate of ['50', '100']) {
+        assert.equal(tree.root.findByProps({ 'aria-label': `FC1 — Horas (${rate}%)` }).props.disabled, true);
     }
-    assert.equal(tree.root.findByProps({ 'aria-label': 'CJ2 — Horas (50%)' }).props.disabled, false);
+    assert.equal(tree.root.findAllByProps({ 'aria-label': 'FC5 — Horas (50%)' }).length, 0);
+    assert.equal(tree.root.findAllByProps({ 'aria-label': 'CJ2 — Horas (50%)' }).length, 0);
     tree.unmount();
+});
+
+test('HE detalha funções selecionadas, preserva entradas e mantém o agregado anterior mensal/EA', async () => {
+    const config = makeMockConfig();
+    const horasPorFuncao = {
+        fc1: { qtd50: 1.25, qtd100: 0 },
+        fc5: { qtd50: 0, qtd100: 2.75 },
+        cj2: { qtd50: 3.33, qtd100: 0.125 },
+        inexistente: { qtd50: 99, qtd100: 99 },
+        sem_funcao: { qtd50: 11, qtd100: 12 }
+    };
+    const base = {
+        periodo: 0, cargo: 'analista', padrao: 'C13', funcao: 'sem_funcao',
+        tabelaPSS: '2026', tabelaIR: '2025_maio', regimePrev: 'rpc',
+        recebeAbono: false, gratEspecificaTipo: 'nenhuma',
+        aqTituloVR: 0, aqTreinoVR: 0, aqTituloPerc: 0, aqTreinoPerc: 0,
+        agencyConfig: config
+    };
+    const expectedRaw = (rate: 50 | 100) => ['fc1', 'fc5', 'cj2'].reduce((sum, key) => {
+        const hours = horasPorFuncao[key as keyof typeof horasPorFuncao];
+        const remuneration = 14852.66 + 14852.66 * 1.4 + config.bases!.funcoes[key];
+        return sum + remuneration / 200 * (rate === 50 ? 1.5 * hours.qtd50 : 2 * hours.qtd100);
+    }, 0);
+    const expected50 = Math.round(expectedRaw(50) * 100) / 100;
+    const expected100 = Math.round(expectedRaw(100) * 100) / 100;
+    for (const isEA of [false, true]) {
+        const params = { ...base, overtimeEntries: [{ id: 'he-detail', qtd50: 999, qtd100: 999,
+            usarSubstituicaoFuncao: true, horasPorFuncao, valorBrutoManual: 999999, isEA, excluirIR: false }] };
+        const inputBefore = JSON.stringify(params);
+        const result = await calculateOvertime(params);
+        const entry = result.entries[0];
+        assert.equal(entry.heVal50, expected50);
+        assert.equal(entry.heVal100, expected100);
+        assert.equal(entry.heTotal, Math.round((expected50 + expected100) * 100) / 100);
+        assert.equal(entry.isEA, isEA);
+        assert.equal(entry.excluirIR, false);
+        const details = entry.detalhamentoPorFuncao!;
+        assert.deepEqual(details.map(item => item.funcao), Object.keys(horasPorFuncao));
+        for (const key of ['inexistente', 'sem_funcao']) {
+            const detail = details.find(item => item.funcao === key)!;
+            assert.equal(detail.elegivel, false);
+            assert.equal(detail.heTotal, 0);
+            assert.equal(detail.qtd50, horasPorFuncao[key as keyof typeof horasPorFuncao].qtd50);
+        }
+        for (const field of ['heVal50', 'heVal100', 'heTotal'] as const) {
+            assert.equal(details.reduce((sum, item) => sum + Math.round(item[field] * 100), 0), Math.round(entry[field] * 100));
+        }
+        assert.equal(JSON.stringify(params), inputBefore);
+    }
+});
+
+test('HE concilia centavos por maiores restos em cada modalidade com desempate pelo código', async () => {
+    const config = makeMockConfig(7);
+    config.bases!.salario.analista.C13 = 1;
+    config.payrollRules!.gajRate = 0;
+    const params = {
+        periodo: 0, cargo: 'analista', padrao: 'C13', funcao: 'sem_funcao',
+        tabelaPSS: '2026', tabelaIR: '2025_maio', regimePrev: 'rpc', recebeAbono: false,
+        gratEspecificaTipo: 'nenhuma', aqTituloVR: 0, aqTreinoVR: 0, aqTituloPerc: 0, aqTreinoPerc: 0,
+        agencyConfig: config,
+        overtimeEntries: [{ id: 'he-cents', qtd50: 0, qtd100: 0, usarSubstituicaoFuncao: true,
+            isEA: false, excluirIR: false, composicaoBase: { funcao: false }, horasPorFuncao: {
+                fc5: { qtd50: 1, qtd100: 1 }, fc1: { qtd50: 1, qtd100: 1 }, cj2: { qtd50: 0, qtd100: 0 }
+            } }]
+    };
+    const result = await calculateOvertime(params);
+    assert.equal(result.heVal50, 0.43);
+    assert.equal(result.heVal100, 0.57);
+    assert.equal(result.heTotal, 1);
+    assert.deepEqual(result.entries[0].detalhamentoPorFuncao, [
+        { funcao: 'fc5', elegivel: true, qtd50: 1, qtd100: 1, heVal50: 0.21, heVal100: 0.28, heTotal: 0.49 },
+        { funcao: 'fc1', elegivel: true, qtd50: 1, qtd100: 1, heVal50: 0.22, heVal100: 0.29, heTotal: 0.51 },
+        { funcao: 'cj2', elegivel: true, qtd50: 0, qtd100: 0, heVal50: 0, heVal100: 0, heTotal: 0 }
+    ]);
+    params.overtimeEntries[0].horasPorFuncao = {
+        cj2: { qtd50: 0, qtd100: 0 }, fc1: { qtd50: 1, qtd100: 1 }, fc5: { qtd50: 1, qtd100: 1 }
+    };
+    const reordered = await calculateOvertime(params);
+    for (const detail of result.entries[0].detalhamentoPorFuncao!) {
+        assert.deepEqual(reordered.entries[0].detalhamentoPorFuncao!.find(item => item.funcao === detail.funcao), detail);
+    }
+});
+
+test('HE vazia retorna detalhe vazio e modo comum ignora funções preservadas', async () => {
+    const params = {
+        periodo: 0, cargo: 'analista', padrao: 'C13', funcao: 'fc5',
+        tabelaPSS: '2026', tabelaIR: '2025_maio', regimePrev: 'rpc', recebeAbono: false,
+        gratEspecificaTipo: 'nenhuma', aqTituloVR: 0, aqTreinoVR: 0, aqTituloPerc: 0, aqTreinoPerc: 0,
+        agencyConfig: makeMockConfig(),
+        overtimeEntries: [{ id: 'he-empty', qtd50: 0, qtd100: 0, usarSubstituicaoFuncao: true, isEA: false, excluirIR: false }]
+    };
+    const empty = await calculateOvertime(params);
+    assert.deepEqual(empty.entries[0].detalhamentoPorFuncao, []);
+    assert.equal(empty.heTotal, 0);
+    const common = await calculateOvertime({ ...params, overtimeEntries: [{ ...params.overtimeEntries[0],
+        usarSubstituicaoFuncao: false, qtd50: 1.5, horasPorFuncao: { cj2: { qtd50: 100, qtd100: 100 } } }] });
+    assert.equal(common.entries[0].detalhamentoPorFuncao, undefined);
+    assert.equal(common.heTotal, Math.round((14852.66 + 14852.66 * 1.4 + 2662.06) / 200 * 1.5 * 1.5 * 100) / 100);
 });
 
 // =========================================================================

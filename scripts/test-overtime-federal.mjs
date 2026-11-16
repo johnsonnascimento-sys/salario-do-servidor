@@ -22,6 +22,7 @@ const server = await createServer({
 
 try {
     await server.ssrLoadModule('/tests/overtimeFederal.test.ts');
+    await server.ssrLoadModule('/tests/overtimeSelection.test.tsx');
 } finally {
     await server.close();
 }

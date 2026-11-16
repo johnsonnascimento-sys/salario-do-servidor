@@ -2,12 +2,15 @@ import { IrEaCompetencias, getDefaultEaCompetencia } from '../IrEaCompetencias';
 import React from 'react';
 import { AlertTriangle, Clock, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { CourtConfig, OvertimeEntry } from '../../../types';
+import type { OvertimeFunctionDetail } from '../../../types/irEa';
 
 interface OvertimeCardProps {
     entry: OvertimeEntry;
     updateEntry: (id: string, patch: Partial<OvertimeEntry>) => void;
     functionKeys: string[];
     eligibleFunctionKeys?: string[];
+    functionDetails?: OvertimeFunctionDetail[];
+    calculationReady?: boolean;
     baseItems?: Array<{ key: string; label: string; valor: number; selecionado: boolean }>;
     baseTotal?: number;
     competenciaReferencia: string;
@@ -22,6 +25,8 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     updateEntry: saveEntry,
     functionKeys,
     eligibleFunctionKeys = [],
+    functionDetails = [],
+    calculationReady = true,
     baseItems = [],
     competenciaReferencia,
     styles,
@@ -33,6 +38,11 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     const [taxOpen, setTaxOpen] = React.useState(Boolean(savedEntry.isEA || savedEntry.excluirIR));
     const [draft, setDraft] = React.useState<OvertimeEntry | null>(null);
     const [dismissedGaactaWarning, setDismissedGaactaWarning] = React.useState(false);
+    const [functionToAdd, setFunctionToAdd] = React.useState('');
+    const functionSelectRef = React.useRef<HTMLSelectElement>(null);
+    const firstHoursRefs = React.useRef<Record<string, HTMLInputElement | null>>({});
+    const addedFunctionRef = React.useRef<string | null>(null);
+    const focusFunctionSelectRef = React.useRef(false);
     const cardContentRef = React.useRef<HTMLDivElement>(null);
     const wasEditing = React.useRef(false);
     React.useLayoutEffect(() => {
@@ -48,6 +58,35 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
         else saveEntry(id, patch);
     };
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
+    const selectedFunctions = Object.keys(entry.horasPorFuncao || {});
+    const availableFunctions = functionKeys.filter(func => !selectedFunctions.includes(func));
+    const canAddFunction = calculationReady && availableFunctions.some(func => eligibleFunctionKeys.includes(func));
+    React.useLayoutEffect(() => {
+        if (focusFunctionSelectRef.current && canAddFunction) {
+            functionSelectRef.current?.focus();
+            focusFunctionSelectRef.current = false;
+        }
+    }, [canAddFunction, entry.horasPorFuncao]);
+    React.useLayoutEffect(() => {
+        const func = addedFunctionRef.current;
+        if (func && selectedFunctions.includes(func) && !firstHoursRefs.current[func]?.disabled) {
+            firstHoursRefs.current[func]?.focus();
+            addedFunctionRef.current = null;
+        }
+    }, [entry.horasPorFuncao]);
+    const addFunction = () => {
+        if (!calculationReady || !availableFunctions.includes(functionToAdd) || !eligibleFunctionKeys.includes(functionToAdd)) return;
+        addedFunctionRef.current = functionToAdd;
+        focusFunctionSelectRef.current = false;
+        updateEntry(entry.id, { horasPorFuncao: { ...entry.horasPorFuncao, [functionToAdd]: { qtd50: 0, qtd100: 0 } } });
+        setFunctionToAdd('');
+    };
+    const removeFunction = (func: string) => {
+        const next = { ...entry.horasPorFuncao };
+        delete next[func];
+        focusFunctionSelectRef.current = true;
+        updateEntry(entry.id, { horasPorFuncao: next });
+    };
 
     const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
     const isJMU = orgSlug === 'jmu' || orgSlug === 'stm';
@@ -199,7 +238,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                             usarSubstituicaoFuncao: checked,
                                             qtd50: checked ? 0 : entry.qtd50,
                                             qtd100: checked ? 0 : entry.qtd100,
-                                            horasPorFuncao: checked ? (entry.horasPorFuncao || {}) : undefined
+                                            horasPorFuncao: entry.horasPorFuncao || {}
                                         });
                                     }}
                                 />
@@ -241,71 +280,76 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             <p className="p-3 text-body-xs text-neutral-500 dark:text-neutral-400">
                                 Apenas funções que geram diferença de substituição estão habilitadas. Funções menores ou iguais não geram valor neste modo. Para calcular horas extras pela sua função atual, desmarque a opção de substituição.
                             </p>
-                            <div className="hidden sm:grid bg-neutral-50 dark:bg-neutral-900/40 p-2 text-body-xs font-semibold text-neutral-600 dark:text-neutral-300 grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2">
-                                <div>Função substituída no dia</div>
-                                <div className="text-center">Horas (50%)</div>
-                                <div className="text-center">Horas (100%)</div>
+                            <div className="p-3 border-t border-neutral-200 dark:border-neutral-700 space-y-2">
+                                <label htmlFor={`${fieldId}-function-select`} className={styles.label}>Selecione a função substituída</label>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                    <select id={`${fieldId}-function-select`} ref={functionSelectRef}
+                                        className={`${styles.input} min-w-0 flex-1`} value={availableFunctions.includes(functionToAdd) ? functionToAdd : ''}
+                                        disabled={!canAddFunction} onChange={e => setFunctionToAdd(e.target.value)}>
+                                        <option value="">Selecione uma função</option>
+                                        {availableFunctions.map(func => <option key={func} value={func} disabled={!eligibleFunctionKeys.includes(func)}>
+                                            {func.toUpperCase()}{!eligibleFunctionKeys.includes(func) ? ' — Sem diferença de substituição' : ''}
+                                        </option>)}
+                                    </select>
+                                    <button type="button" onClick={addFunction}
+                                        disabled={!canAddFunction || !availableFunctions.includes(functionToAdd) || !eligibleFunctionKeys.includes(functionToAdd)}
+                                        className="min-h-11 shrink-0 rounded-lg bg-neutral-800 px-4 py-2 font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed dark:bg-neutral-200 dark:text-neutral-900">
+                                        Adicionar função
+                                    </button>
+                                </div>
+                                <p role="status" className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                                    {!calculationReady ? 'Atualizando cálculo e funções elegíveis…'
+                                        : functionKeys.length === 0 ? 'Catálogo de funções indisponível para esta simulação.'
+                                        : !eligibleFunctionKeys.length ? 'Nenhuma função gera diferença de substituição nesta simulação.'
+                                        : !canAddFunction ? 'Todas as funções elegíveis já foram adicionadas.'
+                                        : selectedFunctions.length === 0 ? 'Adicione uma função para informar as horas trabalhadas.' : 'Você pode adicionar outra função, se necessário.'}
+                                </p>
                             </div>
-                            <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
-                                {functionKeys.map((func) => {
+                            <div className="divide-y divide-neutral-200 dark:divide-neutral-700" aria-busy={!calculationReady}>
+                                {selectedFunctions.map(func => {
                                     const eligible = eligibleFunctionKeys.includes(func);
-                                    const h50 = entry.horasPorFuncao?.[func]?.qtd50 || 0;
-                                    const h100 = entry.horasPorFuncao?.[func]?.qtd100 || 0;
-
+                                    const inCatalog = functionKeys.includes(func);
+                                    const hours = entry.horasPorFuncao![func];
+                                    const detail = functionDetails.find(item => item.funcao === func);
                                     return (
-                                        <div
-                                            key={func}
-                                            className="p-3 sm:p-2 grid grid-cols-1 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 sm:items-center hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors"
-                                        >
-                                            <div className="text-body-xs font-medium text-neutral-700 dark:text-neutral-300 break-words">
-                                                {func.toUpperCase()}
-                                                {!eligible && <span className="block text-label text-neutral-500 font-normal">Sem diferença de substituição</span>}
+                                        <div key={func} className="p-3 space-y-3">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="min-w-0 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 break-words">
+                                                    {func.toUpperCase()}
+                                                    {!inCatalog && <span className="block font-normal text-warning-700 dark:text-warning-300">Função indisponível no catálogo. Revise este lançamento.</span>}
+                                                    {inCatalog && calculationReady && !eligible && <span className="block font-normal text-neutral-500 dark:text-neutral-400">Sem diferença de substituição. Horas preservadas, sem valor neste modo.</span>}
+                                                </div>
+                                                <button type="button" aria-label={`Remover ${func.toUpperCase()}`} onClick={() => removeFunction(func)}
+                                                    className="min-h-11 shrink-0 rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30">
+                                                    Remover
+                                                </button>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2 sm:contents">
-                                                <div className="sm:hidden text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                                                    Horas (50%)
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:items-end">
+                                                {(['qtd50', 'qtd100'] as const).map((kind, index) => (
+                                                    <div key={kind} className="min-w-0">
+                                                        <label htmlFor={`${fieldId}-${func}-${kind}`} className={styles.label}>Horas ({index === 0 ? '50%' : '100%'})</label>
+                                                        <input id={`${fieldId}-${func}-${kind}`} ref={index === 0 ? node => { firstHoursRefs.current[func] = node; } : undefined}
+                                                            type="number" min="0" step="any" value={hours[kind] || ''}
+                                                            disabled={!inCatalog || (calculationReady && !eligible)} readOnly={!calculationReady}
+                                                            aria-label={`${func.toUpperCase()} — Horas (${index === 0 ? '50%' : '100%'})`}
+                                                            onChange={e => {
+                                                                const value = Number(e.target.value);
+                                                                updateEntry(entry.id, { horasPorFuncao: {
+                                                                    ...entry.horasPorFuncao,
+                                                                    [func]: { ...hours, [kind]: Number.isFinite(value) ? Math.max(0, value) : 0 }
+                                                                } });
+                                                            }}
+                                                            className={`${styles.input} min-h-11 disabled:opacity-40 disabled:cursor-not-allowed`} placeholder="0" />
+                                                    </div>
+                                                ))}
+                                                <div className="min-w-0 text-body-xs text-neutral-600 dark:text-neutral-400">
+                                                    <span className="block">Subtotal bruto</span>
+                                                    <output aria-label={`${func.toUpperCase()} — Subtotal bruto`} className="block py-3 font-mono font-semibold text-neutral-800 dark:text-neutral-200 break-words">
+                                                        {!calculationReady ? 'Atualizando…' : detail
+                                                            ? detail.heTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                            : 'Aguardando cálculo…'}
+                                                    </output>
                                                 </div>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={h50 || ''}
-                                                    disabled={!eligible}
-                                                    aria-label={`${func.toUpperCase()} — Horas (50%)`}
-                                                    onChange={e => {
-                                                        const val = Math.max(0, Number(e.target.value) || 0);
-                                                        const current = entry.horasPorFuncao || {};
-                                                        updateEntry(entry.id, {
-                                                            horasPorFuncao: {
-                                                                ...current,
-                                                                [func]: { ...current[func], qtd50: val }
-                                                            }
-                                                        });
-                                                    }}
-                                                    className={`${styles.input} text-center h-8 disabled:opacity-40 disabled:cursor-not-allowed`}
-                                                    placeholder="0"
-                                                />
-                                                <div className="sm:hidden text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                                                    Horas (100%)
-                                                </div>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={h100 || ''}
-                                                    disabled={!eligible}
-                                                    aria-label={`${func.toUpperCase()} — Horas (100%)`}
-                                                    onChange={e => {
-                                                        const val = Math.max(0, Number(e.target.value) || 0);
-                                                        const current = entry.horasPorFuncao || {};
-                                                        updateEntry(entry.id, {
-                                                            horasPorFuncao: {
-                                                                ...current,
-                                                                [func]: { ...current[func], qtd100: val }
-                                                            }
-                                                        });
-                                                    }}
-                                                    className={`${styles.input} text-center h-8 disabled:opacity-40 disabled:cursor-not-allowed`}
-                                                    placeholder="0"
-                                                />
                                             </div>
                                         </div>
                                     );
