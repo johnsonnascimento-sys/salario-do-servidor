@@ -133,11 +133,6 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                 </div>
             </fieldset>
             {isGratAtiva && <div className="flex flex-wrap items-center justify-between gap-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                <div aria-live="polite">
-                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Gratificação mensal estimada</p>
-                    <p className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{formatCurrency(valorGratificacaoCalculada)}</p>
-                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">{personalizada ? 'Ajustes personalizados · ' : ''}{Math.round(specificGratRate * 100)}% de {personalizada ? formatCurrency(totalBaseApurada) : 'vencimento básico'}</p>
-                </div>
                 <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(savedState)}>Personalizar cálculo</button>
             </div>}
             </>}
