@@ -71,8 +71,8 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
             </div>}
         </div>
         <div className="hidden rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800 lg:block">
-            <button type="button" onClick={() => setCollapsed(value => !value)} aria-label={collapsed ? 'Expandir menu de etapas' : 'Recolher menu de etapas'} aria-expanded={!collapsed} className="mb-2 flex min-h-11 w-full items-center justify-center rounded-lg text-neutral-600 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700">
-                {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <><PanelLeftClose className="mr-2 h-5 w-5" /> Recolher menu</>}
+            <button type="button" onClick={() => setCollapsed(value => !value)} aria-label={collapsed ? 'Expandir etapas' : 'Recolher etapas'} aria-expanded={!collapsed} className="mb-2 flex min-h-11 w-full items-center justify-center rounded-lg text-neutral-600 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700">
+                {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <><PanelLeftClose className="mr-2 h-5 w-5" /> Recolher etapas</>}
             </button>
             <div className="space-y-1">{items(collapsed)}</div>
         </div>
