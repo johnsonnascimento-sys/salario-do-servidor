@@ -38,7 +38,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
 }) => {
     const fieldId = React.useId();
     return (
-        <div className={styles.innerBox}>
+        <div className={styles.card}>
             <h4 className={styles.innerBoxTitle}>Dados principais</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>

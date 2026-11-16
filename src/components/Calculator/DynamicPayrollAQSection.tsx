@@ -15,7 +15,7 @@ export const DynamicPayrollAQSection: React.FC<DynamicPayrollAQSectionProps> = (
     renderPreset,
     getPresetGrossLines
 }) => (
-    <div className={styles.innerBox}>
+    <div className={styles.card}>
         <div className="flex flex-wrap items-center gap-2 mb-2">
             <h4 className={`${styles.innerBoxTitle} !mb-0`}>Adicional de Qualificação (AQ)</h4>
             <a href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11416.htm" target="_blank" rel="noopener noreferrer" className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded hover:underline">Lei nº 11.416/2006, arts. 14 e 15 · Lei nº 15.292/2025</a>

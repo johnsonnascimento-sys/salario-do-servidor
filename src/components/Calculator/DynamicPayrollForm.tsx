@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { Settings, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { ManualRubricasSection } from './ManualRubricasSection';
@@ -256,12 +256,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     return (
         <>
-            <section id="remuneracao" tabIndex={-1} className={`${step === 0 ? styles.card : ""} scroll-mt-24`} hidden={step > 1}>
-                <h2 className={styles.sectionTitle} hidden={step !== 0}>
-                    <Settings className="w-4 h-4" />
-                    Dados principais e qualificação
-                </h2>
-
+            <section id="remuneracao" tabIndex={-1} className="scroll-mt-24" hidden={step > 1}>
                 <div hidden={step !== 0} className="space-y-5">
                 <DynamicPayrollBaseSection
                     styles={styles}
