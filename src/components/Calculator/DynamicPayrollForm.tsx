@@ -132,14 +132,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         gaactaAvailable
     });
 
-    const totalCreditos = state.rubricasExtras
-        .filter(rubrica => rubrica.tipo === 'C')
-        .reduce((total, rubrica) => total + (rubrica.valor || 0), 0);
-
-    const totalDescontos = state.rubricasExtras
-        .filter(rubrica => rubrica.tipo === 'D')
-        .reduce((total, rubrica) => total + (rubrica.valor || 0), 0);
-
     const visiblePresets = enabledPresets.filter(instance =>
         instance.presetId !== 'gratificacao' && instance.presetId !== 'abono' &&
         (instance.presetId === 'pensao') === (step === 5)
@@ -455,10 +447,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     irEaEntryTax={state.irEaEntryTax}
                     irEaCurrentYearKeys={state.irEaCurrentYearKeys}
                     competenciaReferencia={competenciaReferencia}
-                    totalCreditos={totalCreditos}
-                    totalDescontos={totalDescontos}
                     styles={styles}
-                    addRubrica={addRubrica}
                     removeRubrica={removeRubrica}
                     updateRubrica={updateRubrica}
                     toPositiveNumber={toPositiveNumber}

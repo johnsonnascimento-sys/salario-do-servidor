@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    DollarSign,
     Minus,
     Plus,
     Trash2,
@@ -24,8 +23,6 @@ interface ManualRubricasSectionProps {
     mode?: 'C' | 'D';
     rubricas: Rubrica[];
     styles: any;
-    totalCreditos: number;
-    totalDescontos: number;
     rubricasTax?: Record<string, RubricaTaxDetail>;
     calculationReady: boolean;
     funprespParticipacao: PensionParticipation;
@@ -36,7 +33,6 @@ interface ManualRubricasSectionProps {
     irEaEntryTax?: Record<string, number>;
     irEaCurrentYearKeys?: string[];
     competenciaReferencia?: string;
-    addRubrica: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     toPositiveNumber: (value: string) => number;
@@ -46,8 +42,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     mode = 'C',
     rubricas,
     styles,
-    totalCreditos,
-    totalDescontos,
     rubricasTax,
     irEaEntryTax,
     irEaCurrentYearKeys,
@@ -58,7 +52,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     pensionConfig,
     pensionMemory,
     competencia = '',
-    addRubrica,
     removeRubrica,
     updateRubrica,
     toPositiveNumber
@@ -150,60 +143,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
     return (
         <div className="space-y-4">
-            {/* Bloco Central de Controle de Lançamentos Avulsos */}
-            {(mode !== 'C' || filteredRubricas.length > 0) && <div className={styles.card}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div>
-                        <h3 className={`${styles.sectionTitle} mb-1 flex items-center gap-2`}>
-                            <DollarSign className="w-4 h-4 text-secondary" />
-                            {mode === 'C' ? 'Créditos avulsos' : 'Descontos avulsos'}
-                        </h3>
-                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                            {mode === 'C' ? 'Inclua VPNI, ATS, acertos e valores retroativos.' : 'Inclua empréstimos, planos de saúde, pensões e outros descontos.'}
-                        </p>
-                    </div>
-
-                </div>
-
-                {/* Resumo de Totalizadores e Filtros Rápidos */}
-                {filteredRubricas.length > 0 && (
-                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 mt-4 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div hidden={mode !== 'C'} className="rounded-xl border border-secondary-500/20 bg-secondary-500/5 px-4 py-2.5 flex items-center justify-between">
-                                <div>
-                                    <p className="text-label font-bold uppercase tracking-widest text-secondary-700 dark:text-secondary-400">Total Créditos Avulsos</p>
-                                    <p className="text-body font-bold font-mono text-secondary-700 dark:text-secondary-400">{formatCurrency(totalCreditos)}</p>
-                                </div>
-                                <span className="text-body-xs font-semibold text-secondary-600 bg-secondary-500/10 px-2 py-0.5 rounded-full">
-                                    {rubricas.filter(r => r.tipo === 'C').length} crédito(s)
-                                </span>
-                            </div>
-                            <div hidden={mode !== 'D'} className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 flex items-center justify-between">
-                                <div>
-                                    <p className="text-label font-bold uppercase tracking-widest text-red-700 dark:text-red-400">Total Descontos Avulsos</p>
-                                    <p className="text-body font-bold font-mono text-red-700 dark:text-red-400">{formatCurrency(totalDescontos)}</p>
-                                </div>
-                                <span className="text-body-xs font-semibold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-full">
-                                    {rubricas.filter(r => r.tipo === 'D').length} desconto(s)
-                                </span>
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-
-                {filteredRubricas.length === 0 && (
-                    <div className="py-3 px-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/30 border border-dashed border-neutral-200 dark:border-neutral-800 text-center space-y-1">
-                        <p className="text-body-xs text-neutral-600 dark:text-neutral-400">
-                            Nenhum lançamento avulso adicionado no momento.
-                        </p>
-                        <p className="text-body-xs text-neutral-500 dark:text-neutral-500">
-                            {mode === 'C' ? 'Use Crédito livre para incluir uma verba.' : 'Use Desconto livre para incluir um desconto.'}
-                        </p>
-                    </div>
-                )}
-            </div>}
-
             {/* Listagem de Cards de Rubricas Individuais */}
             {filteredRubricas.map((rubrica, index) => {
                 const historical = Boolean(
