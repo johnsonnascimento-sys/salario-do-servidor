@@ -36,7 +36,7 @@ export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, c
                     e.preventDefault();
                     setIsOpen((prev) => !prev);
                 }}
-                className={`flex cursor-pointer list-none items-center gap-3 select-none ${compact ? 'justify-end min-h-11' : 'justify-between'}`}
+                className={`flex cursor-pointer list-none items-center gap-3 select-none ${compact ? 'justify-start min-h-11' : 'justify-between'}`}
             >
                 <p className={compact ? 'text-body-xs font-medium text-neutral-600 dark:text-neutral-300' : 'text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400'}>
                     {compact ? (isOpen ? 'Ocultar detalhamento' : 'Ver detalhamento do cálculo') : 'Resumo calculado'}

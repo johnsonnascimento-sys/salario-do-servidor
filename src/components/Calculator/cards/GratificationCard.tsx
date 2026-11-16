@@ -132,7 +132,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                     })}
                 </div>
             </fieldset>
-            {isGratAtiva && <div className="flex flex-wrap items-center justify-between gap-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+            {isGratAtiva && <div className="flex flex-wrap items-center gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
                 <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(savedState)}>Personalizar cálculo</button>
             </div>}
             </>}
