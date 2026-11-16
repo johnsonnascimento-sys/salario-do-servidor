@@ -174,7 +174,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                     </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700 [&>label]:py-3">
                     {/* Vencimento Básico (Padrão: Selecionado) */}
                     <label className={styles.checkboxLabel}>
                         <input
