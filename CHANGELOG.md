@@ -1,3 +1,11 @@
+## Reformulação do card de gratificação natalina — 16/11/2026
+
+- Visão principal compacta com ajuda normativa junto ao título, seleções de cargo efetivo/FC/CJ, totais bruto e líquido por parcela e acesso a Ver detalhamento do cálculo.
+- Composição e ajustes manuais transferidos para Personalizar cálculo, com rascunho isolado, Cancelar/Aplicar ajustes e retorno do foco. A gravação usa somente entradas alteradas do 13º, preservando snapshots e o saldo automático da segunda parcela.
+- Totais reutilizam as linhas do resumo; resultados e memória previdenciária ficam ocultos durante a edição ou enquanto o cálculo estiver indisponível. Nenhuma fórmula do motor foi alterada.
+- Validação: checagem de tipos, build e 35 testes aprovados (13 de cálculo/interface do 13º e 22 de estado, salvamento e restauração).
+- Conferência visual dos componentes reais com motor existente e dados fictícios em desktop e celular (360/390 px), temas claro/escuro. A página completa local não carregou a configuração remota do órgão; essa integração visual permanece sem homologação nesta sessão.
+
 ## Composição do ATS nas horas extras — 16/11/2026
 
 - Removido o campo legado de ATS da composição de horas extras; o ATS lançado como crédito dinâmico permanece disponível para seleção por instância. Seleções antigas do campo legado não entram diretamente na base de HE.

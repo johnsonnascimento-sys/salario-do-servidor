@@ -27,6 +27,9 @@ interface PresetCardContentProps {
     updateSubstitutionEntry: (id: string, patch: Partial<SubstitutionEntry>) => void;
     courtConfig: CourtConfig;
     calculationReady?: boolean;
+    inputState?: CalculatorState;
+    onThirteenthEditingChange?: (editing: boolean) => void;
+    thirteenthOverview?: React.ReactNode;
 }
 
 export const PresetCardContent: React.FC<PresetCardContentProps> = ({
@@ -40,7 +43,10 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     updateOvertimeEntry,
     updateSubstitutionEntry,
     courtConfig,
-    calculationReady = false
+    calculationReady = false,
+    inputState,
+    onThirteenthEditingChange,
+    thirteenthOverview
 }) => {
     const presetId = instance.presetId;
 
@@ -75,7 +81,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     }
 
     if (presetId === 'decimo') {
-        return <ThirteenthCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} courtConfig={courtConfig} />;
+        return <ThirteenthCard inputState={inputState} onEditingChange={onThirteenthEditingChange} overview={thirteenthOverview} state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} courtConfig={courtConfig} />;
     }
 
     if (presetId === 'hora_extra') {

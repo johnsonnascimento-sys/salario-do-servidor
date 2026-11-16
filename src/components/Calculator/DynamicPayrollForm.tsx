@@ -418,6 +418,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             handlePresetDragEnd={handlePresetDragEnd}
                             removePreset={removePreset}
                             state={state}
+                            inputState={inputState}
                             update={update}
                             styles={styles}
                             isNovoAQ={isNovoAQ}

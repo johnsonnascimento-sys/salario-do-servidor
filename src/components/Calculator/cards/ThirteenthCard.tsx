@@ -1,45 +1,82 @@
-import { Accordion } from '../../ui/Accordion';
-import React, { useState, useMemo } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import { SlidersHorizontal } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
-import { formatCurrency } from '../../../utils/calculations';
+import { formatCurrency, getTablesForPeriod } from '../../../utils/calculations';
 
 interface ThirteenthCardProps {
     state: CalculatorState;
+    inputState?: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
     competenciaReferencia: string;
     styles: any;
     courtConfig?: CourtConfig;
+    onEditingChange?: (editing: boolean) => void;
+    overview?: React.ReactNode;
 }
 
-const parseCurrencyInput = (value: string) => {
-    const raw = value.replace(/\D/g, '');
-    return Number(raw) / 100;
-};
+// Only these inputs may be committed; calculated outputs remain owned by the engine.
+const editableFields = [
+    'decimoIncideVencimento', 'decimoIncideGAJ', 'decimoIncideFuncao',
+    'decimoIncideAQTitulo', 'decimoIncideAQTreino', 'decimoIncideVPNI',
+    'decimoIncideATS', 'decimoIncideGrat', 'decimoIncideAbono',
+    'decimoRubricasInclusas', 'decimoOutrasParcelas', 'manualAdiant13',
+    'adiant13Venc', 'adiant13FC', 'segunda13Venc', 'segunda13FC'
+] as const satisfies readonly (keyof CalculatorState)[];
 
+type ThirteenthDraft = Pick<CalculatorState, typeof editableFields[number]>;
+const pickInputs = (state: CalculatorState): ThirteenthDraft =>
+    Object.fromEntries(editableFields.map(field => [field, state[field]])) as ThirteenthDraft;
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
+const parseCurrencyInput = (value: string) => Number(value.replace(/\D/g, '')) / 100;
+const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:border-neutral-600';
 
-export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, styles, courtConfig }) => {
+export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
+    state: savedState, inputState, update: saveField, styles, courtConfig, onEditingChange, overview
+}) => {
     const fieldId = React.useId();
-    const isNov = state.tipoCalculo === 'nov';
+    const [draft, setDraft] = useState<ThirteenthDraft | null>(null);
+    const [customSecond, setCustomSecond] = useState({ segunda13Venc: false, segunda13FC: false });
+    const initialDraft = useRef<ThirteenthDraft | null>(null);
+    const headingRef = useRef<HTMLHeadingElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const wasEditing = useRef(false);
+    const state = draft ? { ...savedState, ...draft } : savedState;
+    const inputs = inputState ?? savedState;
+    useLayoutEffect(() => {
+        if (Boolean(draft) !== wasEditing.current) {
+            const target = draft ? headingRef.current : buttonRef.current;
+            target?.focus({ preventScroll: true });
+            target?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+            wasEditing.current = Boolean(draft);
+        }
+    }, [Boolean(draft)]);
+    const update = (field: keyof CalculatorState, value: any) => {
+        setDraft(current => current ? { ...current, [field]: value } : current);
+    };
+    const openEditor = () => {
+        const next = pickInputs(inputs);
+        setCustomSecond({ segunda13Venc: Boolean(inputs.manualAdiant13 && next.segunda13Venc > 1), segunda13FC: Boolean(inputs.manualAdiant13 && next.segunda13FC > 1) });
+        initialDraft.current = next;
+        setDraft(next);
+        onEditingChange?.(true);
+    };
+    const closeEditor = (apply: boolean) => {
+        if (apply && draft && initialDraft.current) {
+            editableFields.forEach(field => {
+                if (draft[field] !== initialDraft.current![field]) saveField(field, draft[field]);
+            });
+        }
+        setDraft(null);
+        initialDraft.current = null;
+        onEditingChange?.(false);
+    };
 
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
-    const funcaoValorBruta = useMemo(() => {
-        if (!state.funcao || state.funcao === noFunctionCode || !courtConfig?.bases?.funcoes) {
-            return 0;
-        }
-        return courtConfig.bases.funcoes[state.funcao] || 0;
-    }, [state.funcao, noFunctionCode, courtConfig]);
-
+    const funcaoValorBruta = !state.funcao || state.funcao === noFunctionCode || !courtConfig
+        ? 0 : (getTablesForPeriod(state.periodo, courtConfig).funcoes[state.funcao] || 0);
     const temAbonoAtivo = Boolean(state.recebeAbono);
-    const valorAbono = temAbonoAtivo
-        ? (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0)
-        : 0;
-
-    const creditRubricas = useMemo(() => {
-        return (state.rubricasExtras || []).filter(r => r.tipo === 'C');
-    }, [state.rubricasExtras]);
-
-    // Incidências das parcelas padrão e dinâmicas
+    const valorAbono = temAbonoAtivo ? (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0) : 0;
+    const creditRubricas = (state.rubricasExtras || []).filter(r => r.tipo === 'C');
     const incideVenc = state.decimoIncideVencimento !== false;
     const incideGAJ = state.decimoIncideGAJ !== false;
     const incideFuncao = state.decimoIncideFuncao !== false;
@@ -49,388 +86,107 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
     const incideATS = state.decimoIncideATS !== false;
     const incideGrat = state.decimoIncideGrat !== false;
     const incideAbono = state.decimoIncideAbono !== false;
-
     const funcaoValor = incideFuncao ? funcaoValorBruta : 0;
-
-    // Base apurada do cargo efetivo com as seleções dinâmicas
-    const baseSemFC = useMemo(() => {
-        let total = 0;
-        if (incideVenc) total += (state.vencimento || 0);
-        if (incideGAJ) total += (state.gaj || 0);
-        if (incideAQTitulo) total += (state.aqTituloValor || 0);
-        if (incideAQTreino) total += (state.aqTreinoValor || 0);
-        if (incideGrat) total += (state.gratEspecificaValor || 0);
-        if (incideVPNI) total += (state.vpni_lei || 0) + (state.vpni_decisao || 0);
-        if (incideATS) total += (state.ats || 0);
-        if (incideAbono && temAbonoAtivo) total += valorAbono;
-
-        if (state.decimoRubricasInclusas && Array.isArray(state.rubricasExtras)) {
-            state.rubricasExtras
-                .filter(r => r.tipo === 'C' && state.decimoRubricasInclusas?.[r.id] === true)
-                .forEach(r => {
-                    total += (r.valor || 0);
-                });
-        }
-
-        if (state.decimoOutrasParcelas && state.decimoOutrasParcelas > 0) {
-            total += state.decimoOutrasParcelas;
-        }
-
-        return roundCurrency(total);
-    }, [
-        incideVenc,
-        incideGAJ,
-        incideAQTitulo,
-        incideAQTreino,
-        incideGrat,
-        incideVPNI,
-        incideATS,
-        incideAbono,
-        temAbonoAtivo,
-        valorAbono,
-        state.vencimento,
-        state.gaj,
-        state.aqTituloValor,
-        state.aqTreinoValor,
-        state.gratEspecificaValor,
-        state.vpni_lei,
-        state.vpni_decisao,
-        state.ats,
-        state.decimoRubricasInclusas,
-        state.rubricasExtras,
-        state.decimoOutrasParcelas
-    ]);
-
+    // Preview of the editable composition, never a substitute for engine totals/taxes.
+    const baseSemFC = roundCurrency(
+        (incideVenc ? state.vencimento || 0 : 0) +
+        (incideGAJ ? state.gaj || 0 : 0) +
+        (incideAQTitulo ? state.aqTituloValor || 0 : 0) +
+        (incideAQTreino ? state.aqTreinoValor || 0 : 0) +
+        (incideGrat ? state.gratEspecificaValor || 0 : 0) +
+        (incideVPNI ? (state.vpni_lei || 0) + (state.vpni_decisao || 0) : 0) +
+        (incideATS ? state.ats || 0 : 0) + (incideAbono ? valorAbono : 0) +
+        creditRubricas.filter(r => state.decimoRubricasInclusas?.[r.id]).reduce((sum, r) => sum + (r.valor || 0), 0) +
+        (state.decimoOutrasParcelas || 0)
+    );
     const totalBaseApurada = roundCurrency(baseSemFC + funcaoValor);
-
-    const saldoVencCalculado = useMemo(() => {
-        return roundCurrency(Math.max(0, baseSemFC - (state.adiant13Venc || 0)));
-    }, [baseSemFC, state.adiant13Venc]);
-
-    const saldoFCCalculado = useMemo(() => {
-        return roundCurrency(Math.max(0, funcaoValor - (state.adiant13FC || 0)));
-    }, [funcaoValor, state.adiant13FC]);
-
-    // Permite que o usuário opte por customizar manualmente a 2ª parcela
-    const [customizarSegunda, setCustomizarSegunda] = useState(false);
-
+    const hasFunction = funcaoValorBruta > 0 && incideFuncao;
     const handleToggleManual = (enabled: boolean) => {
-        update('manualAdiant13', enabled);
-        if (enabled) {
-            if (!state.adiant13Venc || state.adiant13Venc <= 1) {
-                update('adiant13Venc', roundCurrency(baseSemFC / 2));
-            }
-            if (funcaoValor > 0 && (!state.adiant13FC || state.adiant13FC <= 1)) {
-                update('adiant13FC', roundCurrency(funcaoValor / 2));
-            }
+        setCustomSecond({ segunda13Venc: false, segunda13FC: false });
+        setDraft(current => current ? {
+            ...current, manualAdiant13: enabled,
+            // Automatic amounts restored from snapshots are selections, not manual overrides.
+            ...(enabled ? { segunda13Venc: current.segunda13Venc > 0 ? 1 : 0, segunda13FC: current.segunda13FC > 0 ? 1 : 0 } : {}),
+            ...(enabled && current.adiant13Venc <= 1 ? { adiant13Venc: savedState.adiant13Venc > 1 ? savedState.adiant13Venc : roundCurrency(baseSemFC / 2) } : {}),
+            ...(enabled && hasFunction && current.adiant13FC <= 1 ? { adiant13FC: savedState.adiant13FC > 1 ? savedState.adiant13FC : roundCurrency(funcaoValor / 2) } : {})
+        } : current);
+    };
+    const renderAmount = (field: 'adiant13Venc' | 'adiant13FC' | 'segunda13Venc' | 'segunda13FC', label: string) => (
+        <div className="space-y-1">
+            <label htmlFor={`${fieldId}-${field}`} className={styles.label}>{label}</label>
+            <input id={`${fieldId}-${field}`} type="text" inputMode="decimal" data-calculator="true" className={styles.input}
+                value={state[field] ? state[field].toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                placeholder="0,00" onChange={event => update(field, parseCurrencyInput(event.target.value))} />
+        </div>
+    );
+    const renderSecondAdjustment = (isFunction: boolean) => {
+        const field = isFunction ? 'segunda13FC' : 'segunda13Venc';
+        const advance = isFunction ? state.adiant13FC : state.adiant13Venc;
+        const base = isFunction ? funcaoValor : baseSemFC;
+        const label = isFunction ? '2ª parcela — FC/CJ' : '2ª parcela — Cargo efetivo';
+        const selected = state.tipoCalculo === 'nov' || state[field] > 0;
+        const custom = customSecond[field];
+        return <div className="space-y-2">
+            <label className={styles.checkboxLabel}>
+                <input type="checkbox" className={styles.checkbox} checked={selected}
+                    disabled={state.tipoCalculo === 'nov'} onChange={event => update(field, event.target.checked ? 1 : 0)} />
+                {label}
+            </label>
+            {selected && <>
+                <label className={styles.checkboxLabel}>
+                    <input type="checkbox" className={styles.checkbox} checked={custom}
+                        onChange={event => {
+                            setCustomSecond(current => ({ ...current, [field]: event.target.checked }));
+                            update(field, event.target.checked ? roundCurrency(Math.max(0, base - advance)) : 1);
+                        }} />
+                    Informar valor da 2ª parcela ({isFunction ? 'FC/CJ' : 'cargo efetivo'})
+                </label>
+                {custom ? renderAmount(field, label) : <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Saldo automático após o abatimento do adiantamento.</p>}
+            </>}
+        </div>;
+    };
+    const toggleParcel = (second: boolean, isFunction: boolean, enabled: boolean) => {
+        const firstField = isFunction ? 'adiant13FC' : 'adiant13Venc';
+        const secondField = isFunction ? 'segunda13FC' : 'segunda13Venc';
+        if (second) {
+            if (enabled && savedState[firstField] <= 0) saveField(firstField, 1);
+            saveField(secondField, enabled ? 1 : 0);
+        } else {
+            if (!enabled && savedState[secondField] > 0) saveField(secondField, 0);
+            saveField(firstField, enabled ? 1 : 0);
         }
     };
 
-    const renderAutoToggle = (enabled: boolean, amount: number, label: string, onToggle: () => void) => (
-        <div
-            className={styles.innerBox + ' cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors'}
-            role="checkbox"
-            aria-checked={enabled}
-            aria-label={label}
-            tabIndex={0}
-            onKeyDown={event => {
-                if (event.key === ' ' || event.key === 'Enter') {
-                    event.preventDefault();
-                    onToggle();
-                }
-            }}
-            onClick={onToggle}
-        >
-            <div className="flex items-center gap-3">
-                <input
-                    type="checkbox"
-                    checked={enabled}
-                    tabIndex={-1}
-                    aria-hidden="true"
-                    readOnly
-                    className={styles.checkbox}
-                />
-                <div className="flex-1">
-                    <div className="flex justify-between">
-                        <span className="text-body-xs font-bold text-neutral-700 dark:text-neutral-300">{label}</span>
-                        <span className="text-body-xs font-mono text-neutral-500">{formatCurrency(amount)}</span>
-                    </div>
-                </div>
+    return <div className="space-y-4 text-neutral-700 dark:text-neutral-200">
+        {!draft ? <>
+            {!state.manualAdiant13 ? <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {[false, true].map(second => <fieldset key={String(second)} className="min-w-0 space-y-1">
+                    <legend className="mb-1 text-body font-semibold">{second ? '2ª parcela' : '1ª parcela — Adiantamento'}</legend>
+                    {[false, ...(hasFunction ? [true] : [])].map(isFunction => {
+                        const field = second ? (isFunction ? 'segunda13FC' : 'segunda13Venc') : (isFunction ? 'adiant13FC' : 'adiant13Venc');
+                        return <label key={field} className={styles.checkboxLabel}>
+                            <input type="checkbox" className={styles.checkbox} checked={savedState[field] > 0}
+                                onChange={event => toggleParcel(second, isFunction, event.target.checked)} />
+                            {isFunction ? 'FC/CJ' : 'Cargo efetivo'}
+                        </label>;
+                    })}
+                </fieldset>)}
+            </div> : <div className="flex flex-wrap justify-between gap-2 text-body-xs text-neutral-600 dark:text-neutral-300">
+                <span>Adiantamento informado</span>
+                <span>{inputs.segunda13Venc > 1 || inputs.segunda13FC > 1 ? '2ª parcela personalizada' : 'Saldo automático'}</span>
+            </div>}
+            {overview}
+            <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <button ref={buttonRef} type="button" className={actionClass} onClick={openEditor}>
+                    <SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo
+                </button>
             </div>
-        </div>
-    );
-
-    return (
-        <div className="space-y-4">
-            <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                1ª parcela sem IR/PSS. Na 2ª parcela (novembro), IR e PSS incidem sobre a remuneração integral (1ª + 2ª), sem PSS sobre FC/CJ, com abatimento do adiantamento recebido.
-            </p>
-
-            {/* Seção de Adiantamento e Parcelas */}
-            {state.manualAdiant13 && (
-                <div className="bg-secondary-50 dark:bg-secondary-950/30 border border-secondary-200 dark:border-secondary-800 rounded-lg p-3 text-body-xs text-secondary-800 dark:text-secondary-300">
-                    💡 <strong>Como preencher:</strong> Informe nos campos de <em>Adiantamento</em> o valor que foi descontado no seu contracheque a título de adiantamento da 1ª parcela (cargo efetivo e função comissionada ou cargo em comissão - FC/CJ). A calculadora apura automaticamente o <strong>saldo da 2ª parcela</strong> para garantir que a base integral e as retenções tributárias (IRRF e PSS) fechem em 100%.
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 1ª Parcela - Vencimento */}
-                <div>
-                    <label className={styles.label}>
-                        Adiantamento 1ª Parcela (Cargo Efetivo)
-                    </label>
-                    {state.manualAdiant13 ? (
-                        <div>
-                            <input id={`${fieldId}-adiant13Venc`} aria-label="Adiantamento da primeira parcela do cargo efetivo"
-                                type="text"
-                                className={styles.input}
-                                data-calculator="true"
-                                value={state.adiant13Venc ? state.adiant13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                onChange={e => update('adiant13Venc', parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                            />
-                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                Valor descontado do adiantamento do cargo no contracheque
-                            </p>
-                        </div>
-                    ) : (
-                        renderAutoToggle(
-                            state.adiant13Venc > 0,
-                            state.adiant13Venc,
-                            'Receber adiantamento',
-                            () => {
-                                const nextEnabled = !(state.adiant13Venc > 0);
-                                if (!nextEnabled && state.segunda13Venc > 0) {
-                                    update('segunda13Venc', 0);
-                                }
-                                update('adiant13Venc', nextEnabled ? 1 : 0);
-                            }
-                        )
-                    )}
-                </div>
-
-                {/* 1ª Parcela - FC/CJ */}
-                {funcaoValorBruta > 0 && incideFuncao && (
-                    <div>
-                        <label className={styles.label}>
-                            Adiantamento 1ª Parcela (FC/CJ)
-                        </label>
-                        {state.manualAdiant13 ? (
-                            <div>
-                                <input id={`${fieldId}-adiant13FC`} aria-label="Adiantamento da primeira parcela da função FC/CJ"
-                                    type="text"
-                                    className={styles.input}
-                                    data-calculator="true"
-                                    value={state.adiant13FC ? state.adiant13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                    onChange={e => update('adiant13FC', parseCurrencyInput(e.target.value))}
-                                    placeholder="0,00"
-                                />
-                                <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                    Valor descontado do adiantamento de FC ou CJ no contracheque
-                                </p>
-                            </div>
-                        ) : (
-                            renderAutoToggle(
-                                state.adiant13FC > 0,
-                                state.adiant13FC,
-                                'Receber adiantamento',
-                                () => {
-                                    const nextEnabled = !(state.adiant13FC > 0);
-                                    if (!nextEnabled && state.segunda13FC > 0) {
-                                        update('segunda13FC', 0);
-                                    }
-                                    update('adiant13FC', nextEnabled ? 1 : 0);
-                                }
-                            )
-                        )}
-                    </div>
-                )}
-
-                {/* 2ª Parcela - Vencimento */}
-                <div>
-                    <div className="flex justify-between items-center mb-1">
-                        <label className={styles.label}>2ª Parcela (Cargo Efetivo)</label>
-                        {state.manualAdiant13 && !customizarSegunda && (
-                            <span className="text-body-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                                Saldo automático
-                            </span>
-                        )}
-                    </div>
-                    {state.manualAdiant13 ? (
-                        customizarSegunda ? (
-                            <div>
-                                <input id={`${fieldId}-segunda13Venc`} aria-label="Segunda parcela do cargo efetivo"
-                                    type="text"
-                                    className={styles.input}
-                                    data-calculator="true"
-                                    value={state.segunda13Venc ? state.segunda13Venc.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                    onChange={e => update('segunda13Venc', parseCurrencyInput(e.target.value))}
-                                    placeholder="0,00"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setCustomizarSegunda(false);
-                                        update('segunda13Venc', 1);
-                                    }}
-                                    className="text-body-xs text-secondary-600 dark:text-secondary-400 hover:underline mt-1"
-                                >
-                                    Voltar para cálculo automático do saldo
-                                </button>
-                            </div>
-                        ) : (
-                            <div className={styles.innerBox}>
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <span className="text-body-xs font-bold text-neutral-800 dark:text-neutral-200">
-                                            {formatCurrency(state.segunda13Venc > 1 ? state.segunda13Venc : saldoVencCalculado)}
-                                        </span>
-                                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                                            Integral ({formatCurrency(baseSemFC)}) − Adiantamento ({formatCurrency(state.adiant13Venc || 0)})
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setCustomizarSegunda(true);
-                                            update('segunda13Venc', saldoVencCalculado);
-                                        }}
-                                        className="text-body-xs text-neutral-500 hover:text-secondary-600 dark:hover:text-secondary-400 underline"
-                                    >
-                                        Editar
-                                    </button>
-                                </div>
-                            </div>
-                        )
-                    ) : (
-                        renderAutoToggle(
-                            state.segunda13Venc > 0,
-                            state.segunda13Venc,
-                            'Receber segunda parcela',
-                            () => {
-                                const nextEnabled = !(state.segunda13Venc > 0);
-                                if (nextEnabled) {
-                                    update('segunda13Venc', 1);
-                                    if (state.adiant13Venc <= 0) {
-                                        update('adiant13Venc', 1);
-                                    }
-                                    return;
-                                }
-                                update('segunda13Venc', 0);
-                            }
-                        )
-                    )}
-                </div>
-
-                {/* 2ª Parcela - FC/CJ */}
-                {funcaoValorBruta > 0 && incideFuncao && (
-                    <div>
-                        <div className="flex justify-between items-center mb-1">
-                            <label className={styles.label}>2ª Parcela (FC/CJ)</label>
-                            {state.manualAdiant13 && !customizarSegunda && (
-                                <span className="text-body-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                                    Saldo automático
-                                </span>
-                            )}
-                        </div>
-                        {state.manualAdiant13 ? (
-                            customizarSegunda ? (
-                                <div>
-                                    <input id={`${fieldId}-segunda13FC`} aria-label="Segunda parcela da função FC/CJ"
-                                        type="text"
-                                        className={styles.input}
-                                        data-calculator="true"
-                                        value={state.segunda13FC ? state.segunda13FC.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
-                                        onChange={e => update('segunda13FC', parseCurrencyInput(e.target.value))}
-                                        placeholder="0,00"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setCustomizarSegunda(false);
-                                            update('segunda13FC', 1);
-                                        }}
-                                        className="text-body-xs text-secondary-600 dark:text-secondary-400 hover:underline mt-1"
-                                    >
-                                        Voltar para cálculo automático do saldo
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className={styles.innerBox}>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <span className="text-body-xs font-bold text-neutral-800 dark:text-neutral-200">
-                                                {formatCurrency(state.segunda13FC > 1 ? state.segunda13FC : saldoFCCalculado)}
-                                            </span>
-                                            <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                                                Integral ({formatCurrency(funcaoValor)}) − Adiantamento ({formatCurrency(state.adiant13FC || 0)})
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setCustomizarSegunda(true);
-                                                update('segunda13FC', saldoFCCalculado);
-                                            }}
-                                            className="text-body-xs text-neutral-500 hover:text-secondary-600 dark:hover:text-secondary-400 underline"
-                                        >
-                                            Editar
-                                        </button>
-                                    </div>
-                                </div>
-                            )
-                        ) : (
-                            renderAutoToggle(
-                                state.segunda13FC > 0,
-                                state.segunda13FC,
-                                'Receber segunda parcela',
-                                () => {
-                                    const nextEnabled = !(state.segunda13FC > 0);
-                                    if (nextEnabled) {
-                                        update('segunda13FC', 1);
-                                        if (state.adiant13FC <= 0) {
-                                            update('adiant13FC', 1);
-                                        }
-                                        return;
-                                    }
-                                    update('segunda13FC', 0);
-                                }
-                            )
-                        )}
-                    </div>
-                )}
-            </div>
-
-            <Accordion title="Edição manual do adiantamento do 13º"
-                summary={state.manualAdiant13 ? 'Adiantamento informado manualmente' : 'Parcelas calculadas automaticamente'}
-                defaultOpen={state.manualAdiant13}>
-                <label className={styles.checkboxLabel}>
-                    <input
-                        type="checkbox"
-                        checked={state.manualAdiant13}
-                        onChange={e => handleToggleManual(e.target.checked)}
-                        className={styles.checkbox}
-                    />
-                    Ajustar valores manualmente (adiantamento recebido)
-                </label>
-            </Accordion>
-
-
-            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
-                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
-                    Composição da remuneração de referência (13º) — {formatCurrency(totalBaseApurada)}
-                </summary>
-                <div className="mt-3 space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className={styles.label}>
-                        Composição da Remuneração de Referência (13º)
-                    </span>
-                    <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                        Selecione as parcelas que integram o cálculo
-                    </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        </> : <section aria-labelledby={`${fieldId}-title`} className="space-y-6">
+            <h4 ref={headingRef} tabIndex={-1} id={`${fieldId}-title`} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2">Personalizar 13º salário</h4>
+            <section aria-labelledby={`${fieldId}-composition`} className="space-y-3">
+                <h5 id={`${fieldId}-composition`} className="text-body font-semibold">Composição da remuneração de referência (13º)</h5>
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Selecione as parcelas que integram o cálculo.</p>
+                <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700 [&>label]:py-3">
                     {/* Vencimento Básico */}
                     <label className={styles.checkboxLabel}>
                         <input
@@ -445,7 +201,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                         </span>
                     </label>
 
-                    {/* GAJ (140%) */}
+                    {/* GAJ */}
                     <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
@@ -454,7 +210,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                             onChange={e => update('decimoIncideGAJ', e.target.checked)}
                         />
                         <span className="flex-1 flex items-center justify-between gap-2">
-                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAJ (140%)</span>
+                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAJ</span>
                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gaj)}</span>
                         </span>
                     </label>
@@ -610,7 +366,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
 
                 {/* Outras parcelas / Ajustes na base */}
                 <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <label className="text-body-xs text-neutral-600 dark:text-neutral-400">
+                    <label htmlFor={`${fieldId}-decimoOutrasParcelas`} className="text-body-xs text-neutral-600 dark:text-neutral-400">
                         Outras parcelas / Ajustes na base do 13º:
                     </label>
                     <div className="relative w-full sm:w-44">
@@ -632,8 +388,30 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({ state, update, s
                     <span className={styles.internalTotalLabel}>Base apurada da remuneração (13º)</span>
                     <span className={styles.internalTotalValue}>{formatCurrency(totalBaseApurada)}</span>
                 </div>
-                </div>
-            </details>
-        </div>
-    );
+            </section>
+            <section aria-labelledby={`${fieldId}-adjustments`} className="space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <h5 id={`${fieldId}-adjustments`} className="text-body font-semibold">Ajustes das parcelas</h5>
+                <label className={styles.checkboxLabel}>
+                    <input type="checkbox" className={styles.checkbox} checked={state.manualAdiant13}
+                        onChange={event => handleToggleManual(event.target.checked)} />
+                    Informar o adiantamento recebido
+                </label>
+                {state.manualAdiant13 && <>
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Informe os valores do adiantamento no contracheque. A 2ª parcela terá o saldo calculado automaticamente, salvo edição do valor.</p>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {renderAmount('adiant13Venc', 'Adiantamento recebido — Cargo efetivo')}
+                        {hasFunction && renderAmount('adiant13FC', 'Adiantamento recebido — FC/CJ')}
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {renderSecondAdjustment(false)}
+                        {hasFunction && renderSecondAdjustment(true)}
+                    </div>
+                </>}
+            </section>
+            <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <button type="button" className={actionClass} onClick={() => closeEditor(false)}>Cancelar</button>
+                <button type="button" className={`${actionClass} bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-900`} onClick={() => closeEditor(true)}>Aplicar ajustes</button>
+            </div>
+        </section>}
+    </div>;
 };
