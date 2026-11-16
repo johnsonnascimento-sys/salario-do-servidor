@@ -131,9 +131,10 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                             onChange={e => update('incidirPSSGrat', e.target.checked)}
                         />
                         <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
-                            Incluir na base de cálculo do PSS
+                            Considerar esta gratificação no cálculo da contribuição previdenciária (PSS)
                         </span>
                     </label>
+            <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Quando marcada, a gratificação entra no valor usado para calcular o desconto de PSS. Confira se essa inclusão se aplica ao seu caso.</p>
 
             {isGratAtiva && typeof courtConfig?.payrollRules?.specificGratificationPssDefaults?.[state.gratEspecificaTipo as 'gae' | 'gas'] !== 'boolean' && (
                 <p role="status" className="text-body-xs text-amber-700 dark:text-amber-300">
@@ -144,7 +145,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
             {/* Composição da Base da Remuneração (similar ao 13º e GAACTA) */}
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
                 <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
-                    Composição da base de cálculo — {formatCurrency(totalBaseApurada)} <span className="ml-2 text-primary">Personalizar</span>
+                    Composição da base de cálculo <span className="ml-2 text-primary">Personalizar</span>
                 </summary>
                 <div className="mt-3 space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
