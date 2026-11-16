@@ -127,9 +127,10 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <input id={`${fieldId}-dependentes`} aria-describedby={`${fieldId}-tax-help`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
                     <button type="button" aria-label="Adicionar dependente" onClick={() => update('dependentes', state.dependentes + 1)} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold dark:border-neutral-600">+</button>
                 </div>
-            </div>            </div>
+            </div>
+            </div>
         </section>
-        <details className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
+        <details className={`${styles.card} space-y-3`}
             open={optionsOpen} id={`${fieldId}-options`} onToggle={event => setOptionsOpen(event.currentTarget.open)}>
             <summary className="cursor-pointer min-h-11 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
                 Opções adicionais de previdência ({activeOptions} {activeOptions === 1 ? 'ativa' : 'ativas'})
@@ -172,7 +173,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </>}
             {funprespAdditionalValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespAdditionalValidationError}</p>}
         </details>
-        <details aria-label="Resumo calculado das configurações tributárias" className="group mt-4 rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30">
+        <details aria-label="Resumo calculado das configurações tributárias" className={`${styles.card} group`}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                 <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>
                 <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
