@@ -206,6 +206,8 @@ test('OvertimeCard atualiza composição somente na instância selecionada e man
     const editor = tree.root.findByProps({ 'aria-label': 'Personalizar cálculo de Serviço Extraordinário' });
     assert.equal(editor.findAllByType('details').length, 0, 'Parcelas ficam visíveis sem accordion');
     assert.ok(editor.findAllByType('input').every(input => input.props.type === 'checkbox'), 'O editor contém somente parcelas da base');
+    assert.equal(tree.root.findAllByType('input').length, 1, 'Ao personalizar, os campos da tela normal são substituídos pela composição da base');
+    assert.equal(tree.root.findAllByType('details').length, 0, 'Jornada e tributação não aparecem durante a personalização');
     assert.equal(JSON.stringify(tree.toJSON()).includes('Prestado no recesso forense'), false);
     act(() => tree.root.findByProps({ 'aria-label': 'Incluir Abono de Permanência na base de HE' }).props.onChange({ target: { checked: false } }));
     assert.equal(patch, undefined, 'Edição da base só é aplicada ao confirmar');

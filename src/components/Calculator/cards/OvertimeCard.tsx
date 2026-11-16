@@ -138,7 +138,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
     return (
         <div className="space-y-4">
-
+            {!draft && <>
             <div className={styles.innerBox}>
                 <div className="space-y-4">
                     {gaactaAtivo && !gaactaRecesso && !dismissedGaactaWarning && (
@@ -441,12 +441,12 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     )}
                 </div>
             </details>
-
-            {!draft && <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
+            <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
                 <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(structuredClone(savedEntry))}>
                     <SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo
                 </button>
-            </div>}
+            </div>
+            </>}
             {draft && <section className="space-y-4" aria-label="Personalizar cálculo de Serviço Extraordinário">
                 <h4 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personalizar Serviço Extraordinário</h4>
             <div className="space-y-3">
