@@ -184,16 +184,16 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
                     </h3>
-                    {headerInfo.normBadge && instance.presetId !== 'gaacta' && (
+                    {headerInfo.normBadge && !['gaacta', 'hora_extra'].includes(instance.presetId) && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
                         </span>
                     )}
-                    {instance.presetId === 'gaacta' && (
+                    {['gaacta', 'hora_extra'].includes(instance.presetId) && (
                         <details className="relative">
-                            <summary aria-label="Informações sobre a GAACTA" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">i</span></summary>
+                            <summary aria-label={instance.presetId === 'hora_extra' ? 'Informações sobre Serviço Extraordinário' : 'Informações sobre a GAACTA'} className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">i</span></summary>
                             <div className="absolute left-0 top-full z-20 mt-1 w-72 max-w-[min(18rem,80vw)] rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                                <p className="font-semibold">Gratificação por Atividades de Alta Complexidade</p>
+                                <p className="font-semibold">{headerInfo.title}</p>
                                 <p className="mt-2">{headerInfo.normBadge || 'Não há norma cadastrada e vigente para esta competência.'}</p>
                             </div>
                         </details>
@@ -240,7 +240,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 courtConfig={courtConfig}
             />
 
-            <PresetGrossSummary compact={instance.presetId === 'gaacta'} lines={lines}>
+            <PresetGrossSummary compact={['gaacta', 'hora_extra'].includes(instance.presetId)} lines={lines}>
                 {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
             </PresetGrossSummary>
         </div>

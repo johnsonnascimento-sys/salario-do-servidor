@@ -18,8 +18,8 @@ interface OvertimeCardProps {
 }
 
 export const OvertimeCard: React.FC<OvertimeCardProps> = ({
-    entry,
-    updateEntry,
+    entry: savedEntry,
+    updateEntry: saveEntry,
     functionKeys,
     eligibleFunctionKeys = [],
     baseItems = [],
@@ -31,6 +31,12 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     gaactaRecesso
 }) => {
     const fieldId = React.useId();
+    const [draft, setDraft] = React.useState<OvertimeEntry | null>(null);
+    const entry = draft ?? savedEntry;
+    const updateEntry = (id: string, patch: Partial<OvertimeEntry>) => {
+        if (draft) setDraft(current => current ? { ...current, ...patch } : current);
+        else saveEntry(id, patch);
+    };
     const usarSubstituicaoFuncao = Boolean(entry.usarSubstituicaoFuncao);
 
     const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
@@ -169,6 +175,28 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         </div>
                     )}
 
+                    {!draft && <>
+                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                            {usarSubstituicaoFuncao ? 'Horas por função substituída' : 'Horas pela função atual'} · Divisor {currentDivisor} · {totalHoras}h informadas
+                        </p>
+                        {!usarSubstituicaoFuncao && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {(['qtd50', 'qtd100'] as const).map((field, index) => <div key={field}>
+                                <label htmlFor={`${fieldId}-${field}`} className={styles.label}>Horas extras ({index === 0 ? '50%' : '100%'})</label>
+                                <input id={`${fieldId}-${field}`} type="number" min="0" step="any" className={styles.input} value={entry[field] || ''}
+                                    onChange={e => updateEntry(entry.id, { [field]: Math.max(0, Number(e.target.value) || 0) })} />
+                            </div>)}
+                        </div>}
+                    </>}
+                </div>
+            </div>
+            {!draft && <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(structuredClone(savedEntry))}>
+                    <SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo
+                </button>
+            </div>}
+            {draft && <section className="space-y-4" aria-label="Personalizar cálculo de Serviço Extraordinário">
+                <h4 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personalizar Serviço Extraordinário</h4>
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Ajuste a jornada, as horas, a tributação e as parcelas da base. Confirme para atualizar o cálculo.</p>
                     <details className="group" open={selectedOption === 'custom' || undefined}>
                         <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                             <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
@@ -389,8 +417,6 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                             </div>
                         </div>
                     )}
-                </div>
-            </div>
 
             <details className="group pt-1" open={entry.isEA || entry.excluirIR || undefined}>
                 <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body font-semibold text-neutral-600 dark:text-neutral-400 hover:text-secondary transition-colors rounded min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
@@ -451,7 +477,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
 
             <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
                 <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
-                    Composição da base de cálculo da hora extra — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    Composição da base de cálculo da hora extra (base aplicada) — {baseTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </summary>
                 <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">
                     Selecione as parcelas para calcular a hora extra neste card. Na substituição, a parcela FC/CJ acompanha a função substituída elegível; os valores abaixo representam a função atual.
@@ -459,7 +485,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {baseItems.map(part => (
                         <label key={part.key} className={styles.checkboxLabel}>
-                            <input type="checkbox" className={styles.checkbox} checked={part.selecionado} aria-label={`Incluir ${part.label} na base de HE`}
+                            <input type="checkbox" className={styles.checkbox} checked={entry.composicaoBase?.[part.key] ?? part.selecionado} aria-label={`Incluir ${part.label} na base de HE`}
                                 onChange={e => updateEntry(entry.id, { composicaoBase: { ...entry.composicaoBase, [part.key]: e.target.checked } })} />
                             <span className="flex flex-1 justify-between gap-2 text-body-xs">
                                 <span>{part.label}</span>
@@ -470,6 +496,12 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                 </div>
                 <p className="mt-3 text-body-xs text-neutral-500 dark:text-neutral-400">GAACTA e créditos dinâmicos entram somente quando selecionados. A seleção é uma opção da simulação e deve refletir as parcelas admitidas na sua folha.</p>
             </details>
+                <div className="flex flex-wrap justify-end gap-2">
+                    <button type="button" className="min-h-11 rounded-lg border border-neutral-300 px-4 py-2 dark:border-neutral-600" onClick={() => setDraft(null)}>Cancelar</button>
+                    <button type="button" className="min-h-11 rounded-lg bg-neutral-800 px-4 py-2 font-semibold text-white dark:bg-neutral-200 dark:text-neutral-900" onClick={() => { saveEntry(savedEntry.id, draft); setDraft(null); }}>Aplicar ajustes</button>
+                </div>
+            </section>}
+
         </div>
     );
 };
