@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
+import { automaticSecondThirteenthAmount, resolveSecondThirteenthMode } from '../../../services/agency/engine/modules/thirteenthModes';
 import { SlidersHorizontal } from 'lucide-react';
-import { CalculatorState, CourtConfig } from '../../../types';
+import { CalculatorState, CourtConfig, SecondThirteenthMode } from '../../../types';
 import { formatCurrency, getTablesForPeriod } from '../../../utils/calculations';
 
 interface ThirteenthCardProps {
@@ -20,7 +21,7 @@ const editableFields = [
     'decimoIncideAQTitulo', 'decimoIncideAQTreino', 'decimoIncideVPNI',
     'decimoIncideATS', 'decimoIncideGrat', 'decimoIncideAbono',
     'decimoRubricasInclusas', 'decimoOutrasParcelas', 'manualAdiant13',
-    'adiant13Venc', 'adiant13FC', 'segunda13Venc', 'segunda13FC'
+    'adiant13Venc', 'adiant13FC', 'segunda13Venc', 'segunda13FC', 'segunda13ModoVenc', 'segunda13ModoFC'
 ] as const satisfies readonly (keyof CalculatorState)[];
 
 type ThirteenthDraft = Pick<CalculatorState, typeof editableFields[number]>;
@@ -35,7 +36,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
 }) => {
     const fieldId = React.useId();
     const [draft, setDraft] = useState<ThirteenthDraft | null>(null);
-    const [customSecond, setCustomSecond] = useState({ segunda13Venc: false, segunda13FC: false });
+    const manualSecondAmounts = useRef<Partial<Record<'segunda13Venc' | 'segunda13FC', number>>>({});
     const initialDraft = useRef<ThirteenthDraft | null>(null);
     const headingRef = useRef<HTMLHeadingElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -55,7 +56,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
     };
     const openEditor = () => {
         const next = pickInputs(inputs);
-        setCustomSecond({ segunda13Venc: Boolean(inputs.manualAdiant13 && next.segunda13Venc > 1), segunda13FC: Boolean(inputs.manualAdiant13 && next.segunda13FC > 1) });
+        manualSecondAmounts.current = {};
         initialDraft.current = next;
         setDraft(next);
         onEditingChange?.(true);
@@ -102,11 +103,11 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
     const totalBaseApurada = roundCurrency(baseSemFC + funcaoValor);
     const hasFunction = funcaoValorBruta > 0 && incideFuncao;
     const handleToggleManual = (enabled: boolean) => {
-        setCustomSecond({ segunda13Venc: false, segunda13FC: false });
         setDraft(current => current ? {
             ...current, manualAdiant13: enabled,
             // Automatic amounts restored from snapshots are selections, not manual overrides.
-            ...(enabled ? { segunda13Venc: current.segunda13Venc > 0 ? 1 : 0, segunda13FC: current.segunda13FC > 0 ? 1 : 0 } : {}),
+            ...(enabled && current.segunda13ModoVenc === undefined ? { segunda13Venc: current.segunda13Venc > 0 ? 1 : 0 } : {}),
+            ...(enabled && current.segunda13ModoFC === undefined ? { segunda13FC: current.segunda13FC > 0 ? 1 : 0 } : {}),
             ...(enabled && current.adiant13Venc <= 1 ? { adiant13Venc: savedState.adiant13Venc > 1 ? savedState.adiant13Venc : roundCurrency(baseSemFC / 2) } : {}),
             ...(enabled && hasFunction && current.adiant13FC <= 1 ? { adiant13FC: savedState.adiant13FC > 1 ? savedState.adiant13FC : roundCurrency(funcaoValor / 2) } : {})
         } : current);
@@ -115,44 +116,69 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
         <div className="space-y-1">
             <label htmlFor={`${fieldId}-${field}`} className={styles.label}>{label}</label>
             <input id={`${fieldId}-${field}`} type="text" inputMode="decimal" data-calculator="true" className={styles.input}
-                value={state[field] ? state[field].toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}
+                value={state[field].toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 placeholder="0,00" onChange={event => update(field, parseCurrencyInput(event.target.value))} />
         </div>
     );
+    const getMode = (isFunction: boolean, source = inputs) => resolveSecondThirteenthMode(
+        isFunction ? source.segunda13ModoFC : source.segunda13ModoVenc,
+        isFunction ? source.segunda13FC : source.segunda13Venc,
+        source.manualAdiant13, source.tipoCalculo === 'nov'
+    );
     const renderSecondAdjustment = (isFunction: boolean) => {
         const field = isFunction ? 'segunda13FC' : 'segunda13Venc';
-        const advance = isFunction ? state.adiant13FC : state.adiant13Venc;
+        const modeField = isFunction ? 'segunda13ModoFC' : 'segunda13ModoVenc';
+        const firstField = isFunction ? 'adiant13FC' : 'adiant13Venc';
         const base = isFunction ? funcaoValor : baseSemFC;
-        const label = isFunction ? '2ª parcela — FC/CJ' : '2ª parcela — Cargo efetivo';
-        const selected = state.tipoCalculo === 'nov' || state[field] > 0;
-        const custom = customSecond[field];
-        return <div className="space-y-2">
-            <label className={styles.checkboxLabel}>
-                <input type="checkbox" className={styles.checkbox} checked={selected}
-                    disabled={state.tipoCalculo === 'nov'} onChange={event => update(field, event.target.checked ? 1 : 0)} />
-                {label}
-            </label>
-            {selected && <>
-                <label className={styles.checkboxLabel}>
-                    <input type="checkbox" className={styles.checkbox} checked={custom}
-                        onChange={event => {
-                            setCustomSecond(current => ({ ...current, [field]: event.target.checked }));
-                            update(field, event.target.checked ? roundCurrency(Math.max(0, base - advance)) : 1);
-                        }} />
-                    Informar valor da 2ª parcela ({isFunction ? 'FC/CJ' : 'cargo efetivo'})
-                </label>
-                {custom ? renderAmount(field, label) : <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Saldo automático após o abatimento do adiantamento.</p>}
-            </>}
-        </div>;
+        const advance = state.manualAdiant13 ? state[firstField] : base / 2;
+        const mode = getMode(isFunction, state);
+        const label = isFunction ? 'FC/CJ' : 'Cargo efetivo';
+        const preview = roundCurrency(automaticSecondThirteenthAmount(base, advance, state.manualAdiant13));
+        const changeMode = (next: SecondThirteenthMode) => {
+            if (mode === 'manual') manualSecondAmounts.current[field] = state[field];
+            const amount = next === 'manual' ? (manualSecondAmounts.current[field] ?? preview) : next === 'automatico' ? 1 : 0;
+            setDraft(current => current ? { ...current, [modeField]: next, [field]: amount,
+                ...(!current.manualAdiant13 && next !== 'excluir' && current[firstField] <= 0 ? { [firstField]: 1 } : {})
+            } : current);
+        };
+        return <fieldset className="min-w-0 space-y-3" aria-describedby={`${fieldId}-${field}-description`}>
+            <legend className="mb-2 text-body font-semibold">{label}</legend>
+            <div className="space-y-1">
+                {([
+                    ['excluir', 'Não incluir na simulação'],
+                    ['automatico', 'Calcular automaticamente'],
+                    ['manual', 'Informar valor manual']
+                ] as const).map(([value, text]) => <label key={value} className={`${styles.checkboxLabel} ${value === 'excluir' && state.tipoCalculo === 'nov' ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <input type="radio" name={`${fieldId}-${field}-mode`} value={value} className={styles.checkbox}
+                        checked={mode === value} disabled={value === 'excluir' && state.tipoCalculo === 'nov'}
+                        onChange={() => changeMode(value)} />
+                    {text}
+                </label>)}
+            </div>
+            {state.tipoCalculo === 'nov' && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">No tipo Novembro, a 2ª parcela já está incluída.</p>}
+            <div id={`${fieldId}-${field}-description`} className="space-y-2 text-body-xs">
+                {mode === 'excluir' ? <p>Esta parcela não será acrescentada ao resultado.</p> : mode === 'automatico' ? <>
+                    <p className="flex flex-wrap justify-between gap-2"><span className="font-medium">Saldo bruto calculado</span><strong className="font-mono">{formatCurrency(preview)}</strong></p>
+                    <p className="text-neutral-500 dark:text-neutral-400">Remuneração de referência ({formatCurrency(base)}) − adiantamento recebido ({formatCurrency(advance)}).</p>
+                </> : <>
+                    {renderAmount(field, `Valor bruto da 2ª parcela — ${label} (R$)`)}
+                    <p className="text-neutral-500 dark:text-neutral-400">Será utilizado o valor informado por você.</p>
+                </>}
+            </div>
+        </fieldset>;
     };
     const toggleParcel = (second: boolean, isFunction: boolean, enabled: boolean) => {
         const firstField = isFunction ? 'adiant13FC' : 'adiant13Venc';
         const secondField = isFunction ? 'segunda13FC' : 'segunda13Venc';
         if (second) {
+            saveField(isFunction ? 'segunda13ModoFC' : 'segunda13ModoVenc', enabled ? 'automatico' : 'excluir');
             if (enabled && savedState[firstField] <= 0) saveField(firstField, 1);
             saveField(secondField, enabled ? 1 : 0);
         } else {
-            if (!enabled && savedState[secondField] > 0) saveField(secondField, 0);
+            if (!enabled) {
+                saveField(isFunction ? 'segunda13ModoFC' : 'segunda13ModoVenc', 'excluir');
+                if (savedState[secondField] > 0) saveField(secondField, 0);
+            }
             saveField(firstField, enabled ? 1 : 0);
         }
     };
@@ -165,15 +191,16 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                     {[false, ...(hasFunction ? [true] : [])].map(isFunction => {
                         const field = second ? (isFunction ? 'segunda13FC' : 'segunda13Venc') : (isFunction ? 'adiant13FC' : 'adiant13Venc');
                         return <label key={field} className={styles.checkboxLabel}>
-                            <input type="checkbox" className={styles.checkbox} checked={savedState[field] > 0}
+                            <input type="checkbox" className={styles.checkbox} checked={second ? getMode(isFunction) !== 'excluir' : savedState[field] > 0}
+                                disabled={state.tipoCalculo === 'nov'}
                                 onChange={event => toggleParcel(second, isFunction, event.target.checked)} />
                             {isFunction ? 'FC/CJ' : 'Cargo efetivo'}
                         </label>;
                     })}
                 </fieldset>)}
-            </div> : <div className="flex flex-wrap justify-between gap-2 text-body-xs text-neutral-600 dark:text-neutral-300">
-                <span>Adiantamento informado</span>
-                <span>{inputs.segunda13Venc > 1 || inputs.segunda13FC > 1 ? '2ª parcela personalizada' : 'Saldo automático'}</span>
+            </div> : <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Adiantamento informado</p>}
+            {(state.manualAdiant13 || inputs.segunda13ModoVenc || inputs.segunda13ModoFC) && <div className="space-y-1 text-body-xs text-neutral-600 dark:text-neutral-300">
+                {[false, ...(hasFunction ? [true] : [])].map(isFunction => <p key={String(isFunction)}>2ª parcela — {isFunction ? 'FC/CJ' : 'Cargo efetivo'}: {({ automatico: 'cálculo automático', manual: 'valor manual', excluir: 'não incluída' })[getMode(isFunction)]}</p>)}
             </div>}
             {overview}
             <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
@@ -390,23 +417,27 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                 </div>
             </section>
             <section aria-labelledby={`${fieldId}-adjustments`} className="space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                <h5 id={`${fieldId}-adjustments`} className="text-body font-semibold">Ajustes das parcelas</h5>
+                <h5 id={`${fieldId}-adjustments`} className="text-body font-semibold">Adiantamento já recebido</h5>
                 <label className={styles.checkboxLabel}>
                     <input type="checkbox" className={styles.checkbox} checked={state.manualAdiant13}
                         onChange={event => handleToggleManual(event.target.checked)} />
                     Informar o adiantamento recebido
                 </label>
                 {state.manualAdiant13 && <>
-                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Informe os valores do adiantamento no contracheque. A 2ª parcela terá o saldo calculado automaticamente, salvo edição do valor.</p>
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Informe os valores do adiantamento no contracheque.</p>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {renderAmount('adiant13Venc', 'Adiantamento recebido — Cargo efetivo')}
                         {hasFunction && renderAmount('adiant13FC', 'Adiantamento recebido — FC/CJ')}
                     </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {renderSecondAdjustment(false)}
-                        {hasFunction && renderSecondAdjustment(true)}
-                    </div>
                 </>}
+            </section>
+            <section aria-labelledby={`${fieldId}-second`} className="space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <h5 id={`${fieldId}-second`} className="text-body font-semibold">Como calcular a 2ª parcela</h5>
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Os valores desta seção são brutos. IR e previdência aparecem no detalhamento após aplicar os ajustes.</p>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    {renderSecondAdjustment(false)}
+                    {hasFunction && renderSecondAdjustment(true)}
+                </div>
             </section>
             <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
                 <button type="button" className={actionClass} onClick={() => closeEditor(false)}>Cancelar</button>

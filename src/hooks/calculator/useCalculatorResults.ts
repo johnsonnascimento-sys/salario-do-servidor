@@ -55,6 +55,7 @@ export const useCalculatorResults = (
         state.feriasIncideAQTitulo, state.feriasIncideAQTreino, state.feriasIncideATS,
         state.feriasIncideVPNI, state.feriasIncideAbono, state.feriasIncideGrat,
         state.feriasOutrasParcelas, state.feriasRubricasInclusas,
+        state.segunda13ModoVenc, state.segunda13ModoFC,
         state.manualAdiant13, state.adiant13Venc, state.adiant13FC, state.segunda13Venc, state.segunda13FC,
         state.decimoIncideVencimento, state.decimoIncideGAJ, state.decimoIncideFuncao,
         state.decimoIncideAQTitulo, state.decimoIncideAQTreino, state.decimoIncideATS,

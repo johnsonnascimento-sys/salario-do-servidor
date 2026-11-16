@@ -305,6 +305,8 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
         case 'decimo':
             return (
                 ['jan', 'jun', 'nov'].includes(state.tipoCalculo) ||
+                state.segunda13ModoVenc === 'automatico' || state.segunda13ModoVenc === 'manual' ||
+                state.segunda13ModoFC === 'automatico' || state.segunda13ModoFC === 'manual' ||
                 state.manualAdiant13 ||
                 state.adiant13Venc > 0 ||
                 state.adiant13FC > 0 ||

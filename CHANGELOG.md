@@ -1,3 +1,11 @@
+## Modos explícitos da segunda parcela do 13º — 16/11/2026
+
+- Substituídos os dois checks ambíguos por Não incluir na simulação, Calcular automaticamente e Informar valor manual, com escolha independente para cargo efetivo e FC/CJ. A personalização mostra saldo bruto e operação de abatimento no modo automático, além do campo monetário e orientação próprios do modo manual.
+- Modos opcionais preservados no estado, adaptador, recálculo e snapshots; ausência dos campos mantém o comportamento legado. A inclusão do tipo Novembro e a ausência/exclusão de FC/CJ permanecem respeitadas. Abrir/cancelar a personalização não materializa novos modos.
+- Valores manuais 0/0,50/1 deixam de ser interpretados como seletores automáticos e mantêm a retenção sobre o adiantamento correspondente. O resumo conserva eventual saldo líquido negativo, sem ocultar retenções nem transferi-las a componente excluído. Fórmulas tributárias e arredondamento não foram alterados.
+- Validação: 46 testes aprovados (14 de cálculo do 13º, 9 de interface e 23 de estado/restauração), checagem de tipos e build.
+- Revisão estática especializada de cálculo concluída sem bloqueadores. Conferência dos componentes reais no navegador com dados fictícios e motor existente, em desktop e 360/390 px, nos temas claro/escuro. Configuração publicada e salvamento autenticado não homologados nesta conferência.
+
 ## Reformulação do card de gratificação natalina — 16/11/2026
 
 - Visão principal compacta com ajuda normativa junto ao título, seleções de cargo efetivo/FC/CJ, totais bruto e líquido por parcela e acesso a Ver detalhamento do cálculo.

@@ -1,3 +1,4 @@
+export type SecondThirteenthMode = 'excluir' | 'automatico' | 'manual';
 import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry, CalculatedSubstitutionEntry } from './types/irEa';
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 import type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
@@ -405,6 +406,8 @@ export interface CalculatorState {
   adiant13FC: number;   // Adiantamento FC/CJ (Funcao) - Used for JAN/JUN logic
   segunda13Venc: number; // Segunda parcela do 13o (Base)
   segunda13FC: number;   // Segunda parcela do 13o (FC/CJ)
+  segunda13ModoVenc?: SecondThirteenthMode;
+  segunda13ModoFC?: SecondThirteenthMode;
   manualAdiant13: boolean; // Checkbox to not auto-calc 13th (JAN/JUN)
 
   // Composição da Base da Gratificação Específica (GAE / GAS - seleção dinâmica de parcelas)

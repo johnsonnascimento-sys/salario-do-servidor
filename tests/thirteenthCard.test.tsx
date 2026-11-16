@@ -20,7 +20,62 @@ const calculated = { ...input, adiant13Venc: 4500, adiant13FC: 500, segunda13Ven
     segunda13FC: 500, ir13: 400, pss13: 900 };
 const textOf = (node: ReactTestInstance): string => node.children.map(child => typeof child === 'string' ? child : textOf(child)).join('');
 const button = (tree: ReturnType<typeof create>, name: string) => tree.root.findAllByType('button').find(node => textOf(node) === name)!;
+const modeRadio = (tree: ReturnType<typeof create>, component: string, value: string) => tree.root.findAllByType('fieldset')
+    .find(node => textOf(node.findByType('legend')) === component)!.findAllByType('input').find(node => node.props.value === value)!;
 const checkbox = (tree: ReturnType<typeof create>, label: string) => tree.root.findAllByType('label').find(node => textOf(node).includes(label))!.findByType('input');
+
+test('segunda parcela manual zero não oculta retenções nem transfere descontos para FC excluída', () => {
+    const state: CalculatorState = { ...input, tipoCalculo: 'comum', manualAdiant13: true,
+        adiant13Venc: 3000, adiant13FC: 400, segunda13Venc: 0, segunda13FC: 0,
+        segunda13ModoVenc: 'manual', segunda13ModoFC: 'excluir', pss13: 300, ir13: 270 };
+    const lines = buildPresetGrossLines({ instance: { key: 'zero', presetId: 'decimo' }, state, courtConfig: config,
+        currentTables: { funcoes: { fc1: 1000 } }, isNovoAQ: false, noFunctionCode: '0', currentFunctionValue: 1000, gratificacaoEspecificaCalculada: 0 });
+    assert.equal(lines.find(line => line.label === 'Total 13º salário Líquido 2ª Parcela')?.value, -570);
+    assert.equal(lines.find(line => line.label === '2ª parcela FC/CJ Líquido')?.value, 0);
+    assert.equal(lines.find(line => line.label === 'Total 13º salário Líquido')?.value, 2830);
+});
+
+test('rádios exibem prévia automática reativa e preservam valor manual durante alteração da composição', () => {
+    const patches: unknown[] = [];
+    const manual = { ...input, manualAdiant13: true, adiant13Venc: 3000, adiant13FC: 400 };
+    let tree: ReturnType<typeof create>;
+    act(() => { tree = create(<ThirteenthCard state={{ ...calculated, ...manual }} inputState={manual}
+        update={(...patch) => patches.push(patch)} styles={styles} courtConfig={config} competenciaReferencia="11/2026" />); });
+    act(() => button(tree, 'Personalizar cálculo').props.onClick());
+    const cargo = () => tree.root.findAllByType('fieldset').find(node => textOf(node.findByType('legend')) === 'Cargo efetivo')!;
+    assert.equal(modeRadio(tree, 'Cargo efetivo', 'automatico').props.checked, true);
+    assert.match(textOf(cargo()), /Saldo bruto calculadoR\$ 6.000,00/);
+    act(() => checkbox(tree, 'GAJ').props.onChange({ target: { checked: false } }));
+    assert.match(textOf(cargo()), /Saldo bruto calculadoR\$ 3.000,00/);
+    act(() => modeRadio(tree, 'Cargo efetivo', 'manual').props.onChange());
+    const amount = () => cargo().findAllByType('input').find(node => node.props.type === 'text')!;
+    act(() => amount().props.onChange({ target: { value: '1,00' } }));
+    act(() => checkbox(tree, 'GAJ').props.onChange({ target: { checked: true } }));
+    assert.equal(amount().props.value, '1,00');
+    assert.match(textOf(cargo()), /Será utilizado o valor informado por você/);
+    act(() => modeRadio(tree, 'FC/CJ', 'excluir').props.onChange());
+    assert.deepEqual(patches, []);
+    act(() => button(tree, 'Aplicar ajustes').props.onClick());
+    assert.deepEqual(patches, [['segunda13FC', 0], ['segunda13ModoVenc', 'manual'], ['segunda13ModoFC', 'excluir']]);
+    act(() => tree.unmount());
+});
+
+test('Novembro mostra inclusão obrigatória e manual zero mantém modo explícito ao reabrir', () => {
+    const manual: CalculatorState = { ...input, tipoCalculo: 'nov', manualAdiant13: true,
+        segunda13ModoVenc: 'manual', segunda13Venc: 0, segunda13ModoFC: 'automatico' };
+    let tree: ReturnType<typeof create>;
+    act(() => { tree = create(<ThirteenthCard state={manual} inputState={manual} update={() => {}}
+        styles={styles} courtConfig={config} competenciaReferencia="11/2026" />); });
+    act(() => button(tree, 'Personalizar cálculo').props.onClick());
+    assert.equal(modeRadio(tree, 'Cargo efetivo', 'manual').props.checked, true);
+    assert.equal(modeRadio(tree, 'Cargo efetivo', 'excluir').props.disabled, true);
+    assert.equal(modeRadio(tree, 'FC/CJ', 'excluir').props.disabled, true);
+    assert.match(textOf(tree.root), /No tipo Novembro, a 2ª parcela já está incluída/);
+    act(() => button(tree, 'Cancelar').props.onClick());
+    assert.match(textOf(tree.root), /Cargo efetivo: valor manual/);
+    assert.match(textOf(tree.root), /FC\/CJ: cálculo automático/);
+    act(() => tree.unmount());
+});
 
 test('personalização cancela o rascunho e aplica somente os campos do 13º alterados', () => {
     const patches: unknown[] = [];
@@ -32,7 +87,7 @@ test('personalização cancela o rascunho e aplica somente os campos do 13º alt
         update={(...patch) => patches.push(patch)} styles={styles} courtConfig={config} competenciaReferencia="11/2026" />); });
     assert.equal(tree!.root.findAllByType('section').length, 0);
     act(() => button(tree, 'Personalizar cálculo').props.onClick());
-    assert.equal(checkbox(tree, 'Informar valor da 2ª parcela (cargo efetivo)').props.checked, false);
+    assert.equal(modeRadio(tree, 'Cargo efetivo', 'manual').props.checked, false);
     act(() => checkbox(tree, 'Crédito de teste').props.onChange({ target: { checked: true } }));
     act(() => checkbox(tree, 'Abono de Permanência').props.onChange({ target: { checked: false } }));
     assert.deepEqual(patches, []);
@@ -66,7 +121,7 @@ test('ativar edição do adiantamento em snapshot automático mantém a segunda 
         update={(...patch) => patches.push(patch)} styles={styles} courtConfig={config} competenciaReferencia="11/2026" />); });
     act(() => button(tree, 'Personalizar cálculo').props.onClick());
     act(() => checkbox(tree, 'Informar o adiantamento recebido').props.onChange({ target: { checked: true } }));
-    assert.equal(checkbox(tree, 'Informar valor da 2ª parcela (cargo efetivo)').props.checked, false);
+    assert.equal(modeRadio(tree, 'Cargo efetivo', 'manual').props.checked, false);
     act(() => button(tree, 'Aplicar ajustes').props.onClick());
     assert.deepEqual(patches, [['manualAdiant13', true], ['segunda13Venc', 1], ['segunda13FC', 1]]);
     act(() => tree.unmount());
@@ -79,7 +134,7 @@ test('seleção da segunda parcela ativa apenas o adiantamento correspondente e 
         courtConfig: config, competenciaReferencia: '11/2026' };
     act(() => { tree = create(<ThirteenthCard {...props} />); });
     act(() => tree.root.findAllByType('fieldset')[1].findAllByType('input')[0].props.onChange({ target: { checked: true } }));
-    assert.deepEqual(patches, [['adiant13Venc', 1], ['segunda13Venc', 1]]);
+    assert.deepEqual(patches, [['segunda13ModoVenc', 'automatico'], ['adiant13Venc', 1], ['segunda13Venc', 1]]);
     act(() => tree.update(<ThirteenthCard {...props} state={{ ...input, funcao: '0' }} />));
     assert.equal(tree.root.findAllByType('input').length, 2);
     act(() => tree.unmount());
@@ -92,11 +147,11 @@ test('edição manual restaura valores individuais do snapshot e permite retorna
     act(() => { tree = create(<ThirteenthCard state={{ ...manual, segunda13FC: 600 }} inputState={manual}
         update={(...patch) => patches.push(patch)} styles={styles} courtConfig={config} competenciaReferencia="11/2026" />); });
     act(() => button(tree, 'Personalizar cálculo').props.onClick());
-    assert.equal(checkbox(tree, 'Informar valor da 2ª parcela (cargo efetivo)').props.checked, true);
-    assert.equal(checkbox(tree, 'Informar valor da 2ª parcela (FC/CJ)').props.checked, false);
-    act(() => checkbox(tree, 'Informar valor da 2ª parcela (cargo efetivo)').props.onChange({ target: { checked: false } }));
+    assert.equal(modeRadio(tree, 'Cargo efetivo', 'manual').props.checked, true);
+    assert.equal(modeRadio(tree, 'FC/CJ', 'manual').props.checked, false);
+    act(() => modeRadio(tree, 'Cargo efetivo', 'automatico').props.onChange());
     act(() => button(tree, 'Aplicar ajustes').props.onClick());
-    assert.deepEqual(patches, [['segunda13Venc', 1]]);
+    assert.deepEqual(patches, [['segunda13Venc', 1], ['segunda13ModoVenc', 'automatico']]);
     act(() => tree.unmount());
 });
 

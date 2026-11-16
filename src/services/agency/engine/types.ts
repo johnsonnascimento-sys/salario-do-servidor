@@ -6,7 +6,7 @@ import type { IrEaContext } from '../../../types/irEa';
  */
 
 import { ICalculationParams } from '../types';
-import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../../types';
+import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry, SecondThirteenthMode } from '../../../types';
 import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
@@ -86,6 +86,8 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     adiant13FC: number;
     segunda13Venc: number;
     segunda13FC: number;
+    segunda13ModoVenc?: SecondThirteenthMode;
+    segunda13ModoFC?: SecondThirteenthMode;
     decimoIncideVencimento?: boolean;
     decimoIncideGAJ?: boolean;
     decimoIncideFuncao?: boolean;

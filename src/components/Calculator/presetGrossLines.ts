@@ -1,3 +1,4 @@
+import { resolveSecondThirteenthMode } from '../../services/agency/engine/modules/thirteenthModes';
 import { CalculatorState, CourtConfig } from '../../types';
 import {
     resolveDailiesDailyRate,
@@ -96,13 +97,18 @@ export const buildPresetGrossLines = ({
             const funpresp13 = roundCurrency(Math.max(0, state.valFunpresp13 || 0));
             const totalDescontos13 = roundCurrency(ir13 + pss13 + funpresp13);
             const baseSegundaParcela = roundCurrency(segunda13VencBruto + segunda13FcBruto);
-            const proporcaoSegundaVenc = baseSegundaParcela > 0 ? segunda13VencBruto / baseSegundaParcela : 0;
+            const incluiVenc = resolveSecondThirteenthMode(state.segunda13ModoVenc, state.segunda13Venc, state.manualAdiant13, state.tipoCalculo === 'nov') !== 'excluir';
+            const incluiFC = resolveSecondThirteenthMode(state.segunda13ModoFC, state.segunda13FC, state.manualAdiant13, state.tipoCalculo === 'nov') !== 'excluir';
+            const advanceVenc = incluiVenc ? primeira13VencBruto : 0;
+            const advanceFC = incluiFC ? primeira13FcBruto : 0;
+            const advances = advanceVenc + advanceFC;
+            const proporcaoSegundaVenc = baseSegundaParcela > 0 ? segunda13VencBruto / baseSegundaParcela : advances > 0 ? advanceVenc / advances : 0;
             const descontoSegundaVenc = roundCurrency(totalDescontos13 * proporcaoSegundaVenc);
             const descontoSegundaFc = roundCurrency(Math.max(0, totalDescontos13 - descontoSegundaVenc));
             const primeira13VencLiquido = primeira13VencBruto;
             const primeira13FcLiquido = primeira13FcBruto;
-            const segunda13VencLiquido = roundCurrency(Math.max(0, segunda13VencBruto - descontoSegundaVenc));
-            const segunda13FcLiquido = roundCurrency(Math.max(0, segunda13FcBruto - descontoSegundaFc));
+            const segunda13VencLiquido = roundCurrency(segunda13VencBruto - descontoSegundaVenc);
+            const segunda13FcLiquido = roundCurrency(segunda13FcBruto - descontoSegundaFc);
             const abono13Liquido = abono13Bruto;
             const totalPrimeiraParcelaBruto = roundCurrency(primeira13VencBruto + primeira13FcBruto);
             const totalPrimeiraParcelaLiquido = roundCurrency(primeira13VencLiquido + primeira13FcLiquido);

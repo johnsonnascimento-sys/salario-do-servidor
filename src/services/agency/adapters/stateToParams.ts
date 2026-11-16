@@ -112,6 +112,8 @@ export function mapStateToAgencyParams(
         adiant13FC: state.adiant13FC,
         segunda13Venc: state.segunda13Venc,
         segunda13FC: state.segunda13FC,
+        segunda13ModoVenc: state.segunda13ModoVenc,
+        segunda13ModoFC: state.segunda13ModoFC,
         decimoIncideVencimento: state.decimoIncideVencimento !== false,
         decimoIncideGAJ: state.decimoIncideGAJ !== false,
         decimoIncideFuncao: state.decimoIncideFuncao !== false,

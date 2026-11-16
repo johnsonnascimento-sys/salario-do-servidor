@@ -163,8 +163,8 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         { key: 'feriasDesc', label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', type: 'D', manual: true },
         { key: 'adiant13Venc', label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA ATIVO EC', type: 'C', manual: Boolean(safeSnapshot.manualAdiant13) },
         { key: 'adiant13FC', label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA FC/CJ ATIVO EC', type: 'C', manual: Boolean(safeSnapshot.manualAdiant13) },
-        { key: 'segunda13Venc', label: 'GRATIFICACAO NATALINA-2a PARCELA ATIVO EC', type: 'C', manual: Boolean(safeSnapshot.manualAdiant13) },
-        { key: 'segunda13FC', label: 'GRATIFICACAO NATALINA-2a PARCELA FC/CJ ATIVO EC', type: 'C', manual: Boolean(safeSnapshot.manualAdiant13) },
+        { key: 'segunda13Venc', label: 'GRATIFICACAO NATALINA-2a PARCELA ATIVO EC', type: 'C', manual: safeSnapshot.segunda13ModoVenc ? safeSnapshot.segunda13ModoVenc === 'manual' : Boolean(safeSnapshot.manualAdiant13) },
+        { key: 'segunda13FC', label: 'GRATIFICACAO NATALINA-2a PARCELA FC/CJ ATIVO EC', type: 'C', manual: safeSnapshot.segunda13ModoFC ? safeSnapshot.segunda13ModoFC === 'manual' : Boolean(safeSnapshot.manualAdiant13) },
     ];
     legacyInputs.forEach(({ key, label, type, manual }) => {
         if (safeSnapshot[key] !== undefined && safeSnapshot[key] !== null) return;

@@ -60,6 +60,66 @@ const createBaseParams = (overrides: Partial<IAgencyCalculationParams> = {}): IA
     ...overrides
 });
 
+test('modos explícitos separam saldo automático e valor manual por componente', async () => {
+    const result = await calculateThirteenth(createBaseParams({ manualAdiant13: true,
+        adiant13Venc: 3000, adiant13FC: 400, segunda13Venc: 9999, segunda13FC: 333,
+        segunda13ModoVenc: 'automatico', segunda13ModoFC: 'manual' }));
+    assert.equal(result.segunda13Venc, 6000);
+    assert.equal(result.segunda13FC, 333);
+    assert.equal(result.primeiraParcelaDesconto, 3400);
+    assert.equal(result.pss13, 900);
+});
+
+for (const value of [0, 0.5, 1]) {
+    test(`valor manual ${value} não é reinterpretado como automático e retém tributos sobre seu adiantamento`, async () => {
+        const result = await calculateThirteenth(createBaseParams({ manualAdiant13: true,
+            adiant13Venc: 3000, adiant13FC: 0, segunda13Venc: value, segunda13FC: 99,
+            segunda13ModoVenc: 'manual', segunda13ModoFC: 'excluir' }));
+        assert.equal(result.segunda13Venc, value);
+        assert.equal(result.segunda13FC, 0);
+        assert.equal(result.primeiraParcelaDesconto, 3000);
+        assert.equal(result.pss13, Math.round((3000 + value) * 0.1 * 100) / 100);
+        assert.ok(result.ir13 > 0);
+    });
+}
+
+test('excluir ignora valor residual da segunda ao resolver o adiantamento automático', async () => {
+    const result = await calculateThirteenth(createBaseParams({ tipoCalculo: 'comum', manualAdiant13: false,
+        adiant13Venc: 0, adiant13FC: 0, segunda13Venc: 999, segunda13FC: 222,
+        segunda13ModoVenc: 'excluir', segunda13ModoFC: 'excluir' }));
+    assert.equal(result.gratNatalinaTotal, 0);
+    assert.equal(result.adiant13Venc, 0);
+    assert.equal(result.adiant13FC, 0);
+    assert.equal(result.pss13, 0);
+});
+
+test('Novembro mantém inclusão automática e FC ausente ou excluída não gera valor residual', async () => {
+    const nov = await calculateThirteenth(createBaseParams({ tipoCalculo: 'nov', manualAdiant13: true,
+        adiant13Venc: 3000, adiant13FC: 400, segunda13Venc: 0, segunda13FC: 0,
+        segunda13ModoVenc: 'excluir', segunda13ModoFC: 'excluir' }));
+    assert.equal(nov.segunda13Venc, 6000);
+    assert.equal(nov.segunda13FC, 600);
+    for (const override of [{ funcao: '0' }, { decimoIncideFuncao: false }]) {
+        const result = await calculateThirteenth(createBaseParams({ ...override, manualAdiant13: true,
+            adiant13FC: 400, segunda13FC: 777, segunda13ModoFC: 'manual' }));
+        assert.equal(result.segunda13FC, 0);
+        assert.equal(result.adiant13FC, 0);
+    }
+});
+
+test('modos explícitos funcionam com adiantamento automático e rejeitam valores manuais inválidos', async () => {
+    const params = createBaseParams({ manualAdiant13: false, adiant13Venc: 0, adiant13FC: 0,
+        segunda13ModoVenc: 'manual', segunda13Venc: 1, segunda13ModoFC: 'automatico', segunda13FC: 0 });
+    const result = await calculateThirteenth(params);
+    assert.equal(result.adiant13Venc, 4500);
+    assert.equal(result.segunda13Venc, 1);
+    assert.equal(result.adiant13FC, 500);
+    assert.equal(result.segunda13FC, 500);
+    for (const value of [-1, NaN, Infinity]) {
+        await assert.rejects(() => calculateThirteenth({ ...params, segunda13Venc: value }), /valor bruto válido/);
+    }
+});
+
 test('Achado 1: Somente 1ª e 2ª parcelas do vencimento selecionadas', async () => {
     // Vencimento = 6000 + GAJ (3000) = 9000. Metade = 4500.
     // FC = 1000. Metade = 500.

@@ -325,3 +325,22 @@ test('reordering and removing repeated entries preserves identities and independ
     assert.deepEqual(current!.substitutionEntries.find(entry => entry.id === 'subst-second'), initial.substitutionEntries[1]);
     act(() => renderer.unmount());
 });
+
+
+test('explicit modes and manual zero survive a snapshot round trip', async () => {
+    const state: CalculatorState = { ...baseState(), tipoCalculo: 'comum', manualAdiant13: true,
+        adiant13Venc: 3000, adiant13FC: 400, segunda13Venc: 0, segunda13FC: 1,
+        segunda13ModoVenc: 'manual', segunda13ModoFC: 'automatico' };
+    const serialized = stripCalculatedFieldsFromCalculatorState(state);
+    assert.equal(serialized.segunda13ModoVenc, 'manual');
+    const restored = hydrateCalculatorState(JSON.parse(JSON.stringify(serialized)));
+    assert.equal(restored.segunda13Venc, 0);
+    assert.equal(restored.segunda13ModoFC, 'automatico');
+    const params = mapStateToAgencyParams(restored, 'jmu', config);
+    assert.equal(params.segunda13ModoVenc, 'manual');
+    assert.equal(params.segunda13ModoFC, 'automatico');
+    assert.deepEqual(await calculate(restored), await calculate(state));
+    assert.equal(hasPresetValue('decimo', { ...INITIAL_STATE, segunda13ModoVenc: 'manual' }), true);
+    const legacy = hydrateCalculatorState({ ...INITIAL_STATE, manualAdiant13: true, segunda13Venc: 1000 });
+    assert.equal(legacy.segunda13ModoVenc, undefined);
+});

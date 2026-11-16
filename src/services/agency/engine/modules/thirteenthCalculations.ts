@@ -10,6 +10,7 @@
  * - Abono sobre 13o
  */
 
+import { automaticSecondThirteenthAmount, resolveSecondThirteenthMode } from './thirteenthModes';
 import { CourtConfig } from '../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
@@ -140,9 +141,30 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         }
     }
 
+    // Explicit modes are authoritative; absent fields leave the legacy path untouched.
+    const modeVenc = resolveSecondThirteenthMode(params.segunda13ModoVenc, params.segunda13Venc, params.manualAdiant13, params.tipoCalculo === 'nov');
+    const modeFC = resolveSecondThirteenthMode(params.segunda13ModoFC, params.segunda13FC, params.manualAdiant13, params.tipoCalculo === 'nov');
+    const explicitAmounts = (mode: typeof modeVenc, rawAmount: number, base: number, advance: number, rawAdvance: number): [number, number] => {
+        if (!params.manualAdiant13) advance = ['jan', 'jun', 'nov'].includes(params.tipoCalculo) || rawAdvance > 0 || mode !== 'excluir' ? base / 2 : 0;
+        if (mode === 'excluir') return [advance, 0];
+        if (mode === 'automatico') return [advance, automaticSecondThirteenthAmount(base, advance, params.manualAdiant13)];
+        if (!Number.isFinite(rawAmount) || rawAmount < 0) throw new Error('Informe um valor bruto válido e não negativo para a 2ª parcela do 13º.');
+        return [advance, roundCurrency(rawAmount)];
+    };
+    if (params.segunda13ModoVenc !== undefined) {
+        [adiant13Venc, segunda13Venc] = explicitAmounts(modeVenc, params.segunda13Venc, baseSemFC, adiant13Venc, params.adiant13Venc);
+    }
+    if (params.segunda13ModoFC !== undefined) {
+        if (funcaoValor > 0) [adiant13FC, segunda13FC] = explicitAmounts(modeFC, params.segunda13FC, funcaoValor, adiant13FC, params.adiant13FC);
+        else { adiant13FC = 0; segunda13FC = 0; }
+    }
+    // An included manual zero still settles withholding on its own advance.
+    const incluiSegundaVenc = params.segunda13ModoVenc !== undefined ? modeVenc !== 'excluir' : segunda13Venc > 0;
+    const incluiSegundaFC = params.segunda13ModoFC !== undefined ? funcaoValor > 0 && modeFC !== 'excluir' : segunda13FC > 0;
+
     const primeiraParcelaRecebida = adiant13Venc + adiant13FC;
     const segundaParcelaRecebida = segunda13Venc + segunda13FC;
-    const houveSegundaParcela = segundaParcelaRecebida > 0;
+    const houveSegundaParcela = incluiSegundaVenc || incluiSegundaFC;
 
     let gratNatalinaTotal = primeiraParcelaRecebida + segundaParcelaRecebida;
     let pss13 = 0;
@@ -162,10 +184,10 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     // Cada componente (vencimento e FC/CJ) tem seu abatimento e recomposição
     // vinculados exclusivamente à existência de sua própria 2ª parcela (Regra 4.3.1 e 4.3.2).
     if (houveSegundaParcela) {
-        const primeiraVencParaTributo = segunda13Venc > 0
+        const primeiraVencParaTributo = incluiSegundaVenc
             ? (adiant13Venc > 0 ? adiant13Venc : (!params.manualAdiant13 ? metadeVencimento13 : 0))
             : 0;
-        const primeiraFCParaTributo = segunda13FC > 0
+        const primeiraFCParaTributo = incluiSegundaFC
             ? (adiant13FC > 0 ? adiant13FC : (!params.manualAdiant13 ? metadeFC13 : 0))
             : 0;
 
