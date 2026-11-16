@@ -543,7 +543,9 @@ test('transporte: acessibilidade do botão Info com mouse, teclado e Escape', as
   });
   assert.equal(infoButton.props['aria-expanded'], true);
   const tooltip = tree.root.findByProps({ role: 'tooltip' });
-  assert(tooltip.props.children.includes('Oficial de Justiça Avaliador Federal'));
+  assert(tooltip.findAllByType('span').some(node => typeof node.props.children === 'string' && node.props.children.includes('Oficial de Justiça Avaliador Federal')));
+  assert(tree.root.findByProps({ 'aria-label': 'Diminuir dias de serviço externo' }));
+  assert(tree.root.findByProps({ 'aria-label': 'Aumentar dias de serviço externo' }));
 
   // Escape fecha
   await act(async () => {
@@ -553,3 +555,4 @@ test('transporte: acessibilidade do botão Info com mouse, teclado e Escape', as
 
   await act(async () => { tree.unmount(); });
 });
+

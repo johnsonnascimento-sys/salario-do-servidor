@@ -157,6 +157,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     calculationReady = false
 }) => {
     const headerInfo = getPresetHeaderInfo(instance.presetId, courtConfig, presetLabel, instance, state);
+
     const [infoOpen, setInfoOpen] = useState(false);
     const infoRef = useRef<HTMLSpanElement>(null);
     useEffect(() => {
@@ -184,14 +185,14 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
                     </h3>
-                    {headerInfo.normBadge && !['gaacta', 'hora_extra'].includes(instance.presetId) && (
+                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte'].includes(instance.presetId) && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
                         </span>
                     )}
                     {['gaacta', 'hora_extra'].includes(instance.presetId) && (
                         <details className="relative">
-                            <summary aria-label={instance.presetId === 'hora_extra' ? 'Informações sobre Serviço Extraordinário' : 'Informações sobre a GAACTA'} className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">i</span></summary>
+                            <summary aria-label={`Informações sobre ${headerInfo.title}`} className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">i</span></summary>
                             <div className="absolute left-0 top-full z-20 mt-1 w-72 max-w-[min(18rem,80vw)] rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
                                 <p className="font-semibold">{headerInfo.title}</p>
                                 <p className="mt-2">{headerInfo.normBadge || 'Não há norma cadastrada e vigente para esta competência.'}</p>
@@ -204,7 +205,11 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                                 <Info className="h-4 w-4" />
                             </button>
                             {infoOpen && <span id={`info-${instance.key}`} role="tooltip" className="fixed left-4 right-4 top-1/3 z-tooltip sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-72 rounded-lg border border-neutral-200 bg-white p-3 text-body-xs normal-case tracking-normal text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
-                                {courtConfig.transportIndemnity?.info}
+                                <span className="block font-semibold">{headerInfo.title}</span>
+                                <span className="mt-2 block">{headerInfo.normBadge || 'Não há norma cadastrada e vigente para esta competência.'}</span>
+                                <span className="mt-2 block">{courtConfig.transportIndemnity?.info}</span>
+                                <span className="mt-2 block">{['cjf', 'trf'].some(slug => (courtConfig.orgSlug || '').toLowerCase().startsWith(slug)) ? 'Destinada ao Analista Judiciário, Área Judiciária, especialidade Oficial de Justiça Avaliador Federal. Exclua férias, licenças, afastamentos e dias usados no cálculo de diárias. É vedado o uso de veículo oficial ou suprimento de fundos para a finalidade.' : 'Destinada ao Oficial de Justiça Avaliador Federal ou servidor designado ad hoc. Exclua afastamentos e demais impedimentos, inclusive dias incompatíveis com diárias.'}</span>
+                                <span className="mt-2 block">O pagamento depende de comprovação e atestação; este valor é uma simulação.</span>
                             </span>}
                         </span>
                     )}
@@ -240,7 +245,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 courtConfig={courtConfig}
             />
 
-            <PresetGrossSummary compact={['gaacta', 'hora_extra'].includes(instance.presetId)} lines={lines}>
+            <PresetGrossSummary compact={['gaacta', 'hora_extra', 'indenizacao_transporte'].includes(instance.presetId)} lines={lines}>
                 {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
             </PresetGrossSummary>
         </div>

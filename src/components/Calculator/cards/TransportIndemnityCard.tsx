@@ -1,7 +1,6 @@
-import { Accordion } from '../../ui/Accordion';
 import React from 'react';
 import { CalculatorState, CourtConfig } from '../../../types';
-import { formatCurrency } from '../../../utils/calculations';
+import { Minus, Plus } from 'lucide-react';
 
 interface Props {
     state: CalculatorState;
@@ -22,18 +21,10 @@ const formatServiceCompetence = (comp?: string): string => {
     return `${MONTH_NAMES[month - 1]}/${year}`;
 };
 
-const formatDateBr = (date?: string | null): string => {
-    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
-    return date.split('-').reverse().join('/');
-};
-
-export const TransportIndemnityCard: React.FC<Props> = ({ state, update, competenciaReferencia, styles, courtConfig }) => {
+export const TransportIndemnityCard: React.FC<Props> = ({ state, update, competenciaReferencia, styles }) => {
     const memory = state.transporteIndenizacaoMemory;
     const maxDays = memory?.maxDays || 31;
-    const status = memory?.status === 'full' ? 'Integral' : memory?.status === 'proportional' ? 'Proporcional' : 'Sem valor a receber';
     const isDualCompetence = Boolean(memory?.serviceCompetence && memory.serviceCompetence !== memory.competence);
-    const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
-    const isCJF = orgSlug === 'cjf' || orgSlug.startsWith('trf');
 
     return (
         <div className={`${styles.innerBox} space-y-3`}>
@@ -55,33 +46,12 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, compete
                 </p>
             )}
 
-            {isCJF ? (
-                <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                    Destinado a Analista Judiciário, Área Judiciária, especialidade Oficial de Justiça Avaliador Federal (art. 54 da Resolução CJF nº 4/2008 c/c Portaria CJF nº 182/2026).
-                </p>
-            ) : (
-                <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                    Destinado a Oficial de Justiça Avaliador Federal ou servidor designado como oficial de justiça ad hoc (ATN STM nº 212/2017).
+            {memory?.transitionWarning && (
+                <p role="status" className="rounded-lg border border-warning-200 bg-warning-50 p-3 text-body-sm text-warning-700 dark:border-warning-700 dark:bg-warning-950 dark:text-warning-200">
+                    {memory.transitionWarning}
                 </p>
             )}
-
-            {memory && memory.status !== 'unavailable' && memory.status !== 'invalid' ? (
-                <>
-                    <p className="text-body-sm text-neutral-600 dark:text-neutral-300">
-                        Valor integral aplicável: <strong>{formatCurrency(memory.fullAmount)}</strong>
-                    </p>
-                    {memory.validFrom && (
-                        <p className="text-body-xs text-neutral-500">
-                            Vigência a partir de {formatDateBr(memory.validFrom)}{memory.validTo ? ` até ${formatDateBr(memory.validTo)}` : ''}.
-                        </p>
-                    )}
-                    {memory.transitionWarning && (
-                        <p role="status" className="rounded-lg border border-warning-200 bg-warning-50 p-3 text-body-sm text-warning-700 dark:border-warning-700 dark:bg-warning-950 dark:text-warning-200">
-                            {memory.transitionWarning}
-                        </p>
-                    )}
-                </>
-            ) : (
+            {(!memory || memory.status === 'unavailable' || memory.status === 'invalid') && (
                 <p role="status" className="text-body-sm text-warning-700">
                     {memory?.reason || 'Não há configuração aplicável para esta competência.'}
                 </p>
@@ -91,6 +61,8 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, compete
                 <label htmlFor="transporte-indenizacao-dias" className={styles.label}>
                     Dias de serviço externo no mês{isDualCompetence ? ` (${formatServiceCompetence(memory?.serviceCompetence)})` : ''}
                 </label>
+                <div className="flex items-center gap-2">
+                <button type="button" aria-label="Diminuir dias de serviço externo" disabled={(state.transporteIndenizacaoDias || 0) <= 0} onClick={() => update('transporteIndenizacaoDias', Math.max(0, (state.transporteIndenizacaoDias || 0) - 1))} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300"><Minus className="h-4 w-4" /></button>
                 <input
                     id="transporte-indenizacao-dias"
                     type="number"
@@ -98,7 +70,7 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, compete
                     max={maxDays}
                     step="1"
                     inputMode="numeric"
-                    className={styles.input}
+                    className={`${styles.input} text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
                     value={state.transporteIndenizacaoDias || ''}
                     placeholder="0"
                     onChange={e => {
@@ -109,30 +81,14 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, compete
                         if (Number.isSafeInteger(value) && value <= maxDays) update('transporteIndenizacaoDias', value);
                     }}
                 />
+                <button type="button" aria-label="Aumentar dias de serviço externo" disabled={(state.transporteIndenizacaoDias || 0) >= maxDays} onClick={() => update('transporteIndenizacaoDias', Math.min(maxDays, (state.transporteIndenizacaoDias || 0) + 1))} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300"><Plus className="h-4 w-4" /></button>
+                </div>
             </div>
 
             <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
                 Conte os dias em que houve diligência externa, e não a quantidade de mandados. Várias diligências na mesma data contam como um dia.
             </p>
 
-            <Accordion title="Condições e fundamentos da indenização">
-                {isCJF ? (
-                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                        Considere apenas dias de efetivo serviço externo, excluindo férias, licenças e demais afastamentos, ainda que considerados em lei como de efetivo exercício (art. 56, parágrafo único). Não computar dias que servirem de base ao cálculo de diárias (art. 55, § 2º). É vedado suprimento de fundos ou uso de veículo oficial para a finalidade (art. 57). A prestação dos serviços depende de atestação pelo titular da unidade (art. 56); este valor é uma simulação.
-                    </p>
-                ) : (
-                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                        Considere apenas dias elegíveis, excluindo afastamentos e demais impedimentos, inclusive os dias incompatíveis com diárias. O pagamento depende de comprovação e atestação; este valor é uma simulação.
-                    </p>
-                )}
-
-            </Accordion>
-
-            {memory && !['unavailable', 'invalid', 'inactive'].includes(memory.status) && (
-                <p className="text-body-sm font-semibold" role="status">
-                    {status}
-                </p>
-            )}
         </div>
     );
 };
