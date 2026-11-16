@@ -134,9 +134,6 @@ test('HE em substituição zera destinos inferiores/iguais e aceita apenas desti
     }
 });
 
-const clickHeAction = (tree: any, text: string) => act(() => {
-    tree.root.findAllByType('button').find((button: any) => button.children.includes(text))!.props.onClick();
-});
 test('OvertimeCard bloqueia destinos sem diferença inclusive em lançamentos já preenchidos', () => {
     const tree = create(React.createElement(OvertimeCard, {
         entry: { id: 'he', qtd50: 0, qtd100: 0, usarSubstituicaoFuncao: true, isEA: false, excluirIR: false,
@@ -144,7 +141,6 @@ test('OvertimeCard bloqueia destinos sem diferença inclusive em lançamentos j�
         updateEntry: () => {}, functionKeys: ['fc1', 'fc5', 'cj2'], eligibleFunctionKeys: ['cj2'],
         competenciaReferencia: '2026-11', styles: {}, courtConfig: makeMockConfig()
     }));
-    clickHeAction(tree, 'Personalizar cálculo');
     for (const key of ['FC1', 'FC5']) {
         for (const rate of ['50', '100']) {
             assert.equal(tree.root.findByProps({ 'aria-label': `${key} — Horas (${rate}%)` }).props.disabled, true);
@@ -205,12 +201,20 @@ test('OvertimeCard atualiza composição somente na instância selecionada e man
         updateEntry: (id, value) => { patch = { id, value }; }, functionKeys: [], competenciaReferencia: '2026-11', styles: {},
         baseItems: [{ key: 'abono', label: 'Abono de Permanência', valor: 100, selecionado: true }], baseTotal: 100
     }));
-    clickHeAction(tree, 'Personalizar cálculo');
+    const open = () => act(() => tree.root.findAllByType('button').find(button => button.children.includes('Personalizar cálculo'))!.props.onClick());
+    open();
+    const editor = tree.root.findByProps({ 'aria-label': 'Personalizar cálculo de Serviço Extraordinário' });
+    assert.equal(editor.findAllByType('details').length, 0, 'Parcelas ficam visíveis sem accordion');
+    assert.ok(editor.findAllByType('input').every(input => input.props.type === 'checkbox'), 'O editor contém somente parcelas da base');
+    assert.equal(JSON.stringify(tree.toJSON()).includes('Prestado no recesso forense'), false);
     act(() => tree.root.findByProps({ 'aria-label': 'Incluir Abono de Permanência na base de HE' }).props.onChange({ target: { checked: false } }));
-    assert.equal(patch, undefined, 'A edição não altera a folha antes de aplicar');
-    clickHeAction(tree, 'Aplicar ajustes');
-    assert.equal(patch.id, 'he-base');
-    assert.deepEqual(patch.value.composicaoBase, { gaj: false, abono: false });
+    assert.equal(patch, undefined, 'Edição da base só é aplicada ao confirmar');
+    act(() => tree.root.findAllByType('button').find(button => button.children.includes('Cancelar'))!.props.onClick());
+    assert.equal(patch, undefined, 'Cancelar preserva a composição anterior');
+    open();
+    act(() => tree.root.findByProps({ 'aria-label': 'Incluir Abono de Permanência na base de HE' }).props.onChange({ target: { checked: false } }));
+    act(() => tree.root.findAllByType('button').find(button => button.children.includes('Aplicar ajustes'))!.props.onClick());
+    assert.deepEqual(patch, { id: 'he-base', value: { composicaoBase: { gaj: false, abono: false } } });
     tree.unmount();
 });
 
@@ -642,7 +646,6 @@ test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo cu
         courtConfig
     }));
 
-    clickHeAction(tree, 'Personalizar cálculo');
     // 1. Inicialmente no padrão JMU (35h / divisor 175)
     let select = tree.root.findByType('select');
     assert.equal(select.props.value, '35');
@@ -652,7 +655,6 @@ test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo cu
     act(() => {
         select.props.onChange({ target: { value: 'custom' } });
     });
-    clickHeAction(tree, 'Aplicar ajustes');
     assert.equal(currentEntry.jornadaPersonalizada, true);
 
     // Re-renderiza com o estado atualizado
@@ -665,7 +667,6 @@ test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo cu
         courtConfig
     }));
 
-    clickHeAction(tree, 'Personalizar cálculo');
     select = tree.root.findByType('select');
     assert.equal(select.props.value, 'custom', 'Select não deve retroceder para 35');
     assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), true, 'Painel customizado deve ser exibido');
@@ -676,18 +677,13 @@ test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo cu
     act(() => {
         customHoursInput.props.onChange({ target: { value: '25' } });
     });
-    clickHeAction(tree, 'Aplicar ajustes');
     assert.equal(currentEntry.jornadaSemanal, 25);
     assert.equal(currentEntry.divisor, 125, 'Divisor calculado por (25 ÷ 6) × 30 deve ser 125');
 
-    tree.update(React.createElement(OvertimeCard, { entry: currentEntry, updateEntry, functionKeys: [], competenciaReferencia: '2026-11', styles, courtConfig }));
-    clickHeAction(tree, 'Personalizar cálculo');
-    select = tree.root.findByType('select');
     // 4. Usuário alterna de volta para jornada de 30h padrão
     act(() => {
         select.props.onChange({ target: { value: '30' } });
     });
-    clickHeAction(tree, 'Aplicar ajustes');
     assert.equal(currentEntry.jornadaPersonalizada, false);
     assert.equal(currentEntry.jornadaSemanal, 30);
     assert.equal(currentEntry.divisor, 150);
@@ -700,9 +696,8 @@ test('OvertimeCard: Seleção de "Outra jornada personalizada" mantém o modo cu
         styles,
         courtConfig
     }));
-    clickHeAction(tree, 'Personalizar cálculo');
     select = tree.root.findByType('select');
-    assert.equal(currentEntry.jornadaSemanal, 30);
+    assert.equal(select.props.value, '30');
     assert.equal(JSON.stringify(tree.toJSON()).includes('Jornada semanal (h):'), false);
 
     tree.unmount();
@@ -724,15 +719,12 @@ test('OvertimeCard: IR mensal, EA e exclusão são exclusivos e isolados por ins
         courtConfig: { orgSlug: 'cjf' } as CourtConfig,
     })));
     const tree = create(render());
-    clickHeAction(tree, 'Personalizar cálculo');
     const checkbox = (text: string) => tree.root.findAllByType(OvertimeCard)[0].findAllByType('label')
         .find(label => label.findAllByType('span').some(span => span.children.includes(text)))!.findByType('input');
-    const change = (text: string, checked: boolean) => {
-        act(() => checkbox(text).props.onChange({ target: { checked } }));
-        clickHeAction(tree, 'Aplicar ajustes');
-        act(() => tree.update(render()));
-        clickHeAction(tree, 'Personalizar cálculo');
-    };
+    const change = (text: string, checked: boolean) => act(() => {
+        checkbox(text).props.onChange({ target: { checked } });
+        tree.update(render());
+    });
     const ea = 'Incluir na base do IR de Exercício Anterior (IR-EA / RRA)';
     assert.equal(JSON.stringify(tree.toJSON()).includes('Incidências na Folha Mensal'), false);
     const advanced = () => tree.root.findAllByType(OvertimeCard)[0].findAllByType('details')
