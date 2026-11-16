@@ -1,3 +1,4 @@
+import type { PayslipResultRow } from '../../types/user';
 import { thirteenthPaymentRows } from '../../utils/thirteenthPresentation';
 /**
  * Hook de Resultados - Calculadora
@@ -246,7 +247,7 @@ export const useCalculatorResults = (
             return { resultRows: [], dailiesResultRows: [] };
         }
 
-        const rows: Array<{ label: string; value: number; type: 'C' | 'D' }> = [];
+        const rows: PayslipResultRow[] = [];
         const isNovoAQ = effectiveState.periodo >= 1;
 
         if (effectiveState.vencimento > 0) rows.push({ label: 'VENCIMENTO-ATIVO EC', value: effectiveState.vencimento, type: 'C' });
@@ -311,10 +312,10 @@ export const useCalculatorResults = (
 
         if (effectiveState.thirteenthMemory) rows.push(...thirteenthPaymentRows(effectiveState));
         else {
-        if (effectiveState.adiant13Venc > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA ATIVO EC', value: effectiveState.adiant13Venc, type: 'C' });
-        if (effectiveState.adiant13FC > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA FC/CJ ATIVO EC', value: effectiveState.adiant13FC, type: 'C' });
-        if (effectiveState.segunda13Venc > 0) rows.push({ label: 'GRATIFICACAO NATALINA-2a PARCELA ATIVO EC', value: effectiveState.segunda13Venc, type: 'C' });
-        if (effectiveState.segunda13FC > 0) rows.push({ label: 'GRATIFICACAO NATALINA-2a PARCELA FC/CJ ATIVO EC', value: effectiveState.segunda13FC, type: 'C' });
+        if (effectiveState.adiant13Venc > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA ATIVO EC', value: effectiveState.adiant13Venc, type: 'C', displayGroup: 'thirteenth-credit' });
+        if (effectiveState.adiant13FC > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA FC/CJ ATIVO EC', value: effectiveState.adiant13FC, type: 'C', displayGroup: 'thirteenth-credit' });
+        if (effectiveState.segunda13Venc > 0) rows.push({ label: 'GRATIFICACAO NATALINA-2a PARCELA ATIVO EC', value: effectiveState.segunda13Venc, type: 'C', displayGroup: 'thirteenth-credit' });
+        if (effectiveState.segunda13FC > 0) rows.push({ label: 'GRATIFICACAO NATALINA-2a PARCELA FC/CJ ATIVO EC', value: effectiveState.segunda13FC, type: 'C', displayGroup: 'thirteenth-credit' });
         }
         if (effectiveState.abonoPerm13 && effectiveState.abonoPerm13 > 0) {
             rows.push({ label: 'ABONO DE PERMANENCIA-GN (13o) EC 41/2003 ATIVO EC', value: effectiveState.abonoPerm13, type: 'C' });
@@ -347,7 +348,7 @@ export const useCalculatorResults = (
         if (effectiveState.feriasDesc && effectiveState.feriasDesc > 0) rows.push({ label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', value: effectiveState.feriasDesc, type: 'D' });
         if (effectiveState.pss13 && effectiveState.pss13 > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC', value: effectiveState.pss13, type: 'D' });
         if (effectiveState.ir13 && effectiveState.ir13 > 0) rows.push({ label: 'IMPOSTO DE RENDA-GN(13º) EC', value: effectiveState.ir13, type: 'D' });
-        if (!effectiveState.thirteenthMemory && effectiveState.debitoPrimeiraParcela13 > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA (ABATIMENTO)', value: effectiveState.debitoPrimeiraParcela13, type: 'D' });
+        if (!effectiveState.thirteenthMemory && effectiveState.debitoPrimeiraParcela13 > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA (ABATIMENTO)', value: effectiveState.debitoPrimeiraParcela13, type: 'D', displayGroup: 'thirteenth-advance' });
         if (effectiveState.auxTransporteDesc > 0) rows.push({ label: 'COTA-PARTE AUXÍLIO-TRANSPORTE', value: effectiveState.auxTransporteDesc, type: 'D' });
         if (effectiveState.emprestimos > 0) rows.push({ label: 'CONSIGNAÇÕES / EMPRÉSTIMOS', value: effectiveState.emprestimos, type: 'D' });
         if (effectiveState.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: effectiveState.planoSaude, type: 'D' });

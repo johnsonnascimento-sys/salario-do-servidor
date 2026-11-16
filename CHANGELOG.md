@@ -1,3 +1,9 @@
+## Agrupamento do 13º na página de resultado — 16/11/2026
+
+- Créditos da gratificação natalina reunidos em uma linha com Ver detalhamento, preservando parcelas, descrições e valores. Abatimentos dos adiantamentos formam um grupo próprio nos descontos; IR, PSS, Funpresp e abono próprio do 13º continuam separados.
+- Agrupamento apenas na apresentação, sem somar os detalhes novamente. Linhas individuais permanecem disponíveis para salvamento e PDF/Excel; marcação opcional de origem evita agrupar rubricas manuais homônimas. Snapshots anteriores continuam compatíveis, e créditos aparecem antes dos descontos.
+- Validados conciliação dos totais, primeira parcela isolada, grupos com um lançamento, snapshots anteriores e detalhes recolhidos em desktop/mobile. Typecheck, build, testes do 13º, carregamento e geradores reais de PDF/Excel aprovados. Conferência dos componentes reais no navegador com dados fictícios, em desktop e 360/390 px, nos temas claro/escuro, sem transbordamento horizontal; página completa com configuração remota e salvamento autenticado não homologados nesta tarefa.
+
 ## Recebimento unificado e listas do 13º salário — 16/11/2026
 
 - Card principal com Receber 1ª parcela e Receber 2ª parcela. Composição, adiantamentos informados e fechamento manual ficam separados na personalização; listas aceitam verbas individuais e agrupamentos do contracheque sem criar créditos mensais ou duplicar a referência.

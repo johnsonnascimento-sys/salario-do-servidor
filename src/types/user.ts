@@ -14,6 +14,7 @@ export interface PayslipResultRow {
   label: string;
   value: number;
   type: 'C' | 'D';
+  displayGroup?: 'thirteenth-credit' | 'thirteenth-advance';
 }
 
 export interface UserPayslip {

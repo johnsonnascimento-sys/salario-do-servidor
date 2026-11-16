@@ -1,4 +1,5 @@
 import { CalculatorState, Rubrica } from '../types';
+import type { PayslipResultRow } from '../types/user';
 
 export interface PayslipDisplayRow {
   label: string;
@@ -7,11 +8,27 @@ export interface PayslipDisplayRow {
   details?: Array<{ label: string; value: number; type: 'C' | 'D' }>;
 }
 
-interface RowLike {
-  label: string;
-  value: number;
-  type: 'C' | 'D';
-}
+type RowLike = PayslipResultRow;
+
+const THIRTEENTH_LEGACY_CREDITS = new Set([
+  'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA ATIVO EC',
+  'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA FC/CJ ATIVO EC',
+  'GRATIFICACAO NATALINA-2a PARCELA ATIVO EC',
+  'GRATIFICACAO NATALINA-2a PARCELA FC/CJ ATIVO EC',
+]);
+
+// Old snapshots have no origin tag. Avoid absorbing an ambiguously named manual entry.
+const thirteenthGroup = (row: RowLike, manualLabels: Set<string>) => {
+  if (row.displayGroup === 'thirteenth-credit' && row.type === 'C') return row.displayGroup;
+  if (row.displayGroup === 'thirteenth-advance' && row.type === 'D') return row.displayGroup;
+  if (manualLabels.has(row.label.trim().toUpperCase())) return undefined;
+  if (row.type === 'C' && (THIRTEENTH_LEGACY_CREDITS.has(row.label) ||
+    row.label.startsWith('GRATIFICAÇÃO NATALINA — 1ª PARCELA — ') ||
+    row.label.startsWith('GRATIFICAÇÃO NATALINA — 2ª PARCELA — '))) return 'thirteenth-credit';
+  if (row.type === 'D' && (row.label === 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA (ABATIMENTO)' ||
+    row.label.startsWith('ABATIMENTO DO ADIANTAMENTO DO 13º — '))) return 'thirteenth-advance';
+  return undefined;
+};
 
 const IR_GROUPS = [
   {
@@ -319,6 +336,20 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
   const groupedRowsByIndex = new Map<number, PayslipDisplayRow>();
   const consumedIndexes = new Set<number>();
 
+  const manualLabels = new Set((calculatorState?.rubricasExtras || []).map(row => (row.descricao || '').trim().toUpperCase()));
+  for (const group of ['thirteenth-credit', 'thirteenth-advance'] as const) {
+    const entries = rows.map((row, index) => ({ row, index }))
+      .filter(({ row }) => thirteenthGroup(row, manualLabels) === group);
+    if (entries.length === 0) continue;
+    entries.forEach(({ index }) => consumedIndexes.add(index));
+    groupedRowsByIndex.set(entries[0].index, {
+      label: group === 'thirteenth-credit' ? 'GRATIFICAÇÃO NATALINA (13º SALÁRIO)' : 'ABATIMENTO DO ADIANTAMENTO DO 13º',
+      value: roundCurrency(entries.reduce((sum, { row }) => sum + Number(row.value || 0), 0)),
+      type: group === 'thirteenth-credit' ? 'C' : 'D',
+      details: entries.map(({ row }) => ({ label: row.label, value: row.value, type: row.type })),
+    });
+  }
+
   IR_GROUPS.forEach((group) => {
     const detailRows = rows
       .map((row, index) => ({ row, index }))
@@ -394,5 +425,5 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
     }
 
     return acc;
-  }, []);
+  }, []).sort((a, b) => a.type === b.type ? 0 : a.type === 'C' ? -1 : 1);
 };

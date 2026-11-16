@@ -7,9 +7,9 @@ export const thirteenthPaymentRows = (state: CalculatorState): PayslipResultRow[
     const memory = state.thirteenthMemory;
     if (!memory) return [];
     return [
-        ...memory.advances.map(entry => ({ label: `GRATIFICAÇÃO NATALINA — 1ª PARCELA — ${entry.description}`, value: entry.amount, type: 'C' as const })),
-        ...memory.secondEntries.map(entry => ({ label: `GRATIFICAÇÃO NATALINA — 2ª PARCELA — ${entry.description}`, value: entry.amount, type: 'C' as const })),
-        ...(memory.secondSelected ? memory.advances.map(entry => ({ label: `ABATIMENTO DO ADIANTAMENTO DO 13º — ${entry.description}`, value: entry.amount, type: 'D' as const })) : [])
+        ...memory.advances.map(entry => ({ label: `GRATIFICAÇÃO NATALINA — 1ª PARCELA — ${entry.description}`, value: entry.amount, type: 'C' as const, displayGroup: 'thirteenth-credit' as const })),
+        ...memory.secondEntries.map(entry => ({ label: `GRATIFICAÇÃO NATALINA — 2ª PARCELA — ${entry.description}`, value: entry.amount, type: 'C' as const, displayGroup: 'thirteenth-credit' as const })),
+        ...(memory.secondSelected ? memory.advances.map(entry => ({ label: `ABATIMENTO DO ADIANTAMENTO DO 13º — ${entry.description}`, value: entry.amount, type: 'D' as const, displayGroup: 'thirteenth-advance' as const })) : [])
     ].filter(row => row.value > 0);
 };
 
