@@ -96,6 +96,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
                 entry={overtimeEntry}
                 updateEntry={updateOvertimeEntry}
                 calculationReady={calculationReady}
+                grossTotal={state.overtimeCalculatedEntries?.find(item => item.id === overtimeEntry.id)?.heTotal ?? 0}
                 functionDetails={state.overtimeCalculatedEntries?.find(item => item.id === overtimeEntry.id)?.detalhamentoPorFuncao}
                 functionKeys={functionKeys}
                 eligibleFunctionKeys={state.overtimeCalculatedEntries?.find(item => item.id === overtimeEntry.id)?.funcoesSubstituicaoElegiveis ?? []}

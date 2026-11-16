@@ -900,3 +900,8 @@
 - Validação: 13 testes de substituição, 22 de HE, 16 de IR-EA/configuração, 24 de estado/restauração, 5 de carregamento e 43 de 13º aprovados; script de interface IR-EA, typecheck e build aprovados. Revisão independente de cálculo/regras sem bloqueadores.
 - Conferência do card completo com hook e motor reais e dados fictícios em desktop e 360/390 px, temas claro/escuro: inclusão, subtotal, valor documentado zero, retorno ao cálculo por dias, tributação, detalhamento, ajuda normativa, foco e ausência de transbordamento. Configuração publicada e salvamento autenticado não homologados nesta conferência.
 
+## Subtotal bruto visível no card de Horas Extras — 16/11/2026
+
+- Exibido o subtotal bruto do motor na visão principal de HE por horas globais; no modo de substituição, cada função selecionada já apresenta seu subtotal bruto. Valores antigos ficam ocultos durante recálculo.
+- Sem alteração de fórmula, incidência ou apresentação de líquido nesta mudança.
+

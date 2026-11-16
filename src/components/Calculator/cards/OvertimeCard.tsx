@@ -10,6 +10,7 @@ interface OvertimeCardProps {
     functionKeys: string[];
     eligibleFunctionKeys?: string[];
     functionDetails?: OvertimeFunctionDetail[];
+    grossTotal?: number;
     calculationReady?: boolean;
     baseItems?: Array<{ key: string; label: string; valor: number; selecionado: boolean }>;
     baseTotal?: number;
@@ -26,6 +27,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
     functionKeys,
     eligibleFunctionKeys = [],
     functionDetails = [],
+    grossTotal = 0,
     calculationReady = true,
     baseItems = [],
     competenciaReferencia,
@@ -253,26 +255,34 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                     </div>
 
                     {!usarSubstituicaoFuncao ? (
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div>
-                                <label htmlFor={`${fieldId}-field-4`} className={styles.label}>Qtd. Horas (50%)</label>
-                                <input id={`${fieldId}-field-4`}
-                                    type="number"
-                                    className={styles.input}
-                                    min={0}
-                                    value={entry.qtd50 || ''}
-                                    onChange={e => updateEntry(entry.id, { qtd50: Math.max(0, Number(e.target.value) || 0) })}
-                                />
+                        <div className="mt-4 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor={`${fieldId}-field-4`} className={styles.label}>Qtd. Horas (50%)</label>
+                                    <input id={`${fieldId}-field-4`}
+                                        type="number"
+                                        className={styles.input}
+                                        min={0}
+                                        value={entry.qtd50 || ''}
+                                        onChange={e => updateEntry(entry.id, { qtd50: Math.max(0, Number(e.target.value) || 0) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor={`${fieldId}-field-5`} className={styles.label}>Qtd. Horas (100%)</label>
+                                    <input id={`${fieldId}-field-5`}
+                                        type="number"
+                                        className={styles.input}
+                                        min={0}
+                                        value={entry.qtd100 || ''}
+                                        onChange={e => updateEntry(entry.id, { qtd100: Math.max(0, Number(e.target.value) || 0) })}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label htmlFor={`${fieldId}-field-5`} className={styles.label}>Qtd. Horas (100%)</label>
-                                <input id={`${fieldId}-field-5`}
-                                    type="number"
-                                    className={styles.input}
-                                    min={0}
-                                    value={entry.qtd100 || ''}
-                                    onChange={e => updateEntry(entry.id, { qtd100: Math.max(0, Number(e.target.value) || 0) })}
-                                />
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                                <span className="text-body-xs text-neutral-600 dark:text-neutral-400">Subtotal bruto</span>
+                                <output aria-label="Subtotal bruto de horas extras" className="font-mono text-body font-semibold text-neutral-900 dark:text-neutral-100">
+                                    {calculationReady ? grossTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Atualizando…'}
+                                </output>
                             </div>
                         </div>
                     ) : (
