@@ -402,7 +402,7 @@ export default function Calculator() {
                         updateRubrica={updateRubrica}
                         styles={styles}
                     />
-                    <div hidden={step !== 5}>
+                    <div hidden={step !== 4}>
                     <ObservationsSection
                         state={effectiveState}
                         update={update}
