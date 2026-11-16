@@ -362,11 +362,9 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                         <span className="text-body-xs text-neutral-600 dark:text-neutral-400">Base apurada da gratificação</span>
                         <span className="font-mono text-body-xs text-neutral-800 dark:text-neutral-200 font-bold">{formatCurrency(totalBaseApurada)}</span>
                     </div>
-                    <div className={styles.internalTotalWrapper}>
-                        <span className={styles.internalTotalLabel}>
-                            Valor da Gratificação ({Math.round(specificGratRate * 100)}%)
-                        </span>
-                        <span className={styles.internalTotalValue}>{formatCurrency(valorGratificacaoCalculada)}</span>
+                    <div className="flex items-center justify-between border-t border-neutral-200 pt-3 text-body-xs dark:border-neutral-700">
+                        <span className="font-medium text-neutral-700 dark:text-neutral-300">Valor da gratificação</span>
+                        <span className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">{formatCurrency(valorGratificacaoCalculada)}</span>
                     </div>
                 </div>
                 </div>
