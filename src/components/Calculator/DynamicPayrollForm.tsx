@@ -268,6 +268,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     state={state}
                     cargoOptions={cargoOptions}
                     padroes={padroes}
+                    salaryByCargo={salaryByCargo}
                     functionKeys={functionKeys}
                     functionValues={currentTables.funcoes}
                     cargoLabels={careerCatalog?.cargoLabels}
