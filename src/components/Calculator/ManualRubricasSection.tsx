@@ -228,7 +228,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     >
                         {/* Topo do Card: Badge de Tipo, Integração de Base e Exclusão */}
                         <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
                                 <span
                                     className={`px-2.5 py-0.5 rounded-full text-body-xs font-bold ${
                                         isCredito
@@ -256,7 +256,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             <button
                                 type="button"
                                 onClick={() => removeRubrica(rubrica.id)}
-                                className="text-neutral-400 hover:text-red-500 p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center text-neutral-400 hover:text-red-500 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                                 aria-label="Remover rubrica"
                                 title="Remover este lançamento avulso"
                             >

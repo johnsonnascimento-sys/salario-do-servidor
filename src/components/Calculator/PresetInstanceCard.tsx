@@ -178,7 +178,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             onDragEnd={handlePresetDragEnd}
             className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-primary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-2">
                 <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
                     {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
                     <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
@@ -210,11 +210,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     )}
 
                 </div>
-                <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
-                    {reorderMode && movePreset && <>
-                        <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
-                        <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
-                    </>}
+                <div className="flex shrink-0 items-start">
                 <button
                     type="button"
                     onClick={() => removePreset(instance)}
@@ -224,6 +220,10 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     <Trash2 className="w-4 h-4" />
                 </button>
                 </div>
+                {reorderMode && movePreset && <div className="col-span-2 flex justify-end gap-1">
+                        <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
+                        <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
+                </div>}
             </div>
 
             <PresetCardContent
