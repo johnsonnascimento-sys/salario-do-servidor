@@ -1,3 +1,11 @@
+## Remodelação do card Diárias de Viagem — 16/11/2026
+
+- Layout alinhado ao 13º: campos essenciais, condições aplicadas e totais em linhas simples, sem caixas internas. Norma e orientações ficam no ícone de interrogação; memória e resumo financeiro reunidos em Ver detalhamento do cálculo.
+- Adicional, trechos de transporte, equipe, assessoramento, acompanhamento integral, feriados, descontos e glosas reunidos em Personalizar cálculo, com rascunho isolado, prévia pelo módulo oficial, Cancelar/Aplicar ajustes e retorno do foco. Valores anteriores ficam ocultos durante recálculo ou prévia pendente.
+- Corrigido o adaptador para não permitir que uma lista vazia/residual de trechos zere o adicional completo/metade da JMU. Na Justiça Federal, motor, card e linhas de resultado/exportação consideram os mesmos trechos; snapshots antigos sem lista preservam o seletor, enquanto lista explicitamente vazia mantém adicional zero. A hidratação preserva essa distinção, e a configuração técnica de fallback recebe o órgão conhecido.
+- Fórmulas e parâmetros configurados preservados. Validação: testes de cálculo, interface, restauração, carregamento, regressões do 13º/férias e geradores de PDF/Excel; typecheck e build. Revisão especializada concluída sem bloqueadores após correções de compatibilidade.
+- Conferência dos componentes reais no navegador com dados de teste: desktop e celular (360/390 px), temas claro/escuro, ajuda, detalhamento e aplicar/cancelar, sem transbordamento horizontal. Página completa não homologada: carregamento da configuração remota da JMU falhou neste ambiente.
+
 ## Totais de férias no card — 16/11/2026
 
 - Exibe bruto e líquido no padrão do 13º, incluindo no líquido o desconto de férias antecipadas e o IR apresentados no detalhamento. Valores ficam ocultos enquanto a simulação está pendente.

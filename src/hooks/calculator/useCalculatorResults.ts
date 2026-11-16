@@ -358,9 +358,11 @@ export const useCalculatorResults = (
         const dailiesStart = rows.length;
         const embarkationLabel = (courtConfig?.dailies?.embarkationLabel?.trim() || 'Adicional de embarque');
         const embarkationLabelUpper = embarkationLabel.toUpperCase();
+        const dailiesParams = mapStateToAgencyParams(effectiveState, agency?.slug || courtConfig?.orgSlug || '', courtConfig ?? undefined);
         const diariasAdicionalEmbarque = resolveDailiesEmbarkationAdditional({
             dailiesConfig: courtConfig?.dailies,
-            embarkationType: effectiveState.diariasEmbarque
+            embarkationType: dailiesParams.diariasEmbarque,
+            trechosTransporte: dailiesParams.diariasTrechosTransporte
         });
         const diariasSemAdicionalEmbarque = Math.max(0, effectiveState.diariasBruto - diariasAdicionalEmbarque);
 
@@ -405,7 +407,7 @@ export const useCalculatorResults = (
         const creditRows = rows.filter(row => row.type === 'C');
         const debitRows = rows.filter(row => row.type === 'D');
         return { resultRows: [...creditRows, ...debitRows], dailiesResultRows };
-    }, [effectiveState, courtConfig, currentTables, calculationStatus]);
+    }, [effectiveState, courtConfig, currentTables, calculationStatus, agency?.slug]);
 
     const { resultRows, dailiesResultRows } = resultGroups;
     return { calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending,

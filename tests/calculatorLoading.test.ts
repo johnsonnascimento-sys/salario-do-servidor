@@ -108,7 +108,7 @@ test('config hook: hides old org, ignores old responses, fallback and error rese
     assert.equal(latest.courtConfig, null);
     await act(async () => { configRequests.pju.reject(new Error('offline')); });
     await act(async () => { legacyRequests.pju.resolve({ config }); agencyRequests.pju.resolve({ data: { ...agency, slug: 'pju' }, error: null }); });
-    assert.equal(latest.courtConfig, config);
+    assert.deepEqual(latest.courtConfig, { ...config, orgSlug: 'pju' });
     assert.equal(latest.configError, null);
     await act(async () => { tree.update(React.createElement(Probe, { slug: 'missing' })); });
     await act(async () => { agencyRequests.missing?.resolve({ error: {}, data: null }); configRequests.missing.reject(new Error('offline')); });

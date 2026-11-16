@@ -30,6 +30,7 @@ interface PresetCardContentProps {
     inputState?: CalculatorState;
     onVacationEditingChange?: (editing: boolean) => void;
     onThirteenthEditingChange?: (editing: boolean) => void;
+    onDailiesEditingChange?: (editing: boolean) => void;
     vacationOverview?: React.ReactNode;
     thirteenthOverview?: React.ReactNode;
 }
@@ -49,6 +50,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     inputState,
     onVacationEditingChange,
     onThirteenthEditingChange,
+    onDailiesEditingChange,
     vacationOverview,
     thirteenthOverview
 }) => {
@@ -155,6 +157,9 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     if (presetId === 'diarias') {
         return (
             <DailiesCard
+                inputState={inputState}
+                calculationReady={calculationReady}
+                onEditingChange={onDailiesEditingChange}
                 state={state}
                 update={update}
                 styles={styles}

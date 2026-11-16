@@ -1,6 +1,7 @@
 import { unifiedThirteenthLines } from '../../utils/thirteenthPresentation';
 import { resolveSecondThirteenthMode } from '../../services/agency/engine/modules/thirteenthModes';
 import { CalculatorState, CourtConfig } from '../../types';
+import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import {
     resolveDailiesDailyRate,
     resolveDailiesDiscountRules,
@@ -326,9 +327,11 @@ export const buildPresetGrossLines = ({
                 equipeTrabalho: Boolean(state.diariasEquipeTrabalho),
                 equipeTrabalhoMaiorCargo: state.diariasEquipeTrabalhoMaiorCargo
             }));
+            const dailiesParams = mapStateToAgencyParams(state, courtConfig?.orgSlug || '', courtConfig);
             const adicionalEmbarque = roundCurrency(resolveDailiesEmbarkationAdditional({
                 dailiesConfig: courtConfig?.dailies,
-                embarkationType: state.diariasEmbarque
+                embarkationType: dailiesParams.diariasEmbarque,
+                trechosTransporte: dailiesParams.diariasTrechosTransporte
             }));
             const diariasSemEmbarque = roundCurrency(Math.max(0, (state.diariasBruto || 0) - adicionalEmbarque));
             const meiaDiariaRetorno = periodSummary?.halfDailyApplied ? roundCurrency(dailyRate * 0.5) : 0;

@@ -3,6 +3,8 @@ import { ArrowUp, ArrowDown, GripVertical, Info, Trash2 } from 'lucide-react';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { VacationOverview } from './VacationOverview';
 import { ThirteenthOverview } from './ThirteenthOverview';
+import { DailiesCalculationNotes, DailiesHelp } from './DailiesCalculationNotes';
+import { getDailiesPresentation } from './dailiesPresentation';
 import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS } from './dynamicPayrollForm.helpers';
@@ -164,6 +166,9 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
 
     const [vacationEditing, setVacationEditing] = useState(false);
     const [thirteenthEditing, setThirteenthEditing] = useState(false);
+    const [dailiesEditing, setDailiesEditing] = useState(false);
+    const dailiesPeriodReady = instance.presetId !== 'diarias' || (inputState ?? state).diariasModoDesconto !== 'periodo'
+        || Boolean(getDailiesPresentation(inputState ?? state, courtConfig).period);
     const [infoOpen, setInfoOpen] = useState(false);
     const infoRef = useRef<HTMLSpanElement>(null);
     useEffect(() => {
@@ -186,12 +191,12 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-2">
-                <div className={`flex min-w-0 flex-1 items-center gap-2 ${['decimo', 'substituicao', 'ferias'].includes(instance.presetId) ? '' : 'flex-wrap'}`}>
+                <div className={`flex min-w-0 flex-1 items-center gap-2 ${['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) ? '' : 'flex-wrap'}`}>
                     {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
                     <h3 className="min-w-0 text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
                     </h3>
-                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias'].includes(instance.presetId) && (
+                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
                         </span>
@@ -205,17 +210,17 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                             </div>
                         </details>
                     )}
-                    {['decimo', 'substituicao', 'ferias'].includes(instance.presetId) && (
+                    {['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && (
                         <span ref={infoRef} className="relative inline-flex">
                             <button type="button" aria-label={`Informações sobre ${headerInfo.title}`}
                                 aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} onClick={() => setInfoOpen(open => !open)}
                                 className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:text-neutral-300 dark:hover:bg-neutral-700">
                                 <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">?</span>
                             </button>
-                            {infoOpen && <span id={`info-${instance.key}`} role="note" className="fixed left-4 right-4 top-1/3 z-tooltip rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-80 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                            {infoOpen && <span id={`info-${instance.key}`} role="note" className="fixed left-4 right-4 top-1/3 z-tooltip max-h-[60vh] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-80 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
                                 <span className="block font-semibold">{headerInfo.title}</span>
-                                <span className="mt-2 block">{headerInfo.normBadge}</span>
-                                {instance.presetId === 'decimo' ? <>
+                                {instance.presetId !== 'diarias' && <span className="mt-2 block">{headerInfo.normBadge}</span>}
+                                {instance.presetId === 'diarias' ? <DailiesHelp config={courtConfig} /> : instance.presetId === 'decimo' ? <>
                                 <span className="mt-2 block">A 1ª parcela é o adiantamento, sem IR e PSS. Na 2ª parcela, as retenções consideram a remuneração integral e o abatimento do adiantamento, sem PSS sobre FC/CJ.</span>
                                 <span className="mt-2 block">Use Personalizar cálculo para escolher a composição da remuneração ou informar os valores recebidos.</span>
                                 </> : instance.presetId === 'ferias' ? <>
@@ -263,6 +268,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 inputState={inputState}
                 onVacationEditingChange={setVacationEditing}
                 onThirteenthEditingChange={setThirteenthEditing}
+                onDailiesEditingChange={setDailiesEditing}
                 vacationOverview={instance.presetId === 'ferias' ? <VacationOverview lines={lines} calculationReady={calculationReady} /> : undefined}
                 thirteenthOverview={instance.presetId === 'decimo' ? <ThirteenthOverview lines={lines} calculationReady={calculationReady} /> : undefined}
                 state={state}
@@ -276,7 +282,8 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 courtConfig={courtConfig}
             />
 
-            {!thirteenthEditing && !vacationEditing && <PresetGrossSummary compact={['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias'].includes(instance.presetId)} lines={['decimo', 'substituicao', 'ferias'].includes(instance.presetId) && !calculationReady ? [] : lines}>
+            {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={(['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
+                {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
                 {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
             </PresetGrossSummary>}
         </div>

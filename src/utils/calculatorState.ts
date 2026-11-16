@@ -237,6 +237,10 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         diariasFeriados: Array.isArray(merged.diariasFeriados)
             ? merged.diariasFeriados.filter((d): d is string => typeof d === 'string')
             : [],
+        // Legacy snapshots used only completo/metade; do not turn absence into an explicit zero-leg selection.
+        diariasTrechosTransporte: Array.isArray(safeSnapshot.diariasTrechosTransporte)
+            ? safeSnapshot.diariasTrechosTransporte.filter((leg): leg is string => typeof leg === 'string')
+            : undefined,
         licencaDias: Math.max(0, Math.floor(Number(merged.licencaDias) || 0)),
         transporteIndenizacaoAtivo: merged.transporteIndenizacaoAtivo === true,
         // Keep invalid days visible for validation; never silently truncate a decimal into a payable day.

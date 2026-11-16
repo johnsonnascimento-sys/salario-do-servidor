@@ -86,7 +86,7 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                     // Legacy courts config remains a technical fallback only.
                     const court = await getCourtBySlug(resolvedSlug);
                     if (!court?.config) throw new Error('Configuração não encontrada.');
-                    update({ courtConfig: court.config as CourtConfig });
+                    update({ courtConfig: { ...(court.config as CourtConfig), orgSlug: resolvedSlug } });
                 } catch (_fallbackError) {
                     const message = error instanceof Error ? error.message : 'Configuração não encontrada.';
                     update({ configError: message });

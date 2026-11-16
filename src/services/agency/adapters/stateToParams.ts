@@ -142,7 +142,10 @@ export function mapStateToAgencyParams(
         // Diárias e Licença (Fase 9)
         diariasQtd: state.diariasQtd || 0,
         diariasEmbarque: mapDiariasEmbarque(state.diariasEmbarque),
-        diariasTrechosTransporte: state.diariasTrechosTransporte || [],
+        // JMU uses the complete/half selector; a residual or empty segment list must not override it.
+        // For other branches, preserve absence (legacy selector) and an explicitly empty list (no transport).
+        diariasTrechosTransporte: ['jmu', 'stm'].includes(orgSlug)
+            ? undefined : state.diariasTrechosTransporte,
         diariasModoDesconto: state.diariasModoDesconto,
         diariasDataInicio: state.diariasDataInicio,
         diariasDataFim: state.diariasDataFim,
