@@ -19,55 +19,28 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
 }) => {
     const fieldId = React.useId();
     if (presetId === 'aq') {
+        const groups = isNovoAQ ? [
+            { label: 'Títulos (VR)', field: 'aqTituloVR' as const, options: [[0, 'Nenhum'], [1, 'Especialização (1,0x VR)'], [2, '2 especializações (2,0x VR)'], [3.5, 'Mestrado (3,5x VR)'], [5, 'Doutorado (5,0x VR)']] as const },
+            { label: 'Treinamento (VR)', field: 'aqTreinoVR' as const, options: [[0, 'Nenhum'], [0.2, '120h (0,2x VR)'], [0.4, '240h (0,4x VR)'], [0.6, '360h (0,6x VR)']] as const }
+        ] : [
+            { label: 'Títulos (%)', field: 'aqTituloPerc' as const, options: [[0, 'Nenhum'], [0.05, 'Graduação (5%)'], [0.075, 'Especialização (7,5%)'], [0.1, 'Mestrado (10%)'], [0.125, 'Doutorado (12,5%)']] as const },
+            { label: 'Treinamento (%)', field: 'aqTreinoPerc' as const, options: [[0, 'Nenhum'], [0.01, '120h (1%)'], [0.02, '240h (2%)'], [0.03, '360h (3%)']] as const }
+        ];
         return (
-            <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {isNovoAQ ? (
-                        <>
-                            <div>
-                                <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Titulos (VR)</label>
-                                <select id={`${fieldId}-field-1`} className={styles.input} value={state.aqTituloVR} onChange={e => update('aqTituloVR', Number(e.target.value))}>
-                                    <option value={0}>Nenhum</option>
-                                    <option value={1.0}>Especializacao (1.0x VR)</option>
-                                    <option value={2.0}>2x Especializacao (2.0x VR)</option>
-                                    <option value={3.5}>Mestrado (3.5x VR)</option>
-                                    <option value={5.0}>Doutorado (5.0x VR)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Treinamento (VR)</label>
-                                <select id={`${fieldId}-field-2`} className={styles.input} value={state.aqTreinoVR} onChange={e => update('aqTreinoVR', Number(e.target.value))}>
-                                    <option value={0}>Nenhum</option>
-                                    <option value={0.2}>120h (0.2x VR)</option>
-                                    <option value={0.4}>240h (0.4x VR)</option>
-                                    <option value={0.6}>360h (0.6x VR)</option>
-                                </select>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div>
-                                <label htmlFor={`${fieldId}-field-3`} className={styles.label}>Titulos (%)</label>
-                                <select id={`${fieldId}-field-3`} className={styles.input} value={state.aqTituloPerc} onChange={e => update('aqTituloPerc', Number(e.target.value))}>
-                                    <option value={0}>0%</option>
-                                    <option value={0.05}>5% (Graduacao)</option>
-                                    <option value={0.075}>7.5% (Especializacao)</option>
-                                    <option value={0.1}>10% (Mestrado)</option>
-                                    <option value={0.125}>12.5% (Doutorado)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label htmlFor={`${fieldId}-field-4`} className={styles.label}>Treinamento (%)</label>
-                                <select id={`${fieldId}-field-4`} className={styles.input} value={state.aqTreinoPerc} onChange={e => update('aqTreinoPerc', Number(e.target.value))}>
-                                    <option value={0}>0%</option>
-                                    <option value={0.01}>1% (120h)</option>
-                                    <option value={0.02}>2% (240h)</option>
-                                    <option value={0.03}>3% (360h)</option>
-                                </select>
-                            </div>
-                        </>
-                    )}
-                </div>
+            <div className="space-y-4">
+                {groups.map(group => (
+                    <fieldset key={group.field}>
+                        <legend className={`${styles.label} mb-2`}>{group.label}</legend>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            {group.options.map(([value, label]) => (
+                                <label key={value} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-body font-medium ${state[group.field] === value ? 'border-neutral-600 bg-neutral-100 text-neutral-900 dark:border-neutral-400 dark:bg-neutral-700 dark:text-neutral-100' : 'border-neutral-200 text-neutral-700 dark:border-neutral-700 dark:text-neutral-200'}`}>
+                                    <input type="radio" name={`${fieldId}-${group.field}`} value={value} checked={state[group.field] === value} onChange={() => update(group.field, value)} className="accent-neutral-700 dark:accent-neutral-300" />
+                                    <span>{label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </fieldset>
+                ))}
             </div>
         );
     }
