@@ -16,7 +16,6 @@ import {
     Plus,
     Check,
     Search,
-    GripVertical,
     ArrowDownRight,
     X,
     Sparkles,
@@ -43,9 +42,6 @@ interface PresetControlsSectionProps {
     setSelectedPreset: (value: PredefinedRubricId | '') => void;
     availablePresets: PresetOption[];
     includePreset: (presetId?: PredefinedRubricId) => void;
-    reorderMode: boolean;
-    setReorderMode: React.Dispatch<React.SetStateAction<boolean>>;
-    enabledPresetCount: number;
     multiInstanceHintLabel: string;
     enabledPresets?: PresetInstance[];
     transportIndemnityEnabled?: boolean;
@@ -77,9 +73,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     mode,
     styles,
     includePreset,
-    reorderMode,
-    setReorderMode,
-    enabledPresetCount,
     enabledPresets = [],
     transportIndemnityEnabled = true,
     gaactaAvailable = true,
@@ -209,22 +202,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                     )}
                 </div>
 
-                <div className="flex max-w-full flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
-                    <button
-                        type="button"
-                        onClick={() => setReorderMode(prev => !prev)}
-                        disabled={enabledPresetCount < 2 && !reorderMode}
-                        className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-body font-bold uppercase tracking-wider transition-colors shrink-0 disabled:opacity-40 ${
-                            reorderMode
-                                ? 'bg-primary text-white shadow-sm'
-                                : 'bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-700'
-                        }`}
-                        title="Reordenar a ordem de exibição dos cards no formulário"
-                    >
-                        <GripVertical className="w-3.5 h-3.5" />
-                        {reorderMode ? 'Concluir ordem' : `Reordenar cards (${enabledPresetCount})`}
-                    </button>
-                </div>
             </div>
 
             {addRubrica && (
@@ -232,15 +209,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                     className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 px-4 py-2 font-semibold text-primary hover:bg-primary/10">
                     <Plus className="h-4 w-4" /> {mode === 'C' ? 'Adicionar crédito avulso' : 'Adicionar desconto avulso'}
                 </button>
-            )}
-
-            {reorderMode && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-body text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span>
-                        Use os botões de mover para cima e para baixo em cada card, ou arraste para reorganizar a exibição.
-                    </span>
-                </div>
             )}
 
             {/* Categorias e Chips Visuais */}

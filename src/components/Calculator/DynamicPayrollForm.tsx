@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { Sparkles } from 'lucide-react';
+import { GripVertical, Sparkles } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { ManualRubricasSection } from './ManualRubricasSection';
@@ -321,9 +321,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     setSelectedPreset={setSelectedPreset}
                     availablePresets={availablePresets}
                     includePreset={includePreset}
-                    reorderMode={reorderMode}
-                    setReorderMode={setReorderMode}
-                    enabledPresetCount={visiblePresets.length}
                     multiInstanceHintLabel={MULTI_INSTANCE_HINT_LABEL}
                     enabledPresets={enabledPresets}
                     transportIndemnityEnabled={transportIndemnityEnabled}
@@ -332,6 +329,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     rubricas={state.rubricasExtras}
                 />
             </section>
+
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <button type="button" onClick={() => setReorderMode(previous => !previous)}
+                    disabled={visiblePresets.length < 2 && !reorderMode}
+                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-body font-semibold transition-colors disabled:opacity-40 ${reorderMode ? 'border-primary bg-primary text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800'}`}
+                    title="Reordenar a ordem de exibição dos cards no formulário">
+                    <GripVertical className="h-4 w-4" />
+                    {reorderMode ? 'Concluir ordem' : `Reordenar cards (${visiblePresets.length})`}
+                </button>
+                {reorderMode && <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Use os botões de mover ou arraste os cards para reorganizar a ordem.</p>}
+            </div>
 
             <p role="status" aria-live="polite" className="sr-only">{reorderAnnouncement}</p>
             {enabledPresets.map((instance, index) => {
