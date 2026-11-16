@@ -143,25 +143,6 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
             </>}
             {draft && <section className="space-y-4" aria-label="Personalizar cálculo">
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personalizar {state.gratEspecificaTipo.toUpperCase()}</h3>
-                    <label className={styles.checkboxLabel}>
-                        <input
-                            type="checkbox"
-                            className="accent-neutral-700 dark:accent-neutral-300"
-                            checked={state.incidirPSSGrat}
-                            onChange={e => update('incidirPSSGrat', e.target.checked)}
-                        />
-                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
-                            Considerar esta gratificação no cálculo da contribuição previdenciária (PSS)
-                        </span>
-                    </label>
-            <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Quando marcada, a gratificação entra no valor usado para calcular o desconto de PSS. Confira se essa inclusão se aplica ao seu caso.</p>
-
-            {isGratAtiva && typeof courtConfig?.payrollRules?.specificGratificationPssDefaults?.[state.gratEspecificaTipo as 'gae' | 'gas'] !== 'boolean' && (
-                <p role="status" className="text-body-xs text-amber-700 dark:text-amber-300">
-                    Padrão de PSS ainda não cadastrado para esta gratificação. Confira a seleção previdenciária antes de concluir a simulação.
-                </p>
-            )}
-
             {/* Composição da Base da Remuneração (similar ao 13º e GAACTA) */}
             <div>
                 <div className="mt-3 space-y-3">
@@ -356,6 +337,28 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                         />
                     </div>
                 </div>
+
+                <fieldset className="border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                    <legend className="sr-only">Contribuição previdenciária</legend>
+                    <p className={styles.label}>Contribuição previdenciária</p>
+                    <label className={`${styles.checkboxLabel} border-b border-neutral-200 py-3 dark:border-neutral-700`}>
+                        <input
+                            type="checkbox"
+                            className={styles.checkbox}
+                            checked={state.incidirPSSGrat}
+                            onChange={e => update('incidirPSSGrat', e.target.checked)}
+                        />
+                        <span className="text-body-xs text-neutral-700 dark:text-neutral-300">
+                            Incluir a gratificação no cálculo da contribuição previdenciária (PSS)
+                        </span>
+                    </label>
+                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Confira se essa inclusão se aplica ao seu caso.</p>
+                    {typeof pssDefault !== 'boolean' && (
+                        <p role="status" className="text-body-xs text-amber-700 dark:text-amber-300">
+                            Padrão de PSS ainda não cadastrado para esta gratificação. Confira a seleção previdenciária antes de concluir a simulação.
+                        </p>
+                    )}
+                </fieldset>
 
                 {/* Subtotal da Base Apurada e Valor Correspondente (35%) */}
                 <div className="pt-3 border-t border-neutral-100 dark:border-neutral-700 space-y-2">
