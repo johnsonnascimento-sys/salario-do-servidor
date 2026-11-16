@@ -206,7 +206,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
             {addRubrica && (
                 <button type="button" onClick={() => handleAddManual(mode === 'C' ? { tipo: 'C', incideIR: true, incidePSS: true } : { tipo: 'D' })}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 px-4 py-2 font-semibold text-primary hover:bg-primary/10">
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-secondary/30 px-4 py-2 font-semibold text-secondary hover:bg-secondary/10">
                     <Plus className="h-4 w-4" /> {mode === 'C' ? 'Adicionar crédito avulso' : 'Adicionar desconto avulso'}
                 </button>
             )}
@@ -243,16 +243,16 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                 key={item.id}
                                                 className={`group relative flex flex-col justify-between p-3 rounded-xl border transition-all ${
                                                     isAdded
-                                                        ? 'bg-primary/5 dark:bg-primary/10 border-primary/30 dark:border-primary/40 shadow-xs'
-                                                        : 'bg-white dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-700/80 hover:border-primary/40 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 shadow-xs'
+                                                        ? 'bg-secondary/5 dark:bg-secondary/10 border-secondary/30 dark:border-secondary/40 shadow-xs'
+                                                        : 'bg-white dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-700/80 hover:border-secondary/40 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 shadow-xs'
                                                 }`}
                                             >
                                                 {/* Topo do chip: Ícone e Título */}
                                                 <div className="flex items-start gap-2.5 mb-2">
                                                     <div className={`p-2 rounded-lg shrink-0 ${
                                                         isAdded
-                                                            ? 'bg-primary text-white shadow-xs'
-                                                            : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 group-hover:bg-primary/10 group-hover:text-primary transition-colors'
+                                                            ? 'bg-secondary text-white shadow-xs'
+                                                            : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 group-hover:bg-secondary/10 group-hover:text-secondary transition-colors'
                                                     }`}>
                                                         <IconComponent className="w-4 h-4" />
                                                     </div>
@@ -275,7 +275,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => scrollToPresetCard(item.id)}
-                                                                className="inline-flex min-h-11 items-center gap-1 text-body font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
+                                                                className="inline-flex min-h-11 items-center gap-1 text-body font-semibold text-secondary-700 dark:text-secondary-400 hover:underline"
                                                                 title="Rolar suavemente até o card aberto na tela"
                                                             >
                                                                 <Check className="w-3.5 h-3.5" />
@@ -287,7 +287,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleAddPreset(item.id)}
-                                                                    className="inline-flex min-h-11 items-center gap-1 px-3 py-2 rounded-md bg-primary/10 hover:bg-primary/20 text-primary text-body font-bold uppercase transition-colors"
+                                                                    className="inline-flex min-h-11 items-center gap-1 px-3 py-2 rounded-md bg-secondary/10 hover:bg-secondary/20 text-secondary text-body font-bold uppercase transition-colors"
                                                                     title="Adicionar mais uma instância deste card"
                                                                 >
                                                                     <Plus className="w-3 h-3" />
@@ -299,7 +299,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                                         <button
                                                             type="button"
                                                             onClick={() => handleAddPreset(item.id)}
-                                                            className="w-full inline-flex min-h-11 items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-neutral-100 hover:bg-primary hover:text-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-primary dark:hover:text-white transition-colors text-body font-semibold"
+                                                            className="w-full inline-flex min-h-11 items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-neutral-100 hover:bg-secondary hover:text-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-secondary dark:hover:text-white transition-colors text-body font-semibold"
                                                         >
                                                             <Plus className="w-3.5 h-3.5" />
                                                             <span>Adicionar</span>

@@ -39,7 +39,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({ entry, updat
                 </div>
             </div>
             <details className="group pt-1" open={entry.isEA || entry.excluirIR || entry.pssIsEA || undefined}>
-                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors rounded min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
+                <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-1.5 text-body font-semibold text-neutral-600 dark:text-neutral-400 hover:text-secondary transition-colors rounded min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                     <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     <span>Opções Tributárias Avançadas e Exercícios Anteriores (EA)</span>
                     <span className="text-body font-normal">

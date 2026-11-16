@@ -696,7 +696,7 @@ export const FieldCalculator: React.FC = () => {
                     <button
                         type="button"
                         onClick={applyResult}
-                        className="mt-3 w-full rounded-xl bg-primary px-4 py-2.5 text-body-xs font-bold uppercase tracking-wide text-white hover:bg-secondary-700 shadow-sm transition-colors"
+                        className="mt-3 w-full rounded-xl bg-secondary px-4 py-2.5 text-body-xs font-bold uppercase tracking-wide text-white hover:bg-secondary-700 shadow-sm transition-colors"
                     >
                         Colar resultado no campo
                     </button>

@@ -155,7 +155,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <h3 className={`${styles.sectionTitle} mb-1 flex items-center gap-2`}>
-                            <DollarSign className="w-4 h-4 text-primary" />
+                            <DollarSign className="w-4 h-4 text-secondary" />
                             {mode === 'C' ? 'Créditos avulsos' : 'Descontos avulsos'}
                         </h3>
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
@@ -169,12 +169,12 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 {filteredRubricas.length > 0 && (
                     <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 mt-4 space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div hidden={mode !== 'C'} className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 flex items-center justify-between">
+                            <div hidden={mode !== 'C'} className="rounded-xl border border-secondary-500/20 bg-secondary-500/5 px-4 py-2.5 flex items-center justify-between">
                                 <div>
-                                    <p className="text-label font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Total Créditos Avulsos</p>
-                                    <p className="text-body font-bold font-mono text-emerald-700 dark:text-emerald-400">{formatCurrency(totalCreditos)}</p>
+                                    <p className="text-label font-bold uppercase tracking-widest text-secondary-700 dark:text-secondary-400">Total Créditos Avulsos</p>
+                                    <p className="text-body font-bold font-mono text-secondary-700 dark:text-secondary-400">{formatCurrency(totalCreditos)}</p>
                                 </div>
-                                <span className="text-body-xs font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                <span className="text-body-xs font-semibold text-secondary-600 bg-secondary-500/10 px-2 py-0.5 rounded-full">
                                     {rubricas.filter(r => r.tipo === 'C').length} crédito(s)
                                 </span>
                             </div>
@@ -222,7 +222,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         tabIndex={-1}
                         className={`${styles.card} space-y-3.5 border-l-4 transition-all ${
                             isCredito
-                                ? 'border-l-emerald-500 shadow-xs'
+                                ? 'border-l-secondary-500 shadow-xs'
                                 : 'border-l-red-500 shadow-xs'
                         }`}
                     >
@@ -232,7 +232,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 <span
                                     className={`px-2.5 py-0.5 rounded-full text-body-xs font-bold ${
                                         isCredito
-                                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+                                            ? 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-400 border border-secondary-500/20'
                                             : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
                                     }`}
                                 >
@@ -241,7 +241,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
                                 {isCredito && (
                                     <span className="inline-flex items-center gap-1 text-body-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
-                                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                        <CheckCircle2 className="w-3 h-3 text-secondary-500" />
                                         Disponível para compor bases de HE, GAACTA, Férias, 13º e GAE/GAS
                                     </span>
                                 )}
@@ -399,7 +399,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 aria-expanded={Boolean(isExpanded)}
                                 aria-controls={`manual-advanced-${rubrica.id}`}
                                 onClick={() => toggleEaCard(rubrica.id, Boolean(isExpanded))}
-                                className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-primary transition-colors min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700"
+                                className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-secondary transition-colors min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700"
                             >
                                 <SlidersHorizontal className="w-3.5 h-3.5" />
                                 <span className="text-left">

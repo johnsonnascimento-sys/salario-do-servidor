@@ -360,7 +360,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <div hidden={step !== 4 && step !== 5} className="space-y-5">
             <section id={step === 5 ? 'descontos' : 'verbas'} tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
                 <h2 className={`${styles.sectionTitle} relative`}>
-                    <Sparkles className="w-4 h-4 text-primary" />
+                    <Sparkles className="w-4 h-4 text-secondary" />
                     {step === 5 ? 'Adicionar descontos' : 'Adicionar verbas à simulação'}
                 </h2>
                 <p className="mb-4 text-body text-neutral-600 dark:text-neutral-300">{step === 5
@@ -386,7 +386,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button type="button" onClick={() => setReorderMode(previous => !previous)}
                     disabled={visiblePresets.length < 2 && !reorderMode}
-                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-body font-semibold transition-colors disabled:opacity-40 ${reorderMode ? 'border-primary bg-primary text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800'}`}
+                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-body font-semibold transition-colors disabled:opacity-40 ${reorderMode ? 'border-secondary bg-secondary text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800'}`}
                     title="Reordenar a ordem de exibição dos cards no formulário">
                     <GripVertical className="h-4 w-4" />
                     {reorderMode ? 'Concluir ordem' : `Reordenar cards (${visiblePresets.length})`}

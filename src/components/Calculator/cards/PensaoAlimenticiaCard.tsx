@@ -182,8 +182,8 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
 
     if (!calculationReady) {
         return (
-            <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-body-xs text-neutral-600 dark:bg-primary/10 dark:text-neutral-300">
-                <span aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+            <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-secondary/20 bg-secondary/5 px-4 py-3 text-body-xs text-neutral-600 dark:bg-secondary/10 dark:text-neutral-300">
+                <span aria-hidden="true" className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-secondary/30 border-t-secondary" />
                 <span className="font-medium">Aguardando o cálculo da folha para apurar a pensão...</span>
             </div>
         );
@@ -194,7 +194,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
             {/* Seletor de Modalidade: Percentual vs Valor Fixo */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
-                    <Scale className="w-4 h-4 text-primary shrink-0" />
+                    <Scale className="w-4 h-4 text-secondary shrink-0" />
                     <div>
                         <span className="text-body-xs font-bold text-neutral-800 dark:text-neutral-200">
                             Modalidade de Fixação da Pensão
@@ -212,7 +212,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         onClick={() => update('pensaoTipo', 'percentual')}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-body-xs font-semibold transition-all ${
                             tipo === 'percentual'
-                                ? 'bg-white dark:bg-neutral-900 text-primary shadow-xs font-bold'
+                                ? 'bg-white dark:bg-neutral-900 text-secondary shadow-xs font-bold'
                                 : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                         }`}
                     >
@@ -225,7 +225,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         onClick={() => update('pensaoTipo', 'fixo')}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-body-xs font-semibold transition-all ${
                             tipo === 'fixo'
-                                ? 'bg-white dark:bg-neutral-900 text-primary shadow-xs font-bold'
+                                ? 'bg-white dark:bg-neutral-900 text-secondary shadow-xs font-bold'
                                 : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                         }`}
                     >
@@ -239,7 +239,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
             {tipo === 'percentual' ? (
                 <>
                     {/* Alíquota / Porcentagem e Atalhos Rápidos */}
-                    <div className="p-3 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/20 space-y-2">
+                    <div className="p-3 bg-secondary/5 dark:bg-secondary/10 rounded-xl border border-secondary/20 space-y-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <label className="text-body-xs font-bold text-secondary-900 dark:text-secondary-200">
                                 Percentual da Pensão Alimentícia (%)
@@ -253,8 +253,8 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                         onClick={() => update('pensaoPercentual', p)}
                                         className={`px-2 py-0.5 rounded text-body-xs font-bold transition-colors ${
                                             percentual === p
-                                                ? 'bg-primary text-white shadow-xs'
-                                                : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:border-primary/50'
+                                                ? 'bg-secondary text-white shadow-xs'
+                                                : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:border-secondary/50'
                                         }`}
                                     >
                                         {p}%
@@ -729,7 +729,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         </div>
                         <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex flex-wrap items-center justify-between text-body-xs font-bold">
                             <span className="text-neutral-800 dark:text-neutral-200">(=) Base Líquida de Incidência:</span>
-                            <span className="font-mono text-primary">{formatCurrency(baseLiquida)}</span>
+                            <span className="font-mono text-secondary">{formatCurrency(baseLiquida)}</span>
                         </div>
                         <div className="flex flex-wrap items-center justify-between text-body-xs">
                             <span className="text-neutral-600 dark:text-neutral-400">(×) Alíquota da Pensão:</span>
@@ -748,7 +748,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                 </>
             ) : (
                 /* Modo Valor Fixo (R$) */
-                <div className="space-y-3 p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/20">
+                <div className="space-y-3 p-4 bg-secondary/5 dark:bg-secondary/10 rounded-xl border border-secondary/20">
                     <div>
                         <label className="text-body-xs font-bold text-secondary-900 dark:text-secondary-200 block mb-1">
                             Valor Fixo Mensal da Pensão Alimentícia (R$)
@@ -773,7 +773,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         />
                     </div>
 
-                    <div className="pt-2 border-t border-primary/20 flex flex-wrap items-center justify-between">
+                    <div className="pt-2 border-t border-secondary/20 flex flex-wrap items-center justify-between">
                         <span className="text-body-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
                             <HeartHandshake className="w-4 h-4" />
                             Valor Final da Pensão Alimentícia
@@ -786,7 +786,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
             )}
 
             <div className="p-3 bg-neutral-50 dark:bg-neutral-900/30 rounded-xl border border-neutral-200 dark:border-neutral-800 text-body-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
-                <HeartHandshake className="w-4 h-4 text-primary shrink-0" />
+                <HeartHandshake className="w-4 h-4 text-secondary shrink-0" />
                 <span>
                     O valor apurado de <strong>{formatCurrency(valorCalculado)}</strong> é lançado automaticamente como dedução da folha na linha <em>PENSÃO ALIMENTÍCIA</em>.
                 </span>

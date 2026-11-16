@@ -176,7 +176,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             onDragOver={handlePresetDragOver}
             onDrop={() => handlePresetDrop(instance.key)}
             onDragEnd={handlePresetDragEnd}
-            className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-primary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-2">
                 <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
@@ -200,7 +200,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     )}
                     {instance.presetId === 'indenizacao_transporte' && (
                         <span ref={infoRef} className="relative inline-flex" onMouseEnter={() => setInfoOpen(true)} onMouseLeave={() => setInfoOpen(false)} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setInfoOpen(false); }} onPointerDown={e => e.stopPropagation()}>
-                            <button type="button" aria-label="Informações sobre indenização de transporte" aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} aria-describedby={infoOpen ? `info-${instance.key}` : undefined} onFocus={() => setInfoOpen(true)} onClick={e => { e.stopPropagation(); setInfoOpen(true); }} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-neutral-500 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                            <button type="button" aria-label="Informações sobre indenização de transporte" aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} aria-describedby={infoOpen ? `info-${instance.key}` : undefined} onFocus={() => setInfoOpen(true)} onClick={e => { e.stopPropagation(); setInfoOpen(true); }} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-neutral-500 hover:text-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary">
                                 <Info className="h-4 w-4" />
                             </button>
                             {infoOpen && <span id={`info-${instance.key}`} role="tooltip" className="fixed left-4 right-4 top-1/3 z-tooltip sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-72 rounded-lg border border-neutral-200 bg-white p-3 text-body-xs normal-case tracking-normal text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
