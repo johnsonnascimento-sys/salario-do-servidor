@@ -103,6 +103,17 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
 
     return (
         <div className="space-y-4">
+            <Accordion title="Entenda a GAE e a GAS">
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                    A Gratificação de Atividade Externa (GAE) e a Gratificação de Atividade de Segurança (GAS) correspondem a 35% do vencimento básico do servidor (arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006). Por padrão legal, apenas o Vencimento Básico permanece selecionado.
+                </p>
+
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                    A GAE integra a remuneração do cargo e compõe a base do PSS. A GAS depende do exercício da atividade de segurança e fica fora dessa base por padrão, por não se incorporar à aposentadoria, ressalvados a opção de inclusão e o enquadramento previdenciário aplicável. Fontes: {' '}
+                    <a className="text-primary underline" href="https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?dt_publicacao=24%2F09%2F2020&num_registro=201903436453" target="_blank" rel="noopener noreferrer">STJ, AgInt no REsp 1.849.491/SP</a> e {' '}
+                    <a className="text-primary underline" href="https://www.cjf.jus.br/cjf/noticias/2020/11-novembro/gratificacao-de-atividade-de-seguranca-nao-incorpora-aos-proventos-de-aposentadoria-do-servidor-publico" target="_blank" rel="noopener noreferrer">TNU, Tema 257</a>.
+                </p>
+            </Accordion>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Tipo de Gratificação</label>
@@ -353,17 +364,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                 </div>
                 </div>
             </details>
-            <Accordion title="Fundamentos da GAE / GAS">
-                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                    A Gratificação de Atividade Externa (GAE) e a Gratificação de Atividade de Segurança (GAS) correspondem a 35% do vencimento básico do servidor (arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006). Por padrão legal, apenas o Vencimento Básico permanece selecionado.
-                </p>
 
-                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                    A GAE integra a remuneração do cargo e compõe a base do PSS. A GAS depende do exercício da atividade de segurança e fica fora dessa base por padrão, por não se incorporar à aposentadoria, ressalvados a opção de inclusão e o enquadramento previdenciário aplicável. Fontes: {' '}
-                    <a className="text-primary underline" href="https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?dt_publicacao=24%2F09%2F2020&num_registro=201903436453" target="_blank" rel="noopener noreferrer">STJ, AgInt no REsp 1.849.491/SP</a> e {' '}
-                    <a className="text-primary underline" href="https://www.cjf.jus.br/cjf/noticias/2020/11-novembro/gratificacao-de-atividade-de-seguranca-nao-incorpora-aos-proventos-de-aposentadoria-do-servidor-publico" target="_blank" rel="noopener noreferrer">TNU, Tema 257</a>.
-                </p>
-            </Accordion>
         </div>
     );
 };
