@@ -71,9 +71,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         : [];
     const pensionDiscountTotal = pensionDiscountRows.reduce((total, row) => total + row.value, 0);
     return <div className="space-y-4">
-        <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">{activeSection === 'pension'
-            ? 'Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.'
-            : 'Informe quantos dependentes são considerados no Imposto de Renda. Valores de exercícios anteriores são tratados nos respectivos lançamentos e competências.'}</p>
+        {activeSection === 'pension' && <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.</p>}
         {activeSection === 'pension' && <>
         <section className={styles.card}>
             <h5 className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
@@ -234,7 +232,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 <label htmlFor={`${fieldId}-dependentes`} className={styles.label}>Dependentes (IR)</label>
                 <div className="flex items-stretch gap-2">
                     <button type="button" aria-label="Remover dependente" disabled={state.dependentes <= 0} onClick={() => update('dependentes', Math.max(0, state.dependentes - 1))} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold disabled:opacity-40 dark:border-neutral-600">−</button>
-                    <input id={`${fieldId}-dependentes`} aria-describedby={`${fieldId}-tax-help`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
+                    <input id={`${fieldId}-dependentes`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
                     <button type="button" aria-label="Adicionar dependente" onClick={() => update('dependentes', state.dependentes + 1)} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold dark:border-neutral-600">+</button>
                 </div>
             </div>
