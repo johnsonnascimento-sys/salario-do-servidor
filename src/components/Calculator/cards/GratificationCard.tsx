@@ -348,6 +348,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                         </span>
                     </label>
                     <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Confira se essa inclusão se aplica ao seu caso.</p>
+                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">A GAE compõe a base do PSS. A GAS fica fora dessa base por padrão, ressalvados a opção de inclusão e o enquadramento previdenciário aplicável. Consulte <a className="underline" href="https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?dt_publicacao=24%2F09%2F2020&num_registro=201903436453" target="_blank" rel="noopener noreferrer">STJ</a> e <a className="underline" href="https://www.cjf.jus.br/cjf/noticias/2020/11-novembro/gratificacao-de-atividade-de-seguranca-nao-incorpora-aos-proventos-de-aposentadoria-do-servidor-publico" target="_blank" rel="noopener noreferrer">TNU, Tema 257</a>.</p>
                     {typeof pssDefault !== 'boolean' && (
                         <p role="status" className="text-body-xs text-amber-700 dark:text-amber-300">
                             Padrão de PSS ainda não cadastrado para esta gratificação. Confira a seleção previdenciária antes de concluir a simulação.
@@ -379,14 +380,6 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state: sav
                 }}>Aplicar ajustes</button>
             </div>
             </section>}
-
-            {!draft && <details className="text-body text-neutral-600 dark:text-neutral-300">
-                <summary className="min-h-11 cursor-pointer py-2 font-semibold text-neutral-700 dark:text-neutral-200">Entenda a GAE e a GAS</summary>
-                <div className="space-y-3 pb-2 text-body-xs">
-                    <p>A Gratificação de Atividade Externa (GAE) e a Gratificação de Atividade de Segurança (GAS) correspondem a 35% do vencimento básico do servidor (arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006). Por padrão legal, apenas o vencimento básico permanece selecionado.</p>
-                    <p>A GAE integra a remuneração do cargo e compõe a base do PSS. A GAS depende do exercício da atividade de segurança e fica fora dessa base por padrão, ressalvados a opção de inclusão e o enquadramento previdenciário aplicável. Fontes: <a className="text-secondary-700 underline dark:text-secondary-300" href="https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?dt_publicacao=24%2F09%2F2020&num_registro=201903436453" target="_blank" rel="noopener noreferrer">STJ, AgInt no REsp 1.849.491/SP</a> e <a className="text-secondary-700 underline dark:text-secondary-300" href="https://www.cjf.jus.br/cjf/noticias/2020/11-novembro/gratificacao-de-atividade-de-seguranca-nao-incorpora-aos-proventos-de-aposentadoria-do-servidor-publico" target="_blank" rel="noopener noreferrer">TNU, Tema 257</a>.</p>
-                </div>
-            </details>}
 
         </div>
     );
