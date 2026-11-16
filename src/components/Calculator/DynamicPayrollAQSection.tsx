@@ -24,6 +24,6 @@ export const DynamicPayrollAQSection: React.FC<DynamicPayrollAQSectionProps> = (
         <p className="mb-3 text-body text-neutral-600 dark:text-neutral-300">O VR é a base monetária fixada no Anexo X da Lei nº 11.416/2006, correspondente a 6,5% do valor integral da CJ-1. O reconhecimento e a implementação do adicional observam as condições legais e a regulamentação do órgão.</p>
         <p className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Selecione os títulos reconhecidos e a carga de treinamento registrada para esta competência.</p>
         {renderPreset(AQ_INSTANCE)}
-        <PresetGrossSummary lines={getPresetGrossLines(AQ_INSTANCE)} />
+        <div className="mt-4"><PresetGrossSummary lines={getPresetGrossLines(AQ_INSTANCE)} /></div>
     </div>
 );
