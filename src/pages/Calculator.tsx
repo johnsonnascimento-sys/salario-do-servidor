@@ -119,12 +119,13 @@ export default function Calculator() {
     useEffect(() => {
         const handleHashChange = () => {
             const hash = window.location.hash;
-            if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea' || hash === '#memoria-ir-ea') setStep(6);
+            if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea' || hash === '#memoria-ir-ea') setStep(7);
             else if (hash === '#funpresp-settings') setStep(2);
             else if (hash === '#pension-retro-form') setStep(2);
             else if (hash === '#dependentes-ir') setStep(3);
             else if (hash === '#verbas' || hash === '#manual-rubricas-section') setStep(4);
             else if (hash === '#descontos') setStep(5);
+            else if (hash === '#observacoes') setStep(6);
             else if (hash === '#remuneracao') setStep(0);
             else if (hash === '#competencia') setStep(0);
             if (hash && document.getElementById(hash.slice(1))) {
@@ -333,7 +334,7 @@ export default function Calculator() {
                 <CalculatorNavigation step={step} onChange={changeStep} />
                 <div className="min-w-0 flex-1">
                 <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">
-                    {['Dados básicos', 'Adicional de Qualificação (AQ)', 'Previdência', 'Imposto de Renda', 'Verbas e créditos', 'Descontos', 'Resultado'][step]}
+                    {['Dados básicos', 'Adicional de Qualificação (AQ)', 'Previdência', 'Imposto de Renda', 'Verbas e créditos', 'Descontos', 'Observações / Notas', 'Resultado'][step]}
                 </h2>
                 <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">{step === 4
                     ? 'Adicione os créditos que fazem parte da sua folha. Abra uma categoria ou pesquise pelo nome; depois, selecione Adicionar no item correspondente. Se não encontrar um crédito no catálogo, use Adicionar crédito avulso.'
@@ -346,6 +347,8 @@ export default function Calculator() {
                             : step === 3
                                 ? 'Informe quantos dependentes são considerados para o Imposto de Renda. O resumo abaixo mostra a dedução e o cálculo mensal.'
                                 : step === 6
+                                    ? 'Registre observações que deverão acompanhar a impressão da simulação.'
+                                    : step === 7
                                     ? 'Confira o valor líquido estimado e o detalhamento dos créditos e descontos da simulação.'
                                     : 'Preencha seus dados principais. Os valores são atualizados automaticamente.'}</p>
                 {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-primary-300 bg-primary-50 p-4 text-body text-primary-900 dark:bg-primary-950 dark:text-primary-100">
@@ -406,14 +409,14 @@ export default function Calculator() {
                         updateRubrica={updateRubrica}
                         styles={styles}
                     />
-                    <div hidden={step !== 5}>
+                    <div hidden={step !== 6}>
                     <ObservationsSection
                         state={effectiveState}
                         update={update}
                         styles={styles}
                     />
                     </div>
-                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== 6}>
+                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== 7}>
                     <ResultsOverview state={effectiveState} resultRows={resultRows} dailiesResultRows={dailiesResultRows} calculationReady={calculationReady} resultMessage={resultMessage} />
                     {calculationReady ? <ResultsSummary
                         dailiesResultRows={dailiesResultRows}
@@ -446,7 +449,7 @@ export default function Calculator() {
 
                 <div className="mt-6 flex justify-between gap-3">
                     {step > 0 ? <button type="button" onClick={() => changeStep(step - 1)} className="min-h-11 rounded-lg border border-neutral-300 px-5 py-2 font-semibold text-neutral-700 dark:border-neutral-600 dark:text-neutral-100">Voltar</button> : <span />}
-                    {step < 6 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-primary-800 px-5 py-2 font-semibold text-white hover:bg-primary-900">{step === 5 ? 'Ver resultado' : 'Avançar'}</button>}
+                    {step < 7 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-primary-800 px-5 py-2 font-semibold text-white hover:bg-primary-900">{step === 6 ? 'Ver resultado' : 'Avançar'}</button>}
                 </div>
 
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserRound, Award, Shield, ReceiptText, PlusCircle, MinusCircle, FileText, PanelLeftClose, PanelLeftOpen, ChevronDown } from 'lucide-react';
+import { UserRound, Award, Shield, ReceiptText, PlusCircle, MinusCircle, StickyNote, FileText, PanelLeftClose, PanelLeftOpen, ChevronDown } from 'lucide-react';
 
 const sections = [
     { label: 'Dados básicos', Icon: UserRound },
@@ -8,6 +8,7 @@ const sections = [
     { label: 'Imposto de Renda', Icon: ReceiptText },
     { label: 'Créditos', Icon: PlusCircle },
     { label: 'Descontos', Icon: MinusCircle },
+    { label: 'Observações / Notas', Icon: StickyNote },
     { label: 'Resultado', Icon: FileText }
 ];
 
