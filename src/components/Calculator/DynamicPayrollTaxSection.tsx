@@ -237,17 +237,18 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 </div>
             </div>
             </div>
+            <div className="mt-2">
+                <PresetGrossSummary compact lines={[
+                    { label: 'Abatimento mensal dos dependentes (IR)', value: state.dependentes * (deducaoPorDependente ?? 0) }
+                ]} />
+            </div>
         </section>
-        <details aria-label="Resumo calculado do Imposto de Renda" className={`${styles.card} group`}>
+        <details aria-label="Descontos de Imposto de Renda" className={`${styles.card} group`}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
-                <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>
+                <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Descontos de Imposto de Renda</span>
                 <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
             </summary>
             <div className="space-y-1.5 pt-2 text-body-xs">
-                <dl className="space-y-1.5">
-                    <div className="flex flex-wrap justify-between gap-2"><dt>Dependentes informados para IR</dt><dd className="font-mono">{state.dependentes}</dd></div>
-                    <div className="flex flex-wrap justify-between gap-2"><dt>Abatimento mensal dos dependentes (IR)</dt><dd className="font-mono">{formatCurrency(state.dependentes * (deducaoPorDependente ?? 0))}</dd></div>
-                </dl>
                 {calculationReady ? <>
                     {irDiscountRows.length > 0 ? <div className="space-y-2 border-t border-neutral-200 pt-2 dark:border-neutral-700">
                         {irDiscountRows.map(row => <div key={row.label} className="space-y-1">
