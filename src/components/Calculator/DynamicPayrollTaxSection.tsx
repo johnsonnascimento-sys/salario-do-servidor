@@ -239,7 +239,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </div>
             <div className="mt-2">
                 <PresetGrossSummary compact lines={[
-                    { label: 'Abatimento mensal dos dependentes (IR)', value: state.dependentes * (deducaoPorDependente ?? 0) }
+                    { label: 'Abatimento mensal dos dependentes (IR)', value: state.dependentes * (deducaoPorDependente ?? 0), isDiscount: false }
                 ]} />
             </div>
         </section>
