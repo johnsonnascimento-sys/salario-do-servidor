@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowUp, ArrowDown, GripVertical, Info, Trash2 } from 'lucide-react';
 import { PresetGrossSummary } from './PresetGrossSummary';
+import { VacationOverview } from './VacationOverview';
 import { ThirteenthOverview } from './ThirteenthOverview';
 import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
@@ -262,6 +263,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 inputState={inputState}
                 onVacationEditingChange={setVacationEditing}
                 onThirteenthEditingChange={setThirteenthEditing}
+                vacationOverview={instance.presetId === 'ferias' ? <VacationOverview lines={lines} calculationReady={calculationReady} /> : undefined}
                 thirteenthOverview={instance.presetId === 'decimo' ? <ThirteenthOverview lines={lines} calculationReady={calculationReady} /> : undefined}
                 state={state}
                 update={update}

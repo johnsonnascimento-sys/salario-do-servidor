@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
 import { act, create, ReactTestInstance } from 'react-test-renderer';
+import { VacationOverview } from '../src/components/Calculator/VacationOverview';
+import { buildPresetGrossLines } from '../src/components/Calculator/presetGrossLines';
 import { VacationCard } from '../src/components/Calculator/cards/VacationCard';
 import { INITIAL_STATE, CalculatorState, CourtConfig } from '../src/types';
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
@@ -102,4 +104,18 @@ test('resposta antiga da prévia não reaparece após nova edição ou falha', a
         act(() => tree.unmount());
         AgencyCalculationEngine.prototype.calculateTotal = original;
     }
+});
+
+test('resumo de férias concilia bruto, IR e desconto anterior, sem ocultar saldo negativo', () => {
+    const params = { instance: { key: 'ferias', presetId: 'ferias' as const }, state: { ...input, ferias1_3: 3000, irFerias: 200, feriasDesc: 3100 }, courtConfig: config, currentTables: { funcoes: {} }, isNovoAQ: false, noFunctionCode: '0', currentFunctionValue: 0, gratificacaoEspecificaCalculada: 0 };
+    const lines = buildPresetGrossLines(params);
+    assert.equal(lines.find(line => line.label === 'Adicional 1/3 férias Liquido')?.value, -300);
+    assert.equal(lines.find(line => line.label === 'Desconto de férias antecipadas')?.value, 3100);
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(<VacationOverview lines={lines} calculationReady />); });
+    assert.match(textOf(tree.root), /Bruto.*3.000,00.*Líquido.*300,00/);
+    act(() => tree.update(<VacationOverview lines={lines} calculationReady={false} />));
+    assert.doesNotMatch(textOf(tree.root), /3.000,00/);
+    assert.match(textOf(tree.root), /Aguardando cálculo/);
+    act(() => tree.unmount());
 });

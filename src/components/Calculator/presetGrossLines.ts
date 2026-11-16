@@ -80,13 +80,17 @@ export const buildPresetGrossLines = ({
                 state.abonoIr || 0,
                 0
             );
-        case 'ferias':
-            return buildCardTaxSummary(
-                [{ label: 'Adicional 1/3 férias', value: state.ferias1_3 || 0 }],
-                'Adicional 1/3 férias',
-                state.irFerias || 0,
-                0
-            );
+        case 'ferias': {
+            const gross = roundCurrency(state.ferias1_3 || 0);
+            const ir = roundCurrency(state.irFerias || 0);
+            const advance = roundCurrency(state.feriasDesc || 0);
+            return [
+                { label: 'Adicional 1/3 férias Bruto', value: gross },
+                { label: 'Desconto IR (Adicional 1/3 férias)', value: ir, isDiscount: true },
+                { label: 'Desconto de férias antecipadas', value: advance, isDiscount: true },
+                { label: 'Adicional 1/3 férias Liquido', value: roundCurrency(gross - ir - advance) }
+            ];
+        }
         case 'decimo': {
             if (state.thirteenthMemory) return unifiedThirteenthLines(state);
             const primeira13VencBruto = roundCurrency(state.adiant13Venc || 0);

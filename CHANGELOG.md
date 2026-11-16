@@ -1,3 +1,7 @@
+## Totais de férias no card — 16/11/2026
+
+- Exibe bruto e líquido no padrão do 13º, incluindo no líquido o desconto de férias antecipadas e o IR apresentados no detalhamento. Valores ficam ocultos enquanto a simulação está pendente.
+
 ## Personalização do card Férias — 16/11/2026
 
 - Card alinhado à Gratificação Natalina: composição, valor manual e desconto por recebimento anterior reunidos em Personalizar cálculo, com rascunho isolado, Aplicar ajustes e Cancelar.

@@ -13,6 +13,7 @@ interface VacationCardProps {
     inputState?: CalculatorState;
     onEditingChange?: (editing: boolean) => void;
     calculationReady?: boolean;
+    overview?: React.ReactNode;
 }
 
 const parseCurrencyInput = (value: string) => {
@@ -34,7 +35,7 @@ const pickInputs = (state: CalculatorState): VacationDraft =>
     Object.fromEntries(editableFields.map(field => [field, state[field]])) as VacationDraft;
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:border-neutral-600';
 
-export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, inputState, update: saveField, styles, courtConfig, onEditingChange, calculationReady = false }) => {
+export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, inputState, update: saveField, styles, courtConfig, onEditingChange, calculationReady = false, overview }) => {
     const fieldId = React.useId();
     const inputs = inputState ?? savedState;
     const [draft, setDraft] = useState<VacationDraft | null>(null);
@@ -193,9 +194,9 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                 </label>
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                     {inputs.manualFerias ? 'Valor manual' : 'Cálculo automático'}
-                    {calculationReady ? ` · ${formatCurrency(savedState.ferias1_3)}` : ' · Aguardando cálculo'}
                 </p>
                 {inputs.feriasAntecipadas && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Recebimento anterior informado · desconto {inputs.feriasDescManual ? 'personalizado' : 'automático'}.</p>}
+                {overview}
                 <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
                     <button ref={buttonRef} type="button" className={actionClass} onClick={openEditor}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo</button>
                 </div>
