@@ -255,7 +255,11 @@ export const useDynamicPresetInstances = ({
                 ...Object.keys(entry.dias || {}),
                 ...Object.keys(current?.dias || {})
             ]);
-            const diasEqual = Array.from(diasKeys).every((key) => (entry.dias?.[key] || 0) === (current?.dias?.[key] || 0));
+            const diasEqual = Array.from(diasKeys).every((key) => (
+                Object.prototype.hasOwnProperty.call(entry.dias || {}, key) ===
+                    Object.prototype.hasOwnProperty.call(current?.dias || {}, key) &&
+                (entry.dias?.[key] || 0) === (current?.dias?.[key] || 0)
+            ));
             return (
                 !!current &&
                 current.id === entry.id &&

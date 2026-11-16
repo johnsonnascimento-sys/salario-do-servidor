@@ -80,10 +80,25 @@ export interface CalculatedOvertimeEntry {
     funcoesSubstituicaoElegiveis?: string[];
 }
 
+export interface SubstitutionFunctionDetail {
+    funcao: string;
+    elegivel: boolean;
+    dias: number;
+    valorDestino: number;
+    baseAbatimento: number;
+    diferencaMensal: number;
+    divisor: number;
+    subtotal: number;
+}
+
 export interface CalculatedSubstitutionEntry {
     id: string;
     total: number;
     isEA: boolean;
     excluirIR: boolean;
     pssIsEA: boolean;
+    funcoesSubstituicaoElegiveis?: string[];
+    detalhamentoPorFuncao?: SubstitutionFunctionDetail[];
+    totalPorDias?: number;
+    origemValor?: 'dias' | 'manual';
 }

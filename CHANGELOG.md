@@ -892,3 +892,11 @@
 - Motor passa a devolver detalhamento por função, conciliado por maiores restos em cada modalidade, sem alterar os totais agregados, incidências ou créditos do holerite. Subtotais anteriores ficam ocultos durante recálculo.
 - Validação: 22 testes de HE/interface, 24 de estado/restauração e 5 de carregamento aprovados, além de typecheck e build. Revisão independente de regras/cálculo sem bloqueadores; corrigido retorno do foco após remoção. Conferência dos componentes reais com motor e dados fictícios em desktop e 360/390 px, temas claro/escuro, sem transbordamento horizontal; salvamento autenticado e configuração publicada não homologados nesta conferência.
 
+## Seleção de funções e apresentação do card de Substituição — 16/11/2026
+
+- Tabela completa de FCs/CJs substituída por seletor com Adicionar função, dias, subtotal bruto e Remover. Elegibilidade vem do motor; funções zeradas, inelegíveis e ausentes do catálogo são preservadas em snapshots e identificadas para revisão.
+- Bloco Tributação com IR mensal, Exercícios anteriores (RRA) e Excluir do IR mutuamente exclusivos, preservando competências, valor documentado e seleção independente de PSS EA. Resumo recolhível em Ver detalhamento do cálculo e ajuda normativa no ícone ? junto ao título, seguindo os padrões de HE e 13º.
+- Memória por função com destino, abatimento, diferença, divisor e subtotal conciliado por maiores restos, sem alterar fórmula, total, incidências ou créditos do holerite. Valor documentado, inclusive zero, mantém precedência; cálculo por dias fica apenas como referência, sem rateio fictício do valor manual.
+- Validação: 13 testes de substituição, 22 de HE, 16 de IR-EA/configuração, 24 de estado/restauração, 5 de carregamento e 43 de 13º aprovados; script de interface IR-EA, typecheck e build aprovados. Revisão independente de cálculo/regras sem bloqueadores.
+- Conferência do card completo com hook e motor reais e dados fictícios em desktop e 360/390 px, temas claro/escuro: inclusão, subtotal, valor documentado zero, retorno ao cálculo por dias, tributação, detalhamento, ajuda normativa, foco e ausência de transbordamento. Configuração publicada e salvamento autenticado não homologados nesta conferência.
+

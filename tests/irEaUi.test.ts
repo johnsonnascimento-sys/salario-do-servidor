@@ -174,12 +174,14 @@ const substTree = create(React.createElement(SubstitutionCard, {
 }));
 const drawer = substTree.root.findByType('details');
 assert.equal(drawer.props.open, true);
-assert.ok(JSON.stringify(drawer.findByType('summary').children.map(child => typeof child === 'string' ? child : child.props.children)).includes('Opções Tributárias Avançadas'));
+assert.ok(drawer.findAllByType('summary')[0].findAllByType('span').some(span => span.children.includes('Tributação')));
 assert.equal(substPatches.length, 0, 'Abrir um snapshot não altera os dados');
 const taxChecks = drawer.findAllByType('input').filter(input => input.props.type === 'checkbox');
-assert.deepEqual(taxChecks.map(input => input.props.checked), [true, false, true]);
-act(() => taxChecks[1].props.onChange({ target: { checked: true } }));
-assert.deepEqual(substPatches.pop(), { id: 'subst-ui', patch: { excluirIR: true, isEA: false } });
+assert.deepEqual(taxChecks.map(input => input.props.checked), [true]);
+const taxRadios = drawer.findAllByType('input').filter(input => input.props.type === 'radio');
+assert.deepEqual(taxRadios.map(input => input.props.checked), [false, true, false]);
+act(() => taxRadios.find(input => input.props.value === 'excluir')!.props.onChange());
+assert.deepEqual(substPatches.pop(), { id: 'subst-ui', patch: { excluirIR: true, isEA: false, competenciasEA: ['2024-02'] } });
 assert.equal(substitution.pssIsEA, true, 'IR não modifica seleção de PSS');
 assert.equal(drawer.findAllByType('input').find(input => input.props.type === 'number')!.props.value, 5000);
 assert.deepEqual(substitution.competenciasEA, ['2024-02']);

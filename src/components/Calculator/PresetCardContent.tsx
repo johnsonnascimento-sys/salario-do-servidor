@@ -121,6 +121,9 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
             <SubstitutionCard
                 entry={substitutionEntry}
                 updateEntry={updateSubstitutionEntry}
+                calculationReady={calculationReady}
+                eligibleFunctionKeys={state.substitutionCalculatedEntries?.find(item => item.id === substitutionEntry.id)?.funcoesSubstituicaoElegiveis}
+                functionDetails={state.substitutionCalculatedEntries?.find(item => item.id === substitutionEntry.id)?.detalhamentoPorFuncao}
                 functionKeys={functionKeys}
                 competenciaReferencia={competenciaReferencia}
                 styles={styles}

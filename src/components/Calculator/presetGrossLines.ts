@@ -216,7 +216,20 @@ export const buildPresetGrossLines = ({
                 : isCurrentYearEa
                     ? 'Desconto IR mensal (mesmo ano da folha — sem RRA)'
                     : 'Desconto IR (Substituição)';
+            const functionLines: PresetGrossLine[] = (entry.detalhamentoPorFuncao || []).flatMap(detail => [
+                { label: `${detail.funcao.toUpperCase()} — Dias de substituição`, value: 0, displayValue: detail.dias.toLocaleString('pt-BR') },
+                { label: `${detail.funcao.toUpperCase()} — Valor da função substituída`, value: detail.valorDestino },
+                { label: `${detail.funcao.toUpperCase()} — Base de abatimento (função atual e gratificação específica)`, value: detail.baseAbatimento },
+                { label: `${detail.funcao.toUpperCase()} — Diferença mensal`, value: detail.diferencaMensal },
+                { label: `${detail.funcao.toUpperCase()} — Divisor aplicado`, value: 0, displayValue: detail.divisor.toLocaleString('pt-BR') },
+                { label: `${detail.funcao.toUpperCase()} — Subtotal por dias${entry.origemValor === 'manual' ? ' (referência)' : ''}`, value: detail.subtotal },
+            ]);
             return [
+                ...functionLines,
+                ...(entry.origemValor === 'manual' ? [
+                    { label: 'Total por dias (referência; não somado ao valor documentado)', value: entry.totalPorDias },
+                    { label: 'Valor bruto documentado utilizado', value: entry.total },
+                ] : []),
                 { label: 'Total substituição Bruto', value: entry.total },
                 { label: irLabel, value: ir, isDiscount: true },
                 { label: 'Desconto PSS (Substituição)', value: pss, isDiscount: true },
