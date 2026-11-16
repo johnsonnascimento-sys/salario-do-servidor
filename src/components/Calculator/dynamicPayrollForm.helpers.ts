@@ -110,13 +110,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         tags: ['gaacta', 'alta', 'complexidade', 'cj', '15%']
     },
     {
-        id: 'gratificacao',
-        label: 'GAE / GAS',
-        description: 'GAE (Oficial de Justiça) e GAS (Polícia Judicial) - 35% Lei 11.416/06',
-        category: 'gratificacoes',
-        tags: ['gae', 'gas', 'gratificacao', 'especifica', 'oficial', 'seguranca', 'policia']
-    },
-    {
         id: 'licenca',
         label: 'Licença Compensatória',
         description: 'Indenização de dias de licença compensatória (Res. STM 376/2025 - Revogada pela Res. STM 397/2026)',

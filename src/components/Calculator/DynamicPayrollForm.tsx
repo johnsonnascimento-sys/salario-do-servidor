@@ -11,6 +11,7 @@ import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
 import { DynamicPayrollTaxSection } from './DynamicPayrollTaxSection';
 import { PensionRetroForm } from './PensionRetroForm';
 import { PresetCardContent } from './PresetCardContent';
+import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetControlsSection } from './PresetControlsSection';
 import { PresetInstanceCard } from './PresetInstanceCard';
 import { useFunprespForm } from './hooks/useFunprespForm';
@@ -44,6 +45,8 @@ interface DynamicPayrollFormProps {
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     styles: any;
 }
+
+const GRATIFICATION_INSTANCE: PresetInstance = { key: 'gratificacao-fixed', presetId: 'gratificacao' };
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     step,
@@ -133,7 +136,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         .filter(rubrica => rubrica.tipo === 'D')
         .reduce((total, rubrica) => total + (rubrica.valor || 0), 0);
 
-    const visiblePresets = enabledPresets.filter(instance => (instance.presetId === 'pensao') === (step === 3));
+    const visiblePresets = enabledPresets.filter(instance =>
+        instance.presetId !== 'gratificacao' && (instance.presetId === 'pensao') === (step === 3)
+    );
 
     const funcaoAtualValor =
         state.funcao && state.funcao !== noFunctionCode
@@ -275,6 +280,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     update={update}
                 />
 
+                <div className={styles.card}>
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <h4 className={`${styles.innerBoxTitle} !mb-0`}>Gratificação Específica (GAE / GAS)</h4>
+                        <span className="rounded border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-body-xs font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">Lei 11.416/06, arts. 16 e 17</span>
+                    </div>
+                    {renderPreset(GRATIFICATION_INSTANCE)}
+                    <div className="mt-4"><PresetGrossSummary lines={getPresetGrossLines(GRATIFICATION_INSTANCE)} /></div>
+                </div>
+
                 <DynamicPayrollAQSection
                     styles={styles}
                     renderPreset={renderPreset}
@@ -343,6 +357,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             <p role="status" aria-live="polite" className="sr-only">{reorderAnnouncement}</p>
             {enabledPresets.map((instance, index) => {
+                if (instance.presetId === 'gratificacao') return null;
                 const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
                 if (!preset) return null;
                 const visibleIndex = visiblePresets.findIndex(item => item.key === instance.key);
