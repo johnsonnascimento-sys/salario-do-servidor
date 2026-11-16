@@ -159,13 +159,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         tags: ['auxilio', 'transporte', 'deslocamento', 'passe']
     },
     {
-        id: 'abono',
-        label: 'Abono de Permanência',
-        description: 'Ressarcimento de contribuição previdenciária (EC 41/2003)',
-        category: 'beneficios',
-        tags: ['abono', 'permanencia', 'devolucao', 'pss']
-    },
-    {
         id: 'vpni',
         label: 'VPNI',
         description: 'Vantagem Pessoal Nominalmente Identificada (Quintos/Décimos)',

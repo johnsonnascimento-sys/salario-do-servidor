@@ -47,6 +47,7 @@ interface DynamicPayrollFormProps {
 }
 
 const GRATIFICATION_INSTANCE: PresetInstance = { key: 'gratificacao-fixed', presetId: 'gratificacao' };
+const ABONO_INSTANCE: PresetInstance = { key: 'abono-fixed', presetId: 'abono' };
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     step,
@@ -137,7 +138,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         .reduce((total, rubrica) => total + (rubrica.valor || 0), 0);
 
     const visiblePresets = enabledPresets.filter(instance =>
-        instance.presetId !== 'gratificacao' && (instance.presetId === 'pensao') === (step === 3)
+        instance.presetId !== 'gratificacao' && instance.presetId !== 'abono' &&
+        (instance.presetId === 'pensao') === (step === 3)
     );
 
     const funcaoAtualValor =
@@ -313,6 +315,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     selectionRequired={pensionSelection.incompatible}
                     calculationReady={calculationReady}
                     deducaoPorDependente={courtConfig.values?.deducao_dep ?? 0}
+                    abonoGrossLines={getPresetGrossLines(ABONO_INSTANCE)}
                 />
 
                 </div>
@@ -357,7 +360,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             <p role="status" aria-live="polite" className="sr-only">{reorderAnnouncement}</p>
             {enabledPresets.map((instance, index) => {
-                if (instance.presetId === 'gratificacao') return null;
+                if (instance.presetId === 'gratificacao' || instance.presetId === 'abono') return null;
                 const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
                 if (!preset) return null;
                 const visibleIndex = visiblePresets.findIndex(item => item.key === instance.key);

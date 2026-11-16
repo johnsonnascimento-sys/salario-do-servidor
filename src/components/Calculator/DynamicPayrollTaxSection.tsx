@@ -11,6 +11,8 @@ import { CalculatorState, CourtConfig } from '../../types';
 import { PensionParticipation } from '../../types/pension';
 import { toDecimalRateFromPercentInput, toPercentLabel, toPositiveNumber } from './dynamicPayrollForm.helpers';
 import { SharedPensionSummary } from './SharedPensionSummary';
+import { PresetGrossSummary } from './PresetGrossSummary';
+import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { getPensionErrorFeedback } from '../../utils/pensionFeedback';
 
 interface DynamicPayrollTaxSectionProps {
@@ -29,12 +31,13 @@ interface DynamicPayrollTaxSectionProps {
     selectionRequired?: boolean;
     calculationReady?: boolean;
     deducaoPorDependente?: number;
+    abonoGrossLines: PresetGrossLine[];
 }
 
 export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> = ({
     styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
-    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady, deducaoPorDependente
+    funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady, deducaoPorDependente, abonoGrossLines
 }) => {
     const fieldId = React.useId();
     const participates = state.funprespParticipacao !== 'nao';
@@ -62,6 +65,23 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe o enquadramento da sua contribuição ao RPPS.</p>
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
+        </section>
+        <section className={`${styles.card} space-y-3`}>
+            <h5 className="mb-1 text-h5 font-semibold">Abono de permanência</h5>
+            <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Marque se você já cumpriu os requisitos para aposentadoria voluntária e optou por continuar em atividade. O abono é calculado com base na contribuição previdenciária (PSS) e será incluído como crédito na simulação.</p>
+            <label className={styles.checkboxLabel}>
+                <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono}
+                    onChange={event => {
+                        update('recebeAbono', event.target.checked);
+                        if (event.target.checked) {
+                            update('gaactaIncideAbono', true);
+                            update('decimoIncideAbono', true);
+                            update('feriasIncideAbono', true);
+                        }
+                    }} />
+                <span>Recebo abono de permanência nesta competência</span>
+            </label>
+            {state.recebeAbono && <PresetGrossSummary lines={abonoGrossLines} />}
         </section>
         {optionalItems.some(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]) && <fieldset className="mt-3 space-y-2">
             <legend className={styles.label}>Opções salvas que precisam de revisão</legend>
