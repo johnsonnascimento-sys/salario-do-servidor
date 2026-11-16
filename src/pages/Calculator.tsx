@@ -61,8 +61,6 @@ export default function Calculator() {
         configError,
         saveCurrentPayslip,
         savingPayslip,
-        isUserAuthenticated,
-        loggedUserName,
     } = useCalculator();
 
     const emptyRetroDraftIds = (state.pensionRetroEntries ?? []).filter(entry =>
@@ -315,19 +313,8 @@ export default function Calculator() {
 
             <div className="calculator-workspace max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6" style={{ paddingBottom: barHeight + 40, '--calculator-bar-height': `${barHeight}px` } as React.CSSProperties}>
                 <CalculatorHeader
-                    calculationReady={calculationReady}
-                    courtConfig={courtConfig}
-                    state={effectiveState}
-                    update={update}
                     navigate={navigate}
-                    styles={styles}
-                    isUserAuthenticated={isUserAuthenticated}
-                    loggedUserName={loggedUserName}
                     agencyName={agencyName}
-                    onSavePayslip={handleSavePayslip}
-                    onOpenPayslips={openMyPayslips}
-                    savingPayslip={savingPayslip}
-                    onClearCalculator={handleClearCalculator}
                 />
 
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
