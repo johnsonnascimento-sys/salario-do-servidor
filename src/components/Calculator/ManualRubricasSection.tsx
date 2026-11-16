@@ -392,7 +392,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         )}
 
                         {/* Gaveta de Progressive Disclosure: Opções Tributárias Especiais e EA */}
-                        <div className="pt-1">
+                        {isCredito && <div className="pt-1">
                             <button
                                 type="button"
                                 id={`manual-advanced-trigger-${rubrica.id}`}
@@ -509,7 +509,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                         updateRubrica={updateRubrica}
                                     />
                                 </div>
-                        </div>
+                        </div>}
 
                         {calculationReady && <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />}
 
