@@ -58,19 +58,12 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     return <div className={styles.innerBox}>
         <h4 className={styles.innerBoxTitle}>Previdência e dependentes</h4>
         <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">IR é o Imposto de Renda. PSS é a contribuição previdenciária do servidor. Valores de exercícios anteriores (EA) são tratados nos respectivos lançamentos e competências.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+            <h5 className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
+            <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe o enquadramento da sua contribuição ao RPPS.</p>
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
-            <div>
-                <label htmlFor={`${fieldId}-dependentes`} className={styles.label}>Dependentes (IR)</label>
-                <div className="flex items-stretch gap-2">
-                    <button type="button" aria-label="Remover dependente" disabled={state.dependentes <= 0} onClick={() => update('dependentes', Math.max(0, state.dependentes - 1))} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold disabled:opacity-40 dark:border-neutral-600">−</button>
-                    <input id={`${fieldId}-dependentes`} aria-describedby={`${fieldId}-tax-help`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
-                    <button type="button" aria-label="Adicionar dependente" onClick={() => update('dependentes', state.dependentes + 1)} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold dark:border-neutral-600">+</button>
-                </div>
-            </div>
-
-        </div>
+        </section>
         {optionalItems.some(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]) && <fieldset className="mt-3 space-y-2">
             <legend className={styles.label}>Opções salvas que precisam de revisão</legend>
             <p className={PENSION_HELP_CLASS}>A configuração atual não permite estas inclusões. Desmarque-as para continuar, ou confira a configuração e a competência desta simulação.</p>
@@ -124,6 +117,19 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <details className="mt-2"><summary className="cursor-pointer underline">Informações para suporte</summary><p className="mt-2 break-words">{linkedError}</p></details>
                 </div> : <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedFeedback?.message || linkedError || funprespValidationError}</p>)}
         </fieldset>}
+        <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+            <h5 className="mb-1 text-h5 font-semibold">Dependentes para IR</h5>
+            <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe a quantidade de dependentes considerados no imposto de renda.</p>
+            <div className="max-w-xs">
+            <div>
+                <label htmlFor={`${fieldId}-dependentes`} className={styles.label}>Dependentes (IR)</label>
+                <div className="flex items-stretch gap-2">
+                    <button type="button" aria-label="Remover dependente" disabled={state.dependentes <= 0} onClick={() => update('dependentes', Math.max(0, state.dependentes - 1))} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold disabled:opacity-40 dark:border-neutral-600">−</button>
+                    <input id={`${fieldId}-dependentes`} aria-describedby={`${fieldId}-tax-help`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
+                    <button type="button" aria-label="Adicionar dependente" onClick={() => update('dependentes', state.dependentes + 1)} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold dark:border-neutral-600">+</button>
+                </div>
+            </div>            </div>
+        </section>
         <details className="mt-4 space-y-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
             open={optionsOpen} id={`${fieldId}-options`} onToggle={event => setOptionsOpen(event.currentTarget.open)}>
             <summary className="cursor-pointer min-h-11 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">

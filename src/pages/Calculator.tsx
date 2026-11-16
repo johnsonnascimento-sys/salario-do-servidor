@@ -327,7 +327,9 @@ export default function Calculator() {
                     onClearCalculator={handleClearCalculator}
                 />
 
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                 <CalculatorNavigation step={step} onChange={changeStep} />
+                <div className="min-w-0 flex-1">
                 <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">
                     {['Dados principais e qualificação', 'Previdência e dependentes', 'Verbas e créditos', 'Descontos', 'Resultado'][step]}
                 </h2>
