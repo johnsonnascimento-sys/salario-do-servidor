@@ -28,6 +28,7 @@ interface PresetCardContentProps {
     courtConfig: CourtConfig;
     calculationReady?: boolean;
     inputState?: CalculatorState;
+    onVacationEditingChange?: (editing: boolean) => void;
     onThirteenthEditingChange?: (editing: boolean) => void;
     thirteenthOverview?: React.ReactNode;
 }
@@ -45,6 +46,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     courtConfig,
     calculationReady = false,
     inputState,
+    onVacationEditingChange,
     onThirteenthEditingChange,
     thirteenthOverview
 }) => {
@@ -77,7 +79,7 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
     }
 
     if (presetId === 'ferias') {
-        return <VacationCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} courtConfig={courtConfig} />;
+        return <VacationCard inputState={inputState} onEditingChange={onVacationEditingChange} calculationReady={calculationReady} state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} courtConfig={courtConfig} />;
     }
 
     if (presetId === 'decimo') {

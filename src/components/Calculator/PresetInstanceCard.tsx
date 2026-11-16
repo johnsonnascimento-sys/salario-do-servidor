@@ -161,6 +161,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
 }) => {
     const headerInfo = getPresetHeaderInfo(instance.presetId, courtConfig, presetLabel, instance, state);
 
+    const [vacationEditing, setVacationEditing] = useState(false);
     const [thirteenthEditing, setThirteenthEditing] = useState(false);
     const [infoOpen, setInfoOpen] = useState(false);
     const infoRef = useRef<HTMLSpanElement>(null);
@@ -184,12 +185,12 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-2">
-                <div className={`flex min-w-0 flex-1 items-center gap-2 ${['decimo', 'substituicao'].includes(instance.presetId) ? '' : 'flex-wrap'}`}>
+                <div className={`flex min-w-0 flex-1 items-center gap-2 ${['decimo', 'substituicao', 'ferias'].includes(instance.presetId) ? '' : 'flex-wrap'}`}>
                     {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
                     <h3 className="min-w-0 text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
                     </h3>
-                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao'].includes(instance.presetId) && (
+                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias'].includes(instance.presetId) && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
                         </span>
@@ -203,7 +204,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                             </div>
                         </details>
                     )}
-                    {['decimo', 'substituicao'].includes(instance.presetId) && (
+                    {['decimo', 'substituicao', 'ferias'].includes(instance.presetId) && (
                         <span ref={infoRef} className="relative inline-flex">
                             <button type="button" aria-label={`Informações sobre ${headerInfo.title}`}
                                 aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} onClick={() => setInfoOpen(open => !open)}
@@ -216,6 +217,9 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                                 {instance.presetId === 'decimo' ? <>
                                 <span className="mt-2 block">A 1ª parcela é o adiantamento, sem IR e PSS. Na 2ª parcela, as retenções consideram a remuneração integral e o abatimento do adiantamento, sem PSS sobre FC/CJ.</span>
                                 <span className="mt-2 block">Use Personalizar cálculo para escolher a composição da remuneração ou informar os valores recebidos.</span>
+                                </> : instance.presetId === 'ferias' ? <>
+                                <span className="mt-2 block">O adicional de 1/3 de férias corresponde a um terço da remuneração de referência do servidor no período de usufruto (art. 7º, XVII, da CF/88 c/c art. 76 da Lei nº 8.112/1990).</span>
+                                <span className="mt-2 block">Use Personalizar cálculo para escolher a composição, informar um valor manual ou ajustar o desconto por recebimento anterior.</span>
                                 </> : <span className="mt-2 block">Adicione as funções substituídas e informe os dias correspondentes. Consulte Ver detalhamento do cálculo para conferir a diferença remuneratória, o divisor aplicado e os descontos da simulação.</span>}
                             </span>}
                         </span>
@@ -256,6 +260,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 instance={instance}
                 calculationReady={calculationReady}
                 inputState={inputState}
+                onVacationEditingChange={setVacationEditing}
                 onThirteenthEditingChange={setThirteenthEditing}
                 thirteenthOverview={instance.presetId === 'decimo' ? <ThirteenthOverview lines={lines} calculationReady={calculationReady} /> : undefined}
                 state={state}
@@ -269,7 +274,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 courtConfig={courtConfig}
             />
 
-            {!thirteenthEditing && <PresetGrossSummary compact={['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao'].includes(instance.presetId)} lines={['decimo', 'substituicao'].includes(instance.presetId) && !calculationReady ? [] : lines}>
+            {!thirteenthEditing && !vacationEditing && <PresetGrossSummary compact={['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias'].includes(instance.presetId)} lines={['decimo', 'substituicao', 'ferias'].includes(instance.presetId) && !calculationReady ? [] : lines}>
                 {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
             </PresetGrossSummary>}
         </div>

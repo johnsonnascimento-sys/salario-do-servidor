@@ -1,3 +1,10 @@
+## Personalização do card Férias — 16/11/2026
+
+- Card alinhado à Gratificação Natalina: composição, valor manual e desconto por recebimento anterior reunidos em Personalizar cálculo, com rascunho isolado, Aplicar ajustes e Cancelar.
+- Norma e explicação transferidas para o ícone de interrogação; Resumo calculado substituído por Ver detalhamento do cálculo, oculto durante edição ou recálculo pendente.
+- Prévia isolada pelo motor existente, com proteção contra respostas antigas, sem modificar regras tributárias nem o formato dos snapshots. Removido o percentual fixo do rótulo de GAJ.
+- Validação: testes de cálculo de férias, interação do editor e regressão do 13º, checagem de tipos e build. Conferência do componente real com dados fictícios no navegador em desktop/mobile e temas claro/escuro, sem transbordamento horizontal em 360 px. A calculadora completa não pôde ser homologada: o carregamento da configuração remota da JMU falhou neste ambiente.
+
 ## Agrupamento do 13º na página de resultado — 16/11/2026
 
 - Créditos da gratificação natalina reunidos em uma linha com Ver detalhamento, preservando parcelas, descrições e valores. Abatimentos dos adiantamentos formam um grupo próprio nos descontos; IR, PSS, Funpresp e abono próprio do 13º continuam separados.
