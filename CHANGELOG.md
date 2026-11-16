@@ -1,3 +1,9 @@
+## Versionamento da revisão do cronograma PJU — 16/11/2026
+
+- Versionada como preparada, sem execução no banco nesta tarefa, a migration `20261029_review_pju_adjustment_status.sql`, com status explícitos das parcelas do cronograma e referências da revisão de 29/10/2026.
+- Preserva datas e percentuais existentes e mantém o JSON anterior em versão histórica; divergências no cronograma ou colisões de vigência interrompem a aplicação. A aplicação futura exige conferir o estado real de `power_config` e a atualidade das fontes citadas.
+- Revisão estática especializada concluída; nenhuma homologação de execução SQL ou revalidação jurídica foi realizada nesta tarefa.
+
 ## Correção da alíquota na seleção da Funpresp — 16/11/2026
 
 - A troca explícita de modalidade aplica participação e alíquota em um único patch, usando o padrão válido da configuração mensal ou histórica quando a taxa anterior é incompatível.
