@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { getTablesForPeriod } from '../../../utils/calculations';
 import { resolveGaactaRule } from '../../../services/agency/engine/modules/gaactaCalculations';
@@ -22,12 +22,18 @@ const formatCurrency = (val: number) => {
 };
 
 export const GaactaCard: React.FC<GaactaCardProps> = ({
-    state,
-    update,
+    state: savedState,
+    update: saveField,
     styles,
     courtConfig
 }) => {
     const fieldId = React.useId();
+    const [draft, setDraft] = React.useState<CalculatorState | null>(null);
+    const state = draft ?? savedState;
+    const update = (field: keyof CalculatorState, value: any) => {
+        if (draft) setDraft(current => current ? { ...current, [field]: value } : current);
+        else saveField(field, value);
+    };
     const funcaoStr = (state.funcao || '').toLowerCase();
     const isCJ = funcaoStr.startsWith('cj');
     const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
@@ -115,11 +121,12 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                     Não há regra GAACTA cadastrada e vigente para esta competência. O card não gera valor.
                 </div>
             )}
-            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40">
-                <summary className="cursor-pointer px-4 py-3 text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
-                    Composição da base de cálculo da GAACTA - R$ {formatCurrency(state.gaactaBaseCalculo || 0)}
-                </summary>
-                <div className="space-y-2 p-4 pt-1">
+            {!draft && <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(savedState)}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo</button>
+            </div>}
+            {draft && <section className="space-y-4" aria-label="Personalizar cálculo da GAACTA">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personalizar GAACTA</h3>
+                <div className="space-y-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <label className={styles.checkboxLabel}>
                         <input
@@ -158,7 +165,7 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                             Selecione as parcelas que compõem a remuneração para fins de aplicação da GAACTA:
                         </p>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700 [&>label]:py-3">
                             <label className={styles.checkboxLabel}>
                                 <input
                                     type="checkbox"
@@ -314,7 +321,15 @@ export const GaactaCard: React.FC<GaactaCardProps> = ({
                         </div>
                 )}
                 </div>
-            </details>
+                <div className="flex justify-end gap-2">
+                    <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 dark:border-neutral-600" onClick={() => setDraft(null)}>Cancelar</button>
+                    <button type="button" className="rounded-lg bg-neutral-800 px-4 py-2 font-semibold text-white dark:bg-neutral-200 dark:text-neutral-900" onClick={() => {
+                        const fields: (keyof CalculatorState)[] = ['gaactaManualBase', 'gaactaBaseManualValor', 'gaactaIncideVencimento', 'gaactaIncideGAJ', 'gaactaIncideFuncao', 'gaactaIncideAQTitulo', 'gaactaIncideAQTreino', 'gaactaIncideAbono', 'gaactaIncideGrat', 'gaactaRubricasInclusas', 'gaactaOutrasParcelas', 'gaactaRecesso'];
+                        fields.forEach(field => { if (draft[field] !== savedState[field]) saveField(field, draft[field]); });
+                        setDraft(null);
+                    }}>Aplicar ajustes</button>
+                </div>
+            </section>}
 
         </div>
     );
