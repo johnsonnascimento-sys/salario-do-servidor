@@ -13,8 +13,14 @@ interface GratificationCardProps {
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
-export const GratificationCard: React.FC<GratificationCardProps> = ({ state, update, styles, courtConfig }) => {
+export const GratificationCard: React.FC<GratificationCardProps> = ({ state: savedState, update: saveField, styles, courtConfig }) => {
     const fieldId = React.useId();
+    const [draft, setDraft] = React.useState<CalculatorState | null>(null);
+    const state = draft ?? savedState;
+    const update = (field: keyof CalculatorState, value: any) => {
+        if (draft) setDraft(current => current ? { ...current, [field]: value } : current);
+        else saveField(field, value);
+    };
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
     const funcaoValorBruta = useMemo(() => {
         if (!state.funcao || state.funcao === noFunctionCode || !courtConfig?.bases?.funcoes) {
@@ -95,6 +101,8 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
     ]);
 
     const isGratAtiva = state.gratEspecificaTipo === 'gae' || state.gratEspecificaTipo === 'gas';
+    const pssDefault = courtConfig?.payrollRules?.specificGratificationPssDefaults?.[state.gratEspecificaTipo as 'gae' | 'gas'];
+    const personalizada = !incideVenc || incideGAJ || incideFuncao || incideAQTitulo || incideAQTreino || incideVPNI || incideATS || incideAbono || Boolean(state.gratOutrasParcelas) || Object.values(state.gratRubricasInclusas || {}).some(Boolean) || (typeof pssDefault === 'boolean' && state.incidirPSSGrat !== pssDefault);
     const valorGratificacaoCalculada = useMemo(() => {
         if (!isGratAtiva) return 0;
         return roundCurrency(totalBaseApurada * specificGratRate);
@@ -102,7 +110,8 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
 
     return (
         <div className="space-y-4">
-            <p className="text-body text-neutral-600 dark:text-neutral-300">Selecione a gratificação que se aplica ao seu cargo.</p>
+            {!draft && <p className="text-body text-neutral-600 dark:text-neutral-300">Qual gratificação se aplica ao seu cargo?</p>}
+            {!draft && <>
             <fieldset>
                 <legend className="sr-only">Tipo de gratificação</legend>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -123,6 +132,17 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                     })}
                 </div>
             </fieldset>
+            {isGratAtiva && <div className="flex flex-wrap items-center justify-between gap-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                <div aria-live="polite">
+                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Gratificação mensal estimada</p>
+                    <p className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{formatCurrency(valorGratificacaoCalculada)}</p>
+                    <p className="text-body-xs text-neutral-600 dark:text-neutral-300">{personalizada ? 'Ajustes personalizados · ' : ''}{Math.round(specificGratRate * 100)}% de {personalizada ? formatCurrency(totalBaseApurada) : 'vencimento básico'}</p>
+                </div>
+                <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(savedState)}>Personalizar cálculo</button>
+            </div>}
+            </>}
+            {draft && <section className="space-y-4" aria-label="Personalizar cálculo">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personalizar {state.gratEspecificaTipo.toUpperCase()}</h3>
                     <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
@@ -143,10 +163,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
             )}
 
             {/* Composição da Base da Remuneração (similar ao 13º e GAACTA) */}
-            <details className="group rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 p-4">
-                <summary className="cursor-pointer text-body font-semibold text-neutral-700 dark:text-neutral-300 min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700">
-                    Composição da base de cálculo <span className="ml-2 text-neutral-500 dark:text-neutral-400">Personalizar</span>
-                </summary>
+            <div>
                 <div className="mt-3 space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className={styles.label}>
@@ -354,15 +371,24 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                     </div>
                 </div>
                 </div>
-            </details>
+            </div>
+            <div className="flex justify-end gap-2">
+                <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 dark:border-neutral-600" onClick={() => setDraft(null)}>Cancelar</button>
+                <button type="button" className="rounded-lg bg-neutral-800 px-4 py-2 font-semibold text-white dark:bg-neutral-200 dark:text-neutral-900" onClick={() => {
+                    const fields: (keyof CalculatorState)[] = ['incidirPSSGrat', 'gratIncideVencimento', 'gratIncideGAJ', 'gratIncideFuncao', 'gratIncideAQTitulo', 'gratIncideAQTreino', 'gratIncideVPNI', 'gratIncideATS', 'gratIncideAbono', 'gratRubricasInclusas', 'gratOutrasParcelas'];
+                    fields.forEach(field => { if (draft[field] !== savedState[field]) saveField(field, draft[field]); });
+                    setDraft(null);
+                }}>Aplicar ajustes</button>
+            </div>
+            </section>}
 
-            <details className="text-body text-neutral-600 dark:text-neutral-300">
+            {!draft && <details className="text-body text-neutral-600 dark:text-neutral-300">
                 <summary className="min-h-11 cursor-pointer py-2 font-semibold text-neutral-700 dark:text-neutral-200">Entenda a GAE e a GAS</summary>
                 <div className="space-y-3 pb-2 text-body-xs">
                     <p>A Gratificação de Atividade Externa (GAE) e a Gratificação de Atividade de Segurança (GAS) correspondem a 35% do vencimento básico do servidor (arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006). Por padrão legal, apenas o vencimento básico permanece selecionado.</p>
                     <p>A GAE integra a remuneração do cargo e compõe a base do PSS. A GAS depende do exercício da atividade de segurança e fica fora dessa base por padrão, ressalvados a opção de inclusão e o enquadramento previdenciário aplicável. Fontes: <a className="text-secondary-700 underline dark:text-secondary-300" href="https://scon.stj.jus.br/SCON/GetInteiroTeorDoAcordao?dt_publicacao=24%2F09%2F2020&num_registro=201903436453" target="_blank" rel="noopener noreferrer">STJ, AgInt no REsp 1.849.491/SP</a> e <a className="text-secondary-700 underline dark:text-secondary-300" href="https://www.cjf.jus.br/cjf/noticias/2020/11-novembro/gratificacao-de-atividade-de-seguranca-nao-incorpora-aos-proventos-de-aposentadoria-do-servidor-publico" target="_blank" rel="noopener noreferrer">TNU, Tema 257</a>.</p>
                 </div>
-            </details>
+            </details>}
 
         </div>
     );
