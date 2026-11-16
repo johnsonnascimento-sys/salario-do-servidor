@@ -20,7 +20,6 @@ import {
     ArrowDownRight,
     X,
     Sparkles,
-    Minus,
     Scale
 } from 'lucide-react';
 import { Rubrica } from '../../types';
@@ -184,20 +183,8 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         includePreset(presetId as PredefinedRubricId);
     };
 
-    const quickItems = mode === 'C' ? PRESET_CATALOG.filter(item => ['hora_extra', 'ferias', 'decimo', 'diarias'].includes(item.id)) : [];
-
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Atalhos de verbas">
-                {quickItems.map(item => {
-                    const Icon = PRESET_ICONS[item.id];
-                    const count = activeCounts[item.id] || 0;
-                    return <button key={item.id} type="button" onClick={() => count ? scrollToPresetCard(item.id) : handleAddPreset(item.id)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 py-3 text-body font-semibold text-primary-800 hover:border-primary-600 hover:bg-primary-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-primary-200 dark:hover:bg-neutral-700">
-                        <Icon className="h-5 w-5 shrink-0" /><span>{item.id === 'hora_extra' ? 'Horas extras' : item.id === 'decimo' ? '13º salário' : item.id === 'diarias' ? 'Diárias' : 'Férias'}{count > 0 ? ` (${count})` : ''}</span>
-                    </button>;
-                })}
-                {mode === 'D' && addRubrica && <button type="button" onClick={() => handleAddManual({ tipo: 'D' })} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 py-3 text-body font-semibold text-neutral-700 hover:border-error-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200"><Minus className="h-5 w-5 shrink-0" />Outros descontos</button>}
-            </div>
             {/* Barra superior de ações e busca rápida */}
             <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
                 <div className="relative flex-1 min-w-0">
@@ -207,7 +194,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                         aria-label="Buscar verba ou adicional"
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        placeholder="Buscar verba ou adicional (ex.: hora extra, férias, diárias, 13º)..."
+                        placeholder={mode === 'C' ? 'Buscar verba (ex.: hora extra)...' : 'Buscar desconto (ex.: pensão alimentícia)...'}
                         className={`${styles.input} pl-9 pr-12 w-full`}
                     />
                     {searchTerm && (
@@ -239,6 +226,13 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                     </button>
                 </div>
             </div>
+
+            {addRubrica && (
+                <button type="button" onClick={() => handleAddManual(mode === 'C' ? { tipo: 'C', incideIR: true, incidePSS: true } : { tipo: 'D' })}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 px-4 py-2 font-semibold text-primary hover:bg-primary/10">
+                    <Plus className="h-4 w-4" /> {mode === 'C' ? 'Adicionar crédito avulso' : 'Adicionar desconto avulso'}
+                </button>
+            )}
 
             {reorderMode && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-body text-amber-800 dark:text-amber-300 flex items-center gap-2">

@@ -163,27 +163,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </p>
                     </div>
 
-                    {/* Botões de Inserção Livre */}
-                    <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
-                        {mode === 'C' && <button
-                            type="button"
-                            onClick={() => addRubrica({ tipo: 'C', incideIR: true, incidePSS: true })}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors text-body-xs font-bold uppercase tracking-wider"
-                            title="Adicionar um crédito genérico"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            Crédito livre
-                        </button>}
-                        {mode === 'D' && <button
-                            type="button"
-                            onClick={() => addRubrica({ tipo: 'D' })}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors text-body-xs font-bold uppercase tracking-wider"
-                            title="Adicionar um desconto genérico"
-                        >
-                            <Minus className="w-3.5 h-3.5" />
-                            Desconto livre
-                        </button>}
-                    </div>
                 </div>
 
                 {/* Resumo de Totalizadores e Filtros Rápidos */}
@@ -287,18 +266,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
                         {/* Campos Principais: Tipo, Descrição e Valor */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <div>
-                                <label htmlFor={`manual-type-${rubrica.id}`} className={styles.label}>Natureza</label>
-                                <select
-                                    id={`manual-type-${rubrica.id}`}
-                                    className={styles.input}
-                                    value={rubrica.tipo}
-                                    onChange={e => updateRubrica(rubrica.id, 'tipo', e.target.value as Rubrica['tipo'])}
-                                >
-                                    <option value="C">Crédito (+)</option>
-                                    <option value="D">Desconto</option>
-                                </select>
-                            </div>
                             <div className="md:col-span-2">
                                 <label htmlFor={`manual-description-${rubrica.id}`} className={styles.label}>Descrição da verba</label>
                                 <input
