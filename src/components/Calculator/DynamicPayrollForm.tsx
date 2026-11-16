@@ -299,7 +299,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <a href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11416.htm" target="_blank" rel="noopener noreferrer" className="rounded border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-body-xs font-medium text-neutral-500 hover:underline dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">Lei 11.416/06, arts. 16 e 17</a>
                     </div>
                     {renderPreset(GRATIFICATION_INSTANCE)}
-                    <div className="mt-4"><PresetGrossSummary lines={getPresetGrossLines(GRATIFICATION_INSTANCE)} /></div>
+                    <div className="mt-2"><PresetGrossSummary compact lines={getPresetGrossLines(GRATIFICATION_INSTANCE)} /></div>
                 </div>
 
                 </div>

@@ -6,9 +6,10 @@ import { PresetGrossLine, isDiscountLabel } from './dynamicPayrollForm.helpers';
 interface PresetGrossSummaryProps {
     lines: PresetGrossLine[];
     children?: ReactNode;
+    compact?: boolean;
 }
 
-export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, children }) => {
+export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, children, compact = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const lastLinesRef = useRef<PresetGrossLine[]>(lines);
 
@@ -16,7 +17,7 @@ export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, c
         lastLinesRef.current = lines;
     }
 
-    const displayLines = lines.length > 0 ? lines : lastLinesRef.current;
+    const displayLines = compact ? lines : (lines.length > 0 ? lines : lastLinesRef.current);
 
     if (displayLines.length === 0) {
         return null;
@@ -28,17 +29,17 @@ export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, c
             onToggle={(e) => {
                 setIsOpen(e.currentTarget.open);
             }}
-            className="group rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30"
+            className={compact ? 'group' : 'group rounded-xl border border-neutral-200 bg-neutral-50/70 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900/30'}
         >
             <summary
                 onClick={(e) => {
                     e.preventDefault();
                     setIsOpen((prev) => !prev);
                 }}
-                className="flex cursor-pointer list-none items-center justify-between gap-3 select-none"
+                className={`flex cursor-pointer list-none items-center gap-3 select-none ${compact ? 'justify-end min-h-11' : 'justify-between'}`}
             >
-                <p className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                    Resumo calculado
+                <p className={compact ? 'text-body-xs font-medium text-neutral-600 dark:text-neutral-300' : 'text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400'}>
+                    {compact ? (isOpen ? 'Ocultar detalhamento' : 'Ver detalhamento do cálculo') : 'Resumo calculado'}
                 </p>
                 <ChevronDown
                     className={`h-4 w-4 text-neutral-400 transition-transform duration-200 dark:text-neutral-500 ${isOpen ? 'rotate-180' : ''}`}
@@ -48,7 +49,7 @@ export const PresetGrossSummary: React.FC<PresetGrossSummaryProps> = ({ lines, c
                 {displayLines.map((line, index) => {
                     const isDiscount = Boolean(line.isDiscount || isDiscountLabel(line.label));
                     return (
-                        <div key={`${line.label}-${index}`} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-body-xs">
+                        <div key={`${line.label}-${index}`} className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-body-xs ${compact ? 'border-b border-neutral-200 py-2 dark:border-neutral-700' : ''}`}>
                             <span className="text-neutral-600 dark:text-neutral-300">{line.label}</span>
                             <span className={`font-mono font-semibold ${isDiscount ? 'text-error-600 dark:text-error-400' : 'text-neutral-700 dark:text-neutral-200'}`}>
                                 {line.displayValue ?? formatCurrency(line.value || 0)}
