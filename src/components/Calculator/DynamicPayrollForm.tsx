@@ -18,6 +18,7 @@ import { useFunprespForm } from './hooks/useFunprespForm';
 import { useDynamicPresetInstances } from './hooks/useDynamicPresetInstances';
 import { usePayrollFormNormalization } from './hooks/usePayrollFormNormalization';
 import { buildPresetGrossLines } from './presetGrossLines';
+import type { PayslipResultRow } from '../../types/user';
 import {
     PresetGrossLine,
     PresetInstance,
@@ -30,6 +31,7 @@ import {
 interface DynamicPayrollFormProps {
     step: number;
     state: CalculatorState;
+    resultRows: PayslipResultRow[];
     inputState?: CalculatorState;
     updateMany: (patch: Partial<CalculatorState>) => void;
     pensionContexts?: PensionSelectionContexts | null;
@@ -52,6 +54,7 @@ const ABONO_INSTANCE: PresetInstance = { key: 'abono-fixed', presetId: 'abono' }
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     step,
     state,
+    resultRows,
     inputState,
     updateMany,
     pensionContexts,
@@ -301,6 +304,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 <div hidden={step !== 1}>
                 <DynamicPayrollTaxSection
                     activeSection="pension"
+                    resultRows={resultRows}
                     styles={styles}
                     state={state}
                     update={update}
@@ -323,6 +327,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 <div hidden={step !== 2}>
                 <DynamicPayrollTaxSection
                     activeSection="incomeTax"
+                    resultRows={resultRows}
                     styles={styles}
                     state={state}
                     update={update}

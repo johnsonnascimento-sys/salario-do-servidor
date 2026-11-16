@@ -14,9 +14,12 @@ import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { getPensionErrorFeedback } from '../../utils/pensionFeedback';
+import { groupPayslipRowsForDisplay } from '../../utils/payslipRows';
+import type { PayslipResultRow } from '../../types/user';
 
 interface DynamicPayrollTaxSectionProps {
     activeSection: 'pension' | 'incomeTax';
+    resultRows: PayslipResultRow[];
     styles: Record<string, string>;
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
@@ -36,7 +39,7 @@ interface DynamicPayrollTaxSectionProps {
 }
 
 export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> = ({
-    activeSection, styles, state, update, handleRegimePrevChange, showFunprespSection,
+    activeSection, resultRows, styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
     funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady, deducaoPorDependente, abonoGrossLines
 }) => {
@@ -59,6 +62,10 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     const activeOptions = Number(Boolean(state.pssSobreFC)) + (participates && showFunprespSection ?
         optionalItems.filter(([rule, field]) => config?.incidenceRules?.[rule] && state[field]).length +
         Number(state.funprespFacul > 0) + Number((state.funprespFaculValor ?? 0) > 0) : 0);
+    const irDiscountRows = calculationReady
+        ? groupPayslipRowsForDisplay(resultRows, state).filter(row => row.type === 'D' && row.label.startsWith('IMPOSTO DE RENDA'))
+        : [];
+    const irDiscountTotal = irDiscountRows.reduce((total, row) => total + row.value, 0);
     return <div className="space-y-4">
         <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">{activeSection === 'pension'
             ? 'Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.'
@@ -232,10 +239,16 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <div className="flex flex-wrap justify-between gap-2"><dt>Abatimento mensal dos dependentes (IR)</dt><dd className="font-mono">{formatCurrency(state.dependentes * (deducaoPorDependente ?? 0))}</dd></div>
                 </dl>
                 {calculationReady ? <>
-                    <dl className="space-y-1.5 border-t border-neutral-200 pt-2 dark:border-neutral-700">
-                        <div className="flex flex-wrap justify-between gap-2"><dt>Imposto de renda mensal</dt><dd className="font-mono font-semibold text-error-600 dark:text-error-400">{formatCurrency(state.irMensal)}</dd></div>
-                    </dl>
-                    <p className="text-neutral-600 dark:text-neutral-300">O IR mensal considera as parcelas tributáveis e as deduções aplicáveis à folha, incluindo os dependentes informados. O IR de 13º e de competências históricas aparece nos respectivos resumos.</p>
+                    {irDiscountRows.length > 0 ? <div className="space-y-2 border-t border-neutral-200 pt-2 dark:border-neutral-700">
+                        {irDiscountRows.map(row => <div key={row.label} className="space-y-1">
+                            <div className="flex flex-wrap justify-between gap-2"><dt>{row.label}</dt><dd className="font-mono font-semibold text-error-600 dark:text-error-400">{formatCurrency(row.value)}</dd></div>
+                            {row.details?.map((detail, index) => <div key={`${row.label}-${detail.label}-${index}`} className="flex flex-wrap justify-between gap-2 pl-3 text-neutral-600 dark:text-neutral-300">
+                                <dt>{detail.label}</dt><dd className="font-mono">{formatCurrency(detail.value)}</dd>
+                            </div>)}
+                        </div>)}
+                        <div className="flex flex-wrap justify-between gap-2 border-t border-neutral-200 pt-2 font-semibold dark:border-neutral-700"><dt>Total de descontos de IR</dt><dd className="font-mono text-error-600 dark:text-error-400">{formatCurrency(irDiscountTotal)}</dd></div>
+                    </div> : <p className="border-t border-neutral-200 pt-2 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">Não há descontos de IR nesta simulação.</p>}
+                    <p className="text-neutral-600 dark:text-neutral-300">Os valores e detalhamentos seguem as mesmas rubricas do detalhamento final do holerite, incluindo exercício corrente, exercícios anteriores, férias e 13º quando aplicáveis.</p>
                 </> : <p role="status" className="pt-2 text-neutral-600 dark:text-neutral-300">{calculationError ? 'Resolva as pendências da simulação para consultar os valores deste resumo.' : 'Aguardando o cálculo atual para exibir as bases e os descontos.'}</p>}
             </div>
         </details>

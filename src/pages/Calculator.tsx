@@ -392,6 +392,7 @@ export default function Calculator() {
                         key={`dynamic-payroll-form-${formKey}`}
                         inputState={state}
                         preserveRestoredGlobals={preserveRestoredGlobals}
+                        resultRows={resultRows}
                         state={effectiveState}
                         update={update}
                         updateSubstDays={updateSubstDays}
