@@ -434,6 +434,9 @@ export default function Calculator() {
                     {step < 4 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-primary-800 px-5 py-2 font-semibold text-white hover:bg-primary-900">{step === 3 ? 'Ver resultado' : 'Avançar'}</button>}
                 </div>
 
+                </div>
+                </div>
+
                 <ActionFooter
                     resultLabel={dailiesResultRows.length > 0 ? 'Total estimado' : 'Líquido do holerite'}
                     errorDetail={pensionFeedback?.configuration ? 'Seus dados estão preservados. A equipe do site precisa atualizar a tabela da Funpresp.' : displayCalculationError}
