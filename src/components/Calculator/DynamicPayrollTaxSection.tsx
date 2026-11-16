@@ -16,6 +16,7 @@ import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { getPensionErrorFeedback } from '../../utils/pensionFeedback';
 
 interface DynamicPayrollTaxSectionProps {
+    activeSection: 'pension' | 'incomeTax';
     styles: Record<string, string>;
     state: CalculatorState;
     update: (field: keyof CalculatorState, value: any) => void;
@@ -35,7 +36,7 @@ interface DynamicPayrollTaxSectionProps {
 }
 
 export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> = ({
-    styles, state, update, handleRegimePrevChange, showFunprespSection,
+    activeSection, styles, state, update, handleRegimePrevChange, showFunprespSection,
     previdenciaComplementar: config, funprespNormalOptions, handleFunprespParticipacaoChange,
     funprespValidationError, funprespAdditionalValidationError, calculationError, pensionContext, selectionRequired, calculationReady, deducaoPorDependente, abonoGrossLines
 }) => {
@@ -59,7 +60,10 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         optionalItems.filter(([rule, field]) => config?.incidenceRules?.[rule] && state[field]).length +
         Number(state.funprespFacul > 0) + Number((state.funprespFaculValor ?? 0) > 0) : 0);
     return <div className="space-y-4">
-        <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">IR é o Imposto de Renda. PSS é a contribuição previdenciária do servidor. Valores de exercícios anteriores (EA) são tratados nos respectivos lançamentos e competências.</p>
+        <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">{activeSection === 'pension'
+            ? 'Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.'
+            : 'Informe quantos dependentes são considerados no Imposto de Renda. Valores de exercícios anteriores são tratados nos respectivos lançamentos e competências.'}</p>
+        {activeSection === 'pension' && <>
         <section className={styles.card}>
             <h5 className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe o enquadramento da sua contribuição ao RPPS.</p>
@@ -180,7 +184,30 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </>}
             {funprespAdditionalValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespAdditionalValidationError}</p>}
         </details>
-        <section className={styles.card}>
+        <details aria-label="Resumo calculado da previdência" className={`${styles.card} group`}>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
+                <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="space-y-1.5 pt-2 text-body-xs">
+                <dl className="space-y-1.5">
+                    <div className="flex flex-wrap justify-between gap-2"><dt>Regime previdenciário</dt><dd>{state.regimePrev === 'rpc' || state.regimePrev === 'migrado' ? 'RPPS limitado ao teto do RGPS' : 'RPPS sem teto do RGPS'}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-2"><dt>PSS sobre FC/CJ</dt><dd>{state.pssSobreFC ? 'Incluído' : 'Não incluído'}</dd></div>
+                    {showFunprespSection && <div className="flex flex-wrap justify-between gap-2"><dt>Participação na Funpresp</dt><dd>{state.funprespParticipacao === 'nao' ? 'Não participa' : state.funprespParticipacao === 'patrocinado' ? 'Patrocinada — com contrapartida' : 'Vinculada — sem contrapartida'}</dd></div>}
+                </dl>
+                {calculationReady ? <>
+                    <dl className="space-y-1.5 border-t border-neutral-200 pt-2 dark:border-neutral-700">
+                        {state.pensionMemory?.mensal && <div className="flex flex-wrap justify-between gap-2"><dt>Base de contribuição RPPS mensal</dt><dd className="font-mono font-semibold">{formatCurrency(state.pensionMemory.mensal.baseRpps)}</dd></div>}
+                        <div className="flex flex-wrap justify-between gap-2"><dt>Contribuição RPPS (PSS) mensal</dt><dd className="font-mono font-semibold text-error-600 dark:text-error-400">{formatCurrency(state.pssMensal)}</dd></div>
+                    </dl>
+                    {showFunprespSection && participates && state.pensionMemory && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="monthly" embedded />}
+                </> : <p role="status" className="pt-2 text-neutral-600 dark:text-neutral-300">{calculationError ? 'Resolva as pendências da simulação para consultar os valores deste resumo.' : 'Aguardando o cálculo atual para exibir a contribuição.'}</p>}
+            </div>
+        </details>
+        </>
+        }
+        {activeSection === 'incomeTax' && <>
+        <section id="dependentes-ir" className={styles.card}>
             <h5 className="mb-1 text-h5 font-semibold">Dependentes para IR</h5>
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe a quantidade de dependentes considerados no imposto de renda.</p>
             <div className="max-w-xs">
@@ -194,29 +221,24 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </div>
             </div>
         </section>
-        <details aria-label="Resumo calculado das configurações tributárias" className={`${styles.card} group`}>
+        <details aria-label="Resumo calculado do Imposto de Renda" className={`${styles.card} group`}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                 <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>
                 <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
             </summary>
             <div className="space-y-1.5 pt-2 text-body-xs">
                 <dl className="space-y-1.5">
-                    <div className="flex flex-wrap justify-between gap-2"><dt>Regime previdenciário</dt><dd>{state.regimePrev === 'rpc' || state.regimePrev === 'migrado' ? 'RPPS limitado ao teto do RGPS' : 'RPPS sem teto do RGPS'}</dd></div>
-                    <div className="flex flex-wrap justify-between gap-2"><dt>PSS sobre FC/CJ</dt><dd>{state.pssSobreFC ? 'Incluído' : 'Não incluído'}</dd></div>
                     <div className="flex flex-wrap justify-between gap-2"><dt>Dependentes informados para IR</dt><dd className="font-mono">{state.dependentes}</dd></div>
                     <div className="flex flex-wrap justify-between gap-2"><dt>Abatimento mensal dos dependentes (IR)</dt><dd className="font-mono">{formatCurrency(state.dependentes * (deducaoPorDependente ?? 0))}</dd></div>
-                    {showFunprespSection && <div className="flex flex-wrap justify-between gap-2"><dt>Participação na Funpresp</dt><dd>{state.funprespParticipacao === 'nao' ? 'Não participa' : state.funprespParticipacao === 'patrocinado' ? 'Patrocinada — com contrapartida' : 'Vinculada — sem contrapartida'}</dd></div>}
                 </dl>
                 {calculationReady ? <>
                     <dl className="space-y-1.5 border-t border-neutral-200 pt-2 dark:border-neutral-700">
-                        {state.pensionMemory?.mensal && <div className="flex flex-wrap justify-between gap-2"><dt>Base de contribuição RPPS mensal</dt><dd className="font-mono font-semibold">{formatCurrency(state.pensionMemory.mensal.baseRpps)}</dd></div>}
-                        <div className="flex flex-wrap justify-between gap-2"><dt>Contribuição RPPS (PSS) mensal</dt><dd className="font-mono font-semibold text-error-600 dark:text-error-400">{formatCurrency(state.pssMensal)}</dd></div>
                         <div className="flex flex-wrap justify-between gap-2"><dt>Imposto de renda mensal</dt><dd className="font-mono font-semibold text-error-600 dark:text-error-400">{formatCurrency(state.irMensal)}</dd></div>
                     </dl>
-                    <p className="text-neutral-600 dark:text-neutral-300">O IR mensal considera as parcelas tributáveis e as deduções aplicáveis à folha, incluindo os dependentes informados. PSS e IR de 13º e competências históricas aparecem nos respectivos resumos.</p>
-                    {showFunprespSection && participates && state.pensionMemory && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="monthly" embedded />}
+                    <p className="text-neutral-600 dark:text-neutral-300">O IR mensal considera as parcelas tributáveis e as deduções aplicáveis à folha, incluindo os dependentes informados. O IR de 13º e de competências históricas aparece nos respectivos resumos.</p>
                 </> : <p role="status" className="pt-2 text-neutral-600 dark:text-neutral-300">{calculationError ? 'Resolva as pendências da simulação para consultar os valores deste resumo.' : 'Aguardando o cálculo atual para exibir as bases e os descontos.'}</p>}
             </div>
         </details>
+        </>}
     </div>;
 };
