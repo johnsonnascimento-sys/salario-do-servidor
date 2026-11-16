@@ -112,8 +112,8 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                         { value: 'gas', label: 'GAS — Atividade de segurança' }
                     ].map(option => {
                         const selected = option.value === '0' ? !isGratAtiva : state.gratEspecificaTipo === option.value;
-                        return <label key={option.value} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-body font-medium ${selected ? 'border-secondary-500 bg-secondary-50 text-secondary-900 dark:border-secondary-400 dark:bg-secondary-950/30 dark:text-secondary-100' : 'border-neutral-200 text-neutral-700 dark:border-neutral-700 dark:text-neutral-200'}`}>
-                            <input type="radio" name={`${fieldId}-gratificacao`} value={option.value} checked={selected} className="accent-secondary"
+                        return <label key={option.value} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-body font-medium ${selected ? 'border-neutral-600 bg-neutral-100 text-neutral-900 dark:border-neutral-400 dark:bg-neutral-700 dark:text-neutral-100' : 'border-neutral-200 text-neutral-700 dark:border-neutral-700 dark:text-neutral-200'}`}>
+                            <input type="radio" name={`${fieldId}-gratificacao`} value={option.value} checked={selected} className="accent-neutral-700 dark:accent-neutral-300"
                                 onChange={e => {
                                     const patch = getGratificationSelectionPatch(e.target.value, courtConfig);
                                     Object.entries(patch).forEach(([field, value]) => update(field as keyof CalculatorState, value));
@@ -126,7 +126,7 @@ export const GratificationCard: React.FC<GratificationCardProps> = ({ state, upd
                     <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
-                            className={styles.checkbox}
+                            className="accent-neutral-700 dark:accent-neutral-300"
                             checked={state.incidirPSSGrat}
                             onChange={e => update('incidirPSSGrat', e.target.checked)}
                         />
