@@ -72,8 +72,8 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                 </div>
             </div>
 
-            <div className="mt-4">
-                <PresetGrossSummary lines={[
+            <div className="mt-2">
+                <PresetGrossSummary compact lines={[
                     { label: 'Salário Base', value: baseVencimento },
                     { label: 'Gratificação de Atividade Judiciária (GAJ)', value: gaj },
                     { label: 'Auxílio Alimentação', value: state.auxAlimentacao || 0 }
