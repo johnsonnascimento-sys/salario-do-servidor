@@ -368,6 +368,7 @@ export const useDynamicPresetInstances = ({
                 update('feriasRubricasInclusas', {});
                 break;
             case 'decimo':
+                update('thirteenthPayroll', undefined);
                 update('segunda13ModoVenc', undefined);
                 update('segunda13ModoFC', undefined);
                 update('manualAdiant13', false);

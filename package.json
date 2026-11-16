@@ -20,7 +20,7 @@
     "test:exports": "node scripts/test-export-files.mjs",
     "test:dailies": "node scripts/test-dailies-pju.mjs",
     "test:dailies-restore": "node scripts/test-dailies-restore.mjs",
-    "test:thirteenth": "node scripts/test-thirteenth-isolation.mjs && node scripts/test-thirteenth-card.mjs",
+    "test:thirteenth": "node scripts/test-thirteenth-isolation.mjs && node scripts/test-thirteenth-ledger.mjs && node scripts/test-thirteenth-card.mjs",
     "test:vacation": "node scripts/test-vacation-isolation.mjs",
     "test:gratification": "node scripts/test-gratification-isolation.mjs",
     "test:config": "node scripts/test-config-service.mjs",

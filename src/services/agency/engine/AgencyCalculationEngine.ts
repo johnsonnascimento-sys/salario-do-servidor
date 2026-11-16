@@ -196,6 +196,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 feriasDesconto: vacation.descontoAntecipacao,
 
                 // 13Âº SalÃ¡rio
+                thirteenthMemory: thirteenth.thirteenthMemory,
                 gratificacaoNatalina: thirteenth.gratNatalinaTotal,
                 abono13: thirteenth.abono13,
                 imposto13: thirteenth.ir13,

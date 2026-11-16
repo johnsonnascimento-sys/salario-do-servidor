@@ -1,3 +1,4 @@
+import { unifiedThirteenthLines } from '../../utils/thirteenthPresentation';
 import { resolveSecondThirteenthMode } from '../../services/agency/engine/modules/thirteenthModes';
 import { CalculatorState, CourtConfig } from '../../types';
 import {
@@ -87,6 +88,7 @@ export const buildPresetGrossLines = ({
                 0
             );
         case 'decimo': {
+            if (state.thirteenthMemory) return unifiedThirteenthLines(state);
             const primeira13VencBruto = roundCurrency(state.adiant13Venc || 0);
             const primeira13FcBruto = roundCurrency(state.adiant13FC || 0);
             const segunda13VencBruto = roundCurrency(state.segunda13Venc || 0);

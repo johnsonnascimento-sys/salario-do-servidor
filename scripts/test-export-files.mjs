@@ -63,6 +63,25 @@ try {
     assert(cells.some(row => row[1] === 'RESTITUICAO AUX. ALIM. (DIARIAS)' && row[3] === 25));
     assert(cells.some(row => row[1] === 'TOTAL' && row[2] === 1350 && row[3] === 125));
     assert(cells.some(row => row[1] === 'LÍQUIDO' && row[3] === 1225));
+    const { thirteenthPaymentRows } = await server.ssrLoadModule('/src/utils/thirteenthPresentation.ts');
+    const unified = { ...INITIAL_STATE, mesRef: 'NOVEMBRO', anoRef: 2026, totalBruto: 2000, totalDescontos: 1000, liquido: 1000,
+        thirteenthMemory: { version: 1, firstSelected: true, secondSelected: true, firstMode: 'informado', secondMode: 'automatico',
+            components: [{ id: 'vencimento', label: 'Salary demo', amount: 2000 }], groups: [], cargoTotal: 2000, functionTotal: 0, referenceTotal: 2000,
+            advances: [{ id: 'demo-first', target: 'grupo:cargo', description: 'ADVANCE DEMO', amount: 1000 }],
+            secondEntries: [{ id: 'demo-second', target: 'grupo:cargo', description: 'BALANCE DEMO', amount: 1000 }], firstTotal: 1000, secondTotal: 1000 } };
+    const unifiedRows = thirteenthPaymentRows(unified);
+    exportToPDF(unified, unifiedRows, null, { filename: 'unified-13' });
+    exportToExcel(unified, unifiedRows, null, { filename: 'unified-13' });
+    const auditPdf = Buffer.from(await downloads[2].blob.arrayBuffer()).toString('latin1');
+    assert(auditPdf.includes('demo-first / grupo:cargo'), 'PDF retains original payment links');
+    const auditWorkbook = XLSX.read(new Uint8Array(await downloads[3].blob.arrayBuffer()), { type: 'array' });
+    assert(auditWorkbook.SheetNames.includes('Memória do 13º'));
+    const auditCells = XLSX.utils.sheet_to_json(auditWorkbook.Sheets['Memória do 13º'], { header: 1 });
+    assert(auditCells.some(row => row[0] === 'Identificador / vínculo' && row[1] === 'demo-first / grupo:cargo'));
+    const unifiedCells = XLSX.utils.sheet_to_json(auditWorkbook.Sheets.Holerite, { header: 1 });
+    for (const row of unifiedRows) assert.equal(unifiedCells.filter(cell => cell[1] === row.label).length, 1);
+    assert(unifiedCells.some(row => row[1] === 'TOTAL' && row[2] === 2000 && row[3] === 1000));
+    console.log('Unified thirteenth PDF/XLSX audit memory, unique entries, links and totals verified.');
     console.log(`Export generators passed: PDF ${pdfBytes.length} bytes; XLSX ${excelBytes.length} bytes; credits, debits and totals verified.`);
 } finally {
     delete globalThis.__exportFilesTest;

@@ -344,3 +344,23 @@ test('explicit modes and manual zero survive a snapshot round trip', async () =>
     const legacy = hydrateCalculatorState({ ...INITIAL_STATE, manualAdiant13: true, segunda13Venc: 1000 });
     assert.equal(legacy.segunda13ModoVenc, undefined);
 });
+
+
+test('unified thirteenth lists and memory round trip without changing the legacy path', async () => {
+    const state: CalculatorState = { ...baseState(), tipoCalculo: 'comum',
+        thirteenthPayroll: { version: 1, firstSelected: true, secondSelected: true,
+            firstMode: 'informado', secondMode: 'automatico',
+            advances: [{ id: 'advance-cargo', target: 'grupo:cargo', description: 'Advance salary', amount: 3000 },
+                { id: 'advance-fc', target: 'grupo:funcao', description: 'Advance function', amount: 400 }], secondEntries: [] } };
+    const before = await calculate(state);
+    const snapshot = stripCalculatedFieldsFromCalculatorState({ ...state, thirteenthMemory: before.breakdown.thirteenthMemory });
+    assert.equal(snapshot.thirteenthMemory, undefined);
+    assert.deepEqual(snapshot.thirteenthPayroll, state.thirteenthPayroll);
+    const restored = hydrateCalculatorState(JSON.parse(JSON.stringify(snapshot)));
+    assert.deepEqual(await calculate(restored), before);
+    assert.equal(restored.thirteenthPayroll!.advances[0].amount, 3000);
+    restored.thirteenthPayroll!.advances[0].amount = 99;
+    assert.equal(state.thirteenthPayroll!.advances[0].amount, 3000);
+    assert.equal(hasPresetValue('decimo', { ...state, thirteenthPayroll: { ...state.thirteenthPayroll!, firstSelected: false, secondSelected: false } }), false);
+    assert.equal(mapStateToAgencyParams(state, 'jmu', config).thirteenthPayroll, state.thirteenthPayroll);
+});

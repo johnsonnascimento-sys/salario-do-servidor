@@ -1,3 +1,4 @@
+import type { ThirteenthPayrollInput, ThirteenthCalculationMemory } from './types/thirteenth';
 export type SecondThirteenthMode = 'excluir' | 'automatico' | 'manual';
 import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry, CalculatedSubstitutionEntry } from './types/irEa';
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
@@ -408,6 +409,8 @@ export interface CalculatorState {
   segunda13FC: number;   // Segunda parcela do 13o (FC/CJ)
   segunda13ModoVenc?: SecondThirteenthMode;
   segunda13ModoFC?: SecondThirteenthMode;
+  thirteenthPayroll?: ThirteenthPayrollInput;
+  thirteenthMemory?: ThirteenthCalculationMemory;
   manualAdiant13: boolean; // Checkbox to not auto-calc 13th (JAN/JUN)
 
   // Composição da Base da Gratificação Específica (GAE / GAS - seleção dinâmica de parcelas)
@@ -569,6 +572,7 @@ export type CalculatedPayrollState = Pick<
   | 'valFunprespNormal'
   | 'valFunprespFacultativa'
   | 'pensionMemory'
+  | 'thirteenthMemory'
   | 'irEaMemory'
   | 'irEaEntryTax'
   | 'irEaCurrentYearKeys'

@@ -1,3 +1,11 @@
+## Recebimento unificado e listas do 13º salário — 16/11/2026
+
+- Card principal com Receber 1ª parcela e Receber 2ª parcela. Composição, adiantamentos informados e fechamento manual ficam separados na personalização; listas aceitam verbas individuais e agrupamentos do contracheque sem criar créditos mensais ou duplicar a referência.
+- Configuração opcional versionada e memória do motor com componentes, vínculos e totais. Snapshots antigos mantêm o cálculo anterior até conversão explícita; seleções parciais são sinalizadas. Cancelar preserva entradas, e valores anteriores não são exibidos como prévia definitiva durante recálculo ou pendência.
+- Incidências por componente, abatimento único, abono mensal separado do abono próprio do 13º e suporte a valores manuais zero/um. Agrupamentos e lançamentos individuais inconsistentes, vínculos ausentes, sobreposição e excesso de adiantamento ficam pendentes; o total coincidente com a referência não substitui a discriminação individual.
+- PDF e Excel recebem memória própria do 13º, com IDs/vínculos e totais, separada dos créditos/débitos do holerite. Totais das parcelas e da memória incluem o abono próprio uma única vez.
+- Validados 68 testes de cálculo/interface/estado/carregamento, checagem de tipos, build e os geradores reais de PDF/Excel. Revisão independente especializada concluiu sem bloqueadores após correção de dois cenários de incidência individual. Conferência visual dos componentes reais com dados fictícios em desktop e 360/390 px, temas claro/escuro; configuração publicada e salvamento autenticado não homologados nesta sessão.
+
 ## Modos explícitos da segunda parcela do 13º — 16/11/2026
 
 - Substituídos os dois checks ambíguos por Não incluir na simulação, Calcular automaticamente e Informar valor manual, com escolha independente para cargo efetivo e FC/CJ. A personalização mostra saldo bruto e operação de abatimento no modo automático, além do campo monetário e orientação próprios do modo manual.

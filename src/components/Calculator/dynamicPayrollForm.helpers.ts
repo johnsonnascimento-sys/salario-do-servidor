@@ -303,6 +303,7 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
         case 'ferias':
             return state.tipoCalculo === 'jan' || state.manualFerias || state.ferias1_3 > 0 || state.feriasAntecipadas;
         case 'decimo':
+            if (state.thirteenthPayroll) return ['jan', 'jun', 'nov'].includes(state.tipoCalculo) || state.thirteenthPayroll.firstSelected || state.thirteenthPayroll.secondSelected;
             return (
                 ['jan', 'jun', 'nov'].includes(state.tipoCalculo) ||
                 state.segunda13ModoVenc === 'automatico' || state.segunda13ModoVenc === 'manual' ||

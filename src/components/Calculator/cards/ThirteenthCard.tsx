@@ -1,8 +1,10 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
-import { automaticSecondThirteenthAmount, resolveSecondThirteenthMode } from '../../../services/agency/engine/modules/thirteenthModes';
+import React, { useLayoutEffect, useRef, useState, useMemo } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
-import { CalculatorState, CourtConfig, SecondThirteenthMode } from '../../../types';
+import { CalculatorState, CourtConfig } from '../../../types';
 import { formatCurrency, getTablesForPeriod } from '../../../utils/calculations';
+import { createThirteenthPayroll, thirteenthSelection, ParcelSelection } from '../../../utils/thirteenthPayroll';
+import { useThirteenthPreview } from '../hooks/useThirteenthPreview';
+import { ThirteenthPaymentsEditor } from './ThirteenthPaymentsEditor';
 
 interface ThirteenthCardProps {
     state: CalculatorState;
@@ -14,35 +16,41 @@ interface ThirteenthCardProps {
     onEditingChange?: (editing: boolean) => void;
     overview?: React.ReactNode;
 }
-
-// Only these inputs may be committed; calculated outputs remain owned by the engine.
 const editableFields = [
     'decimoIncideVencimento', 'decimoIncideGAJ', 'decimoIncideFuncao',
     'decimoIncideAQTitulo', 'decimoIncideAQTreino', 'decimoIncideVPNI',
     'decimoIncideATS', 'decimoIncideGrat', 'decimoIncideAbono',
-    'decimoRubricasInclusas', 'decimoOutrasParcelas', 'manualAdiant13',
-    'adiant13Venc', 'adiant13FC', 'segunda13Venc', 'segunda13FC', 'segunda13ModoVenc', 'segunda13ModoFC'
+    'decimoRubricasInclusas', 'decimoOutrasParcelas', 'thirteenthPayroll'
 ] as const satisfies readonly (keyof CalculatorState)[];
-
 type ThirteenthDraft = Pick<CalculatorState, typeof editableFields[number]>;
 const pickInputs = (state: CalculatorState): ThirteenthDraft =>
     Object.fromEntries(editableFields.map(field => [field, state[field]])) as ThirteenthDraft;
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
-const parseCurrencyInput = (value: string) => Number(value.replace(/\D/g, '')) / 100;
 const actionClass = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:border-neutral-600';
+
+const ParcelToggle: React.FC<{ value: ParcelSelection; disabled: boolean; label: string; styles: any; onChange: (checked: boolean) => void }> = ({ value, disabled, label, styles, onChange }) => {
+    const ref = useRef<HTMLInputElement>(null);
+    useLayoutEffect(() => { if (ref.current) ref.current.indeterminate = value === 'mixed'; }, [value]);
+    return <label className={styles.checkboxLabel}>
+        <input ref={ref} type="checkbox" className={styles.checkbox} checked={value === true}
+            aria-checked={value === 'mixed' ? 'mixed' : value} disabled={disabled} onChange={event => onChange(event.target.checked)} />
+        {label}
+    </label>;
+};
 
 export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
     state: savedState, inputState, update: saveField, styles, courtConfig, onEditingChange, overview
 }) => {
     const fieldId = React.useId();
     const [draft, setDraft] = useState<ThirteenthDraft | null>(null);
-    const manualSecondAmounts = useRef<Partial<Record<'segunda13Venc' | 'segunda13FC', number>>>({});
     const initialDraft = useRef<ThirteenthDraft | null>(null);
     const headingRef = useRef<HTMLHeadingElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const wasEditing = useRef(false);
-    const state = draft ? { ...savedState, ...draft } : savedState;
     const inputs = inputState ?? savedState;
+    const state = useMemo(() => draft ? { ...savedState, ...draft } : savedState, [savedState, draft]);
+    const previewState = useMemo(() => ({ ...inputs, ...draft }), [inputs, draft]);
+    const preview = useThirteenthPreview(previewState, courtConfig, Boolean(draft));
     useLayoutEffect(() => {
         if (Boolean(draft) !== wasEditing.current) {
             const target = draft ? headingRef.current : buttonRef.current;
@@ -54,24 +62,6 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
     const update = (field: keyof CalculatorState, value: any) => {
         setDraft(current => current ? { ...current, [field]: value } : current);
     };
-    const openEditor = () => {
-        const next = pickInputs(inputs);
-        manualSecondAmounts.current = {};
-        initialDraft.current = next;
-        setDraft(next);
-        onEditingChange?.(true);
-    };
-    const closeEditor = (apply: boolean) => {
-        if (apply && draft && initialDraft.current) {
-            editableFields.forEach(field => {
-                if (draft[field] !== initialDraft.current![field]) saveField(field, draft[field]);
-            });
-        }
-        setDraft(null);
-        initialDraft.current = null;
-        onEditingChange?.(false);
-    };
-
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
     const funcaoValorBruta = !state.funcao || state.funcao === noFunctionCode || !courtConfig
         ? 0 : (getTablesForPeriod(state.periodo, courtConfig).funcoes[state.funcao] || 0);
@@ -100,119 +90,51 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
         creditRubricas.filter(r => state.decimoRubricasInclusas?.[r.id]).reduce((sum, r) => sum + (r.valor || 0), 0) +
         (state.decimoOutrasParcelas || 0)
     );
-    const totalBaseApurada = roundCurrency(baseSemFC + funcaoValor);
+    const totalBaseApurada = preview.reference?.referenceTotal ?? roundCurrency(baseSemFC + funcaoValor);
     const hasFunction = funcaoValorBruta > 0 && incideFuncao;
-    const handleToggleManual = (enabled: boolean) => {
-        setDraft(current => current ? {
-            ...current, manualAdiant13: enabled,
-            // Automatic amounts restored from snapshots are selections, not manual overrides.
-            ...(enabled && current.segunda13ModoVenc === undefined ? { segunda13Venc: current.segunda13Venc > 0 ? 1 : 0 } : {}),
-            ...(enabled && current.segunda13ModoFC === undefined ? { segunda13FC: current.segunda13FC > 0 ? 1 : 0 } : {}),
-            ...(enabled && current.adiant13Venc <= 1 ? { adiant13Venc: savedState.adiant13Venc > 1 ? savedState.adiant13Venc : roundCurrency(baseSemFC / 2) } : {}),
-            ...(enabled && hasFunction && current.adiant13FC <= 1 ? { adiant13FC: savedState.adiant13FC > 1 ? savedState.adiant13FC : roundCurrency(funcaoValor / 2) } : {})
-        } : current);
+    const selection = thirteenthSelection(inputs, hasFunction);
+    const partial = selection.first === 'mixed' || selection.second === 'mixed';
+    const openEditor = () => {
+        const next = pickInputs(inputs);
+        initialDraft.current = next;
+        setDraft({ ...next, thirteenthPayroll: createThirteenthPayroll(inputs, savedState, hasFunction) });
+        onEditingChange?.(true);
     };
-    const renderAmount = (field: 'adiant13Venc' | 'adiant13FC' | 'segunda13Venc' | 'segunda13FC', label: string) => (
-        <div className="space-y-1">
-            <label htmlFor={`${fieldId}-${field}`} className={styles.label}>{label}</label>
-            <input id={`${fieldId}-${field}`} type="text" inputMode="decimal" data-calculator="true" className={styles.input}
-                value={state[field].toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                placeholder="0,00" onChange={event => update(field, parseCurrencyInput(event.target.value))} />
-        </div>
-    );
-    const getMode = (isFunction: boolean, source = inputs) => resolveSecondThirteenthMode(
-        isFunction ? source.segunda13ModoFC : source.segunda13ModoVenc,
-        isFunction ? source.segunda13FC : source.segunda13Venc,
-        source.manualAdiant13, source.tipoCalculo === 'nov'
-    );
-    const renderSecondAdjustment = (isFunction: boolean) => {
-        const field = isFunction ? 'segunda13FC' : 'segunda13Venc';
-        const modeField = isFunction ? 'segunda13ModoFC' : 'segunda13ModoVenc';
-        const firstField = isFunction ? 'adiant13FC' : 'adiant13Venc';
-        const base = isFunction ? funcaoValor : baseSemFC;
-        const advance = state.manualAdiant13 ? state[firstField] : base / 2;
-        const mode = getMode(isFunction, state);
-        const label = isFunction ? 'FC/CJ' : 'Cargo efetivo';
-        const preview = roundCurrency(automaticSecondThirteenthAmount(base, advance, state.manualAdiant13));
-        const changeMode = (next: SecondThirteenthMode) => {
-            if (mode === 'manual') manualSecondAmounts.current[field] = state[field];
-            const amount = next === 'manual' ? (manualSecondAmounts.current[field] ?? preview) : next === 'automatico' ? 1 : 0;
-            setDraft(current => current ? { ...current, [modeField]: next, [field]: amount,
-                ...(!current.manualAdiant13 && next !== 'excluir' && current[firstField] <= 0 ? { [firstField]: 1 } : {})
-            } : current);
-        };
-        return <fieldset className="min-w-0 space-y-3" aria-describedby={`${fieldId}-${field}-description`}>
-            <legend className="mb-2 text-body font-semibold">{label}</legend>
-            <div className="space-y-1">
-                {([
-                    ['excluir', 'Não incluir na simulação'],
-                    ['automatico', 'Calcular automaticamente'],
-                    ['manual', 'Informar valor manual']
-                ] as const).map(([value, text]) => <label key={value} className={`${styles.checkboxLabel} ${value === 'excluir' && state.tipoCalculo === 'nov' ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                    <input type="radio" name={`${fieldId}-${field}-mode`} value={value} className={styles.checkbox}
-                        checked={mode === value} disabled={value === 'excluir' && state.tipoCalculo === 'nov'}
-                        onChange={() => changeMode(value)} />
-                    {text}
-                </label>)}
-            </div>
-            {state.tipoCalculo === 'nov' && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">No tipo Novembro, a 2ª parcela já está incluída.</p>}
-            <div id={`${fieldId}-${field}-description`} className="space-y-2 text-body-xs">
-                {mode === 'excluir' ? <p>Esta parcela não será acrescentada ao resultado.</p> : mode === 'automatico' ? <>
-                    <p className="flex flex-wrap justify-between gap-2"><span className="font-medium">Saldo bruto calculado</span><strong className="font-mono">{formatCurrency(preview)}</strong></p>
-                    <p className="text-neutral-500 dark:text-neutral-400">Remuneração de referência ({formatCurrency(base)}) − adiantamento recebido ({formatCurrency(advance)}).</p>
-                </> : <>
-                    {renderAmount(field, `Valor bruto da 2ª parcela — ${label} (R$)`)}
-                    <p className="text-neutral-500 dark:text-neutral-400">Será utilizado o valor informado por você.</p>
-                </>}
-            </div>
-        </fieldset>;
-    };
-    const toggleParcel = (second: boolean, isFunction: boolean, enabled: boolean) => {
-        const firstField = isFunction ? 'adiant13FC' : 'adiant13Venc';
-        const secondField = isFunction ? 'segunda13FC' : 'segunda13Venc';
-        if (second) {
-            saveField(isFunction ? 'segunda13ModoFC' : 'segunda13ModoVenc', enabled ? 'automatico' : 'excluir');
-            if (enabled && savedState[firstField] <= 0) saveField(firstField, 1);
-            saveField(secondField, enabled ? 1 : 0);
-        } else {
-            if (!enabled) {
-                saveField(isFunction ? 'segunda13ModoFC' : 'segunda13ModoVenc', 'excluir');
-                if (savedState[secondField] > 0) saveField(secondField, 0);
-            }
-            saveField(firstField, enabled ? 1 : 0);
+    const closeEditor = (apply: boolean) => {
+        if (apply && draft && initialDraft.current) {
+            editableFields.forEach(field => {
+                if (draft[field] !== initialDraft.current![field]) saveField(field, draft[field]);
+            });
         }
+        setDraft(null);
+        initialDraft.current = null;
+        onEditingChange?.(false);
     };
-
+    const toggleParcel = (second: boolean, enabled: boolean) => {
+        const next = createThirteenthPayroll(inputs, savedState, hasFunction);
+        if (second) { next.secondSelected = enabled; if (enabled) next.firstSelected = true; }
+        else { next.firstSelected = enabled; if (!enabled) next.secondSelected = false; }
+        saveField('thirteenthPayroll', next);
+    };
     return <div className="space-y-4 text-neutral-700 dark:text-neutral-200">
         {!draft ? <>
-            {!state.manualAdiant13 ? <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {[false, true].map(second => <fieldset key={String(second)} className="min-w-0 space-y-1">
-                    <legend className="mb-1 text-body font-semibold">{second ? '2ª parcela' : '1ª parcela — Adiantamento'}</legend>
-                    {[false, ...(hasFunction ? [true] : [])].map(isFunction => {
-                        const field = second ? (isFunction ? 'segunda13FC' : 'segunda13Venc') : (isFunction ? 'adiant13FC' : 'adiant13Venc');
-                        return <label key={field} className={styles.checkboxLabel}>
-                            <input type="checkbox" className={styles.checkbox} checked={second ? getMode(isFunction) !== 'excluir' : savedState[field] > 0}
-                                disabled={state.tipoCalculo === 'nov'}
-                                onChange={event => toggleParcel(second, isFunction, event.target.checked)} />
-                            {isFunction ? 'FC/CJ' : 'Cargo efetivo'}
-                        </label>;
-                    })}
-                </fieldset>)}
-            </div> : <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Adiantamento informado</p>}
-            {(state.manualAdiant13 || inputs.segunda13ModoVenc || inputs.segunda13ModoFC) && <div className="space-y-1 text-body-xs text-neutral-600 dark:text-neutral-300">
-                {[false, ...(hasFunction ? [true] : [])].map(isFunction => <p key={String(isFunction)}>2ª parcela — {isFunction ? 'FC/CJ' : 'Cargo efetivo'}: {({ automatico: 'cálculo automático', manual: 'valor manual', excluir: 'não incluída' })[getMode(isFunction)]}</p>)}
-            </div>}
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <ParcelToggle value={selection.first} disabled={['jan', 'jun', 'nov'].includes(inputs.tipoCalculo)} label="Receber 1ª parcela" styles={styles} onChange={checked => toggleParcel(false, checked)} />
+                <ParcelToggle value={selection.second} disabled={inputs.tipoCalculo === 'nov'} label="Receber 2ª parcela" styles={styles} onChange={checked => toggleParcel(true, checked)} />
+            </div>
+            {selection.second !== false && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">O adiantamento será considerado e abatido no fechamento; não será pago novamente.</p>}
+            {partial && <p role="status" className="text-body-xs text-warning-700 dark:text-warning-300">Seleção parcial de uma simulação anterior. Revise em Personalizar cálculo antes de confirmar o recebimento unificado.</p>}
+            {inputs.thirteenthPayroll && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Adiantamento: {inputs.thirteenthPayroll.firstMode === 'automatico' ? 'automático' : 'valores informados'}. Fechamento: {inputs.thirteenthPayroll.secondMode === 'automatico' ? 'automático' : 'valores manuais'}.</p>}
             {overview}
             <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                <button ref={buttonRef} type="button" className={actionClass} onClick={openEditor}>
-                    <SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo
-                </button>
+                <button ref={buttonRef} type="button" className={actionClass} onClick={openEditor}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo</button>
             </div>
         </> : <section aria-labelledby={`${fieldId}-title`} className="space-y-6">
             <h4 ref={headingRef} tabIndex={-1} id={`${fieldId}-title`} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2">Personalizar 13º salário</h4>
+            {partial && <p className="text-body-xs text-warning-700 dark:text-warning-300">A configuração anterior seleciona componentes diferentes. Aplicar ajustes confirma o recebimento unificado das parcelas selecionadas, preservando os valores recuperados nas listas.</p>}
             <section aria-labelledby={`${fieldId}-composition`} className="space-y-3">
                 <h5 id={`${fieldId}-composition`} className="text-body font-semibold">Composição da remuneração de referência (13º)</h5>
-                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Selecione as parcelas que integram o cálculo.</p>
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Selecione as parcelas que integram o cálculo. O abono mensal desta composição é distinto do abono próprio do 13º apurado pelo motor.</p>
                 <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700 [&>label]:py-3">
                     {/* Vencimento Básico */}
                     <label className={styles.checkboxLabel}>
@@ -410,35 +332,15 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                     </div>
                 </div>
 
+                {(state.decimoOutrasParcelas || 0) > 0 && <p className="text-body-xs text-warning-700 dark:text-warning-300">Para identificar as incidências deste ajuste, cadastre a verba em Créditos como rubrica avulsa, selecione-a na composição e substitua explicitamente este valor. O cálculo permanece pendente até a identificação.</p>}
+
                 {/* Subtotal da Base Apurada */}
                 <div className={styles.internalTotalWrapper}>
                     <span className={styles.internalTotalLabel}>Base apurada da remuneração (13º)</span>
                     <span className={styles.internalTotalValue}>{formatCurrency(totalBaseApurada)}</span>
                 </div>
             </section>
-            <section aria-labelledby={`${fieldId}-adjustments`} className="space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                <h5 id={`${fieldId}-adjustments`} className="text-body font-semibold">Adiantamento já recebido</h5>
-                <label className={styles.checkboxLabel}>
-                    <input type="checkbox" className={styles.checkbox} checked={state.manualAdiant13}
-                        onChange={event => handleToggleManual(event.target.checked)} />
-                    Informar o adiantamento recebido
-                </label>
-                {state.manualAdiant13 && <>
-                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Informe os valores do adiantamento no contracheque.</p>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {renderAmount('adiant13Venc', 'Adiantamento recebido — Cargo efetivo')}
-                        {hasFunction && renderAmount('adiant13FC', 'Adiantamento recebido — FC/CJ')}
-                    </div>
-                </>}
-            </section>
-            <section aria-labelledby={`${fieldId}-second`} className="space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                <h5 id={`${fieldId}-second`} className="text-body font-semibold">Como calcular a 2ª parcela</h5>
-                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Os valores desta seção são brutos. IR e previdência aparecem no detalhamento após aplicar os ajustes.</p>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    {renderSecondAdjustment(false)}
-                    {hasFunction && renderSecondAdjustment(true)}
-                </div>
-            </section>
+            {draft.thirteenthPayroll && <ThirteenthPaymentsEditor value={draft.thirteenthPayroll} onChange={next => update('thirteenthPayroll', next)} reference={preview.reference} memory={preview.memory} loading={preview.loading} error={preview.error} styles={styles} />}
             <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
                 <button type="button" className={actionClass} onClick={() => closeEditor(false)}>Cancelar</button>
                 <button type="button" className={`${actionClass} bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-900`} onClick={() => closeEditor(true)}>Aplicar ajustes</button>

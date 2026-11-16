@@ -1,3 +1,4 @@
+import { thirteenthAuditRows } from '../utils/thirteenthPresentation';
 import { buildIrEaAuditRows } from '../utils/irEaExport';
 import { buildPensionAuditRows } from '../utils/pensionExport';
 import { saveAs } from 'file-saver';
@@ -130,6 +131,13 @@ export const exportToPDF = (
         doc.autoTable({ head: [['Alerta da simulação']], body: [[transitionWarning]],
             startY: 24, theme: 'grid', styles: { fontSize: 9 }, margin: { bottom: 20 } });
     }
+    const thirteenthRows = thirteenthAuditRows(state);
+    if (thirteenthRows.length > 0) {
+        doc.addPage(); doc.setFontSize(12); doc.setTextColor(0);
+        doc.text('Memória do 13º salário', 14, 18);
+        doc.autoTable({ head: [['Campo / Vínculo', 'Valor']], body: thirteenthRows,
+            startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
+    }
     const pensionRows = buildPensionAuditRows(state.pensionMemory);
     if (pensionRows.length > 0) {
         doc.addPage();
@@ -209,6 +217,12 @@ export const exportToExcel = (
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols'] = [{ wch: 5 }, { wch: 40 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Holerite');
+    const thirteenthRows = thirteenthAuditRows(state);
+    if (thirteenthRows.length > 0) {
+        const auditSheet = XLSX.utils.aoa_to_sheet([['Campo / Vínculo', 'Valor'], ...thirteenthRows]);
+        auditSheet['!cols'] = [{ wch: 65 }, { wch: 70 }];
+        XLSX.utils.book_append_sheet(wb, auditSheet, 'Memória do 13º');
+    }
     const pensionRows = buildPensionAuditRows(state.pensionMemory);
     if (pensionRows.length > 0) {
         const auditSheet = XLSX.utils.aoa_to_sheet([['Referência / Campo', 'Valor'], ...pensionRows]);

@@ -10,6 +10,8 @@
  * - Abono sobre 13o
  */
 
+import { calculateThirteenthLedger } from './thirteenthLedger';
+import type { ThirteenthCalculationMemory } from '../../../../types/thirteenth';
 import { automaticSecondThirteenthAmount, resolveSecondThirteenthMode } from './thirteenthModes';
 import { CourtConfig } from '../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
@@ -20,6 +22,7 @@ import { buildComplementaryBase, calculateComplementaryPension } from './pension
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
 
 export interface ThirteenthResult {
+    thirteenthMemory?: ThirteenthCalculationMemory;
     gratNatalinaTotal: number;
     pss13: number;
     funpresp13: number;
@@ -46,6 +49,7 @@ const roundCurrency = (value: number) => Math.round(value * 100) / 100;
  * Calcula 13o Salario / Gratificacao Natalina
  */
 export async function calculateThirteenth(params: IAgencyCalculationParams, retroativos: PensionRetroMemory[] = []): Promise<ThirteenthResult> {
+    if (params.thirteenthPayroll !== undefined) return calculateThirteenthLedger(params, retroativos);
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);

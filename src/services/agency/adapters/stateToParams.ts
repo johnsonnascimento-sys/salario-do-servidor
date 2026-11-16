@@ -107,6 +107,7 @@ export function mapStateToAgencyParams(
         feriasIncideGrat: state.feriasIncideGrat !== false,
         feriasOutrasParcelas: state.feriasOutrasParcelas || 0,
         feriasRubricasInclusas: state.feriasRubricasInclusas || {},
+        thirteenthPayroll: state.thirteenthPayroll,
         manualAdiant13: state.manualAdiant13,
         adiant13Venc: state.adiant13Venc,
         adiant13FC: state.adiant13FC,

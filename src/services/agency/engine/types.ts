@@ -1,3 +1,4 @@
+import type { ThirteenthPayrollInput } from '../../../types/thirteenth';
 import type { IrEaContext } from '../../../types/irEa';
 /**
  * Interface de Parametros de Calculo da Agencia
@@ -81,6 +82,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     feriasIncideGrat?: boolean;
     feriasOutrasParcelas?: number;
     feriasRubricasInclusas?: Record<string, boolean>;
+    thirteenthPayroll?: ThirteenthPayrollInput;
     manualAdiant13: boolean;
     adiant13Venc: number;
     adiant13FC: number;
