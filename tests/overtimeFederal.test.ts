@@ -658,30 +658,29 @@ test('OvertimeCard: IR mensal, EA e exclusão são exclusivos e isolados por ins
         courtConfig: { orgSlug: 'cjf' } as CourtConfig,
     })));
     const tree = create(render());
-    const checkbox = (text: string) => tree.root.findAllByType(OvertimeCard)[0].findAllByType('label')
+    const radio = (text: string) => tree.root.findAllByType(OvertimeCard)[0].findAllByType('label')
         .find(label => label.findAllByType('span').some(span => span.children.includes(text)))!.findByType('input');
     const change = (text: string, checked: boolean) => act(() => {
-        checkbox(text).props.onChange({ target: { checked } });
+        radio(text).props.onChange();
         tree.update(render());
     });
-    const ea = 'Incluir na base do IR de Exercício Anterior (IR-EA / RRA)';
+    const ea = 'Exercícios anteriores (RRA)';
     assert.equal(JSON.stringify(tree.toJSON()).includes('Incidências na Folha Mensal'), false);
-    const advanced = () => tree.root.findAllByType(OvertimeCard)[0].findAllByType('details')
-        .find(detail => JSON.stringify(detail.findByType('summary').children.map(child => typeof child === 'string' ? child : child.props.children)).includes('Opções Tributárias'))!;
-    assert.equal(advanced().props.open, undefined);
+    const advanced = () => tree.root.findAllByType(OvertimeCard)[0].findAllByType('details').find(detail => detail.props.className === 'group/tax pt-1')!;
+    assert.equal(advanced().props.open, false);
     assert.equal(JSON.stringify(tree.toJSON()).includes('PSS'), false);
     change(ea, true);
     assert.deepEqual(entries[0].competenciasEA, ['2025-12']);
     assert.equal(advanced().props.open, true);
-    change(ea, false);
+    change('IR mensal', true);
     assert.equal(entries[0].isEA, false);
     assert.equal(entries[0].excluirIR, false);
     assert.deepEqual(entries[0].competenciasEA, ['2025-12'], 'Alternar preserva meses informados');
-    change('Excluir da base do IR', true);
+    change('Excluir do IR', true);
     assert.equal(entries[0].excluirIR, true);
     change(ea, true);
     assert.equal(entries[0].excluirIR, false);
-    change('Excluir da base do IR', true);
+    change('Excluir do IR', true);
     assert.equal(entries[0].isEA, false);
     assert.deepEqual(entries[1], { id: 'he-b', qtd50: 3, qtd100: 0, isEA: false, excluirIR: false });
     assert.ok(patches.every(id => id === 'he-a'));

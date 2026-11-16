@@ -1,7 +1,8 @@
 import React from 'react';
-import { ArrowDown, Plus, Trash2, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { ArrowDown, Plus, Trash2, AlertCircle, AlertTriangle, Info, ChevronDown } from 'lucide-react';
 
 interface Props {
+    compact?: boolean;
     value?: string[];
     onChange: (value: string[]) => void;
     styles: any;
@@ -48,7 +49,8 @@ export const IrEaCompetencias: React.FC<Props> = ({
     styles,
     tipo,
     competenciaReferencia,
-    anoReferencia
+    anoReferencia,
+    compact = false
 }) => {
     const scrollToIrEa = () => {
         if (typeof document === 'undefined') return;
@@ -125,7 +127,15 @@ export const IrEaCompetencias: React.FC<Props> = ({
                 : `Adicione o mês e ano em que as horas/serviços foram realizados (até dez/${anoMaximoEa}) para calcular o imposto de anos anteriores.`;
 
     return (
-        <fieldset className="space-y-3 rounded-2xl border border-neutral-200/90 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40 p-4">
+        <fieldset className={compact ? 'min-w-0 space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-700' : 'space-y-3 rounded-2xl border border-neutral-200/90 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40 p-4'}>
+            {compact ? <>
+                <legend className="sr-only">Competências do serviço</legend>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="text-body font-semibold text-neutral-800 dark:text-neutral-200">Competências do serviço</h4>
+                    <span className="text-body-xs text-neutral-500 dark:text-neutral-400" aria-live="polite">{value.length === 1 ? '1 mês informado' : `${value.length} meses informados`}</span>
+                </div>
+                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Informe os meses indicados no comprovante de pagamento (até dez/{anoMaximoEa}).</p>
+            </> : <>
             <legend className={styles.label}>
                 Meses em que o serviço foi prestado (Ano Anterior{anoPagamento ? ` — até dez/${anoMaximoEa}` : ''})
             </legend>
@@ -176,6 +186,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                 </div>
             </div>
 
+            </>}
             {value.length === 0 && (
                 <div role="status" className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-body-xs text-amber-800 dark:text-amber-300">
                     <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -235,23 +246,30 @@ export const IrEaCompetencias: React.FC<Props> = ({
                 <button
                     type="button"
                     onClick={handleAddMonth}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-secondary/30 bg-secondary/5 text-secondary hover:bg-secondary/15 transition-all text-body-xs font-bold uppercase tracking-wider shadow-xs cursor-pointer"
+                    className={compact ? 'inline-flex min-h-11 items-center gap-1.5 py-2 text-body-xs font-semibold text-secondary-800 hover:underline dark:text-secondary-300' : 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-secondary/30 bg-secondary/5 text-secondary hover:bg-secondary/15 transition-all text-body-xs font-bold uppercase tracking-wider shadow-xs cursor-pointer'}
                 >
                     <Plus className="w-4 h-4" />
-                    <span>Adicionar mês trabalhado</span>
+                    <span>{compact ? 'Adicionar competência' : 'Adicionar mês trabalhado'}</span>
                 </button>
-                <button
+                {!compact && <button
                     type="button"
                     onClick={scrollToIrEa}
                     className="inline-flex items-center gap-1 text-body-xs font-semibold text-secondary-600 dark:text-secondary-400 hover:underline cursor-pointer"
                 >
                     <span>Ver Memória do IR-EA</span>
                     <ArrowDown className="w-3.5 h-3.5" />
-                </button>
+                </button>}
             </div>
-            <p className="text-body-xs text-neutral-500 dark:text-neutral-400 pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
+            {compact ? <details className="group/help">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded text-body-xs text-neutral-500 dark:text-neutral-400 [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
+                    <Info className="h-4 w-4 shrink-0" aria-hidden="true" />Entenda o cálculo do RRA
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 group-open/help:rotate-180" aria-hidden="true" />
+                </summary>
+                <p className="pl-6 text-body-xs leading-relaxed text-neutral-500 dark:text-neutral-400">No RRA, o cálculo considera a quantidade de meses a que o pagamento se refere. Informe as competências conforme os documentos do pagamento. A apuração também depende das deduções e das regras aplicáveis (Lei nº 7.713/1988, art. 12-A).</p>
+                <button type="button" onClick={scrollToIrEa} className="ml-6 min-h-11 text-body-xs font-semibold text-secondary-800 hover:underline dark:text-secondary-300">Ver memória do IR-EA</button>
+            </details> : <p className="text-body-xs text-neutral-500 dark:text-neutral-400 pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
                 Cálculo por RRA (Lei nº 7.713/88): o imposto é apurado mês a mês pelo ano trabalhado, evitando que você pague imposto a mais ao receber tudo junto agora.
-            </p>
+            </p>}
         </fieldset>
     );
 };
