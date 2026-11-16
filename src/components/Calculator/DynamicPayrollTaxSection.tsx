@@ -232,7 +232,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 <label htmlFor={`${fieldId}-dependentes`} className={styles.label}>Dependentes (IR)</label>
                 <div className="flex items-stretch gap-2">
                     <button type="button" aria-label="Remover dependente" disabled={state.dependentes <= 0} onClick={() => update('dependentes', Math.max(0, state.dependentes - 1))} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold disabled:opacity-40 dark:border-neutral-600">−</button>
-                    <input id={`${fieldId}-dependentes`} type="number" min={0} step={1} className={styles.input} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
+                    <input id={`${fieldId}-dependentes`} type="number" min={0} step={1} className={`${styles.input} text-center`} value={state.dependentes} onChange={e => update('dependentes', Math.floor(toPositiveNumber(e.target.value)))} />
                     <button type="button" aria-label="Adicionar dependente" onClick={() => update('dependentes', state.dependentes + 1)} className="min-h-11 min-w-11 rounded-lg border border-neutral-300 text-xl font-semibold dark:border-neutral-600">+</button>
                 </div>
             </div>
