@@ -14,7 +14,7 @@ interface Props {
     updateMany: (patch: Partial<CalculatorState>) => void;
     courtConfig: CourtConfig;
     calculationReady: boolean;
-    functionKeys: string[];
+    functionValues: Record<string, number>;
     styles: Record<string, string>;
 }
 
@@ -37,7 +37,7 @@ const baseOptions = [
 
 const nonNegative = (value: string) => Math.max(0, Number(value) || 0);
 
-export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, calculationReady, functionKeys, styles }: Props) {
+export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, calculationReady, functionValues, styles }: Props) {
     const id = useId();
     const [licenseSelected, setLicenseSelected] = useState(false);
     const previousDays = useRef(0);
@@ -100,12 +100,28 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
         ] : [])
     ] : [];
     const inputLabel = 'text-body-xs text-neutral-600 dark:text-neutral-300';
-    const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600';
+    const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:border-neutral-600';
 
-    const check = (label: string, checked: boolean, onChange: (checked: boolean) => void) => (
-        <label className={styles.checkboxLabel}>
+    const baseFunction = mode === 'licenca' && form.baseLicenca !== 'auto' ? form.baseLicenca : state.funcao;
+    const baseValues: Partial<Record<LicencaBaseComponent, number>> = calculationReady ? {
+        vencimento: state.vencimento,
+        gaj: state.gaj,
+        funcao: functionValues[baseFunction] ?? 0,
+        aqTitulo: state.aqTituloValor,
+        aqTreino: state.aqTreinoValor,
+        vpni: (state.vpni_lei || 0) + (state.vpni_decisao || 0),
+        ats: state.ats
+    } : {};
+    const modeLabel = mode === 'licenca' ? 'Licença Compensatória' : 'GAACTA';
+    const check = (label: string, checked: boolean, onChange: (checked: boolean) => void, value?: number, key = label) => (
+        <label key={key} className={styles.checkboxLabel}>
             <input type="checkbox" className={styles.checkbox} checked={checked} onChange={event => onChange(event.target.checked)} />
-            <span>{label}</span>
+            <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                <span className="min-w-0 break-words text-body-xs text-neutral-700 dark:text-neutral-300">{label}</span>
+                {value !== undefined && <span className="shrink-0 font-mono text-body-xs font-semibold text-neutral-600 dark:text-neutral-400">
+                    {formatCurrency(value)}
+                </span>}
+            </span>
         </label>
     );
 
@@ -153,55 +169,65 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
                         O cálculo divide a base selecionada pelo divisor mensal e multiplica o resultado pelos dias a indenizar.
                     </p>}
                 </PresetGrossSummary>
-            </> : <section className="space-y-4" aria-labelledby={`${id}-customize`}>
-                <h5 id={`${id}-customize`} ref={headingRef} tabIndex={-1} className="text-lg font-semibold">Personalizar cálculo</h5>
-                <p className={inputLabel}>A base é dinâmica. Os créditos que você adicionar em outras páginas podem influenciar o cálculo conforme as parcelas selecionadas aqui.</p>
-                {mode === 'licenca' && <p className={inputLabel}>Marque os créditos avulsos que deseja incluir na base da licença para esta simulação.</p>}
-                {mode === 'gaacta' && check('Informar valor fixo para a base', form.gaactaManualBase, checked => edit({ gaactaManualBase: checked }))}
-                {mode === 'gaacta' && form.gaactaManualBase ? <div>
-                    <label htmlFor={`${id}-base-manual`} className={styles.label}>Base manual (R$)</label>
-                    <input id={`${id}-base-manual`} type="number" min="0" step="0.01" className={styles.input}
-                        value={form.gaactaBaseManualValor || ''} onChange={event => edit({ gaactaBaseManualValor: nonNegative(event.target.value) })} />
-                </div> : <fieldset className="space-y-2">
-                    <legend className="mb-2 font-semibold">Composição da base</legend>
-                    {baseOptions.map(({ license, gaacta, label }) => {
-                        if (mode === 'licenca') return <div key={license}>{check(label, form.licencaComposicaoBase?.parcelas?.[license] !== false, checked => setLicensePart(license, checked))}</div>;
-                        if (!gaacta) return null;
-                        const checked = gaacta === 'gaactaIncideGrat' ? form[gaacta] === true : form[gaacta] !== false;
-                        return <div key={license}>{check(label, checked, value => edit({ [gaacta]: value }))}</div>;
-                    })}
-                    {mode === 'licenca' ? check('Incluir abono estimado', form.incluirAbonoLicenca, checked => edit({ incluirAbonoLicenca: checked }))
-                        : check('Abono de permanência, quando ativo', form.gaactaIncideAbono, checked => edit({ gaactaIncideAbono: checked }))}
-                    {creditOptions.map((rubrica, index) => (
-                        <div key={rubrica.id}>
-                            {check(rubrica.descricao.trim() || `Crédito avulso ${index + 1}`, mode === 'licenca' ? form.licencaComposicaoBase?.rubricas?.[rubrica.id] === true : form.gaactaRubricasInclusas?.[rubrica.id] !== false, checked => {
+            </> : <section className="space-y-6" aria-labelledby={`${id}-customize`}>
+                <h5 id={`${id}-customize`} ref={headingRef} tabIndex={-1} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2">
+                    Personalizar {modeLabel}
+                </h5>
+                <section className="space-y-3" aria-labelledby={`${id}-composition`}>
+                    <h6 id={`${id}-composition`} className="text-body font-semibold">Composição da base ({modeLabel})</h6>
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">A base é dinâmica. Os créditos que você adicionar em outras páginas podem influenciar o cálculo conforme as parcelas selecionadas aqui.</p>
+                    {mode === 'licenca' && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Marque os créditos avulsos que deseja incluir na base da licença para esta simulação.</p>}
+                    {mode === 'gaacta' && check('Informar valor fixo para a base', form.gaactaManualBase, checked => edit({ gaactaManualBase: checked }))}
+                    {mode === 'gaacta' && form.gaactaManualBase ? <div>
+                        <label htmlFor={`${id}-base-manual`} className={styles.label}>Base manual (R$)</label>
+                        <input id={`${id}-base-manual`} type="number" min="0" step="0.01" className={styles.input}
+                            value={form.gaactaBaseManualValor || ''} onChange={event => edit({ gaactaBaseManualValor: nonNegative(event.target.value) })} />
+                    </div> : <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700 [&>label]:py-3">
+                        {baseOptions.map(({ license, gaacta, label }) => {
+                            if (mode === 'licenca') return check(label, form.licencaComposicaoBase?.parcelas?.[license] !== false,
+                                checked => setLicensePart(license, checked), baseValues[license], license);
+                            if (!gaacta) return null;
+                            const checked = gaacta === 'gaactaIncideGrat' ? form[gaacta] === true : form[gaacta] !== false;
+                            return check(label, checked, value => edit({ [gaacta]: value }), baseValues[license], license);
+                        })}
+                        {mode === 'licenca' ? check('Incluir abono estimado', form.incluirAbonoLicenca, checked => edit({ incluirAbonoLicenca: checked }))
+                            : check('Abono de permanência, quando ativo', form.gaactaIncideAbono, checked => edit({ gaactaIncideAbono: checked }),
+                                calculationReady && state.recebeAbono ? state.abonoPermanencia : undefined)}
+                        {creditOptions.map((rubrica, index) => {
+                            const selected = mode === 'licenca' ? form.licencaComposicaoBase?.rubricas?.[rubrica.id] === true
+                                : form.gaactaRubricasInclusas?.[rubrica.id] !== false;
+                            return check(rubrica.descricao.trim() || `Crédito avulso ${index + 1}`, selected, checked => {
                                 if (mode === 'licenca') edit({ licencaComposicaoBase: {
                                     ...form.licencaComposicaoBase,
                                     rubricas: { ...form.licencaComposicaoBase?.rubricas, [rubrica.id]: checked }
                                 } });
                                 else edit({ gaactaRubricasInclusas: { ...form.gaactaRubricasInclusas, [rubrica.id]: checked } });
-                            })}
+                            }, rubrica.valor, `credit-${rubrica.id}`);
+                        })}
+                    </div>}
+                    {mode === 'licenca' && form.licencaComposicaoBase?.parcelas?.funcao !== false && <div>
+                        <label htmlFor={`${id}-funcao`} className={styles.label}>Função usada na base</label>
+                        <select id={`${id}-funcao`} className={styles.input} value={form.baseLicenca}
+                            onChange={event => edit({ baseLicenca: event.target.value })}>
+                            <option value="auto">Função dos dados principais</option>
+                            {Object.keys(functionValues).map(key => <option key={key} value={key}>{key.toUpperCase()}</option>)}
+                        </select>
+                    </div>}
+                    {mode === 'gaacta' && !form.gaactaManualBase && <div className="flex flex-col justify-between gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-700 sm:flex-row sm:items-center">
+                        <label htmlFor={`${id}-ajustes`} className={inputLabel}>Outras parcelas da base</label>
+                        <div className="relative w-full sm:w-44">
+                            <span className="absolute left-3 top-2.5 font-mono text-body-xs text-neutral-500" aria-hidden="true">R$</span>
+                            <input id={`${id}-ajustes`} type="number" min="0" step="0.01"
+                                className={`${styles.input} pl-9 py-1.5 text-right font-mono text-body-xs`} placeholder="0,00"
+                                value={form.gaactaOutrasParcelas || ''} onChange={event => edit({ gaactaOutrasParcelas: nonNegative(event.target.value) })} />
                         </div>
-                    ))}
-                </fieldset>}
-                {mode === 'licenca' && form.licencaComposicaoBase?.parcelas?.funcao !== false && <div>
-                    <label htmlFor={`${id}-funcao`} className={styles.label}>Função usada na base</label>
-                    <select id={`${id}-funcao`} className={styles.input} value={form.baseLicenca}
-                        onChange={event => edit({ baseLicenca: event.target.value })}>
-                        <option value="auto">Função dos dados principais</option>
-                        {functionKeys.map(key => <option key={key} value={key}>{key.toUpperCase()}</option>)}
-                    </select>
-                </div>}
-                {mode === 'gaacta' && !form.gaactaManualBase && <div>
-                    <label htmlFor={`${id}-ajustes`} className={styles.label}>Outras parcelas da base (R$)</label>
-                    <input id={`${id}-ajustes`} type="number" min="0" step="0.01" className={styles.input}
-                        value={form.gaactaOutrasParcelas || ''} onChange={event => edit({ gaactaOutrasParcelas: nonNegative(event.target.value) })} />
-                </div>}
+                    </div>}
+                </section>
                 {mode === 'gaacta' && (hasOvertime || form.gaactaRecesso) && <div className="space-y-2">
                     <p className={inputLabel}>A GAACTA e as horas extras só podem ser acumuladas no recesso judiciário.</p>
                     {check('Período de recesso judiciário', form.gaactaRecesso, checked => edit({ gaactaRecesso: checked }))}
                 </div>}
-                <div className="flex flex-wrap justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
                     <button type="button" className={button} onClick={() => closeEditor(false)}>Cancelar</button>
                     <button type="button" className={`${button} bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-900`}
                         onClick={() => closeEditor(true)}>Aplicar ajustes</button>

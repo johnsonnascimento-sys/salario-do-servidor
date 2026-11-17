@@ -276,7 +276,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 />
 
                 <GaactaCompensatoryLeaveCard state={state} updateMany={updateMany} courtConfig={courtConfig}
-                    calculationReady={calculationReady} functionKeys={functionKeys} styles={styles} />
+                    calculationReady={calculationReady} functionValues={currentTables.funcoes ?? {}} styles={styles} />
 
                 <div className={styles.card}>
                     <div className="mb-3 flex flex-wrap items-center gap-2">
