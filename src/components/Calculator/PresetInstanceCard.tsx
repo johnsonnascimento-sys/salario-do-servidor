@@ -100,14 +100,6 @@ const getPresetHeaderInfo = (
                 title: 'Abono de Permanência',
                 normBadge: 'EC 41/2003'
             };
-        case 'pre_escolar':
-            return {
-                title: 'Auxílio Pré-Escolar'
-            };
-        case 'aux_transporte':
-            return {
-                title: 'Auxílio Transporte'
-            };
         case 'pensao':
             return {
                 title: 'Pensão Alimentícia',

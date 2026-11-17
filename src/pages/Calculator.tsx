@@ -339,7 +339,7 @@ export default function Calculator() {
                                     : step === 2
                                         ? 'Revise as vantagens pessoais e adicionais lançados na sua remuneração.'
                                         : step === 3
-                                            ? 'Inclua benefícios e verbas disponíveis no catálogo para esta competência.'
+                                            ? 'Preencha os auxílios que se aplicam a esta competência. Use o catálogo para adicionar outras verbas.'
                                     : 'Preencha seus dados principais. Os valores são atualizados automaticamente.'}</p>
                 {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-secondary-300 bg-secondary-50 p-4 text-body text-secondary-900 dark:bg-secondary-950 dark:text-secondary-100">
                     <p>{exportError || saveFeedback}</p>

@@ -115,12 +115,12 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
             <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor={`${fieldId}-field-9`} className={styles.label}>Qtd. dependentes</label>
-                        <input id={`${fieldId}-field-9`} type="number" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
+                        <label htmlFor={`${fieldId}-field-9`} className={styles.label}>Quantidade de dependentes elegíveis</label>
+                        <input id={`${fieldId}-field-9`} type="number" min="0" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
                     </div>
                     <div>
-                        <label htmlFor={`${fieldId}-field-10`} className={styles.label}>Cota pre-escolar</label>
-                        <input id={`${fieldId}-field-10`} type="number" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
+                        <label htmlFor={`${fieldId}-field-10`} className={styles.label}>Cota por dependente (R$)</label>
+                        <input id={`${fieldId}-field-10`} type="number" min="0" step="0.01" className={styles.input} value={state.cotaPreEscolar} onChange={e => update('cotaPreEscolar', toPositiveNumber(e.target.value))} />
                     </div>
                 </div>
             </div>
@@ -131,8 +131,8 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
         return (
             <div className="space-y-3">
                 <div>
-                    <label htmlFor={`${fieldId}-field-11`} className={styles.label}>Gasto mensal de transporte</label>
-                    <input id={`${fieldId}-field-11`} type="number" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
+                    <label htmlFor={`${fieldId}-field-11`} className={styles.label}>Gasto mensal de transporte (R$)</label>
+                    <input id={`${fieldId}-field-11`} type="number" min="0" step="0.01" className={styles.input} value={state.auxTransporteGasto} onChange={e => update('auxTransporteGasto', toPositiveNumber(e.target.value))} />
                 </div>
             </div>
         );

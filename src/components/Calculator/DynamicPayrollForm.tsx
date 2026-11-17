@@ -51,6 +51,10 @@ interface DynamicPayrollFormProps {
 
 const GRATIFICATION_INSTANCE: PresetInstance = { key: 'gratificacao-fixed', presetId: 'gratificacao' };
 const ABONO_INSTANCE: PresetInstance = { key: 'abono-fixed', presetId: 'abono' };
+const FIXED_BENEFITS: Array<PresetInstance & { title: string }> = [
+    { key: 'aux-transporte-fixed', presetId: 'aux_transporte', title: 'Auxílio-transporte' },
+    { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar' }
+];
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     step,
@@ -351,7 +355,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </section>
 
             <div hidden={step !== 3 && step !== 6 && step !== 7 && step !== 8} className="space-y-5">
-            <section id={step === 7 ? 'descontos' : step === 3 ? 'beneficios' : step === 8 ? 'descontos-pensao' : step === 6 ? 'creditos-eventuais' : 'verbas'} tabIndex={-1} className={`${styles.card} scroll-mt-24`} hidden={step === 7 || step === 8}>
+            <section id="beneficios" tabIndex={-1} className="space-y-5 scroll-mt-24" hidden={step !== 3}>
+                {FIXED_BENEFITS.map(instance => (
+                    <div key={instance.key} className={`${styles.card} space-y-4`}>
+                        <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                            {instance.title}
+                        </h3>
+                        {renderPreset(instance)}
+                        <PresetGrossSummary compact lines={calculationReady ? getPresetGrossLines(instance) : []} />
+                    </div>
+                ))}
+            </section>
+            <section id={step === 7 ? 'descontos' : step === 8 ? 'descontos-pensao' : step === 6 ? 'creditos-eventuais' : 'verbas'} tabIndex={-1} className={`${styles.card} scroll-mt-24`} hidden={step === 7 || step === 8}>
                 <h2 className={`${styles.sectionTitle} relative`}>
                     <Sparkles className="w-4 h-4 text-secondary" />
                     {step === 7 ? 'Adicionar descontos' : step === 6 ? 'Créditos eventuais' : 'Adicionar benefícios à simulação'}

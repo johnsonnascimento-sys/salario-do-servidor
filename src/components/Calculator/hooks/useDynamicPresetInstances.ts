@@ -19,7 +19,8 @@ interface UseDynamicPresetInstancesParams {
     transportIndemnityEnabled: boolean;
 }
 
-const isCatalogPreset = (id: PredefinedRubricId) => id !== 'gaacta' && id !== 'licenca';
+const isCatalogPreset = (id: PredefinedRubricId) =>
+    id !== 'gaacta' && id !== 'licenca' && id !== 'pre_escolar' && id !== 'aux_transporte';
 
 const createOvertimeEntry = (): OvertimeEntry => ({
     id: createUniqueId('he-entry'),
@@ -397,12 +398,6 @@ export const useDynamicPresetInstances = ({
                 update('substPssIsEA', false);
                 update('substitutionEntries', []);
                 functionKeys.forEach(key => updateSubstDays(key, 0));
-                break;
-            case 'pre_escolar':
-                update('auxPreEscolarQtd', 0);
-                break;
-            case 'aux_transporte':
-                update('auxTransporteGasto', 0);
                 break;
             case 'indenizacao_transporte':
                 update('transporteIndenizacaoAtivo', false);

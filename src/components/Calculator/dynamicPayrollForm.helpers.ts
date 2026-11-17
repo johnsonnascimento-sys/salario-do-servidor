@@ -35,8 +35,6 @@ export interface PresetInstance {
 export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }> = [
     { id: 'decimo', label: '13o Salario' },
     { id: 'abono', label: 'Abono de Permanencia' },
-    { id: 'pre_escolar', label: 'Auxilio Pre-Escolar' },
-    { id: 'aux_transporte', label: 'Auxilio Transporte' },
     { id: 'diarias', label: 'Diarias de Viagem' },
     { id: 'ferias', label: 'Ferias' },
     { id: 'gratificacao', label: 'Gratificacao Especifica (GAE/GAS)' },
@@ -76,7 +74,7 @@ export const PRESET_CATEGORIES = [
     {
         id: 'indenizacoes',
         title: 'Indenizações & Viagens',
-        subtitle: 'Diárias, auxílios e ressarcimento de transporte'
+        subtitle: 'Diárias e ressarcimento de transporte'
     },
     {
         id: 'beneficios',
@@ -128,20 +126,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: 'Cumprimento de mandados por Oficial de Justiça (JMU e CJF)',
         category: 'indenizacoes',
         tags: ['indenizacao', 'transporte', 'oficial', 'mandados', 'diligencias']
-    },
-    {
-        id: 'pre_escolar',
-        label: 'Auxílio Pré-Escolar',
-        description: 'Benefício assistencial por dependente elegível',
-        category: 'indenizacoes',
-        tags: ['pre', 'escolar', 'creche', 'filhos', 'dependentes', 'auxilio']
-    },
-    {
-        id: 'aux_transporte',
-        label: 'Auxílio Transporte',
-        description: 'Custeio de transporte coletivo municipal/intermunicipal',
-        category: 'indenizacoes',
-        tags: ['auxilio', 'transporte', 'deslocamento', 'passe']
     },
     {
         id: 'vpni',
@@ -332,10 +316,6 @@ export const hasPresetValue = (presetId: PredefinedRubricId, state: CalculatorSt
             );
         case 'licenca':
             return state.licencaDias > 0;
-        case 'pre_escolar':
-            return state.auxPreEscolarQtd > 0;
-        case 'aux_transporte':
-            return state.auxTransporteGasto > 0;
         case 'indenizacao_transporte':
             return Boolean(state.transporteIndenizacaoAtivo);
         case 'diarias':
