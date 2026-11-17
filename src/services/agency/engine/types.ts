@@ -1,5 +1,6 @@
 import type { ThirteenthPayrollInput } from '../../../types/thirteenth';
 import type { IrEaContext } from '../../../types/irEa';
+import type { LicencaComposicaoBase } from '../../../types/licenca';
 /**
  * Interface de Parametros de Calculo da Agencia
  *
@@ -140,6 +141,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     transporteIndenizacaoDias?: number;
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
+    licencaComposicaoBase?: LicencaComposicaoBase;
     rubricasExtras?: Rubrica[];
     // GAACTA (Resolução STM nº 397/2026)
     gaactaAtivo?: boolean;

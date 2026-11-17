@@ -17,8 +17,9 @@ interface UseDynamicPresetInstancesParams {
     updateSubstDays: (key: string, days: number) => void;
     functionKeys: string[];
     transportIndemnityEnabled: boolean;
-    gaactaAvailable: boolean;
 }
+
+const isCatalogPreset = (id: PredefinedRubricId) => id !== 'gaacta' && id !== 'licenca';
 
 const createOvertimeEntry = (): OvertimeEntry => ({
     id: createUniqueId('he-entry'),
@@ -45,8 +46,7 @@ export const useDynamicPresetInstances = ({
     update,
     updateSubstDays,
     functionKeys,
-    transportIndemnityEnabled,
-    gaactaAvailable
+    transportIndemnityEnabled
 }: UseDynamicPresetInstancesParams) => {
     const overtimeLegacyMigratedRef = useRef(false);
     const substitutionLegacyMigratedRef = useRef(false);
@@ -55,7 +55,7 @@ export const useDynamicPresetInstances = ({
         const instances: PresetInstance[] = [];
         const selectedIds = Array.from(new Set([
             ...DEFAULT_PRESETS,
-            ...PREDEFINED_OPTIONS.filter(option => hasPresetValue(option.id, initialState)).map(option => option.id)
+            ...PREDEFINED_OPTIONS.filter(option => isCatalogPreset(option.id) && hasPresetValue(option.id, initialState)).map(option => option.id)
         ]));
 
         selectedIds.forEach((presetId) => {
@@ -96,7 +96,7 @@ export const useDynamicPresetInstances = ({
     );
     const availablePresets = PREDEFINED_OPTIONS.filter(
         option => (option.id !== 'indenizacao_transporte' || transportIndemnityEnabled) &&
-            (option.id !== 'gaacta' || gaactaAvailable) &&
+            isCatalogPreset(option.id) &&
             (MULTI_INSTANCE_PRESETS.has(option.id) || !enabledPresetIds.has(option.id))
     );
     const [selectedPreset, setSelectedPreset] = useState<PredefinedRubricId | ''>(PREDEFINED_OPTIONS[0]?.id || '');
@@ -398,11 +398,6 @@ export const useDynamicPresetInstances = ({
                 update('substitutionEntries', []);
                 functionKeys.forEach(key => updateSubstDays(key, 0));
                 break;
-            case 'licenca':
-                update('licencaDias', 0);
-                update('baseLicenca', 'auto');
-                update('incluirAbonoLicenca', true);
-                break;
             case 'pre_escolar':
                 update('auxPreEscolarQtd', 0);
                 break;
@@ -412,26 +407,6 @@ export const useDynamicPresetInstances = ({
             case 'indenizacao_transporte':
                 update('transporteIndenizacaoAtivo', false);
                 update('transporteIndenizacaoDias', 0);
-                break;
-            case 'gaacta':
-                update('gaactaAtivo', false);
-                update('gaactaValor', 0);
-                update('gaactaBaseCalculo', 0);
-                update('gaactaPercentual', 0);
-                update('gaactaManualBase', false);
-                update('gaactaBaseManualValor', 0);
-                update('gaactaOutrasParcelas', 0);
-                update('gaactaRecesso', false);
-                update('gaactaIncideAbono', true);
-                update('gaactaIncideGrat', false);
-                update('gaactaIncideVencimento', true);
-                update('gaactaIncideGAJ', true);
-                update('gaactaIncideFuncao', true);
-                update('gaactaIncideAQTitulo', true);
-                update('gaactaIncideAQTreino', true);
-                update('gaactaIncideATS', true);
-                update('gaactaIncideVPNI', true);
-                update('gaactaRubricasInclusas', {});
                 break;
             case 'diarias':
                 update('diariasQtd', 0);
@@ -466,8 +441,7 @@ export const useDynamicPresetInstances = ({
 
     const includePreset = (targetPreset?: PredefinedRubricId) => {
         const preset = targetPreset || selectedPreset;
-        if (!preset) return;
-        if (preset === 'gaacta' && !gaactaAvailable) return;
+        if (!preset || !isCatalogPreset(preset)) return;
         if (preset === 'indenizacao_transporte' && !transportIndemnityEnabled) return;
 
         if (preset === 'hora_extra') {
@@ -508,9 +482,6 @@ export const useDynamicPresetInstances = ({
         }
         if (preset === 'indenizacao_transporte') {
             update('transporteIndenizacaoAtivo', true);
-        }
-        if (preset === 'gaacta') {
-            update('gaactaAtivo', true);
         }
         if (preset === 'pensao') {
             update('pensaoAlimenticiaAtiva', true);

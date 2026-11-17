@@ -9,7 +9,6 @@ import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS } from './dynamicPayrollForm.helpers';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
-import { resolveGaactaRule } from '../../services/agency/engine/modules/gaactaCalculations';
 
 interface PresetInstanceCardProps {
     instance: PresetInstance;
@@ -52,16 +51,6 @@ const getPresetHeaderInfo = (
     const defaultDivisor = courtConfig?.payrollRules?.overtimeMonthHours || (isJMU ? 175 : 200);
 
     switch (presetId) {
-        case 'gaacta': {
-            const months = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
-            const monthIndex = months.indexOf((state?.mesRef || '').toUpperCase()) + 1;
-            const competence = state && monthIndex > 0 ? `${state.anoRef}-${String(monthIndex).padStart(2, '0')}` : '';
-            const rule = resolveGaactaRule(courtConfig, competence);
-            return {
-                title: 'Gratificação por Atividades de Alta Complexidade',
-                normBadge: rule ? `${rule.reference} • ${(rule.percentage * 100).toLocaleString('pt-BR')}%` : undefined
-            };
-        }
         case 'hora_extra': {
             const entry = instance?.overtimeEntryId
                 ? state?.overtimeEntries?.find(e => e.id === instance.overtimeEntryId)
@@ -81,11 +70,6 @@ const getPresetHeaderInfo = (
             return {
                 title: 'Gratificação Natalina (13º Salário)',
                 normBadge: 'Lei 8.112/90'
-            };
-        case 'licenca':
-            return {
-                title: 'Licença Compensatória',
-                normBadge: isJMU ? 'Res. STM Nº 376/2025 • Revogada pela Res. 397/2026' : 'Regulamentação PJU'
             };
         case 'substituicao':
             return {
@@ -196,12 +180,12 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     <h3 className="min-w-0 text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
                     </h3>
-                    {headerInfo.normBadge && !['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias', 'gratificacao'].includes(instance.presetId) && (
+                    {headerInfo.normBadge && !['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias', 'gratificacao'].includes(instance.presetId) && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
                         </span>
                     )}
-                    {['gaacta', 'hora_extra'].includes(instance.presetId) && (
+                    {instance.presetId === 'hora_extra' && (
                         <details className="relative">
                             <summary aria-label={`Informações sobre ${headerInfo.title}`} className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">i</span></summary>
                             <div className="absolute left-0 top-full z-20 mt-1 w-72 max-w-[min(18rem,80vw)] rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
@@ -285,7 +269,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 courtConfig={courtConfig}
             />
 
-            {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={['gaacta', 'hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={(['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
+            {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={(['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
                 {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
                 {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
             </PresetGrossSummary>}

@@ -169,6 +169,7 @@ export function mapStateToAgencyParams(
         transporteIndenizacaoDias: state.transporteIndenizacaoDias ?? 0,
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,
+        licencaComposicaoBase: state.licencaComposicaoBase,
         // GAACTA (Resolução STM nº 397/2026)
         gaactaAtivo: Boolean(state.gaactaAtivo),
         gaactaValor: state.gaactaValor || 0,

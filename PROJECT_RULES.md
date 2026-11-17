@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 17/11/2026 12:00
+Atualizado em: 17/11/2026 18:31
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -302,7 +302,8 @@ Cada rubrica manual deve suportar:
 4. **Natureza indenizatória e isenção:** A gratificação possui natureza estritamente indenizatória (art. 4º), não integrando a remuneração nem compondo base de cálculo para contribuição previdenciária (PSS/RPPS) nem incidência de imposto de renda (IRRF), nem servindo de base para outros adicionais. Por solicitação expressa do usuário, a composição configurável de HE oferece inclusão opcional da GAACTA na simulação, desmarcada por padrão, sem apresentá-la como incidência legal automática.
 5. **Incompatibilidade com serviço extraordinário:** O acúmulo da GAACTA é incompatível com a prestação de serviço extraordinário, exceto no período do recesso judiciário (art. 6º). Havendo concomitância, o servidor deverá optar entre a GAACTA e as Horas Extras. A calculadora emite alertas cruzados em ambos os módulos (GAACTA e Horas Extras), mantendo a ressalva ativável para o período de recesso forense.
 6. **Módulo base para a Justiça Federal:** A arquitetura do módulo GAACTA serve de base unificada e parametrizada para a expansão e aplicação na Justiça Federal (JF) e demais órgãos do Poder Judiciário da União.
-7. **Exibição nas Rubricas Pré-definidas:** A gratificação figura no seletor de Rubricas Pré-definidas sob a nomenclatura canônica "Gratificação por Atividades de Alta Complexidade (GAACTA)", alinhando a opção do seletor ao título do card e garantindo localização alfabética imediata no grupo de gratificações. A parametrização versionada (`gaacta_rules`) contempla a JMU e a Justiça Federal (CJF e TRFs) desde 06/2026, com suporte a fallback transitório em `ConfigService` para assegurar disponibilidade operacional contínua na UI.
+7. **Exibição em Dados básicos:** GAACTA e Licença Compensatória compartilham um card entre Dados principais e GAE/GAS, com seleção exclusiva, personalização da base e detalhamento. Na JMU, o card apresenta um único aviso sobre a instituição da GAACTA e a revogação da Licença Compensatória. A abertura de um holerite salvo com as duas rubricas preserva o registro até a escolha explícita do usuário. A parametrização versionada (`gaacta_rules`) contempla a JMU e a Justiça Federal (CJF e TRFs) desde 06/2026, com suporte a fallback transitório em `ConfigService`.
+8. **Composição da Licença Compensatória na simulação:** O padrão reproduz a base anterior. A personalização permite excluir parcelas dessa base e incluir créditos avulsos mediante seleção explícita por rubrica. Os valores, parâmetros e cálculo permanecem no motor oficial.
 
 ## 13. Indenização de Transporte na JMU
 

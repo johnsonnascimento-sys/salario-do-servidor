@@ -7,6 +7,7 @@
  */
 
 import { CourtConfig } from '../../../../types';
+import type { LicencaBaseComponent } from '../../../../types/licenca';
 import { calculatePss } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
@@ -52,11 +53,20 @@ export async function calculateCompensatoryLeave(params: IAgencyCalculationParam
         valFuncaoLicenca = funcoes[params.baseLicenca];
     }
 
-    // Base da Licenca
-    const baseLicencaTotal = baseVencimento + gaj + aqTituloVal + aqTreinoVal +
-        gratVal + (params.vpni_lei || 0) +
-        (params.vpni_decisao || 0) + (params.ats || 0) +
-        valFuncaoLicenca;
+    const composicao = params.licencaComposicaoBase;
+    const incluir = (parcela: LicencaBaseComponent, valor: number) =>
+        composicao?.parcelas?.[parcela] === false ? 0 : valor;
+    let baseLicencaTotal = incluir('vencimento', baseVencimento) + incluir('gaj', gaj) +
+        incluir('aqTitulo', aqTituloVal) + incluir('aqTreino', aqTreinoVal) +
+        incluir('gratificacao', gratVal) + incluir('vpni', params.vpni_lei || 0) +
+        incluir('vpni', params.vpni_decisao || 0) + incluir('ats', params.ats || 0) +
+        incluir('funcao', valFuncaoLicenca);
+    for (const rubrica of params.rubricasExtras ?? []) {
+        const valor = Number(rubrica.valor);
+        if (rubrica.tipo === 'C' && composicao?.rubricas?.[rubrica.id] === true && Number.isFinite(valor) && valor > 0) {
+            baseLicencaTotal += valor;
+        }
+    }
 
     // Abono sobre licenca (opcional)
     let abonoEstimadoLicenca = 0;

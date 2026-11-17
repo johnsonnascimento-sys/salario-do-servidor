@@ -58,7 +58,7 @@ export interface PresetCatalogItem {
     id: PresetCatalogItemId;
     label: string;
     description: string;
-    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios' | 'descontos' | 'gratificacoes';
+    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios' | 'descontos';
     tags: string[];
 }
 
@@ -68,7 +68,6 @@ export const PRESET_CATEGORIES = [
         title: 'Serviço Extraordinário e Substituições',
         subtitle: 'Horas extras e substituição de função'
     },
-    { id: 'gratificacoes', title: 'Gratificações', subtitle: 'GAE / GAS, GAACTA e Licença Compensatória' },
     {
         id: 'direitos',
         title: 'Direitos Periódicos',
@@ -101,20 +100,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: 'Substituição de titular de cargo em comissão ou função de confiança',
         category: 'trabalho',
         tags: ['substituicao', 'funcao', 'cargo', 'comissao', 'titular', 'dias', 'fc', 'cj']
-    },
-    {
-        id: 'gaacta',
-        label: 'Gratificação de Alta Complexidade (GAACTA)',
-        description: 'Gratificação de 15% sobre remuneração de CJ (Res. STM 397/26 e JF)',
-        category: 'gratificacoes',
-        tags: ['gaacta', 'alta', 'complexidade', 'cj', '15%']
-    },
-    {
-        id: 'licenca',
-        label: 'Licença Compensatória',
-        description: 'Indenização de dias de licença compensatória (Res. STM 376/2025 - Revogada pela Res. STM 397/2026)',
-        category: 'gratificacoes',
-        tags: ['licenca', 'compensatoria', 'dias', 'acervo', 'stm', '376', 'revogada']
     },
     {
         id: 'ferias',

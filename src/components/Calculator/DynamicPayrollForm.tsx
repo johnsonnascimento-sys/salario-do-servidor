@@ -9,6 +9,7 @@ import { ManualRubricasSection } from './ManualRubricasSection';
 import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
 import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
 import { DynamicPayrollTaxSection } from './DynamicPayrollTaxSection';
+import { GaactaCompensatoryLeaveCard } from './cards/GaactaCompensatoryLeaveCard';
 import { PensionRetroForm } from './PensionRetroForm';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossSummary } from './PresetGrossSummary';
@@ -99,8 +100,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     });
 
     const pensionParams = mapStateToAgencyParams(inputState ?? state, '', courtConfig);
-    const orgSlug = (courtConfig?.orgSlug || '').toLowerCase();
-    const gaactaAvailable = Boolean(courtConfig?.gaactaRules?.enabled || orgSlug === 'jmu' || orgSlug === 'stm' || orgSlug === 'cjf' || orgSlug.startsWith('trf'));
     const pensionSelection = usePensionSelection({ params: pensionParams, context: pensionContexts?.monthly ?? null,
         onApply: patch => updateMany(patch as Partial<CalculatorState>), normalize: !pensionPending });
 
@@ -128,8 +127,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         update,
         updateSubstDays,
         functionKeys,
-        transportIndemnityEnabled,
-        gaactaAvailable
+        transportIndemnityEnabled
     });
 
     const visiblePresets = enabledPresets.filter(instance =>
@@ -277,6 +275,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     update={update}
                 />
 
+                <GaactaCompensatoryLeaveCard state={state} updateMany={updateMany} courtConfig={courtConfig}
+                    calculationReady={calculationReady} functionKeys={functionKeys} styles={styles} />
+
                 <div className={styles.card}>
                     <div className="mb-3 flex flex-wrap items-center gap-2">
                         <h4 className={`${styles.innerBoxTitle} !mb-0`}>Gratificação específica (GAE / GAS)</h4>
@@ -369,7 +370,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     multiInstanceHintLabel={MULTI_INSTANCE_HINT_LABEL}
                     enabledPresets={enabledPresets}
                     transportIndemnityEnabled={transportIndemnityEnabled}
-                    gaactaAvailable={gaactaAvailable}
                     addRubrica={addRubrica}
                     rubricas={state.rubricasExtras}
                 />

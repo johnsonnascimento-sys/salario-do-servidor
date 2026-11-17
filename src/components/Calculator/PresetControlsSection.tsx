@@ -6,7 +6,6 @@ import {
     Shield,
     Sun,
     Gift,
-    CalendarClock,
     Plane,
     Car,
     Coins,
@@ -45,7 +44,6 @@ interface PresetControlsSectionProps {
     multiInstanceHintLabel: string;
     enabledPresets?: PresetInstance[];
     transportIndemnityEnabled?: boolean;
-    gaactaAvailable?: boolean;
     addRubrica?: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
     rubricas?: Rubrica[];
 }
@@ -53,11 +51,9 @@ interface PresetControlsSectionProps {
 const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
     hora_extra: Clock,
     substituicao: ArrowLeftRight,
-    gaacta: Award,
     gratificacao: Shield,
     ferias: Sun,
     decimo: Gift,
-    licenca: CalendarClock,
     diarias: Plane,
     indenizacao_transporte: Car,
     abono: Coins,
@@ -75,7 +71,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     includePreset,
     enabledPresets = [],
     transportIndemnityEnabled = true,
-    gaactaAvailable = true,
     addRubrica,
     rubricas = []
 }) => {
@@ -140,7 +135,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         return PRESET_CATALOG.filter(item => {
             if ((item.category === 'descontos') !== (mode === 'D')) return false;
             if (item.id === 'indenizacao_transporte' && !transportIndemnityEnabled) return false;
-            if (item.id === 'gaacta' && !gaactaAvailable) return false;
 
             if (!term) return true;
 
@@ -149,7 +143,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
             const matchTags = item.tags.some(tag => normalizeSearch(tag).includes(term));
             return matchLabel || matchDesc || matchTags;
         });
-    }, [searchTerm, transportIndemnityEnabled, gaactaAvailable, mode]);
+    }, [searchTerm, transportIndemnityEnabled, mode]);
 
     const scrollToPresetCard = (presetId: string) => {
         if (presetId === 'vpni' || presetId === 'ats') {

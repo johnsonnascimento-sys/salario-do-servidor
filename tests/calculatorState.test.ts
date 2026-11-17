@@ -299,7 +299,7 @@ test('reordering and removing repeated entries preserves identities and independ
         const [state, setState] = useState(initial);
         current = state;
         const update = useCallback((field: keyof CalculatorState, value: unknown) => setState(previous => ({ ...previous, [field]: value })), []);
-        presets = useDynamicPresetInstances({ state, update, updateSubstDays: () => {}, functionKeys: ['fc1', 'cj1'], transportIndemnityEnabled: true, gaactaAvailable: true });
+        presets = useDynamicPresetInstances({ state, update, updateSubstDays: () => {}, functionKeys: ['fc1', 'cj1'], transportIndemnityEnabled: true });
         return null;
     }
     let renderer;

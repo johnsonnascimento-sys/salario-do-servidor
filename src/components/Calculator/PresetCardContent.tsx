@@ -5,10 +5,8 @@ import { GratificationCard } from './cards/GratificationCard';
 import { ThirteenthCard } from './cards/ThirteenthCard';
 import { OvertimeCard } from './cards/OvertimeCard';
 import { SubstitutionCard } from './cards/SubstitutionCard';
-import { LicenseCard } from './cards/LicenseCard';
 import { TransportIndemnityCard } from './cards/TransportIndemnityCard';
 import { DailiesCard } from './cards/DailiesCard';
-import { GaactaCard } from './cards/GaactaCard';
 import { PensaoAlimenticiaCard } from './cards/PensaoAlimenticiaCard';
 import { SimplePresetFields } from './SimplePresetFields';
 import { resolveOvertimeEntry, resolveSubstitutionEntry } from './presetEntryResolvers';
@@ -134,22 +132,6 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
                 functionKeys={functionKeys}
                 competenciaReferencia={competenciaReferencia}
                 styles={styles}
-            />
-        );
-    }
-
-    if (presetId === 'licenca') {
-        return <LicenseCard state={state} update={update} competenciaReferencia={competenciaReferencia} styles={styles} />;
-    }
-
-    if (presetId === 'gaacta') {
-        return (
-            <GaactaCard
-                state={state}
-                update={update}
-                styles={styles}
-                courtConfig={courtConfig}
-                competenciaReferencia={competenciaReferencia}
             />
         );
     }

@@ -4,6 +4,7 @@ import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry,
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 import type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 import type { GaactaRulesConfig } from './types/gaacta';
+import type { LicencaComposicaoBase } from './types/licenca';
 export type { GaactaRulesConfig } from './types/gaacta';
 export type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 export interface SalaryTable {
@@ -326,6 +327,7 @@ export interface CalculatorState {
   licencaDias: number;
   baseLicenca: string; // 'auto', 'cj4', 'cj3'...
   incluirAbonoLicenca: boolean;
+  licencaComposicaoBase?: LicencaComposicaoBase;
   licencaValor: number;
   transporteIndenizacaoAtivo: boolean;
   transporteIndenizacaoDias: number;

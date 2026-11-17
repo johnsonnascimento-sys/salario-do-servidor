@@ -1,3 +1,8 @@
+## Card de GAACTA e Licença Compensatória — 17/11/2026
+
+- Unificadas as rubricas em Dados básicos, com seletor exclusivo, aviso de transição na JMU, personalização da composição e detalhamento do cálculo.
+- A licença permite escolher parcelas da base e incluir créditos avulsos por seleção explícita. Holerites anteriores conservam a composição padrão e os lançamentos salvos.
+
 ## Navegação da calculadora por páginas — 17/11/2026
 
 - Organizadas dez páginas na sequência solicitada: dados básicos, AQ, vantagens pessoais, benefícios, previdência e abono, imposto de renda, créditos eventuais, descontos, observações/notas e resultado.
