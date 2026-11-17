@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 16/11/2026 15:56
+Atualizado em: 17/11/2026 12:00
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -54,6 +54,11 @@ Regra de precedencia: `org > power > global`.
 4. Nao duplicar em `org_config` o que ja e comum ao poder, exceto quando houver diferenca real.
 
 ## 4. Regras funcionais da calculadora
+
+### 4.0 Navegação por páginas
+
+1. A calculadora apresenta, nesta ordem, Dados básicos, Adicional de Qualificação (AQ), Vantagens pessoais, Benefícios, Previdência e abono, Imposto de Renda, Créditos Eventuais, Descontos, Observações/Notas e Resultado.
+2. As páginas organizam a coleta dos dados; não duplicam nem alteram os valores e regras do motor oficial.
 
 ### 4.1 Rubricas manuais
 

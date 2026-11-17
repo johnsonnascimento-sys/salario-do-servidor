@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { UserRound, Award, Shield, ReceiptText, PlusCircle, MinusCircle, StickyNote, FileText, PanelLeftClose, PanelLeftOpen, List, X } from 'lucide-react';
+import { UserRound, Award, Shield, ReceiptText, PlusCircle, MinusCircle, StickyNote, FileText, PanelLeftClose, PanelLeftOpen, List, X, Briefcase, HeartPulse } from 'lucide-react';
 
 const sections = [
     { label: 'Dados básicos', Icon: UserRound },
     { label: 'Adicional de Qualificação (AQ)', Icon: Award },
-    { label: 'Previdência', Icon: Shield },
+    { label: 'Vantagens pessoais', Icon: Briefcase },
+    { label: 'Benefícios', Icon: HeartPulse },
+    { label: 'Previdência e abono', Icon: Shield },
     { label: 'Imposto de Renda', Icon: ReceiptText },
-    { label: 'Créditos', Icon: PlusCircle },
+    { label: 'Créditos Eventuais', Icon: PlusCircle },
     { label: 'Descontos', Icon: MinusCircle },
     { label: 'Observações / Notas', Icon: StickyNote },
     { label: 'Resultado', Icon: FileText }

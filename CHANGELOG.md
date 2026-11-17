@@ -1,3 +1,8 @@
+## Navegação da calculadora por páginas — 17/11/2026
+
+- Organizadas dez páginas na sequência solicitada: dados básicos, AQ, vantagens pessoais, benefícios, previdência e abono, imposto de renda, créditos eventuais, descontos, observações/notas e resultado.
+- Mantidas as entradas existentes e seus cálculos; ajustados navegação, títulos, paginação, atalhos por hash e exibição das rubricas nas etapas correspondentes.
+
 ## Ícone de ajuda do Adicional de Qualificação — 16/11/2026
 
 - Atualizado o símbolo do ícone de informações do AQ para interrogação, alinhando-o aos demais cards.

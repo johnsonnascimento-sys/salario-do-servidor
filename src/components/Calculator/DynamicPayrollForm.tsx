@@ -134,7 +134,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const visiblePresets = enabledPresets.filter(instance =>
         instance.presetId !== 'gratificacao' && instance.presetId !== 'abono' &&
-        (instance.presetId === 'pensao') === (step === 5)
+        (instance.presetId === 'pensao') === (step === 7)
     );
 
     const funcaoAtualValor =
@@ -258,7 +258,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     return (
         <>
-            <section id="remuneracao" tabIndex={-1} className="scroll-mt-24" hidden={step > 3}>
+            <section id="remuneracao" tabIndex={-1} className="scroll-mt-24" hidden={step > 6}>
                 <div hidden={step !== 0} className="space-y-5">
                 <DynamicPayrollBaseSection
                     styles={styles}
@@ -302,7 +302,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         getPresetGrossLines={getPresetGrossLines}
                     />
                 </div>
-                <div hidden={step !== 2}>
+                <div hidden={step !== 4}>
                 <DynamicPayrollTaxSection
                     activeSection="pension"
                     resultRows={resultRows}
@@ -325,7 +325,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 />
 
                 </div>
-                <div hidden={step !== 3}>
+                <div hidden={step !== 5}>
                 <DynamicPayrollTaxSection
                     activeSection="incomeTax"
                     resultRows={resultRows}
@@ -349,18 +349,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 </div>
             </section>
 
-            <div hidden={step !== 4 && step !== 5} className="space-y-5">
-            <section id={step === 5 ? 'descontos' : 'verbas'} tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
+            <div hidden={step !== 3 && step !== 6 && step !== 7 && step !== 8} className="space-y-5">
+            <section id={step === 7 ? 'descontos' : step === 3 ? 'beneficios' : step === 8 ? 'descontos-pensao' : step === 6 ? 'creditos-eventuais' : 'verbas'} tabIndex={-1} className={`${styles.card} scroll-mt-24`} hidden={step === 7 || step === 8}>
                 <h2 className={`${styles.sectionTitle} relative`}>
                     <Sparkles className="w-4 h-4 text-secondary" />
-                    {step === 5 ? 'Adicionar descontos' : 'Adicionar verbas à simulação'}
+                    {step === 7 ? 'Adicionar descontos' : step === 6 ? 'Créditos eventuais' : 'Adicionar benefícios à simulação'}
                 </h2>
-                <p className="mb-4 text-body text-neutral-600 dark:text-neutral-300">{step === 5
+                <p className="mb-4 text-body text-neutral-600 dark:text-neutral-300">{step === 7
                     ? 'As categorias reúnem os descontos disponíveis. Abra uma para conferir os itens ou pesquise pelo nome; use o botão Adicionar do item escolhido. Desconto avulso serve para lançar um item que não está no catálogo.'
                     : 'As categorias reúnem créditos e adicionais disponíveis. Abra uma para conferir os itens ou pesquise pelo nome; use o botão Adicionar do item escolhido. Crédito avulso serve para lançar um item que não está no catálogo.'}</p>
 
                 <PresetControlsSection
-                    mode={step === 5 ? 'D' : 'C'}
+                    mode={step === 7 ? 'D' : 'C'}
                     styles={styles}
                     selectedPreset={selectedPreset}
                     setSelectedPreset={setSelectedPreset}
@@ -400,7 +400,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         tabIndex={-1}
                         key={instance.key}
                         className="scroll-mt-20 transition-all duration-300"
-                        hidden={(instance.presetId === 'pensao') !== (step === 5)}
+                        hidden={(instance.presetId === 'pensao') !== (step === 7)}
                     >
                         <PresetInstanceCard
                             instance={instance}
@@ -434,9 +434,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             })}
 
-            <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300">
+            <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300" hidden={step !== 6 && step !== 7 && step !== 8}>
                 <ManualRubricasSection
-                    mode={step === 5 ? 'D' : 'C'}
+                    mode={step === 7 || step === 8 ? 'D' : 'C'}
                     rubricas={state.rubricasExtras}
                     rubricasTax={state.rubricasTax}
                     calculationReady={calculationReady && Boolean(state.pensionMemory)}
@@ -454,7 +454,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     toPositiveNumber={toPositiveNumber}
                 />
             </div>
-            <div hidden={step !== 2}>
+            <div hidden={step !== 4}>
             <PensionRetroForm state={inputState ?? state} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
                 pensionParams={pensionParams} pensionContexts={pensionContexts}
                 invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
