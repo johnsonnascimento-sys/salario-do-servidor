@@ -53,7 +53,8 @@ const GRATIFICATION_INSTANCE: PresetInstance = { key: 'gratificacao-fixed', pres
 const ABONO_INSTANCE: PresetInstance = { key: 'abono-fixed', presetId: 'abono' };
 const FIXED_BENEFITS: Array<PresetInstance & { title: string }> = [
     { key: 'aux-transporte-fixed', presetId: 'aux_transporte', title: 'Auxílio-transporte' },
-    { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar' }
+    { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar' },
+    { key: 'vantagens-pessoais-fixed', presetId: 'vantagens', title: 'Vantagens Pessoais' }
 ];
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
