@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { UserRound, Award, Shield, ReceiptText, PlusCircle, MinusCircle, StickyNote, FileText, PanelLeftClose, PanelLeftOpen, List, X, Briefcase, HeartPulse } from 'lucide-react';
 
 const sections = [
@@ -8,7 +8,7 @@ const sections = [
     { label: 'Benefícios', Icon: HeartPulse },
     { label: 'Previdência e abono', Icon: Shield },
     { label: 'Imposto de Renda', Icon: ReceiptText },
-    { label: 'Créditos Eventuais', Icon: PlusCircle },
+    { label: 'Créditos Eventuais', hint: 'Horas extras, férias, 13º e mais', Icon: PlusCircle },
     { label: 'Descontos', Icon: MinusCircle },
     { label: 'Observações / Notas', Icon: StickyNote },
     { label: 'Resultado', Icon: FileText }
@@ -24,6 +24,7 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
     const [mobileOpen, setMobileOpen] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
+    const navId = useId();
 
     useEffect(() => {
         if (!mobileOpen) return;
@@ -48,12 +49,22 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
         setMobileOpen(false);
         triggerRef.current?.focus();
     };
-    const items = (compact: boolean) => sections.map(({ label, Icon }, index) => (
-        <button key={label} type="button" onClick={() => { setMobileOpen(false); onChange(index); }} aria-current={step === index ? 'step' : undefined} aria-label={compact ? label : undefined} title={compact ? label : undefined}
-            className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 ${step === index ? 'bg-secondary-800 text-white' : 'text-neutral-700 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700'}`}>
-            <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />{!compact && <span>{label}</span>}
-        </button>
-    ));
+    const items = (compact: boolean, surface: 'mobile' | 'desktop') => sections.map(({ label, Icon, hint }, index) => {
+        const current = step === index;
+        const hintId = hint && !compact ? `${navId}-${surface}-${index}` : undefined;
+        return (
+            <button key={label} type="button" onClick={() => { setMobileOpen(false); onChange(index); }}
+                aria-current={current ? 'step' : undefined} aria-label={compact || hint ? label : undefined}
+                aria-describedby={hintId} title={compact ? [label, hint].filter(Boolean).join(' · ') : undefined}
+                className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 ${current ? 'bg-secondary-800 text-white' : 'text-neutral-700 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700'}`}>
+                <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                {!compact && <span>
+                    {label}
+                    {hint && <span id={hintId} className={`mt-0.5 block text-body-xs font-normal ${current ? 'text-secondary-100' : 'text-neutral-600 dark:text-neutral-300'}`}>{hint}</span>}
+                </span>}
+            </button>
+        );
+    });
     return <nav aria-label="Etapas da simulação" className={`min-w-0 min-[960px]:shrink-0 ${collapsed ? 'min-[960px]:w-16' : 'min-[960px]:w-56'}`}>
         <div className="min-[960px]:hidden">
             <p className="mb-3 text-body-sm font-semibold text-neutral-600 dark:text-neutral-300">Etapa {step + 1} de {sections.length}: {sections[step].label}</p>
@@ -68,7 +79,7 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
                         <button type="button" onClick={closeMobile} aria-label="Fechar menu de etapas" className="flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800"><X className="h-5 w-5" /></button>
                     </div>
                     <p className="mb-3 text-body-sm text-neutral-600 dark:text-neutral-300">Escolha uma etapa para acessá-la diretamente.</p>
-                    <div className="space-y-1">{items(false)}</div>
+                    <div className="space-y-1">{items(false, 'mobile')}</div>
                 </div>
             </div>}
         </div>
@@ -76,7 +87,7 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
             <button type="button" onClick={() => setCollapsed(value => !value)} aria-label={collapsed ? 'Expandir etapas' : 'Recolher etapas'} aria-expanded={!collapsed} className="mb-2 flex min-h-11 w-full items-center justify-center rounded-lg text-neutral-600 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700">
                 {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <><PanelLeftClose className="mr-2 h-5 w-5" /> Recolher etapas</>}
             </button>
-            <div className="space-y-1">{items(collapsed)}</div>
+            <div className="space-y-1">{items(collapsed, 'desktop')}</div>
         </div>
     </nav>;
 };

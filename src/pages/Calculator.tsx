@@ -323,7 +323,7 @@ export default function Calculator() {
                     {['Dados básicos', 'Adicional de Qualificação (AQ)', 'Vantagens pessoais', 'Benefícios', 'Previdência e abono', 'Imposto de Renda', 'Créditos Eventuais', 'Descontos', 'Observações/Notas', 'Resultado'][step]}
                 </h2>
                 <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">{step === 6
-                    ? 'Inclua as verbas eventuais da simulação.'
+                    ? `Em Adicionar crédito, você encontra horas extras, substituição de função, férias, 13º salário${courtConfig.transportIndemnity?.enabled ? ', diárias e indenização de transporte' : ' e diárias'}.`
                     : step === 7
                         ? 'Inclua os descontos que aparecem na sua folha.'
                         : step === 1
