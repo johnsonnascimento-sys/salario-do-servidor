@@ -38,12 +38,15 @@ test('VPNI e ATS exibem tributação independente do detalhamento e preservam co
     };
     const tree = create(<Form />);
     const card = (id: string) => tree.root.findByProps({ id: `manual-rubrica-${id}` });
-    const radio = (id: string, value: string) => card(id).findByProps({ name: `manual-tributacao-${id}`, value });
+    const radio = (id: string, value: string) => card(id).findByProps({ type: 'radio', name: `manual-tributacao-${id}`, value });
     const current = (id: string) => tree.root.findByType(ManualRubricasSection).props.rubricas.find((item: Rubrica) => item.id === id);
 
     for (const id of ['vpni', 'ats']) {
-        const [tax, calculation] = card(id).findAllByType('details');
-        assert.equal(tax.findAllByProps({ type: 'radio' }).length, 3);
+        const [tax, calculation] = card(id).findAllByType('details', { deep: false });
+        const funpresp = tax.findAllByType('details').find(detail => detail.props.className.includes('group/funpresp'))!;
+        assert.equal(tax.findAllByProps({ type: 'radio' }).length, 6);
+        assert.equal(Boolean(funpresp.props.open), false);
+        assert.equal(tax.props.open, false);
         assert.equal(calculation.findAllByType('input').length, 0);
         assert.equal(calculation.findAllByType('details').length, 1);
         assert.equal(card(id).findAllByProps({ id: `manual-description-${id}` }).length, 0);
@@ -64,12 +67,19 @@ test('VPNI e ATS exibem tributação independente do detalhamento e preservam co
     act(() => radio('ats', 'rra').props.onChange());
     assert.deepEqual(current('ats').competenciasEA, ['2024-07']);
 
-    const pss = (label: string) => card('vpni').findAllByType('label')
-        .find(item => item.findAllByType('span').some(span => span.props.children === label))!.findByType('input');
-    act(() => pss('Incluir na base do PSS por competência original').props.onChange({ target: { checked: true } }));
+    const pss = (value: string, id = 'vpni') => card(id).findByProps({ type: 'radio', name: `manual-pss-${id}`, value });
+    act(() => pss('original').props.onChange());
     assert.equal(current('vpni').pssCompetenciaSeparada, true);
     assert.equal(current('vpni').incidePSS, false);
-    act(() => pss('Incluir na base do PSS mensal').props.onChange({ target: { checked: true } }));
+    assert.equal(pss('original').props.checked, true);
+    assert.equal(pss('mensal', 'ats').props.checked, true);
+    assert.equal(card('vpni').findAllByType('details')[1].props.open, true);
+    assert.equal(card('vpni').findByType('select').props.value, '');
+    assert.ok(card('vpni').findByProps({ href: '#pension-retro-form' }));
+    act(() => pss('excluir').props.onChange());
+    assert.equal(current('vpni').pssCompetenciaSeparada, false);
+    assert.equal(current('vpni').incidePSS, false);
+    act(() => pss('mensal').props.onChange());
     assert.equal(current('vpni').pssCompetenciaSeparada, false);
     assert.equal(current('vpni').incidePSS, true);
     assert.equal(current('ats').incidePSS, true);
@@ -117,7 +127,7 @@ test('card de VPNI adiciona lançamentos independentes e preserva a VPNI antiga 
     act(() => field(saved.id, 'value').props.onChange({ target: { value: '2171.59' } }));
     act(() => field(second, 'description').props.onChange({ target: { value: 'Decisão judicial' } }));
     act(() => field(second, 'value').props.onChange({ target: { value: '992.87' } }));
-    act(() => entries()[1].findByProps({ name: `manual-tributacao-${second}`, value: 'excluir' }).props.onChange());
+    act(() => entries()[1].findByProps({ type: 'radio', name: `manual-tributacao-${second}`, value: 'excluir' }).props.onChange());
     assert.equal(total(), 'R$ 3.164,46');
     assert.deepEqual(calculator.state.rubricasExtras.map(item => [item.id, item.vantagemPessoal, item.valor, item.incideIR]),
         [[saved.id, 'VPNI', 2171.59, true], [second, 'VPNI', 992.87, false]]);
