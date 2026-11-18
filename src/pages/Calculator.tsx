@@ -25,8 +25,6 @@ import {
     USER_AREA_LAST_RESULT_ROWS_KEY,
 } from '../constants/storage';
 import { hydrateCalculatorState } from '../utils/calculatorState';
-import { getPayrollPresentation } from '../utils/payrollPresentation';
-import { formatCurrency } from '../utils/calculations';
 import { CalculatorNavigationState, CalculatorRestoreSource } from '../types/calculatorRestore';
 
 export default function Calculator() {
@@ -268,9 +266,6 @@ export default function Calculator() {
     const resultMessage = calculationStatus === 'pension_pending' ? 'Apuração pendente'
         : calculationStatus === 'selection_required' ? 'Revise a participação previdenciária'
             : calculationStatus === 'error' ? (pensionFeedback?.configuration ? 'Funpresp em atualização' : pensionFeedback?.title || 'Cálculo indisponível') : 'Calculando...';
-    const rubricSummary = (step === 6 || step === 7) && calculationReady
-        ? getPayrollPresentation(effectiveState, resultRows, dailiesResultRows)
-        : undefined;
 
     if (loadingConfig || loadingAgency) {
         return (
@@ -324,11 +319,6 @@ export default function Calculator() {
                 <div className="flex flex-col gap-5 min-[960px]:flex-row min-[960px]:items-start">
                 <CalculatorNavigation step={step} onChange={changeStep} />
                 <div className="min-w-0 flex-1">
-                {(step === 6 || step === 7) && <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-secondary-50 px-4 py-3 text-secondary-900 dark:bg-secondary-950 dark:text-secondary-100" aria-live="polite">
-                    <span className="font-semibold">Líquido do holerite</span>
-                    <strong className="tabular-nums">{rubricSummary ? formatCurrency(rubricSummary.payrollNet) : resultMessage}</strong>
-                    {rubricSummary?.hasDailies && <span className="basis-full text-body-sm">Diárias líquidas · {formatCurrency(rubricSummary.dailiesNet)}</span>}
-                </div>}
                 <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">
                     {['Dados básicos', 'Adicional de Qualificação (AQ)', 'Vantagens pessoais', 'Benefícios', 'Previdência e abono', 'Imposto de Renda', 'Créditos Eventuais', 'Descontos', 'Observações/Notas', 'Resultado'][step]}
                 </h2>
