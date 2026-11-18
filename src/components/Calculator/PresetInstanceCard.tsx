@@ -8,7 +8,7 @@ import { getDailiesPresentation } from './dailiesPresentation';
 import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
 import { RubricCardHeading } from './RubricCardHeading';
-import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS } from './dynamicPayrollForm.helpers';
+import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS, roundCurrency } from './dynamicPayrollForm.helpers';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
 
 interface PresetInstanceCardProps {
@@ -155,6 +155,9 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const cardAmount = cardLines.find(line => line.cardAmount && line.cardAmount !== 'net')
         ?? cardLines.find(line => line.cardAmount === 'net');
     const net = cardLines.find(line => line.cardAmount === 'net')?.value;
+    // Os totais do 13º incluem o adiantamento. O cabeçalho mostra o saldo desta folha.
+    const advanceDebit = instance.presetId === 'decimo' ? state.debitoPrimeiraParcela13 ?? 0 : 0;
+    const amountForPayroll = (value: number) => advanceDebit ? roundCurrency(value - advanceDebit) : value;
     const infoRef = useRef<HTMLSpanElement>(null);
     useEffect(() => {
         if (!infoOpen || typeof document === 'undefined') return;
@@ -179,8 +182,8 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 title={`${presetLabel}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}`}
                 presetId={instance.presetId}
                 discount={instance.presetId === 'pensao'}
-                amount={cardAmount?.cardAmount ? { kind: cardAmount.cardAmount, value: cardAmount.value } : undefined}
-                net={net}
+                amount={cardAmount?.cardAmount ? { kind: cardAmount.cardAmount, value: amountForPayroll(cardAmount.value) } : undefined}
+                net={net === undefined ? undefined : amountForPayroll(net)}
                 notice={instance.presetId === 'indenizacao_transporte' && state.transporteIndenizacaoMemory?.status === 'unavailable'
                     ? 'Valor indisponível nesta competência' : undefined}
                 panelId={panelId} expanded={editor.expanded} onToggle={editor.toggle}

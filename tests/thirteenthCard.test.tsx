@@ -163,13 +163,17 @@ test('totais do card e lançamentos do holerite conciliam sem duplicar adiantame
     assert.equal(lines.filter(line => line.label === 'Abono próprio do 13º (crédito separado)').length, 1);
 });
 
-test('detalhamento e resultados ficam ocultos durante edição e quando cálculo fica indisponível', async () => {
+const presetProps = (state: CalculatorState) => {
     const instance = { key: 'teste', presetId: 'decimo' as const };
-    const lines = buildPresetGrossLines({ instance, state: calculated, courtConfig: config, currentTables: { funcoes: { fc1: 1000 } }, isNovoAQ: false, noFunctionCode: '0', currentFunctionValue: 1000, gratificacaoEspecificaCalculada: 0 });
-    const props = { instance, presetLabel: '13º', reorderMode: false, draggingPreset: null,
+    const lines = buildPresetGrossLines({ instance, state, courtConfig: config, currentTables: { funcoes: { fc1: 1000 } }, isNovoAQ: false, noFunctionCode: '0', currentFunctionValue: 1000, gratificacaoEspecificaCalculada: 0 });
+    return { instance, presetLabel: '13º', reorderMode: false, draggingPreset: null,
         handlePresetDragStart() {}, handlePresetDragOver() {}, handlePresetDrop() {}, handlePresetDragEnd() {}, removePreset() {},
-        state: calculated, inputState: input, update() {}, styles, isNovoAQ: false, competenciaReferencia: '11/2026', functionKeys: [],
+        state, inputState: input, update() {}, styles, isNovoAQ: false, competenciaReferencia: '11/2026', functionKeys: [],
         updateOvertimeEntry() {}, updateSubstitutionEntry() {}, courtConfig: config, lines, calculationReady: true };
+};
+
+test('detalhamento e resultados ficam ocultos durante edição e quando cálculo fica indisponível', async () => {
+    const props = presetProps(calculated);
     let tree: ReturnType<typeof create>;
     act(() => { tree = create(<PresetInstanceCard {...props} />); });
     assert.equal(tree.root.findByType('details').props.open, false);
@@ -188,5 +192,32 @@ test('detalhamento e resultados ficam ocultos durante edição e quando cálculo
     assert.deepEqual(labels(), ['Bruto']);
     act(() => tree.update(<PresetInstanceCard {...props} editor={editor} calculationReady={false} />));
     assert.deepEqual(labels(), []);
+    act(() => tree.unmount());
+});
+
+test('card recolhido mostra o saldo do 13º nesta folha após o abatimento do adiantamento', () => {
+    const november = { ...calculated, tipoCalculo: 'nov', adiant13Venc: 3000.27, adiant13FC: 0,
+        segunda13Venc: 5000.30, segunda13FC: 0, abonoPerm13: 0, ir13: 1200, pss13: 767.43,
+        valFunpresp13: 0, debitoPrimeiraParcela13: 3000.27 } satisfies CalculatorState;
+    const editor = { expanded: false, toggle() {} };
+    const tree = create(<PresetInstanceCard {...presetProps(november)} editor={editor} />);
+    const amounts = () => tree.root.findByType(RubricCardHeading).findAllByType('dd')
+        .map(node => textOf(node).replace(/\s/g, ' '));
+
+    assert.deepEqual(amounts(), ['R$ 5.000,30', 'R$ 3.032,87']);
+
+    const unified: CalculatorState = { ...november, thirteenthMemory: {
+        version: 1, firstSelected: true, secondSelected: true, firstMode: 'informado', secondMode: 'manual',
+        firstTotal: november.adiant13Venc, secondTotal: november.segunda13Venc,
+        referenceTotal: 8000.57, cargoTotal: 8000.57, functionTotal: 0,
+        components: [], groups: [], advances: [], secondEntries: []
+    } };
+    act(() => tree.update(<PresetInstanceCard {...presetProps(unified)} editor={editor} />));
+    assert.deepEqual(amounts(), ['R$ 5.000,30', 'R$ 3.032,87']);
+
+    const advanceOnly = { ...november, tipoCalculo: 'jun', segunda13Venc: 0, ir13: 0, pss13: 0,
+        debitoPrimeiraParcela13: 0 } satisfies CalculatorState;
+    act(() => tree.update(<PresetInstanceCard {...presetProps(advanceOnly)} editor={editor} />));
+    assert.deepEqual(amounts(), ['R$ 3.000,27', 'R$ 3.000,27']);
     act(() => tree.unmount());
 });
