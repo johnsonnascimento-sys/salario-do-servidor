@@ -1,8 +1,13 @@
 import { IrEaCompetencias, getDefaultEaCompetencia } from '../IrEaCompetencias';
 import React from 'react';
-import { SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from '../TaxAdjustmentPanel';
 import { SubstitutionEntry } from '../../../types';
 import type { SubstitutionFunctionDetail } from '../../../types/irEa';
+
+const SUBSTITUTION_PSS_OPTIONS = [
+    { value: 'excluir', label: 'Sem incidência' },
+    { value: 'ea', label: 'Exercícios anteriores (EA)' }
+];
 
 interface SubstitutionCardProps {
     entry: SubstitutionEntry;
@@ -20,6 +25,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
     calculationReady = true, competenciaReferencia, styles
 }) => {
     const fieldId = React.useId();
+    const irRegime = entry.excluirIR ? 'excluir' : entry.isEA ? 'rra' : 'mensal';
     const [taxOpen, setTaxOpen] = React.useState(Boolean(entry.isEA || entry.excluirIR || entry.pssIsEA || entry.valorBrutoManual !== undefined));
     const [functionToAdd, setFunctionToAdd] = React.useState('');
     const selectRef = React.useRef<HTMLSelectElement>(null);
@@ -85,7 +91,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                             : selectedFunctions.length === 0 ? 'Adicione uma função para informar os dias de substituição.' : 'Você pode adicionar outra função, se necessário.'}
                     </p>
                     {hasManualGross && <p className="text-body-xs text-warning-700 dark:text-warning-300">
-                        O valor bruto documentado substitui o cálculo por dias. Os subtotais por função são apenas referência e não são somados ao valor documentado. Para usar o cálculo por dias, limpe o valor documentado em Tributação.
+                        O valor bruto documentado substitui o cálculo por dias. Os subtotais por função são apenas referência. Para usar o cálculo por dias, limpe o valor documentado em Ajustar tributação.
                     </p>}
                 </div>
                 <div className="divide-y divide-neutral-200 dark:divide-neutral-700" aria-busy={!calculationReady}>
@@ -127,54 +133,31 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                     })}
                 </div>
             </div>
-            <details className="group/tax pt-1" open={taxOpen} onToggle={event => setTaxOpen(event.currentTarget.open)}>
-                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded py-2 text-body text-neutral-700 dark:text-neutral-300 [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
-                    <span className="inline-flex items-center gap-2 font-semibold"><SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />Tributação</span>
-                    <span className="ml-auto text-right text-body-xs font-normal text-neutral-500 dark:text-neutral-400">
-                        {entry.excluirIR ? 'Sem incidência de IR' : entry.isEA ? 'Exercícios anteriores (RRA)' : 'IR mensal'}{entry.pssIsEA ? ' · PSS de exercícios anteriores' : ''}
-                    </span>
-                    <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 group-open/tax:rotate-180" aria-hidden="true" />
-                </summary>
-                <div className="space-y-4 pt-2">
-                    <fieldset className="flex flex-col gap-x-6 sm:flex-row sm:flex-wrap">
-                        <legend className="sr-only">Regime de tributação da substituição</legend>
-                        {[
-                            { value: 'mensal', label: 'IR mensal' },
-                            { value: 'rra', label: 'Exercícios anteriores (RRA)' },
-                            { value: 'excluir', label: 'Excluir do IR' }
-                        ].map(option => <label key={option.value} className={`${styles.checkboxLabel} min-h-11 py-2`}>
-                            <input type="radio" name={`${fieldId}-tributacao`} value={option.value} className="h-4 w-4 shrink-0 accent-secondary-800"
-                                checked={option.value === (entry.excluirIR ? 'excluir' : entry.isEA ? 'rra' : 'mensal')}
-                                onChange={() => {
-                                    setTaxOpen(true);
-                                    updateEntry(entry.id, {
-                                        isEA: option.value === 'rra', excluirIR: option.value === 'excluir',
-                                        competenciasEA: option.value === 'rra' && !entry.competenciasEA?.length
-                                            ? [getDefaultEaCompetencia(competenciaReferencia)] : entry.competenciasEA
-                                    });
-                                }} />
-                            <span>{option.label}</span>
-                        </label>)}
-                    </fieldset>
-                    {entry.isEA && !entry.excluirIR ? <IrEaCompetencias compact tipo="substituicao" value={entry.competenciasEA}
-                        onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })} styles={styles} competenciaReferencia={competenciaReferencia} />
-                        : <p className="text-body-xs text-neutral-500 dark:text-neutral-400">{entry.excluirIR ? 'O valor desta verba fica excluído da base do Imposto de Renda.' : 'O valor compõe a base do IR da folha mensal.'}</p>}
-                    <label className={styles.checkboxLabel}>
-                        <input type="checkbox" className={styles.checkbox} checked={entry.pssIsEA}
-                            onChange={event => updateEntry(entry.id, { pssIsEA: event.target.checked })} />
-                        <span>Incluir na base do PSS (Exercício Anterior - EA)</span>
-                    </label>
-                    {(entry.isEA || hasManualGross) && <div className="space-y-2">
-                        <label htmlFor={`${fieldId}-manual-gross`} className={styles.label}>Valor bruto documentado da substituição (R$, opcional)</label>
-                        <input id={`${fieldId}-manual-gross`} type="number" min="0" step="0.01" className={styles.input}
-                            value={entry.valorBrutoManual ?? ''} placeholder="0,00" onChange={event => updateEntry(entry.id, {
-                                valorBrutoManual: event.target.value === '' ? undefined : Math.max(0, Number(event.target.value) || 0)
-                            })} />
-                        {hasManualGross && <button type="button" className="min-h-11 text-body-xs font-semibold text-secondary-800 hover:underline dark:text-secondary-300"
-                            onClick={() => updateEntry(entry.id, { valorBrutoManual: undefined })}>Usar cálculo por dias</button>}
-                    </div>}
-                </div>
-            </details>
+            <TaxAdjustmentPanel open={taxOpen} onToggle={setTaxOpen} summary={`${IR_SUMMARY[irRegime]} · ${entry.pssIsEA ? 'PSS de exercícios anteriores' : 'Sem PSS'}`}>
+                <TaxChoices title="Imposto de Renda (IR)" name={`${fieldId}-tributacao`} value={irRegime}
+                    options={IR_OPTIONS} onChange={value => updateEntry(entry.id, {
+                        isEA: value === 'rra',
+                        excluirIR: value === 'excluir',
+                        competenciasEA: value === 'rra' && !entry.competenciasEA?.length
+                            ? [getDefaultEaCompetencia(competenciaReferencia)] : entry.competenciasEA
+                    })} />
+                {irRegime === 'rra' && (
+                    <IrEaCompetencias compact tipo="substituicao" value={entry.competenciasEA}
+                        onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
+                        styles={styles} competenciaReferencia={competenciaReferencia} />
+                )}
+                <TaxChoices title="Previdência (PSS)" name={`${fieldId}-pss`} value={entry.pssIsEA ? 'ea' : 'excluir'}
+                    options={SUBSTITUTION_PSS_OPTIONS} onChange={value => updateEntry(entry.id, { pssIsEA: value === 'ea' })} />
+                {(entry.isEA || hasManualGross) && <div className="space-y-2">
+                    <label htmlFor={`${fieldId}-manual-gross`} className={styles.label}>Valor bruto documentado da substituição (R$, opcional)</label>
+                    <input id={`${fieldId}-manual-gross`} type="number" min="0" step="0.01" className={styles.input}
+                        value={entry.valorBrutoManual ?? ''} placeholder="0,00" onChange={event => updateEntry(entry.id, {
+                            valorBrutoManual: event.target.value === '' ? undefined : Math.max(0, Number(event.target.value) || 0)
+                        })} />
+                    {hasManualGross && <button type="button" className="min-h-11 text-body-xs font-semibold text-secondary-800 hover:underline dark:text-secondary-300"
+                        onClick={() => updateEntry(entry.id, { valorBrutoManual: undefined })}>Usar cálculo por dias</button>}
+                </div>}
+            </TaxAdjustmentPanel>
         </div>
     );
 };

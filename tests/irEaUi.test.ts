@@ -174,15 +174,32 @@ const substTree = create(React.createElement(SubstitutionCard, {
 }));
 const drawer = substTree.root.findByType('details');
 assert.equal(drawer.props.open, true);
-assert.ok(drawer.findAllByType('summary')[0].findAllByType('span').some(span => span.children.includes('Tributação')));
+assert.ok(drawer.findAllByType('summary')[0].findAllByType('span').some(span => span.children.includes('Ajustar tributação')));
 assert.equal(substPatches.length, 0, 'Abrir um snapshot não altera os dados');
-const taxChecks = drawer.findAllByType('input').filter(input => input.props.type === 'checkbox');
-assert.deepEqual(taxChecks.map(input => input.props.checked), [true]);
 const taxRadios = drawer.findAllByType('input').filter(input => input.props.type === 'radio');
-assert.deepEqual(taxRadios.map(input => input.props.checked), [false, true, false]);
-act(() => taxRadios.find(input => input.props.value === 'excluir')!.props.onChange());
+const irRadios = taxRadios.filter(input => input.props.name.endsWith('-tributacao'));
+const pssRadios = taxRadios.filter(input => input.props.name.endsWith('-pss'));
+assert.deepEqual(irRadios.map(input => input.props.checked), [false, true, false]);
+assert.deepEqual(pssRadios.map(input => [input.props.value, input.props.checked]), [['excluir', false], ['ea', true]]);
+act(() => pssRadios[0].props.onChange());
+assert.deepEqual(substPatches.pop(), { id: 'subst-ui', patch: { pssIsEA: false } });
+act(() => irRadios.find(input => input.props.value === 'excluir')!.props.onChange());
 assert.deepEqual(substPatches.pop(), { id: 'subst-ui', patch: { excluirIR: true, isEA: false, competenciasEA: ['2024-02'] } });
 assert.equal(substitution.pssIsEA, true, 'IR não modifica seleção de PSS');
 assert.equal(drawer.findAllByType('input').find(input => input.props.type === 'number')!.props.value, 5000);
 assert.deepEqual(substitution.competenciasEA, ['2024-02']);
 substTree.unmount();
+
+const { OvertimeCard } = await import('../src/components/Calculator/cards/OvertimeCard');
+const overtimePatches: unknown[] = [];
+const overtimeTree = create(React.createElement(OvertimeCard, {
+    entry: state.overtimeEntries[0], updateEntry: (id, patch) => { overtimePatches.push({ id, patch }); },
+    functionKeys: [], competenciaReferencia: '11/2026', styles: {},
+}));
+const overtimeTax = overtimeTree.root.findAllByType('details').find(detail => detail.props.className?.includes('group/tax'))!;
+const overtimeRadios = overtimeTax.findAllByType('input').filter(input => input.props.type === 'radio');
+assert.deepEqual(overtimeRadios.map(input => [input.props.value, input.props.checked]),
+    [['mensal', false], ['rra', true], ['excluir', false]]);
+act(() => overtimeRadios[0].props.onChange());
+assert.deepEqual(overtimePatches, [{ id: 'h', patch: { isEA: false, excluirIR: false, competenciasEA: ['2024-01'] } }]);
+overtimeTree.unmount();

@@ -1,6 +1,7 @@
 import { IrEaCompetencias, getDefaultEaCompetencia } from '../IrEaCompetencias';
 import React from 'react';
 import { AlertTriangle, Clock, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from '../TaxAdjustmentPanel';
 import { CourtConfig, OvertimeEntry } from '../../../types';
 import type { OvertimeFunctionDetail } from '../../../types/irEa';
 
@@ -55,6 +56,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
         }
     }, [Boolean(draft)]);
     const entry = draft ?? savedEntry;
+    const irRegime = entry.excluirIR ? 'excluir' : entry.isEA ? 'rra' : 'mensal';
     const updateEntry = (id: string, patch: Partial<OvertimeEntry>) => {
         if (draft) setDraft(current => current ? { ...current, ...patch } : current);
         else saveEntry(id, patch);
@@ -368,45 +370,20 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                         </div>
                     )}
 
-            <details className="group/tax pt-1" open={taxOpen} onToggle={event => setTaxOpen(event.currentTarget.open)}>
-                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded py-2 text-body text-neutral-700 dark:text-neutral-300 [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
-                    <span className="inline-flex items-center gap-2 font-semibold"><SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />Tributação</span>
-                    <span className="ml-auto text-right text-body-xs font-normal text-neutral-500 dark:text-neutral-400">
-                        {entry.excluirIR ? 'Sem incidência de IR' : entry.isEA ? 'Exercícios anteriores (RRA)' : 'IR mensal'}
-                    </span>
-                    <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 group-open/tax:rotate-180" aria-hidden="true" />
-                </summary>
-                <div className="space-y-4 pt-2">
-                    <fieldset className="flex flex-col gap-x-6 sm:flex-row sm:flex-wrap">
-                        <legend className="sr-only">Regime de tributação das horas extras</legend>
-                        {[
-                            { value: 'mensal', label: 'IR mensal' },
-                            { value: 'rra', label: 'Exercícios anteriores (RRA)' },
-                            { value: 'excluir', label: 'Excluir do IR' }
-                        ].map(option => (
-                            <label key={option.value} className={`${styles.checkboxLabel} min-h-11 py-2`}>
-                                <input type="radio" name={`${fieldId}-tributacao`} value={option.value}
-                                    className="h-4 w-4 shrink-0 accent-secondary-800"
-                                    checked={option.value === (entry.excluirIR ? 'excluir' : entry.isEA ? 'rra' : 'mensal')}
-                                    onChange={() => { setTaxOpen(true); updateEntry(entry.id, {
-                                        isEA: option.value === 'rra',
-                                        excluirIR: option.value === 'excluir',
-                                        competenciasEA: option.value === 'rra' && !entry.competenciasEA?.length
-                                            ? [getDefaultEaCompetencia(competenciaReferencia)] : entry.competenciasEA
-                                    }); }} />
-                                <span>{option.label}</span>
-                            </label>
-                        ))}
-                    </fieldset>
-                    {entry.isEA && !entry.excluirIR ? (
-                        <IrEaCompetencias compact tipo="horas_extras" value={entry.competenciasEA}
-                            onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
-                            styles={styles} competenciaReferencia={competenciaReferencia} />
-                    ) : <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                        {entry.excluirIR ? 'O valor desta verba fica excluído da base do Imposto de Renda.' : 'O valor compõe a base do IR da folha mensal.'}
-                    </p>}
-                </div>
-            </details>
+            <TaxAdjustmentPanel open={taxOpen} onToggle={setTaxOpen} summary={IR_SUMMARY[irRegime]}>
+                <TaxChoices title="Imposto de Renda (IR)" name={`${fieldId}-tributacao`} value={irRegime}
+                    options={IR_OPTIONS} onChange={value => updateEntry(entry.id, {
+                        isEA: value === 'rra',
+                        excluirIR: value === 'excluir',
+                        competenciasEA: value === 'rra' && !entry.competenciasEA?.length
+                            ? [getDefaultEaCompetencia(competenciaReferencia)] : entry.competenciasEA
+                    })} />
+                {irRegime === 'rra' && (
+                    <IrEaCompetencias compact tipo="horas_extras" value={entry.competenciasEA}
+                        onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
+                        styles={styles} competenciaReferencia={competenciaReferencia} />
+                )}
+            </TaxAdjustmentPanel>
             <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
                 <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600" onClick={() => setDraft(structuredClone(savedEntry))}>
                     <SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo
