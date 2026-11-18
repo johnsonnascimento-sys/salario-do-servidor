@@ -23,6 +23,7 @@ import { IAgencyCalculationParams } from './types';
 
 // Importar mÃ³dulos de cÃ¡lculo
 import { calculateBase, calculateBaseComponents } from './modules/baseCalculations';
+import { resolveAtsRubrics } from './modules/atsCalculations';
 import { calculateBenefits } from './modules/benefitsCalculations';
 import { calculateVacation } from './modules/vacationCalculations';
 import { calculateThirteenth } from './modules/thirteenthCalculations';
@@ -60,19 +61,24 @@ const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number
  * Orquestra todos os cÃ¡lculos delegando para mÃ³dulos especializados.
  */
 export class AgencyCalculationEngine implements IAgencyCalculator {
+    private withResolvedAts(params: IAgencyCalculationParams): IAgencyCalculationParams {
+        const { rubricas, error } = resolveAtsRubrics(params.rubricasExtras ?? [], params);
+        if (error) throw new Error(error);
+        return { ...params, rubricasExtras: rubricas };
+    }
 
     /**
      * Calcula a base salarial (vencimento + GAJ + FC + AQ + gratificaÃ§Ãµes)
      */
     async calculateBase(params: ICalculationParams): Promise<number> {
-        return await calculateBase(params as IAgencyCalculationParams);
+        return await calculateBase(this.withResolvedAts(params as IAgencyCalculationParams));
     }
 
     /**
      * Calcula as deduÃ§Ãµes (PSS, IRRF, Funpresp)
      */
     async calculateDeductions(grossValue: number, params: ICalculationParams): Promise<any> {
-        return await calculateDeductions(grossValue, params as IAgencyCalculationParams);
+        return await calculateDeductions(grossValue, this.withResolvedAts(params as IAgencyCalculationParams));
     }
 
     /**
@@ -95,6 +101,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
      * REFATORADO: Agora Ã© async para suportar ConfigService
      */
     async calculateTotal(params: IAgencyCalculationParams): Promise<ICalculationResult> {
+        params = this.withResolvedAts(params);
         // 1. Calcular Base Salarial (agora async)
         const base = await calculateBase(params);
         const baseComponents = await calculateBaseComponents(params);

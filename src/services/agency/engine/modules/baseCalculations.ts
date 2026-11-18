@@ -71,7 +71,7 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
  * Obtem dados ajustados para o periodo (bases salariais e VR)
  * usando a configuracao do orgao ja carregada.
  */
-export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfig) {
+function getPeriodData(periodo: number, agencyConfig: CourtConfig) {
     const cachedByConfig = periodDataCache.get(agencyConfig);
     if (cachedByConfig?.has(periodo)) {
         return cachedByConfig.get(periodo)!;
@@ -108,6 +108,14 @@ export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfi
     }
 
     return computed;
+}
+
+export async function getDataForPeriod(periodo: number, agencyConfig: CourtConfig) {
+    return getPeriodData(periodo, agencyConfig);
+}
+
+export function getEffectiveBasicSalary(periodo: number, config: CourtConfig, cargo: string, padrao: string) {
+    return getPeriodData(periodo, config).salario[cargo]?.[padrao];
 }
 
 export function resolveGratificationValue(

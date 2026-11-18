@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
+import { getAtsCalculationContext } from '../../services/agency/engine/modules/atsCalculations';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
 import { GripVertical, X } from 'lucide-react';
@@ -498,6 +499,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     rubricas={personalRubrics}
                     fixedTitles={fixedTitles}
                     addVpni={addVpni}
+                    atsContext={getAtsCalculationContext(pensionParams)}
                     updateRubrica={(id, field, value) => updateRubrica(
                         id, field, value, personalRubrics.find(rubrica => rubrica.id === id)
                     )}
@@ -610,7 +612,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </div>
             </PresetControlsSection>
             <div hidden={step !== 4}>
-            <PensionRetroForm state={inputState ?? state} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
+            <PensionRetroForm state={{ ...currentInputs, rubricasExtras: state.rubricasExtras }} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
                 pensionParams={pensionParams} pensionContexts={pensionContexts}
                 invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
                     ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}

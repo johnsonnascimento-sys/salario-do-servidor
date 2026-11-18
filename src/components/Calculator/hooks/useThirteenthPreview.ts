@@ -25,6 +25,7 @@ export const useThirteenthPreview = (state: CalculatorState, config: CourtConfig
             let reference: ThirteenthReference | undefined;
             try {
                 const params = mapStateToAgencyParams(state, config.orgSlug || '', config);
+                if (params.atsCalculationError) throw new Error(params.atsCalculationError);
                 const deductions = await calculateDeductions(await calculateBase(params), params);
                 reference = await buildThirteenthReference({ ...params, abonoPermanencia: params.recebeAbono ? deductions.pss : 0 });
                 const result = await new AgencyCalculationEngine().calculateTotal(params);

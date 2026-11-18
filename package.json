@@ -8,6 +8,7 @@
     "prebuild": "node scripts/generate-version.js",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
+    "test:ats": "node scripts/test-ats.mjs",
     "test:sorting": "node scripts/test-payslip-sorting.cjs",
     "test:pension": "node scripts/test-pension.mjs && node scripts/test-pension-integration.mjs",
     "test:pension-form": "node scripts/test-pension-form.mjs",

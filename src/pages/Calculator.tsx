@@ -72,7 +72,7 @@ export default function Calculator() {
         Array.isArray(entry.vinculos) && entry.vinculos.length === 0 &&
         Object.keys(entry).every(key => ['id', 'competencia', 'modo', 'tipo', 'vinculos'].includes(key))
     ).map(entry => entry.id);
-    const hasHistoricalRubrics = state.rubricasExtras.some(rubrica => Number(rubrica.valor) > 0 &&
+    const hasHistoricalRubrics = effectiveState.rubricasExtras.some(rubrica => Number(rubrica.valor) > 0 &&
         (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)));
     const onlyEmptyRetroDrafts = !hasHistoricalRubrics && emptyRetroDraftIds.length > 0 &&
         emptyRetroDraftIds.length === (state.pensionRetroEntries ?? []).length;

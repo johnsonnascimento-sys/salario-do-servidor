@@ -12,6 +12,7 @@ import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry, SecondThirteent
 import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
+    atsCalculationError?: string;
     irEaContext?: IrEaContext;
     heCompetenciasEA?: string[];
     substCompetenciasEA?: string[];

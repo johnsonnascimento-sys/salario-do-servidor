@@ -22,10 +22,19 @@ const createRubricaId = () => {
     return `rubrica-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
-const invalidateOptionAmountsOnPeriodChange = (previous: CalculatorState, next: CalculatorState): CalculatorState =>
-    previous.anoRef !== next.anoRef || previous.mesRef !== next.mesRef
-        ? { ...next, rubricasExtras: next.rubricasExtras.map(rubrica => ({ ...rubrica, pensionOptionAmountConfirmed: false })) }
-        : next;
+const invalidateOptionAmountsOnBaseChange = (previous: CalculatorState, next: CalculatorState): CalculatorState => {
+    const referenceChanged = previous.anoRef !== next.anoRef || previous.mesRef !== next.mesRef;
+    const salarySelectionChanged = previous.cargo !== next.cargo || previous.padrao !== next.padrao || previous.periodo !== next.periodo;
+    if (!referenceChanged && !salarySelectionChanged) return next;
+
+    return {
+        ...next,
+        rubricasExtras: next.rubricasExtras.map(rubrica =>
+            referenceChanged || (rubrica.vantagemPessoal === 'ATS' && rubrica.atsPercentual !== undefined)
+                ? { ...rubrica, pensionOptionAmountConfirmed: false, pensionOptionConfirmedValue: undefined }
+                : rubrica)
+    };
+};
 
 export const useCalculatorState = () => {
     const location = useLocation();
@@ -42,11 +51,11 @@ export const useCalculatorState = () => {
     ));
 
     const update = useCallback((field: keyof CalculatorState, value: any) => {
-        setState(prev => invalidateOptionAmountsOnPeriodChange(prev, { ...prev, [field]: value }));
+        setState(prev => invalidateOptionAmountsOnBaseChange(prev, { ...prev, [field]: value }));
     }, []);
 
     const updateMany = useCallback((patch: Partial<CalculatorState>) => {
-        setState(prev => invalidateOptionAmountsOnPeriodChange(prev, applyCalculatorPatch(prev, patch)));
+        setState(prev => invalidateOptionAmountsOnBaseChange(prev, applyCalculatorPatch(prev, patch)));
     }, []);
 
     const updateSubstDays = useCallback((key: string, days: number) => {
@@ -102,8 +111,10 @@ export const useCalculatorState = () => {
                         ? { vantagemPessoal: null }
                         : {}),
                 [field]: value,
-                ...(['valor', 'tipo', 'pensionRubricId', 'pensionOptionDate', 'pensionOptionReference', 'incideFunpresp', 'funprespCompetenciaSeparada', 'pssCompetenciaSeparada'].includes(field)
-                    ? { pensionOptionAmountConfirmed: false } : {})
+                ...(['valor', 'atsPercentual', 'tipo', 'pensionRubricId', 'pensionOptionDate', 'pensionOptionReference', 'incideFunpresp', 'funprespCompetenciaSeparada', 'pssCompetenciaSeparada'].includes(field)
+                    ? { pensionOptionAmountConfirmed: false, pensionOptionConfirmedValue: undefined } : {}),
+                ...(field === 'pensionOptionAmountConfirmed' && current.atsPercentual !== undefined
+                    ? { pensionOptionConfirmedValue: value === true ? fallback?.valor : undefined } : {})
             };
 
             return {
@@ -123,7 +134,7 @@ export const useCalculatorState = () => {
         if (newTipo === 'jun') updates.mesRef = 'JUNHO';
         if (newTipo === 'nov') updates.mesRef = 'NOVEMBRO';
 
-        setState(prev => invalidateOptionAmountsOnPeriodChange(prev, { ...prev, ...updates }));
+        setState(prev => invalidateOptionAmountsOnBaseChange(prev, { ...prev, ...updates }));
     }, []);
 
     return {

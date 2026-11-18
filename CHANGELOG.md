@@ -1,3 +1,8 @@
+## ATS por percentual do vencimento básico — 18/11/2026
+
+- O card de ATS aceita valor fixo ou percentual adquirido, com digitação direta e botões de ajuste. O motor resolve o valor em centavos pelo vencimento básico do cargo efetivo na competência selecionada.
+- A migração versiona o limite de 35% na configuração de folha do PJU. A opção percentual depende da configuração do órgão. Holerites anteriores continuam no modo de valor fixo.
+
 ## Cards de VPNI e ATS em Vantagens Pessoais — 17/11/2026
 
 - VPNI e ATS aparecem em dois cards fixos na etapa Vantagens pessoais do menu, com as incidências e o detalhamento das rubricas manuais. Lançamentos existentes mantêm valores, incidências e vínculos. A etapa Benefícios volta a exibir apenas os auxílios fixos.
@@ -945,4 +950,3 @@
 
 - Exibido o subtotal bruto do motor na visão principal de HE por horas globais; no modo de substituição, cada função selecionada já apresenta seu subtotal bruto. Valores antigos ficam ocultos durante recálculo.
 - Sem alteração de fórmula, incidência ou apresentação de líquido nesta mudança.
-

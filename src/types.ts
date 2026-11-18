@@ -79,6 +79,7 @@ export interface DailiesConfig {
 }
 
 export interface PayrollRulesConfig {
+  atsPercentageLimit?: number;
   specificGratificationPssDefaults?: Partial<Record<'gae' | 'gas', boolean>>;
   gajRate: number;
   specificGratificationRate: number;
@@ -206,6 +207,8 @@ export interface RubricaTaxDetail {
 
 export interface Rubrica {
   vantagemPessoal?: 'VPNI' | 'ATS' | null;
+  atsPercentual?: number;
+  pensionOptionConfirmedValue?: number;
   competenciasEA?: string[];
   fundamentoDeducaoEA?: string;
   id: string;

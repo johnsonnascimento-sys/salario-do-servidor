@@ -12,6 +12,8 @@ import { resolvePensionRubricRule } from '../../services/agency/engine/modules/p
 import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from './TaxAdjustmentPanel';
 import { CalculatorCardHeading } from './CalculatorCardHeading';
+import { AtsValueFields } from './AtsValueFields';
+import type { getAtsCalculationContext } from '../../services/agency/engine/modules/atsCalculations';
 import { RubricCardHeading } from './RubricCardHeading';
 import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
@@ -36,6 +38,7 @@ interface ManualRubricasSectionProps {
     rubricas: Rubrica[];
     fixedTitles?: ReadonlyMap<string, string>;
     addVpni?: () => void;
+    atsContext?: ReturnType<typeof getAtsCalculationContext>;
     summaryRubrics?: Rubrica[];
     styles: any;
     rubricasTax?: Record<string, RubricaTaxDetail>;
@@ -59,6 +62,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     rubricas,
     fixedTitles,
     addVpni,
+    atsContext,
     summaryRubrics = rubricas,
     styles,
     rubricasTax,
@@ -440,13 +444,25 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 <>
                                     <CalculatorCardHeading help={fixedTitle === 'ATS' ? {
                                         label: 'Explicação sobre Adicional por Tempo de Serviço',
-                                        content: <p>ATS significa Adicional por Tempo de Serviço, também conhecido como anuênio. Informe o valor conforme o contracheque.</p>
+                                        content: <>
+                                            <p>O art. 67 da Lei nº 8.112/1990 previa 1% por ano de serviço público efetivo. A Lei nº 9.527/1997 passou a prever 5% a cada cinco anos de serviço público federal efetivo.</p>
+                                            <p>A revogação preservou as situações constituídas até 8 de março de 1999. Informe o percentual adquirido conforme o registro funcional. O valor acompanha o vencimento básico do cargo efetivo na competência selecionada.</p>
+                                            <p>
+                                                <a className="underline" href="https://www.planalto.gov.br/ccivil_03/leis/l8112cons.htm" target="_blank" rel="noreferrer">Lei nº 8.112/1990, art. 67</a>
+                                                {' · '}
+                                                <a className="underline" href="https://www2.camara.leg.br/legin/fed/medpro/2001/medidaprovisoria-2225-45-4-setembro-2001-395990-publicacaooriginal-1-pe.html" target="_blank" rel="noreferrer">MP nº 2.225-45/2001</a>
+                                            </p>
+                                        </>
                                     } : undefined}>
                                         <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                                             {fixedTitle === 'ATS' ? 'Adicional por Tempo de Serviço (ATS)' : fixedTitle}
                                         </h3>
                                     </CalculatorCardHeading>
-                                    {valueField}
+                                    {fixedTitle === 'ATS' && atsContext
+                                        ? <AtsValueFields id={rubrica.id} percentual={rubrica.atsPercentual}
+                                            context={atsContext} onChange={percentual => updateRubrica(rubrica.id, 'atsPercentual', percentual)}
+                                            fixedValueField={valueField} styles={styles} />
+                                        : valueField}
                                 </>
                             )}
                             {taxOptions}

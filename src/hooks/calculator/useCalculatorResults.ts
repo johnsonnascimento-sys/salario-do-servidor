@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalculatorState, CalculatedPayrollState, CourtConfig } from '../../types';
 import { AgencyCalculationEngine } from '../../services/agency/engine/AgencyCalculationEngine';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
+import { resolveAtsRubrics } from '../../services/agency/engine/modules/atsCalculations';
 import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { assertPensionRubricsReady, PensionCalculationPendingError } from '../../services/agency/engine/modules/pensionPending';
 import { calculateMonthlyPensionContext } from '../../services/agency/engine/modules/pensionContext';
@@ -113,6 +114,7 @@ export const useCalculatorResults = (
             try {
                 const orgSlug = agency.slug;
                 const params = mapStateToAgencyParams(state, orgSlug, courtConfig);
+                if (params.atsCalculationError) throw new Error(params.atsCalculationError);
                 // Historical participation cannot be inferred from today's selection.
                 assertPensionRubricsReady(params);
                 pensionContexts = await resolvePensionSelectionContexts(params);
@@ -238,8 +240,11 @@ export const useCalculatorResults = (
     }, [courtConfig, state.periodo, calculationStatus]);
 
     const effectiveState = useMemo(
-        () => mergeEffectiveState(state, calculatedState),
-        [state, calculatedState]
+        () => mergeEffectiveState({
+            ...state,
+            rubricasExtras: resolveAtsRubrics(state.rubricasExtras, { ...state, agencyConfig: courtConfig ?? undefined }).rubricas
+        }, calculatedState),
+        [state, calculatedState, courtConfig]
     );
 
     const resultGroups = useMemo(() => {
@@ -410,6 +415,6 @@ export const useCalculatorResults = (
     }, [effectiveState, courtConfig, currentTables, calculationStatus, agency?.slug]);
 
     const { resultRows, dailiesResultRows } = resultGroups;
-    return { calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending,
+    return { effectiveState, calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending,
         pensionContexts: isCurrent ? completed.pensionContexts ?? null : null };
 };

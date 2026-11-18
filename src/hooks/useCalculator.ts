@@ -70,14 +70,14 @@ export const useCalculator = () => {
         handleDonationComplete: handleDonationCompleteBase
     } = useCalculatorExport();
 
-    const { calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending, pensionContexts } = useCalculatorResults(
+    const { effectiveState: resolvedState, calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending, pensionContexts } = useCalculatorResults(
         state,
         agencyService,
         courtConfig,
         agency
     );
     const calculationReady = calculationStatus === 'ready' && !loadingAgency && !loadingConfig && !configError && !agencyError;
-    const effectiveState = { ...state, ...calculatedState };
+    const effectiveState = { ...resolvedState };
     // Pending results must not overwrite fields that also serve as form inputs.
     if (!calculationReady) {
         PERSISTED_CALCULATED_INPUT_KEYS.forEach((key) => { effectiveState[key] = state[key]; });

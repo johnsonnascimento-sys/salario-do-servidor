@@ -253,6 +253,7 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         payrollRules: effective.payroll_rules
             ? {
                 gajRate: effective.payroll_rules.gaj_rate,
+                atsPercentageLimit: effective.payroll_rules.ats_percentage_limit,
                 specificGratificationPssDefaults: effective.payroll_rules.specific_gratification_pss_defaults,
                 specificGratificationRate: effective.payroll_rules.specific_gratification_rate,
                 vrRateOnCj1: effective.payroll_rules.vr_rate_on_cj1,
