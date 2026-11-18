@@ -1,4 +1,4 @@
-import { Award, Briefcase, FileText, HandCoins, MinusCircle, PlusCircle, ReceiptText, Shield, StickyNote, UserRound } from 'lucide-react';
+import { Award, Coins, FileText, HandCoins, MinusCircle, PlusCircle, ReceiptText, Shield, StickyNote, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface CalculatorSection {
@@ -24,7 +24,7 @@ export const CALCULATOR_SECTIONS: CalculatorSection[] = [
     },
     {
         label: 'Vantagens pessoais',
-        Icon: Briefcase,
+        Icon: Coins,
         description: 'Revise as vantagens pessoais e adicionais lançados na sua remuneração.',
     },
     {
