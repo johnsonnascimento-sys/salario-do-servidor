@@ -158,7 +158,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                         close();
                     }
                 }}
-                className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-y-auto overscroll-contain bg-white p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100 min-[960px]:sticky min-[960px]:top-4 min-[960px]:h-auto min-[960px]:max-h-[calc(100dvh-var(--calculator-bar-height,0px)-2rem)] min-[960px]:rounded-xl min-[960px]:border min-[960px]:border-neutral-200 dark:min-[960px]:border-neutral-700">
+                className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-y-auto overscroll-contain bg-white p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100 min-[960px]:static min-[960px]:h-auto min-[960px]:overflow-visible min-[960px]:overscroll-auto min-[960px]:rounded-xl min-[960px]:border min-[960px]:border-neutral-200 dark:min-[960px]:border-neutral-700">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between gap-2">
                         <h3 id={`${id}-title`} className="text-h5 font-semibold">{addLabel}</h3>
