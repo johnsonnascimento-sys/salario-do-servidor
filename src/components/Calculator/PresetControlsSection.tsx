@@ -44,6 +44,9 @@ interface PresetControlsSectionProps {
     transportIndemnityEnabled?: boolean;
     addRubrica?: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
     rubricas?: Rubrica[];
+    catalogCategory?: 'beneficios' | 'eventuais';
+    showAddManual?: boolean;
+    onCardAdded?: (id: string) => void;
 }
 
 const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -68,7 +71,10 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     enabledPresets = [],
     transportIndemnityEnabled = true,
     addRubrica,
-    rubricas = []
+    rubricas = [],
+    catalogCategory = 'eventuais',
+    showAddManual = true,
+    onCardAdded
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     useEffect(() => setSearchTerm(''), [mode]);
@@ -98,8 +104,10 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
             : rubricas.find(rubrica => !pending.previousIds.includes(rubrica.id));
         if (!added) return;
         pendingFocus.current = null;
-        focusCard('key' in added ? `preset-card-${added.key}` : `manual-rubrica-${added.id}`);
-    }, [enabledPresets, rubricas]);
+        const id = 'key' in added ? `preset-card-${added.key}` : `manual-rubrica-${added.id}`;
+        if (onCardAdded) onCardAdded(id);
+        else focusCard(id);
+    }, [enabledPresets, rubricas, onCardAdded]);
 
     // Contagem de instâncias ativas por presetId e atalhos manuais (VPNI, ATS)
     const activeCounts = useMemo(() => {
@@ -129,6 +137,8 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const filteredCatalog = useMemo(() => {
         const term = normalizeSearch(searchTerm.trim());
         return PRESET_CATALOG.filter(item => {
+            if (catalogCategory === 'beneficios' && item.category !== 'beneficios') return false;
+            if (catalogCategory === 'eventuais' && item.category === 'beneficios') return false;
             if ((item.category === 'descontos') !== (mode === 'D')) return false;
             if (item.id === 'indenizacao_transporte' && !transportIndemnityEnabled) return false;
 
@@ -139,7 +149,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
             const matchTags = item.tags.some(tag => normalizeSearch(tag).includes(term));
             return matchLabel || matchDesc || matchTags;
         });
-    }, [searchTerm, transportIndemnityEnabled, mode]);
+    }, [searchTerm, transportIndemnityEnabled, mode, catalogCategory]);
 
     const scrollToPresetCard = (presetId: string) => {
         if (presetId === 'vpni' || presetId === 'ats') {
@@ -194,7 +204,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
             </div>
 
-            {addRubrica && (
+            {showAddManual && addRubrica && (
                 <button type="button" onClick={() => handleAddManual(mode === 'C' ? { tipo: 'C', incideIR: true, incidePSS: true } : { tipo: 'D' })}
                     className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-secondary/30 px-4 py-2 font-semibold text-secondary hover:bg-secondary/10">
                     <Plus className="h-4 w-4" /> {mode === 'C' ? 'Adicionar crédito avulso' : 'Adicionar desconto avulso'}

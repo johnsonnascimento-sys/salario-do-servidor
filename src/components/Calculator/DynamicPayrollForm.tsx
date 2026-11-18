@@ -53,8 +53,7 @@ const GRATIFICATION_INSTANCE: PresetInstance = { key: 'gratificacao-fixed', pres
 const ABONO_INSTANCE: PresetInstance = { key: 'abono-fixed', presetId: 'abono' };
 const FIXED_BENEFITS: Array<PresetInstance & { title: string }> = [
     { key: 'aux-transporte-fixed', presetId: 'aux_transporte', title: 'Auxílio-transporte' },
-    { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar' },
-    { key: 'vantagens-pessoais-fixed', presetId: 'vantagens', title: 'Vantagens Pessoais' }
+    { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar' }
 ];
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
@@ -365,6 +364,33 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <PresetGrossSummary compact lines={calculationReady ? getPresetGrossLines(instance) : []} />
                     </div>
                 ))}
+                <div className={`${styles.card} scroll-mt-24`}>
+                    <h2 className={`${styles.sectionTitle} relative`}>
+                        <Sparkles className="w-4 h-4 text-secondary" />
+                        Vantagens Pessoais
+                    </h2>
+                    <PresetControlsSection
+                        mode="C"
+                        styles={styles}
+                        selectedPreset={selectedPreset}
+                        setSelectedPreset={setSelectedPreset}
+                        availablePresets={availablePresets}
+                        includePreset={includePreset}
+                        multiInstanceHintLabel={MULTI_INSTANCE_HINT_LABEL}
+                        enabledPresets={enabledPresets}
+                        transportIndemnityEnabled={transportIndemnityEnabled}
+                        addRubrica={addRubrica}
+                        rubricas={state.rubricasExtras}
+                        catalogCategory="beneficios"
+                        showAddManual={false}
+                        onCardAdded={id => {
+                            const element = document.getElementById(id);
+                            if (!element) return;
+                            element.focus({ preventScroll: true });
+                            element.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+                        }}
+                    />
+                </div>
             </section>
 
             <div id={step === 7 ? 'descontos' : step === 8 ? 'descontos-pensao' : undefined}
@@ -387,6 +413,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     transportIndemnityEnabled={transportIndemnityEnabled}
                     addRubrica={addRubrica}
                     rubricas={state.rubricasExtras}
+                    catalogCategory="eventuais"
                 />
             </section>
 

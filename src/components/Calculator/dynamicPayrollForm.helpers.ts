@@ -128,6 +128,20 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         tags: ['indenizacao', 'transporte', 'oficial', 'mandados', 'diligencias']
     },
     {
+        id: 'vpni',
+        label: 'VPNI',
+        description: 'Vantagem Pessoal Nominalmente Identificada (Quintos/Décimos)',
+        category: 'beneficios',
+        tags: ['vpni', 'quintos', 'decimos', 'vantagem', 'pessoal', 'incorporacao']
+    },
+    {
+        id: 'ats',
+        label: 'ATS',
+        description: 'Adicional por Tempo de Serviço (Anuênios)',
+        category: 'beneficios',
+        tags: ['ats', 'anuenios', 'tempo', 'servico', 'adicional']
+    },
+    {
         id: 'pensao',
         label: 'Pensão Alimentícia',
         description: 'Cálculo por percentual sobre remuneração/líquido ou valor fixo',
