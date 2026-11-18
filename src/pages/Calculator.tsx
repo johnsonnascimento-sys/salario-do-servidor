@@ -1,5 +1,5 @@
 import { getPensionErrorFeedback } from '../utils/pensionFeedback';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
@@ -10,6 +10,10 @@ import { ObservationsSection } from '../components/Calculator/ObservationsSectio
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ResultsOverview } from '../components/Calculator/ResultsOverview';
 import { CalculatorNavigation } from '../components/Calculator/CalculatorNavigation';
+import { CalculatorSearch } from '../components/Calculator/CalculatorSearch';
+import { CALCULATOR_SECTIONS } from '../components/Calculator/calculatorSections';
+import type { CalculatorSearchDestination } from '../components/Calculator/calculatorSearchIndex';
+import { calculatorTargetClass, useCalculatorTargetFocus } from '../components/Calculator/hooks/useCalculatorTargetFocus';
 import { IrEaContextSection } from '../components/Calculator/IrEaContextSection';
 import { toReferenceMonthIndex } from '../components/Calculator/referenceDateUtils';
 import { ActionFooter } from '../components/Calculator/ActionFooter';
@@ -86,7 +90,9 @@ export default function Calculator() {
     const [saveFeedback, setSaveFeedback] = useState('');
     const [barHeight, setBarHeight] = useState(120);
     const [step, setStep] = useState(0);
+    const [searchDestination, setSearchDestination] = useState<CalculatorSearchDestination | null>(null);
     const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+    const focusSearchTarget = useCalculatorTargetFocus();
     const initialScrollDone = useRef(false);
 
     useLayoutEffect(() => {
@@ -107,6 +113,7 @@ export default function Calculator() {
     }, [loadingConfig, loadingAgency, restoreReady]);
 
     const changeStep = (nextStep: number) => {
+        setSearchDestination(null);
         setStep(nextStep);
         window.requestAnimationFrame(() => {
             stepHeadingRef.current?.focus();
@@ -114,9 +121,26 @@ export default function Calculator() {
         });
     };
 
+    const selectSearchResult = (destination: CalculatorSearchDestination) => {
+        setStep(destination.step);
+        setSearchDestination({ ...destination });
+    };
+
+    const focusSearchFallback = useCallback(() => { focusSearchTarget(stepHeadingRef.current); }, [focusSearchTarget]);
+
+    useLayoutEffect(() => {
+        if (searchDestination?.step !== step) return;
+        if (searchDestination.kind !== 'preset') {
+            const target = searchDestination.kind === 'element' ? document.getElementById(searchDestination.elementId) : null;
+            if (!focusSearchTarget(target)) focusSearchFallback();
+        }
+        setSearchDestination(null);
+    }, [searchDestination, step, focusSearchTarget, focusSearchFallback]);
+
     useEffect(() => {
         const handleHashChange = () => {
             const hash = window.location.hash;
+            setSearchDestination(null);
             if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea' || hash === '#memoria-ir-ea') setStep(9);
             else if (hash === '#funpresp-settings' || hash === '#pension-retro-form') setStep(4);
             else if (hash === '#dependentes-ir') setStep(5);
@@ -315,12 +339,13 @@ export default function Calculator() {
                     navigate={navigate}
                     agencyName={agencyName}
                 />
+                <CalculatorSearch courtConfig={courtConfig} onSelect={selectSearchResult} />
 
                 <div className="flex flex-col gap-5 min-[960px]:flex-row min-[960px]:items-start">
                 <CalculatorNavigation step={step} onChange={changeStep} />
                 <div className="min-w-0 flex-1">
-                <h2 ref={stepHeadingRef} tabIndex={-1} className="scroll-mt-28 text-h3 font-bold text-neutral-900 dark:text-white mb-4">
-                    {['Dados básicos', 'Adicional de Qualificação (AQ)', 'Vantagens pessoais', 'Benefícios', 'Previdência e abono', 'Imposto de Renda', 'Créditos Eventuais', 'Descontos', 'Observações/Notas', 'Resultado'][step]}
+                <h2 ref={stepHeadingRef} tabIndex={-1} className={`${calculatorTargetClass} text-h3 font-bold text-neutral-900 dark:text-white mb-4`}>
+                    {CALCULATOR_SECTIONS[step].label}
                 </h2>
                 <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">{step === 6
                     ? `Em Adicionar crédito, você encontra horas extras, substituição de função, férias, 13º salário${courtConfig.transportIndemnity?.enabled ? ', diárias e indenização de transporte' : ' e diárias'}.`
@@ -346,7 +371,7 @@ export default function Calculator() {
                     {!exportError && <button type="button" aria-label="Fechar mensagem" className="min-h-11 shrink-0 px-2 font-semibold" onClick={() => setSaveFeedback('')}>Fechar</button>}
                 </div>}
                 <div className="space-y-5">
-                    <section id="competencia" tabIndex={-1} aria-label="Competência" className="scroll-mt-28" hidden={step !== 0}>
+                    <section id="competencia" tabIndex={-1} aria-label="Competência" className={calculatorTargetClass} hidden={step !== 0}>
                     <GlobalSettings
                         key={`global-settings-${formKey}`}
                         state={effectiveState}
@@ -381,6 +406,8 @@ export default function Calculator() {
                     </div>}
                     <DynamicPayrollForm
                         step={step}
+                        presetSearchDestination={searchDestination?.kind === 'preset' && searchDestination.step === step ? searchDestination : null}
+                        onSearchFallback={focusSearchFallback}
                         calculationReady={calculationReady}
                         pensionPending={Boolean(calculationPending)}
                         updateMany={updateMany}

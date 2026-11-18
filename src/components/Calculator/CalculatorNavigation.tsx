@@ -1,18 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { UserRound, Award, Shield, ReceiptText, PlusCircle, MinusCircle, StickyNote, FileText, PanelLeftClose, PanelLeftOpen, List, X, Briefcase, HeartPulse } from 'lucide-react';
-
-const sections = [
-    { label: 'Dados básicos', Icon: UserRound },
-    { label: 'Adicional de Qualificação (AQ)', Icon: Award },
-    { label: 'Vantagens pessoais', Icon: Briefcase },
-    { label: 'Benefícios', Icon: HeartPulse },
-    { label: 'Previdência e abono', Icon: Shield },
-    { label: 'Imposto de Renda', Icon: ReceiptText },
-    { label: 'Créditos Eventuais', hint: 'Horas extras, férias, 13º e mais', Icon: PlusCircle },
-    { label: 'Descontos', Icon: MinusCircle },
-    { label: 'Observações / Notas', Icon: StickyNote },
-    { label: 'Resultado', Icon: FileText }
-];
+import { PanelLeftClose, PanelLeftOpen, List, X } from 'lucide-react';
+import { CALCULATOR_SECTIONS as sections } from './calculatorSections';
 
 interface CalculatorNavigationProps {
     step: number;

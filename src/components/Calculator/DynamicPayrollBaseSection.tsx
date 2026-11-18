@@ -2,6 +2,7 @@ import React from 'react';
 import { CalculatorState } from '../../types';
 import { formatCurrency } from '../../utils/calculations';
 import { PresetGrossSummary } from './PresetGrossSummary';
+import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
 interface DynamicPayrollBaseSectionProps {
     styles: Record<string, string>;
@@ -38,8 +39,8 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
 }) => {
     const fieldId = React.useId();
     return (
-        <div className={styles.card}>
-            <h4 className={styles.innerBoxTitle}>Dados principais</h4>
+        <section id="dados-principais" tabIndex={-1} aria-labelledby={`${fieldId}-titulo`} className={`${styles.card} ${calculatorTargetClass}`}>
+            <h4 id={`${fieldId}-titulo`} className={styles.innerBoxTitle}>Dados principais</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label htmlFor={`${fieldId}-cargo`} className={styles.label}>Cargo</label>
@@ -79,6 +80,6 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                     { label: 'Auxílio Alimentação', value: state.auxAlimentacao || 0 }
                 ]} />
             </div>
-        </div>
+        </section>
     );
 };

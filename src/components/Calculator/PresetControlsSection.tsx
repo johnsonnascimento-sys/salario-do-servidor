@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDownRight, Plus, Search, X } from 'lucide-react';
 import type { Rubrica } from '../../types';
 import {
@@ -6,12 +6,16 @@ import {
     type PredefinedRubricId, type PresetInstance
 } from './dynamicPayrollForm.helpers';
 import { rubricIcon } from './RubricCardHeading';
+import type { PresetSearchDestination } from './calculatorSearchIndex';
+import { useCalculatorTargetFocus } from './hooks/useCalculatorTargetFocus';
 
 interface PresetControlsSectionProps {
     mode: Rubrica['tipo'] | null;
     instanceCount: number;
     enabledPresets: PresetInstance[];
     transportIndemnityEnabled: boolean;
+    searchDestination?: PresetSearchDestination | null;
+    onSearchFallback?: () => void;
     includePreset: (presetId: PredefinedRubricId) => string | undefined;
     addRubrica: (payload: Partial<Rubrica>) => string | void;
     expandCard: (id: string) => void;
@@ -23,7 +27,8 @@ const desktopQuery = '(min-width: 960px)';
 const actionClass = 'inline-flex items-center justify-center gap-2 rounded-lg border border-secondary/40 px-3 py-2 text-body-sm font-semibold text-secondary-800 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:bg-secondary-950';
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
-    mode, instanceCount, enabledPresets, transportIndemnityEnabled, includePreset, addRubrica, expandCard, children
+    mode, instanceCount, enabledPresets, transportIndemnityEnabled, searchDestination, onSearchFallback,
+    includePreset, addRubrica, expandCard, children
 }) => {
     const id = useId();
     const [openMode, setOpenMode] = useState<Rubrica['tipo'] | null>(null);
@@ -31,20 +36,22 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.(desktopQuery).matches));
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('todos');
+    const [exactSearch, setExactSearch] = useState<PresetSearchDestination | null>(null);
     const dialogRef = useRef<HTMLDialogElement>(null);
     const searchRef = useRef<HTMLInputElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
+    const addResultRef = useRef<HTMLButtonElement>(null);
     const focusTarget = useRef<string | null>(null);
-    const highlighted = useRef<HTMLElement | null>(null);
-    const highlightTimer = useRef<ReturnType<typeof setTimeout>>();
+    const handledSearch = useRef<PresetSearchDestination | null>(null);
+    const focusCard = useCalculatorTargetFocus();
     const credit = mode === 'C';
     const addLabel = credit ? 'Adicionar crédito' : 'Adicionar desconto';
     const term = normalizeSearch(search.trim());
-    const catalog = PRESET_CATALOG.filter(item =>
+    const catalog = useMemo(() => PRESET_CATALOG.filter(item =>
         (item.category === 'descontos') === !credit &&
         (item.id !== 'indenizacao_transporte' || transportIndemnityEnabled)
-    );
-    const filtered = catalog.filter(item =>
+    ), [credit, transportIndemnityEnabled]);
+    const filtered = catalog.filter(item => exactSearch ? item.id === exactSearch.presetId :
         (category === 'todos' || item.category === category) &&
         normalizeSearch([item.label, item.description, ...item.tags].join(' ')).includes(term)
     );
@@ -57,9 +64,9 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         return () => media.removeEventListener('change', resize);
     }, []);
 
-    useEffect(() => {
-        if (openMode !== mode) setOpenMode(null);
-    }, [mode, openMode]);
+    useLayoutEffect(() => {
+        setOpenMode(current => current === mode ? current : null);
+    }, [mode]);
 
     useLayoutEffect(() => {
         const dialog = dialogRef.current;
@@ -85,29 +92,38 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
             return;
         }
 
-        const card = document.getElementById(target);
-        if (!card) return;
-        highlighted.current?.removeAttribute('data-rubric-highlight');
-        clearTimeout(highlightTimer.current);
-        card.setAttribute('data-rubric-highlight', '');
-        highlighted.current = card;
-        (card.querySelector<HTMLElement>('[data-rubric-edit]') ?? card).focus({ preventScroll: true });
-        card.scrollIntoView({
-            block: 'start',
-            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
-        });
-        highlightTimer.current = setTimeout(() => card.removeAttribute('data-rubric-highlight'), 1800);
-    }, [open]);
+        if (target === 'heading' || !focusCard(document.getElementById(target))) onSearchFallback?.();
+    }, [open, focusCard, onSearchFallback]);
 
-    useEffect(() => () => {
-        clearTimeout(highlightTimer.current);
-        highlighted.current?.removeAttribute('data-rubric-highlight');
-    }, []);
-
-    const close = (target = 'trigger') => {
+    const close = useCallback((target = 'trigger') => {
         focusTarget.current = target;
         setOpenMode(null);
-    };
+    }, []);
+
+    useLayoutEffect(() => {
+        if (!searchDestination || !mode || handledSearch.current === searchDestination) return;
+        handledSearch.current = searchDestination;
+        const option = catalog.find(item => item.id === searchDestination.presetId);
+        const first = option && enabledPresets.find(instance => instance.presetId === option.id);
+        if (first) {
+            const cardId = `preset-card-${first.key}`;
+            if (open) close(cardId);
+            else if (!focusCard(document.getElementById(cardId))) onSearchFallback?.();
+        } else if (option) {
+            setSearch(option.label);
+            setCategory('todos');
+            setExactSearch(searchDestination);
+            setOpenMode(mode);
+        } else if (open) {
+            close('heading');
+        } else {
+            onSearchFallback?.();
+        }
+    }, [searchDestination, mode, catalog, enabledPresets, open, close, focusCard, onSearchFallback]);
+
+    useLayoutEffect(() => {
+        if (open && exactSearch) addResultRef.current?.focus();
+    }, [open, exactSearch, desktop]);
 
     const reveal = (cardId: string, edit = false) => {
         if (edit) expandCard(cardId);
@@ -139,6 +155,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                             }
                             setSearch('');
                             setCategory('todos');
+                            setExactSearch(null);
                             setOpenMode(mode);
                         }}
                         className="inline-flex items-center gap-2 rounded-lg bg-secondary-800 px-4 py-2 font-semibold text-white hover:bg-secondary-900">
@@ -169,14 +186,20 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                     </div>
                     <label className="flex min-h-11 items-center gap-2 rounded-lg border border-secondary/50 px-3 focus-within:ring-2 focus-within:ring-secondary">
                         <Search className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
-                        <input ref={searchRef} type="search" value={search} onChange={event => setSearch(event.target.value)}
+                        <input ref={searchRef} type="search" value={search} onChange={event => {
+                            setSearch(event.target.value);
+                            setExactSearch(null);
+                        }}
                             aria-label={credit ? 'Buscar verba ou adicional' : 'Buscar desconto'}
                             placeholder={credit ? 'Buscar verba ou adicional' : 'Buscar desconto'}
                             className="w-full bg-transparent py-2" />
                     </label>
                     {credit && <div role="group" aria-label="Categorias" className="flex flex-wrap gap-2">
                         {[{ id: 'todos', title: 'Todos' }, ...PRESET_CATEGORIES.filter(item => catalog.some(option => option.category === item.id))].map(item => (
-                            <button key={item.id} type="button" onClick={() => setCategory(item.id)} aria-pressed={item.id === category}
+                            <button key={item.id} type="button" onClick={() => {
+                                setCategory(item.id);
+                                setExactSearch(null);
+                            }} aria-pressed={item.id === category}
                                 className={`rounded-full border px-3 text-body-sm font-semibold ${item.id === category
                                     ? 'border-secondary-800 bg-secondary-800 text-white'
                                     : 'border-neutral-200 hover:border-secondary dark:border-neutral-700'}`}>
@@ -210,7 +233,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                             onClick={() => reveal(`preset-card-${first.key}`)}>
                                             {repeatable ? <ArrowDownRight aria-hidden="true" className="h-4 w-4" /> : 'Ver lançamento'}
                                         </button>}
-                                        {(!first || repeatable) && <button type="button" className={actionClass}
+                                        {(!first || repeatable) && <button ref={exactSearch ? addResultRef : undefined} type="button" className={actionClass}
                                             aria-label={`${first ? 'Adicionar outro lançamento de' : 'Adicionar'} ${item.label}`}
                                             onClick={() => addPreset(item.id)}>
                                             {first ? 'Adicionar outro' : 'Adicionar'}

@@ -15,6 +15,7 @@ import { PresetGrossLine } from './dynamicPayrollForm.helpers';
 import { getPensionErrorFeedback } from '../../utils/pensionFeedback';
 import { groupPayslipRowsForDisplay } from '../../utils/payslipRows';
 import type { PayslipResultRow } from '../../types/user';
+import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
 interface DynamicPayrollTaxSectionProps {
     activeSection: 'pension' | 'incomeTax';
@@ -76,14 +77,14 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     return <div className="space-y-4">
         {activeSection === 'pension' && <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.</p>}
         {activeSection === 'pension' && <>
-        <section className={styles.card}>
-            <h5 className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
+        <section id="regime-previdenciario" tabIndex={-1} aria-labelledby={`${fieldId}-regime-titulo`} className={`${styles.card} ${calculatorTargetClass}`}>
+            <h5 id={`${fieldId}-regime-titulo`} className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe o enquadramento da sua contribuição ao RPPS.</p>
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
         </section>
-        <section className={`${styles.card} space-y-3`}>
-            <h5 className="mb-1 text-h5 font-semibold">Abono de permanência</h5>
+        <section id="abono-permanencia" tabIndex={-1} aria-labelledby={`${fieldId}-abono-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
+            <h5 id={`${fieldId}-abono-titulo`} className="mb-1 text-h5 font-semibold">Abono de permanência</h5>
             <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Marque se você já cumpriu os requisitos para aposentadoria voluntária e optou por continuar em atividade. O abono é calculado com base na contribuição previdenciária (PSS) e será incluído como crédito na simulação.</p>
             <label className={styles.checkboxLabel}>
                 <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono}
@@ -107,7 +108,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 <span>{label} — inclusão salva</span>
             </label>)}
         </fieldset>}
-        {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.card} space-y-3 scroll-mt-24`}>
+        {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
             <h5 id={`${fieldId}-funpresp-title`} className="mb-1 text-h5 font-semibold">Funpresp-Jud</h5>
             <p className={PENSION_HELP_CLASS}>Use os dados da sua adesão ao plano. A participação na Funpresp é uma escolha separada do regime previdenciário acima.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -232,8 +233,8 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         </>
         }
         {activeSection === 'incomeTax' && <>
-        <section id="dependentes-ir" className={styles.card}>
-            <h5 className="mb-1 text-h5 font-semibold">Dependentes para IR</h5>
+        <section id="dependentes-ir" tabIndex={-1} aria-labelledby={`${fieldId}-dependentes-titulo`} className={`${styles.card} ${calculatorTargetClass}`}>
+            <h5 id={`${fieldId}-dependentes-titulo`} className="mb-1 text-h5 font-semibold">Dependentes para IR</h5>
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe a quantidade de dependentes considerados no imposto de renda.</p>
             <div className="max-w-xs">
             <div>

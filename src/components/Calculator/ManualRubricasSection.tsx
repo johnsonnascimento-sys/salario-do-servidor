@@ -12,6 +12,7 @@ import { resolvePensionRubricRule } from '../../services/agency/engine/modules/p
 import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from './TaxAdjustmentPanel';
 import { RubricCardHeading } from './RubricCardHeading';
+import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
 const VPNI_DESCRIPTIONS = ['VPNI — Lei nº 9.527/1997', 'VPNI — decisão judicial'];
 
@@ -541,11 +542,11 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         : [{ label: `${rubrica.descricao?.trim() || fixedTitle} Bruto`, value: rubrica.valor }];
 
                     return (
-                        <div key={rubrica.id} id={`manual-rubrica-${rubrica.id}`} tabIndex={-1}
-                            role={groupedVpni ? 'group' : undefined} aria-label={groupedVpni ? `Lançamento de VPNI ${index + 1}` : undefined}
+                        <div key={rubrica.id} id={fixedTitle === 'ATS' ? 'vantagem-ats' : `manual-rubrica-${rubrica.id}`} tabIndex={-1}
+                            role="group" aria-label={groupedVpni ? `Lançamento de VPNI ${index + 1}` : fixedTitle}
                             className={groupedVpni
                                 ? 'min-w-0 space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700 sm:p-4'
-                                : `${styles.card} space-y-4`}>
+                                : `${styles.card} ${calculatorTargetClass} space-y-4`}>
                             {groupedVpni ? (
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,10rem)_auto] sm:items-end">
                                     <div>
@@ -665,7 +666,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     return (
         <div className={fixedTitles ? 'space-y-5' : 'space-y-4'}>
             {addVpni && (
-                <section aria-labelledby={`${vpniId}-titulo`} className={`${styles.card} space-y-4`}>
+                <section id="vantagem-vpni" tabIndex={-1} aria-labelledby={`${vpniId}-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-4`}>
                     <h3 id={`${vpniId}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">VPNI</h3>
                     <datalist id={`${vpniId}-descricoes`}>
                         {VPNI_DESCRIPTIONS.map(label => <option key={label} value={label} />)}

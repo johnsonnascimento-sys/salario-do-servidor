@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { act, create } from 'react-test-renderer';
 import { PresetControlsSection } from '../src/components/Calculator/PresetControlsSection';
 import type { PresetInstance } from '../src/components/Calculator/dynamicPayrollForm.helpers';
+import type { PresetSearchDestination } from '../src/components/Calculator/calculatorSearchIndex';
 
 test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', (context) => {
     let focused = '';
@@ -13,6 +14,7 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
         focus: () => { focused = id; },
         setAttribute: () => highlighted.add(id),
         removeAttribute: () => highlighted.delete(id),
+        closest: () => null,
         querySelector: () => null,
         scrollIntoView: () => {}
     });
@@ -33,10 +35,10 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
         else Reflect.deleteProperty(globalThis, 'document');
     });
 
-    function Catalog() {
+    function Catalog({ searchDestination }: { searchDestination?: PresetSearchDestination }) {
         const [instances, setInstances] = useState<PresetInstance[]>([{ key: 'overtime-old', presetId: 'hora_extra' }]);
         const [expanded, expandCard] = useState('');
-        return <PresetControlsSection mode="C" instanceCount={instances.length} enabledPresets={instances}
+        return <PresetControlsSection mode="C" instanceCount={instances.length} enabledPresets={instances} searchDestination={searchDestination}
             transportIndemnityEnabled={false} includePreset={presetId => {
                 const key = 'overtime-new';
                 setInstances(previous => [{ presetId, key }, ...previous]);
@@ -81,6 +83,18 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
         assert.ok(tree.root.findAllByType('p').some(node => node.children.join('') === '2 lançamentos'));
         act(() => control('Ver lançamento de Horas extras')!.props.onClick());
         assert.equal(focused, 'preset-card-overtime-new');
+
+        act(() => tree.update(<Catalog searchDestination={{ kind: 'preset', step: 6, presetId: 'ferias' }} />));
+        assert.equal(currentDialog, 'desktop');
+        assert.equal(focused, 'button');
+        assert.equal(tree.root.findAllByType('li').length, 1);
+        assert.ok(control('Adicionar Férias'));
+        assert.equal(count(), 'Créditos adicionados (2)');
+
+        act(() => tree.update(<Catalog searchDestination={{ kind: 'preset', step: 6, presetId: 'hora_extra' }} />));
+        assert.equal(currentDialog, null);
+        assert.equal(focused, 'preset-card-overtime-new');
+        assert.equal(count(), 'Créditos adicionados (2)');
     } finally {
         act(() => tree.unmount());
     }
