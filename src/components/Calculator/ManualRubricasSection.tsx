@@ -1,13 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-    Minus,
-    Plus,
-    Trash2,
-    SlidersHorizontal,
-    ChevronDown,
-    ChevronUp,
-    CheckCircle2
-} from 'lucide-react';
+import { Trash2, SlidersHorizontal, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { Rubrica, RubricaTaxDetail, PrevidenciaComplementarConfig } from '../../types';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
@@ -247,6 +239,175 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         />
                     </div>
                 );
+                const monthlyPssField = (
+                    <label className={styles.checkboxLabel}>
+                        <input
+                            type="checkbox"
+                            className={styles.checkbox}
+                            checked={rubrica.incidePSS && (!fixedTitle || !rubrica.pssCompetenciaSeparada)}
+                            onChange={e => {
+                                const checked = e.target.checked;
+                                updateRubrica(rubrica.id, 'incidePSS', checked);
+                                if (checked) {
+                                    updateRubrica(rubrica.id, 'pssCompetenciaSeparada', false);
+                                }
+                            }}
+                        />
+                        <span>{fixedTitle ? 'Incluir na base do PSS mensal' : 'Incidir na Previdência (PSS Mensal)'}</span>
+                    </label>
+                );
+                const irRegime = rubrica.isEA ? 'rra' : rubrica.incideIR ? 'mensal' : 'excluir';
+                const irRegimeSummary = rubrica.isEA ? 'Exercícios anteriores (RRA)' : rubrica.incideIR ? 'IR mensal' : 'Sem incidência de IR';
+                const eaCompetencias = rubrica.isEA && (
+                    <IrEaCompetencias
+                        compact={Boolean(fixedTitle)}
+                        tipo="rubrica"
+                        value={rubrica.competenciasEA}
+                        onChange={competencias => updateRubrica(rubrica.id, 'competenciasEA', competencias)}
+                        styles={styles}
+                        competenciaReferencia={competenciaReferencia}
+                    />
+                );
+                const advancedTaxFields = (
+                    <>
+                        <div className={fixedTitle ? 'flex flex-wrap items-center gap-x-6 gap-y-3' : 'flex flex-wrap items-center gap-4'}>
+                            {fixedTitle ? monthlyPssField : (
+                                <label className={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={rubrica.isEA}
+                                        onChange={e => {
+                                            const checked = e.target.checked;
+                                            updateRubrica(rubrica.id, 'isEA', checked);
+                                            if (checked) {
+                                                updateRubrica(rubrica.id, 'incideIR', false);
+                                                if (!rubrica.competenciasEA || rubrica.competenciasEA.length === 0) {
+                                                    updateRubrica(rubrica.id, 'competenciasEA', [getDefaultEaCompetencia(competenciaReferencia)]);
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    <span>Incluir na base do IR de Exercício Anterior (IR-EA / RRA)</span>
+                                </label>
+                            )}
+
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={rubrica.pssCompetenciaSeparada}
+                                    onChange={e => {
+                                        const checked = e.target.checked;
+                                        updateRubrica(rubrica.id, 'pssCompetenciaSeparada', checked);
+                                        if (checked) {
+                                            updateRubrica(rubrica.id, 'incidePSS', false);
+                                        }
+                                    }}
+                                />
+                                <span>{fixedTitle ? 'Incluir na base do PSS por competência original' : 'PSS por competência original retroativa'}</span>
+                            </label>
+
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={Boolean(rubrica.incideFunpresp)}
+                                    disabled={
+                                        !historical &&
+                                        ((classification === 'obrigatoria' && Boolean(rubrica.incideFunpresp)) ||
+                                            (classification === 'excluida' && !rubrica.incideFunpresp))
+                                    }
+                                    onChange={e => updateRubrica(rubrica.id, 'incideFunpresp', e.target.checked)}
+                                />
+                                <span>Incluir na base da Funpresp</span>
+                            </label>
+
+                            <label className={styles.checkboxLabel}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={Boolean(rubrica.funprespCompetenciaSeparada)}
+                                    onChange={e => updateRubrica(rubrica.id, 'funprespCompetenciaSeparada', e.target.checked)}
+                                />
+                                <span>Funpresp por competência original retroativa</span>
+                            </label>
+                        </div>
+
+                        {!fixedTitle && eaCompetencias && (
+                            <div className="border-t border-neutral-200 pt-2 dark:border-neutral-700">{eaCompetencias}</div>
+                        )}
+                        {rubrica.isEA && rubrica.tipo === 'D' && (
+                            <label className={styles.label}>
+                                Fundamento e referência documental da dedução EA
+                                <input
+                                    required
+                                    className={styles.input}
+                                    value={rubrica.fundamentoDeducaoEA ?? ''}
+                                    onChange={event => updateRubrica(rubrica.id, 'fundamentoDeducaoEA', event.target.value)}
+                                />
+                            </label>
+                        )}
+
+                        <PensionRubricFields
+                            rubrica={rubrica}
+                            competencia={competencia}
+                            config={pensionConfig}
+                            styles={styles}
+                            updateRubrica={updateRubrica}
+                        />
+                    </>
+                );
+                const fixedTaxOptions = (
+                    <details className="group/tax border-t border-neutral-200 pt-1 dark:border-neutral-700"
+                        open={Boolean(isExpanded)}
+                        onToggle={event => {
+                            const open = event.currentTarget.open;
+                            setExpandedEaCards(previous => previous[rubrica.id] === open
+                                ? previous : { ...previous, [rubrica.id]: open });
+                        }}>
+                        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded py-2 text-body text-neutral-700 dark:text-neutral-300 [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
+                            <span className="inline-flex items-center gap-2 font-semibold">
+                                <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                Tributação
+                            </span>
+                            <span className="ml-auto text-right text-body-xs text-neutral-500 dark:text-neutral-400">
+                                {irRegimeSummary}{rubrica.pssCompetenciaSeparada ? ' · PSS por competência original' : ''}
+                            </span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 group-open/tax:rotate-180" aria-hidden="true" />
+                        </summary>
+                        <div className="space-y-4 pt-2">
+                            <fieldset className="flex flex-col gap-x-6 sm:flex-row sm:flex-wrap">
+                                <legend className="sr-only">Regime de tributação de {fixedTitle}</legend>
+                                {([
+                                    { value: 'mensal', label: 'IR mensal' },
+                                    { value: 'rra', label: 'Exercícios anteriores (RRA)' },
+                                    { value: 'excluir', label: 'Excluir do IR' }
+                                ] as const).map(option => (
+                                    <label key={option.value} className={`${styles.checkboxLabel} min-h-11 py-2`}>
+                                        <input type="radio" name={`manual-tributacao-${rubrica.id}`} value={option.value}
+                                            className="h-4 w-4 shrink-0 accent-secondary-800"
+                                            checked={irRegime === option.value}
+                                            onChange={() => {
+                                                updateRubrica(rubrica.id, 'isEA', option.value === 'rra');
+                                                updateRubrica(rubrica.id, 'incideIR', option.value === 'mensal');
+                                                if (option.value === 'rra' && !rubrica.competenciasEA?.length) {
+                                                    updateRubrica(rubrica.id, 'competenciasEA', [getDefaultEaCompetencia(competenciaReferencia)]);
+                                                }
+                                            }} />
+                                        <span>{option.label}</span>
+                                    </label>
+                                ))}
+                            </fieldset>
+                            {eaCompetencias || (
+                                <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                                    {rubrica.incideIR ? 'O valor compõe a base do IR da folha mensal.' : 'O valor desta verba fica excluído da base do Imposto de Renda.'}
+                                </p>
+                            )}
+                            {advancedTaxFields}
+                        </div>
+                    </details>
+                );
                 const taxOptions = (
                     <>
                         {/* Incidências Tributárias Básicas (Imediato) */}
@@ -271,21 +432,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                         />
                                         <span>Incidir no Imposto de Renda (IR Mensal)</span>
                                     </label>
-                                    <label className={styles.checkboxLabel}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            checked={rubrica.incidePSS}
-                                            onChange={e => {
-                                                const checked = e.target.checked;
-                                                updateRubrica(rubrica.id, 'incidePSS', checked);
-                                                if (checked) {
-                                                    updateRubrica(rubrica.id, 'pssCompetenciaSeparada', false);
-                                                }
-                                            }}
-                                        />
-                                        <span>Incidir na Previdência (PSS Mensal)</span>
-                                    </label>
+                                    {monthlyPssField}
                                 </div>
                             </div>
                         )}
@@ -314,99 +461,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
                                 <div id={`manual-advanced-${rubrica.id}`} hidden={!isExpanded}
                                     aria-labelledby={`manual-advanced-trigger-${rubrica.id}`} className="mt-2.5 p-3.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-3 animate-in fade-in duration-150">
-                                    <div className="flex items-center gap-4 flex-wrap">
-                                        <label className={styles.checkboxLabel}>
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={rubrica.isEA}
-                                                onChange={e => {
-                                                    const checked = e.target.checked;
-                                                    updateRubrica(rubrica.id, 'isEA', checked);
-                                                    if (checked) {
-                                                        updateRubrica(rubrica.id, 'incideIR', false);
-                                                        if (!rubrica.competenciasEA || rubrica.competenciasEA.length === 0) {
-                                                            updateRubrica(rubrica.id, 'competenciasEA', [getDefaultEaCompetencia(competenciaReferencia)]);
-                                                        }
-                                                    }
-                                                }}
-                                            />
-                                            <span>Incluir na base do IR de Exercício Anterior (IR-EA / RRA)</span>
-                                        </label>
-
-                                        <label className={styles.checkboxLabel}>
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={rubrica.pssCompetenciaSeparada}
-                                                onChange={e => {
-                                                    const checked = e.target.checked;
-                                                    updateRubrica(rubrica.id, 'pssCompetenciaSeparada', checked);
-                                                    if (checked) {
-                                                        updateRubrica(rubrica.id, 'incidePSS', false);
-                                                    }
-                                                }}
-                                            />
-                                            <span>PSS por competência original retroativa</span>
-                                        </label>
-
-                                        <label className={styles.checkboxLabel}>
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={Boolean(rubrica.incideFunpresp)}
-                                                disabled={
-                                                    !historical &&
-                                                    ((classification === 'obrigatoria' && Boolean(rubrica.incideFunpresp)) ||
-                                                        (classification === 'excluida' && !rubrica.incideFunpresp))
-                                                }
-                                                onChange={e => updateRubrica(rubrica.id, 'incideFunpresp', e.target.checked)}
-                                            />
-                                            <span>Incluir na base da Funpresp</span>
-                                        </label>
-
-                                        <label className={styles.checkboxLabel}>
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={Boolean(rubrica.funprespCompetenciaSeparada)}
-                                                onChange={e => updateRubrica(rubrica.id, 'funprespCompetenciaSeparada', e.target.checked)}
-                                            />
-                                            <span>Funpresp por competência original retroativa</span>
-                                        </label>
-                                    </div>
-
-                                    {rubrica.isEA && (
-                                        <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                                            <IrEaCompetencias
-                                                tipo="rubrica"
-                                                value={rubrica.competenciasEA}
-                                                onChange={competencias => updateRubrica(rubrica.id, 'competenciasEA', competencias)}
-                                                styles={styles}
-                                                competenciaReferencia={competenciaReferencia}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {rubrica.isEA && rubrica.tipo === 'D' && (
-                                        <label className={styles.label}>
-                                            Fundamento e referência documental da dedução EA
-                                            <input
-                                                required
-                                                className={styles.input}
-                                                value={rubrica.fundamentoDeducaoEA ?? ''}
-                                                onChange={event => updateRubrica(rubrica.id, 'fundamentoDeducaoEA', event.target.value)}
-                                            />
-                                        </label>
-                                    )}
-
-                                    <PensionRubricFields
-                                        rubrica={rubrica}
-                                        competencia={competencia}
-                                        config={pensionConfig}
-                                        styles={styles}
-                                        updateRubrica={updateRubrica}
-                                    />
+                                    {advancedTaxFields}
                                 </div>
                         </div>}
                     </>
@@ -457,12 +512,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         <div key={rubrica.id} id={`manual-rubrica-${rubrica.id}`} tabIndex={-1} className={`${styles.card} space-y-4`}>
                             <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3>
                             {valueField}
+                            {fixedTaxOptions}
                             <PresetGrossSummary compact lines={lines}>
-                                <div className="space-y-4 pt-2">
-                                    {descriptionField}
-                                    {taxOptions}
-                                    {calculationNotices}
-                                </div>
+                                {calculationNotices}
                             </PresetGrossSummary>
                         </div>
                     );

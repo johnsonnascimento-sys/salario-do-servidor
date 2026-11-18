@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import React from 'react';
+import React, { useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { act, create } from 'react-test-renderer';
 import { ManualRubricasSection } from '../src/components/Calculator/ManualRubricasSection';
 import type { Rubrica } from '../src/types';
 import type { PensionCalculationMemory, PensionMemory, PensionParticipation } from '../src/types/pension';
@@ -18,6 +19,59 @@ const memory: PensionMemory = { mensal: month, thirteenth: { ...month, tipo: '13
     facultativa: 0, facultativaExterna: 0, aporteFolha: 0, aporteExterno: 0, descontoFolha: 42.5 },
     retroativos: [{ id: 'retro', competencia: '2025-12', tipo: 'mensal', modo: 'manual', destinoIR: 'ea',
         rpps: 10, complementar: 15 }] };
+
+test('VPNI e ATS exibem tributação independente do detalhamento e preservam competências salvas', () => {
+    const vpni: Rubrica = { ...rubric, id: 'vpni', descricao: 'VPNI', incideIR: true, incidePSS: true, incideFunpresp: false };
+    const ats: Rubrica = { ...vpni, id: 'ats', descricao: 'ATS', incideIR: false, isEA: true, competenciasEA: ['2024-07'] };
+    const fixedTitles = new Map([['vpni', 'VPNI'], ['ats', 'ATS']]);
+    const Form = () => {
+        const [rubricas, setRubricas] = useState([vpni, ats]);
+        return <ManualRubricasSection rubricas={rubricas} fixedTitles={fixedTitles}
+            calculationReady={false} funprespParticipacao="nao" competenciaReferencia="11/2026" styles={{}}
+            removeRubrica={() => {}} toPositiveNumber={Number}
+            updateRubrica={(id, field, value) => setRubricas(previous =>
+                previous.map(item => item.id === id ? { ...item, [field]: value } : item))} />;
+    };
+    const tree = create(<Form />);
+    const card = (id: string) => tree.root.findByProps({ id: `manual-rubrica-${id}` });
+    const radio = (id: string, value: string) => card(id).findByProps({ name: `manual-tributacao-${id}`, value });
+    const current = (id: string) => tree.root.findByType(ManualRubricasSection).props.rubricas.find((item: Rubrica) => item.id === id);
+
+    for (const id of ['vpni', 'ats']) {
+        const [tax, calculation] = card(id).findAllByType('details');
+        assert.equal(tax.findAllByProps({ type: 'radio' }).length, 3);
+        assert.equal(calculation.findAllByType('input').length, 0);
+        assert.equal(calculation.findAllByType('details').length, 1);
+        assert.equal(card(id).findAllByProps({ id: `manual-description-${id}` }).length, 0);
+    }
+
+    assert.equal(radio('vpni', 'mensal').props.checked, true);
+    assert.equal(radio('ats', 'rra').props.checked, true);
+    act(() => radio('vpni', 'rra').props.onChange());
+    assert.equal(current('vpni').incideIR, false);
+    assert.equal(current('vpni').isEA, true);
+    assert.deepEqual(current('vpni').competenciasEA, ['2025-12']);
+    act(() => radio('vpni', 'excluir').props.onChange());
+    assert.equal(current('vpni').isEA, false);
+    assert.equal(current('vpni').incideIR, false);
+    act(() => radio('ats', 'mensal').props.onChange());
+    assert.equal(current('ats').incideIR, true);
+    assert.equal(current('ats').isEA, false);
+    act(() => radio('ats', 'rra').props.onChange());
+    assert.deepEqual(current('ats').competenciasEA, ['2024-07']);
+
+    const pss = (label: string) => card('vpni').findAllByType('label')
+        .find(item => item.findAllByType('span').some(span => span.props.children === label))!.findByType('input');
+    act(() => pss('Incluir na base do PSS por competência original').props.onChange({ target: { checked: true } }));
+    assert.equal(current('vpni').pssCompetenciaSeparada, true);
+    assert.equal(current('vpni').incidePSS, false);
+    act(() => pss('Incluir na base do PSS mensal').props.onChange({ target: { checked: true } }));
+    assert.equal(current('vpni').pssCompetenciaSeparada, false);
+    assert.equal(current('vpni').incidePSS, true);
+    assert.equal(current('ats').incidePSS, true);
+    act(() => tree.unmount());
+});
+
 const render = ({ current = rubric, ready = true, participation = 'patrocinado', withMemory = true, dataMemory = memory,
     taxes = { r: { ir: 0, pss: 0, funpresp: 85, totalDescontos: 85, liquido: 915 } } }: {
         current?: Rubrica; ready?: boolean; participation?: PensionParticipation; withMemory?: boolean; dataMemory?: PensionMemory;

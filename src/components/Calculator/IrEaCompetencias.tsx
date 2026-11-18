@@ -129,9 +129,11 @@ export const IrEaCompetencias: React.FC<Props> = ({
     return (
         <fieldset className={compact ? 'min-w-0 space-y-3 border-t border-neutral-200 pt-4 dark:border-neutral-700' : 'space-y-3 rounded-2xl border border-neutral-200/90 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40 p-4'}>
             {compact ? <>
-                <legend className="sr-only">Competências do serviço</legend>
+                <legend className="sr-only">{tipo === 'rubrica' ? 'Competências de origem' : 'Competências do serviço'}</legend>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h4 className="text-body font-semibold text-neutral-800 dark:text-neutral-200">Competências do serviço</h4>
+                    <h4 className="text-body font-semibold text-neutral-800 dark:text-neutral-200">
+                        {tipo === 'rubrica' ? 'Competências de origem' : 'Competências do serviço'}
+                    </h4>
                     <span className="text-body-xs text-neutral-500 dark:text-neutral-400" aria-live="polite">{value.length === 1 ? '1 mês informado' : `${value.length} meses informados`}</span>
                 </div>
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Informe os meses indicados no comprovante de pagamento (até dez/{anoMaximoEa}).</p>
