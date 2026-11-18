@@ -146,7 +146,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     const filteredRubricas = rubricas.filter(rubrica => rubrica.tipo === mode);
 
     return (
-        <div className="space-y-4">
+        <div className={fixedTitles ? 'space-y-5' : 'space-y-4'}>
             {/* Listagem de Cards de Rubricas Individuais */}
             {filteredRubricas.map((rubrica, index) => {
                 const fixedTitle = fixedTitles?.get(rubrica.id);
@@ -159,72 +159,24 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 const isExpanded = expandedEaCards[rubrica.id] ?? (rubrica.isEA || rubrica.pssCompetenciaSeparada || rubrica.funprespCompetenciaSeparada);
                 const isCredito = rubrica.tipo === 'C';
 
-                return (
-                    <div
-                        key={rubrica.id}
-                        id={`manual-rubrica-${rubrica.id}`}
-                        tabIndex={-1}
-                        className={`${styles.card} space-y-3.5 border-l-4 transition-all ${
-                            isCredito
-                                ? 'border-l-secondary-500 shadow-xs'
-                                : 'border-l-red-500 shadow-xs'
-                        }`}
-                    >
-                        {/* Topo do Card: Badge de Tipo, Integração de Base e Exclusão */}
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
-                                {fixedTitle ? <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3> : <span
-                                    className={`px-2.5 py-0.5 rounded-full text-body-xs font-bold ${
-                                        isCredito
-                                            ? 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-400 border border-secondary-500/20'
-                                            : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
-                                    }`}
-                                >
-                                    {isCredito ? 'Crédito' : 'Desconto'} #{index + 1}
-                                </span>}
-
-                                {isCredito && (
-                                    <span className="inline-flex items-center gap-1 text-body-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
-                                        <CheckCircle2 className="w-3 h-3 text-secondary-500" />
-                                        Disponível para compor bases de HE, GAACTA, Férias, 13º e GAE/GAS
-                                    </span>
-                                )}
-
-                                {rubrica.isEA && (
-                                    <span className="text-body-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded">
-                                        Exercício Anterior (EA)
-                                    </span>
-                                )}
-                            </div>
-
-                            {!fixedTitle && <button
-                                type="button"
-                                onClick={() => removeRubrica(rubrica.id)}
-                                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center text-neutral-400 hover:text-red-500 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                aria-label="Remover rubrica"
-                                title="Remover este lançamento avulso"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>}
-                        </div>
-
-                        {/* Campos Principais: Tipo, Descrição e Valor */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <div className="md:col-span-2">
-                                <label htmlFor={`manual-description-${rubrica.id}`} className={styles.label}>Descrição da verba</label>
-                                <input
-                                    type="text"
-                                    id={`manual-description-${rubrica.id}`}
-                                    list={`sugestoes-${rubrica.id}`}
-                                    className={styles.input}
-                                    value={rubrica.descricao}
-                                    placeholder={
-                                        isCredito
-                                            ? 'Ex.: Acerto Retroativo, Diferença Salarial...'
-                                            : 'Ex.: Empréstimo Consignado, Plano de Saúde, Coparticipação, Pensão...'
-                                    }
-                                    onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)}
-                                />
+                const descriptionField = (
+                    <div>
+                        <label htmlFor={`manual-description-${rubrica.id}`} className={styles.label}>Descrição da verba</label>
+                        <input
+                            type="text"
+                            id={`manual-description-${rubrica.id}`}
+                            list={fixedTitle ? undefined : `sugestoes-${rubrica.id}`}
+                            className={styles.input}
+                            value={rubrica.descricao}
+                            placeholder={
+                                fixedTitle || (isCredito
+                                    ? 'Ex.: Acerto Retroativo, Diferença Salarial...'
+                                    : 'Ex.: Empréstimo Consignado, Plano de Saúde, Coparticipação, Pensão...')
+                            }
+                            onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)}
+                        />
+                        {!fixedTitle && (
+                            <>
                                 <datalist id={`sugestoes-${rubrica.id}`}>
                                     {isCredito ? (
                                         <>
@@ -276,22 +228,27 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                         </>
                                     )}
                                 </div>
-                            </div>
-                            <div>
-                                <label htmlFor={`manual-value-${rubrica.id}`} className={styles.label}>Valor (R$)</label>
-                                <input
-                                    id={`manual-value-${rubrica.id}`}
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    className={styles.input}
-                                    value={rubrica.valor || ''}
-                                    placeholder="0,00"
-                                    onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))}
-                                />
-                            </div>
-                        </div>
-
+                            </>
+                        )}
+                    </div>
+                );
+                const valueField = (
+                    <div>
+                        <label htmlFor={`manual-value-${rubrica.id}`} className={styles.label}>Valor (R$)</label>
+                        <input
+                            id={`manual-value-${rubrica.id}`}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className={styles.input}
+                            value={rubrica.valor || (fixedTitle ? 0 : '')}
+                            placeholder="0,00"
+                            onChange={e => updateRubrica(rubrica.id, 'valor', toPositiveNumber(e.target.value))}
+                        />
+                    </div>
+                );
+                const taxOptions = (
+                    <>
                         {/* Incidências Tributárias Básicas (Imediato) */}
                         {isCredito && (
                             <div className="p-3 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-2">
@@ -452,9 +409,10 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     />
                                 </div>
                         </div>}
-
-                        {calculationReady && <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />}
-
+                    </>
+                );
+                const calculationNotices = (
+                    <>
                         {(rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)) && (
                             <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
                                 <p>Apuração por competência: {formatCurrency(distributed[rubrica.id] ?? 0)} de {formatCurrency(Number(rubrica.valor) || 0)} distribuídos.</p>
@@ -487,6 +445,86 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 Líquido individual indisponível para esta rubrica. Confira o cálculo atualizado da folha.
                             </p>
                         )}
+                    </>
+                );
+
+                if (fixedTitle) {
+                    const lines = calculationReady && rubrica.valor > 0
+                        ? getRubricaLines(rubrica, index)
+                        : [{ label: `${rubrica.descricao?.trim() || fixedTitle} Bruto`, value: rubrica.valor }];
+
+                    return (
+                        <div key={rubrica.id} id={`manual-rubrica-${rubrica.id}`} tabIndex={-1} className={`${styles.card} space-y-4`}>
+                            <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3>
+                            {valueField}
+                            <PresetGrossSummary compact lines={lines}>
+                                <div className="space-y-4 pt-2">
+                                    {descriptionField}
+                                    {taxOptions}
+                                    {calculationNotices}
+                                </div>
+                            </PresetGrossSummary>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div
+                        key={rubrica.id}
+                        id={`manual-rubrica-${rubrica.id}`}
+                        tabIndex={-1}
+                        className={`${styles.card} space-y-3.5 border-l-4 transition-all ${
+                            isCredito
+                                ? 'border-l-secondary-500 shadow-xs'
+                                : 'border-l-red-500 shadow-xs'
+                        }`}
+                    >
+                        {/* Topo do Card: Badge de Tipo, Integração de Base e Exclusão */}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
+                                <span
+                                    className={`px-2.5 py-0.5 rounded-full text-body-xs font-bold ${
+                                        isCredito
+                                            ? 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-400 border border-secondary-500/20'
+                                            : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20'
+                                    }`}
+                                >
+                                    {isCredito ? 'Crédito' : 'Desconto'} #{index + 1}
+                                </span>
+
+                                {isCredito && (
+                                    <span className="inline-flex items-center gap-1 text-body-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
+                                        <CheckCircle2 className="w-3 h-3 text-secondary-500" />
+                                        Disponível para compor bases de HE, GAACTA, Férias, 13º e GAE/GAS
+                                    </span>
+                                )}
+
+                                {rubrica.isEA && (
+                                    <span className="text-body-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded">
+                                        Exercício Anterior (EA)
+                                    </span>
+                                )}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => removeRubrica(rubrica.id)}
+                                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center text-neutral-400 hover:text-red-500 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                aria-label="Remover rubrica"
+                                title="Remover este lançamento avulso"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div className="md:col-span-2">{descriptionField}</div>
+                            {valueField}
+                        </div>
+
+                        {taxOptions}
+                        {calculationReady && <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />}
+                        {calculationNotices}
                     </div>
                 );
             })}
