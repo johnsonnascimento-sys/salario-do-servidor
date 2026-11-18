@@ -102,6 +102,62 @@ test('VPNI, ATS e crédito avulso compartilham o painel tributário e preservam 
     act(() => tree.unmount());
 });
 
+test('desconto avulso separa ajustes de base do total e permite revisar a dedução em RRA', () => {
+    const desconto: Rubrica = { ...rubric, id: 'desconto', tipo: 'D', descricao: 'Reposição', incideFunpresp: false };
+    const Form = ({ ready = false }) => {
+        const [current, setCurrent] = useState(desconto);
+        return <ManualRubricasSection mode="D" rubricas={[current]} calculationReady={ready}
+            funprespParticipacao="nao" competenciaReferencia="11/2026" styles={{}}
+            editor={{ expandedIds: new Set(['manual-rubrica-desconto']), toggle() {} }}
+            removeRubrica={() => {}} toPositiveNumber={Number}
+            updateRubrica={(_id, field, value) => setCurrent(previous => ({ ...previous, [field]: value }))} />;
+    };
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(<Form />); });
+    const editor = () => tree.root.findByProps({ id: 'manual-editor-desconto' });
+    const details = () => editor().findAllByType('details', { deep: false });
+    const radio = (tax: string, value: string) => editor().findByProps({ type: 'radio', name: `manual-${tax}-desconto`, value });
+    const current = (): Rubrica => tree.root.findByType(ManualRubricasSection).props.rubricas[0];
+    const reference = () => editor().findByProps({ type: 'text', required: true });
+
+    assert.equal(details().length, 1);
+    assert.equal(details()[0].props.open, false);
+    assert.equal(radio('tributacao', 'excluir').props.checked, true);
+    assert.equal(radio('pss', 'excluir').props.checked, true);
+    act(() => details()[0].props.onToggle({ currentTarget: { open: true } }));
+    act(() => radio('tributacao', 'rra').props.onChange());
+    assert.equal(details()[0].props.open, true);
+    assert.equal(editor().findAllByProps({ type: 'month' }).length, 0);
+    assert.equal(reference().props.value, '');
+    act(() => editor().findAllByType('button').find(button => button.findAllByType('span')
+        .some(span => span.children.includes('Adicionar competência')))!.props.onClick());
+    act(() => editor().findByProps({ type: 'month' }).props.onChange({ target: { value: '2024-03' } }));
+    act(() => reference().props.onChange({ target: { value: 'Demonstrativo 123' } }));
+
+    act(() => radio('tributacao', 'mensal').props.onChange());
+    assert.equal(current().incideIR, true);
+    assert.equal(editor().findAllByProps({ type: 'text', required: true }).length, 0);
+    act(() => radio('tributacao', 'rra').props.onChange());
+    assert.equal(current().incideIR, false);
+    assert.deepEqual(current().competenciasEA, ['2024-03']);
+    assert.equal(reference().props.value, 'Demonstrativo 123');
+    act(() => radio('pss', 'mensal').props.onChange());
+    assert.equal(current().incidePSS, true);
+    assert.equal(current().isEA, true);
+
+    act(() => tree.update(<Form ready />));
+    assert.equal(details().length, 2);
+    const calculation = details()[1];
+    assert.equal(calculation.findByType('summary').findByType('p').children.join(''), 'Ver detalhamento do cálculo');
+    assert.ok(calculation.findAllByType('span').some(span => span.children.includes('Total do desconto')));
+    assert.equal(calculation.findAllByType('input').length, 0);
+    act(() => details()[0].props.onToggle({ currentTarget: { open: false } }));
+    act(() => calculation.findByType('summary').props.onClick({ preventDefault() {} }));
+    assert.equal(calculation.props.open, true);
+    assert.equal(details()[0].props.open, false);
+    act(() => tree.unmount());
+});
+
 test('card de VPNI adiciona lançamentos independentes e preserva a VPNI antiga em uma linha', () => {
     const config: CourtConfig = {
         orgSlug: 'jmu',

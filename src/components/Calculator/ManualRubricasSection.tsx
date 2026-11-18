@@ -89,8 +89,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     const pendingSections = rubricas.flatMap(rubrica => {
         const reasons: string[] = [];
         const historical = Boolean(rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada));
-        const needsClassification = rubrica.tipo === 'C' && rubrica.valor > 0 &&
-            (funprespParticipacao !== 'nao' || historical || rubrica.incideFunpresp);
+        const needsClassification = rubrica.valor > 0 && (rubrica.incideFunpresp ||
+            (rubrica.tipo === 'C' && (funprespParticipacao !== 'nao' || historical)));
         if (needsClassification && (!classifications[rubrica.id] || classifications[rubrica.id] === 'pendente')) reasons.push('natureza');
         if (rubrica.incideFunpresp && (historical || classifications[rubrica.id] === 'facultativa') &&
             (!rubrica.pensionOptionDate || !rubrica.pensionOptionReference || !rubrica.pensionOptionAmountConfirmed)) reasons.push('opcao');
@@ -113,16 +113,11 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
     const getRubricaLines = (rubrica: Rubrica, index: number): PresetGrossLine[] => {
         const valor = Number(rubrica.valor) || 0;
-        const fallbackLabel = `${rubrica.tipo === 'C' ? 'Crédito' : 'Desconto'} #${index + 1}`;
-        const label = (rubrica.descricao || '').trim() || fallbackLabel;
-
         if (rubrica.tipo === 'D') {
-            return [
-                { label: `${label} (Desconto)`, value: valor, isDiscount: true },
-                { label: 'Total Desconto', value: valor, isDiscount: true }
-            ];
+            return [{ label: 'Total do desconto', value: valor, isDiscount: true }];
         }
 
+        const label = (rubrica.descricao || '').trim() || `Crédito #${index + 1}`;
         const tax = calculationReady ? rubricasTax?.[rubrica.id] : undefined;
         const sharedPension = Boolean(
             rubrica.incideFunpresp &&
@@ -285,7 +280,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             }
                             onChange={e => updateRubrica(rubrica.id, 'incideFunpresp', e.target.checked)}
                         />
-                        <span>Incluir na base da Funpresp</span>
+                        <span>{isCredito ? 'Incluir na base da Funpresp' : 'Deduzir da base da Funpresp'}</span>
                     </label>
                 );
                 const funprespHistory = (
@@ -311,24 +306,34 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 const showFunpresp = Boolean(
                     rubrica.incideFunpresp || rubrica.funprespCompetenciaSeparada || rubrica.pensionRubricId ||
                     rubrica.pensionOptionDate || rubrica.pensionOptionReference || rubrica.pensionOptionAmountConfirmed ||
-                    (rubrica.valor > 0 && (funprespParticipacao !== 'nao' || rubrica.pssCompetenciaSeparada))
+                    (isCredito && rubrica.valor > 0 && (funprespParticipacao !== 'nao' || rubrica.pssCompetenciaSeparada))
                 );
                 const pssRegime = rubrica.pssCompetenciaSeparada ? 'original' : rubrica.incidePSS ? 'mensal' : 'excluir';
                 const pssSummary = pssRegime === 'original' ? 'PSS por competência original' : pssRegime === 'mensal' ? 'PSS mensal' : 'Sem PSS';
-                const taxOptions = isCredito && (
+                const taxOptions = (
                     <TaxAdjustmentPanel open={Boolean(taxOpen)} summary={`${IR_SUMMARY[irRegime]} · ${pssSummary}`}
                         onToggle={open => setExpandedTaxPanels(previous => previous[rubrica.id] === open
                             ? previous : { ...previous, [rubrica.id]: open })}>
-                        <TaxChoices title="Imposto de Renda (IR)" name={`manual-tributacao-${rubrica.id}`} value={irRegime}
+                        <TaxChoices title={isCredito ? 'Imposto de Renda (IR)' : 'Dedução na base do Imposto de Renda (IR)'}
+                            name={`manual-tributacao-${rubrica.id}`} value={irRegime}
                             options={IR_OPTIONS} onChange={value => {
                                 updateRubrica(rubrica.id, 'isEA', value === 'rra');
                                 updateRubrica(rubrica.id, 'incideIR', value === 'mensal');
-                                if (value === 'rra' && !rubrica.competenciasEA?.length) {
+                                if (isCredito && value === 'rra' && !rubrica.competenciasEA?.length) {
                                     updateRubrica(rubrica.id, 'competenciasEA', [getDefaultEaCompetencia(competenciaReferencia)]);
                                 }
                             }} />
                         {eaCompetencias}
-                        <TaxChoices title="Previdência (PSS)" name={`manual-pss-${rubrica.id}`} value={pssRegime}
+                        {!isCredito && rubrica.isEA && (
+                            <label className={styles.label}>
+                                Fundamento e referência documental da dedução em RRA
+                                <input type="text" required className={styles.input}
+                                    value={rubrica.fundamentoDeducaoEA ?? ''}
+                                    onChange={event => updateRubrica(rubrica.id, 'fundamentoDeducaoEA', event.target.value)} />
+                            </label>
+                        )}
+                        <TaxChoices title={isCredito ? 'Previdência (PSS)' : 'Dedução na base da Previdência (PSS)'}
+                            name={`manual-pss-${rubrica.id}`} value={pssRegime}
                             options={PSS_OPTIONS} onChange={value => {
                                 updateRubrica(rubrica.id, 'incidePSS', value === 'mensal');
                                 if (Boolean(rubrica.pssCompetenciaSeparada) !== (value === 'original')) {
@@ -372,7 +377,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
                         {rubrica.incideFunpresp && !rubrica.funprespCompetenciaSeparada && funprespParticipacao !== 'nao' && (
                             <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                                Esta rubrica integra a base compartilhada da Funpresp mensal. Confira o desconto no resumo previdenciário.
+                                {isCredito ? 'Esta rubrica integra a base compartilhada da Funpresp mensal.' : 'Esta rubrica reduz a base compartilhada da Funpresp mensal.'}
+                                {' '}Confira a contribuição no resumo previdenciário.
                             </p>
                         )}
 
@@ -512,8 +518,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
                         {taxOptions}
                         {calculationReady ? (
-                            <PresetGrossSummary compact={isCredito} lines={lines}>
-                                {isCredito && calculationNotices}
+                            <PresetGrossSummary compact lines={lines}>
+                                {calculationNotices}
                             </PresetGrossSummary>
                         ) : calculationNotices}
                         </div>
@@ -550,7 +556,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 </section>
             )}
             {renderRubricas(otherEntries)}
-            {mode === 'C' && calculationReady && pensionMemory && rubricas.some(rubrica => rubrica.tipo === 'C' &&
+            {calculationReady && pensionMemory && filteredRubricas.some(rubrica =>
                 (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
                     (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao')))) && (
                 <SharedPensionSummary memory={pensionMemory} rubricas={summaryRubrics} />

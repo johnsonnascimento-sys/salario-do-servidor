@@ -203,7 +203,7 @@ export const IrEaCompetencias: React.FC<Props> = ({
                             <div key={index} className="space-y-1.5">
                                 <div className="flex items-center gap-2">
                                     <label className="flex-1">
-                                        <span className="sr-only">Mês trabalhado {index + 1}</span>
+                                        <span className="sr-only">{tipo === 'rubrica' ? 'Competência de origem' : 'Mês trabalhado'} {index + 1}</span>
                                         <input
                                             type="month"
                                             className={`${styles.input} ${isAnoCorrente ? 'border-amber-400 dark:border-amber-600 focus:ring-amber-500' : ''}`}
