@@ -136,7 +136,17 @@ test('opções adicionais contam apenas opções ativas e recolher não muda ent
         update: (k,v) => calls.push([k,v]), handleRegimePrevChange: () => {}, showFunprespSection: true,
         previdenciaComplementar: config, funprespNormalOptions: [.03], handleFunprespParticipacaoChange: () => {} }));
     const regime = tree.root.findByProps({ id: 'regime-previdenciario' });
-    const pss = regime.findAllByType('input').find(input => input.props.type === 'checkbox')!;
+    assert.deepEqual(regime.findAllByType('option').map(option => option.children.join('')), [
+        'Sem limite do teto do INSS', 'Limitada ao teto do INSS',
+    ]);
+    const help = regime.findByProps({ 'aria-label': 'Explicação sobre regime previdenciário' });
+    assert.equal(help.props['aria-expanded'], false);
+    act(() => help.props.onClick());
+    const helpText = regime.findByProps({ role: 'note' }).findAllByType('p').map(paragraph => paragraph.children.join('')).join(' ');
+    assert.match(helpText, /função comissionada \(FC\) ou cargo em comissão \(CJ\).*contribuição previdenciária mensal \(PSS\)/);
+    const pssLabel = regime.findAllByType('label').find(label => label.children.some(child =>
+        typeof child !== 'string' && child.type === 'span' && child.children.join('').includes('função comissionada ou cargo em comissão')));
+    const pss = pssLabel!.findByType('input');
     assert.equal(pss.props.checked, true);
     act(() => pss.props.onChange({ target: { checked: false } }));
     assert.deepEqual(calls.splice(0), [['pssSobreFC', false]]);
@@ -257,9 +267,9 @@ test('legendas mensais e de múltiplos retroativos são independentes e têm ids
         React.createElement(PensionRetroForm, { state: current, styles: {}, pssTableOptions: [], update: () => {} }));
     const tree = create(render(input));
     const selectors = tree.root.findAllByType('select').filter(select => select.props['aria-describedby'] && !select.props['aria-invalid']);
-    assert.equal(selectors.length, 6);
-    assert.equal(new Set(selectors.map(select => select.props.id)).size, 6);
-    assert.equal(new Set(selectors.map(select => select.props['aria-describedby'])).size, 6);
+    assert.equal(selectors.length, 5);
+    assert.equal(new Set(selectors.map(select => select.props.id)).size, selectors.length);
+    assert.equal(new Set(selectors.map(select => select.props['aria-describedby'])).size, selectors.length);
     for (const select of selectors) describedHelp(tree.root, select);
     const retro = tree.root.findByType(PensionRetroForm);
     const before = retro.findAllByType('p').map(p => p.children.join(''));
@@ -352,7 +362,7 @@ for (const regimePrev of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
         const tree = create(renderTaxSection(props));
         const summary = () => tree.root.findByProps({ 'aria-label': 'Resumo calculado da previdência' });
         const text = () => JSON.stringify(summary().findAllByType('dd').map(item => item.children));
-        assert.match(text(), regimePrev === 'migrado' || regimePrev === 'rpc' ? /RPPS limitado/ : /RPPS sem teto/);
+        assert.match(text(), regimePrev === 'migrado' || regimePrev === 'rpc' ? /Limitado ao teto do INSS/ : /Sem limite do teto do INSS/);
         assert.match(text(), /Não participa/);
         assert.match(text(), /321,00/);
         act(() => tree.update(renderTaxSection({ ...props, calculationReady: false, calculationError: 'pendência de configuração' })));

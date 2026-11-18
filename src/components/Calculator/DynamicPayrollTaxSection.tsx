@@ -2,7 +2,7 @@ import { resolvePensionUrp, validateLinkedPensionSalary } from '../../services/a
 import { toReferenceMonthIndex } from './referenceDateUtils';
 import React, { useEffect, useState } from 'react';
 import { CalculatorCardHeading } from './CalculatorCardHeading';
-import { PensionRegimeSelect } from './PensionRegimeSelect';
+import { PensionRegimeSelect, pensionRegimeGroup } from './PensionRegimeSelect';
 import type { PensionContext } from '../../services/agency/engine/modules/pensionContext';
 import { PensionParticipationSelect } from './PensionParticipationSelect';
 import { PENSION_HELP_CLASS } from './pensionHelp';
@@ -89,13 +89,18 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         {activeSection === 'pension' && <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.</p>}
         {activeSection === 'pension' && <>
         <section id="regime-previdenciario" tabIndex={-1} aria-labelledby={`${fieldId}-regime-titulo`} className={`${styles.card} ${calculatorTargetClass}`}>
-            <h5 id={`${fieldId}-regime-titulo`} className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
-            <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe o enquadramento da sua contribuição ao RPPS.</p>
+            <CalculatorCardHeading help={{ label: 'Explicação sobre regime previdenciário', content: <>
+                <p>O Regime Próprio de Previdência Social (RPPS) é a previdência do servidor. Se o seu regime é limitado ao teto do INSS, a simulação aplica esse limite ao valor usado para calcular a contribuição previdenciária. Consulte seu cadastro funcional para confirmar o regime.</p>
+                <p>Ao marcar a opção de função comissionada (FC) ou cargo em comissão (CJ), a simulação inclui o valor dessa parcela no cálculo da contribuição previdenciária mensal (PSS). Marque a opção se essa parcela fizer parte da base de contribuição da sua folha. Se tiver dúvida, consulte a unidade de gestão de pessoas do seu órgão.</p>
+            </>}}>
+                <h5 id={`${fieldId}-regime-titulo`} className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
+            </CalculatorCardHeading>
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
+                label="Base de cálculo da contribuição"
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
             <label className={`${styles.checkboxLabel} mt-2`}>
                 <input id={`${fieldId}-pssSobreFC`} type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
-                <span>Incluir FC/CJ na base do PSS</span>
+                <span>Incluir função comissionada ou cargo em comissão no cálculo da contribuição previdenciária</span>
             </label>
         </section>
         <section id="abono-permanencia" tabIndex={-1} aria-labelledby={`${fieldId}-abono-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
@@ -224,8 +229,8 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </summary>
             <div className="space-y-1.5 pt-2 text-body-xs">
                 <dl className="space-y-1.5">
-                    <div className="flex flex-wrap justify-between gap-2"><dt>Regime previdenciário</dt><dd>{state.regimePrev === 'rpc' || state.regimePrev === 'migrado' ? 'RPPS limitado ao teto do RGPS' : 'RPPS sem teto do RGPS'}</dd></div>
-                    <div className="flex flex-wrap justify-between gap-2"><dt>PSS sobre FC/CJ</dt><dd>{state.pssSobreFC ? 'Incluído' : 'Não incluído'}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-2"><dt>Regime previdenciário</dt><dd>{pensionRegimeGroup(state.regimePrev) === 'rpc' ? 'Limitado ao teto do INSS' : 'Sem limite do teto do INSS'}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-2"><dt>Função comissionada ou cargo em comissão na base da contribuição</dt><dd>{state.pssSobreFC ? 'Incluído' : 'Não incluído'}</dd></div>
                     {showFunprespSection && <div className="flex flex-wrap justify-between gap-2"><dt>Participação na Funpresp</dt><dd>{state.funprespParticipacao === 'nao' ? 'Não participa' : state.funprespParticipacao === 'patrocinado' ? 'Patrocinada — com contrapartida' : 'Vinculada — sem contrapartida'}</dd></div>}
                 </dl>
                 {calculationReady ? <>
