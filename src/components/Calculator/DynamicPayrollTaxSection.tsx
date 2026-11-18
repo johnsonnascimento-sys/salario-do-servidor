@@ -1,6 +1,7 @@
 import { resolvePensionUrp, validateLinkedPensionSalary } from '../../services/agency/engine/modules/pensionUrp';
 import { toReferenceMonthIndex } from './referenceDateUtils';
 import React, { useEffect, useState } from 'react';
+import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { PensionRegimeSelect } from './PensionRegimeSelect';
 import type { PensionContext } from '../../services/agency/engine/modules/pensionContext';
 import { PensionParticipationSelect } from './PensionParticipationSelect';
@@ -84,8 +85,13 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
         </section>
         <section id="abono-permanencia" tabIndex={-1} aria-labelledby={`${fieldId}-abono-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
-            <h5 id={`${fieldId}-abono-titulo`} className="mb-1 text-h5 font-semibold">Abono de permanência</h5>
-            <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Marque se você já cumpriu os requisitos para aposentadoria voluntária e optou por continuar em atividade. O abono é calculado com base na contribuição previdenciária (PSS) e será incluído como crédito na simulação.</p>
+            <CalculatorCardHeading help={{ label: 'Explicação sobre abono de permanência', content: <>
+                <p>O abono de permanência é devido ao servidor que já cumpriu os requisitos para aposentadoria voluntária e opta por permanecer em atividade. Nesta simulação, o valor corresponde à contribuição previdenciária (PSS) e é lançado como crédito na competência.</p>
+                <p>Fundamento constitucional: art. 40, § 19, da Constituição Federal, conforme a regra de aposentadoria aplicável ao servidor. Para servidores que preencheram os requisitos até a entrada em vigor da EC nº 103/2019, aplica-se também o art. 3º, § 3º, da emenda, que preserva os critérios anteriores, inclusive o abono de permanência.</p>
+                <p><a className="underline" href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm#art40" target="_blank" rel="noreferrer">Constituição Federal, art. 40, § 19</a>{' · '}<a className="underline" href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc103.htm" target="_blank" rel="noreferrer">Emenda Constitucional nº 103/2019, art. 3º, § 3º</a></p>
+            </>}}>
+                <h5 id={`${fieldId}-abono-titulo`} className="mb-1 text-h5 font-semibold">Abono de permanência</h5>
+            </CalculatorCardHeading>
             <label className={styles.checkboxLabel}>
                 <input type="checkbox" className={styles.checkbox} checked={state.recebeAbono}
                     onChange={event => {
