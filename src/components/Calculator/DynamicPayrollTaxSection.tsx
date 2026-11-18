@@ -115,8 +115,14 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </label>)}
         </fieldset>}
         {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
-            <h5 id={`${fieldId}-funpresp-title`} className="mb-1 text-h5 font-semibold">Funpresp-Jud</h5>
-            <p className={PENSION_HELP_CLASS}>Use os dados da sua adesão ao plano. A participação na Funpresp é uma escolha separada do regime previdenciário acima.</p>
+            <CalculatorCardHeading help={{ label: 'Explicação sobre Funpresp-Jud', content: <>
+                <p>Informe sua participação e alíquota conforme o certificado de adesão ou contracheque. A adesão ao plano complementar é uma escolha separada do regime próprio (RPPS).</p>
+                <p>Na participação patrocinada, o participante contribui sobre a parcela da remuneração de participação acima do teto do RGPS, e o patrocinador contribui paritariamente até o limite previsto. Na participação vinculada, o participante escolhe a base de contribuição, sem contrapartida do patrocinador. Os valores e condições dependem do regulamento e da sua adesão.</p>
+                <p>Fundamento legal: Lei nº 12.618/2012, que institui o regime de previdência complementar dos servidores públicos federais, e regulamento do Plano de Benefícios JusMP-Prev da Funpresp-Jud.</p>
+                <p><a className="underline" href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12618.htm" target="_blank" rel="noreferrer">Lei nº 12.618/2012</a>{' · '}<a className="underline" href="https://www.funprespjud.com.br/legislacao-e-normas/" target="_blank" rel="noreferrer">Legislação e regulamento da Funpresp-Jud</a>{' · '}<a className="underline" href="https://www.funprespjud.com.br/adesao/" target="_blank" rel="noreferrer">Informações de adesão e contribuição</a></p>
+            </>}}>
+                <h5 id={`${fieldId}-funpresp-title`} className="mb-1 text-h5 font-semibold">Funpresp-Jud</h5>
+            </CalculatorCardHeading>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PensionParticipationSelect className={styles.input} labelClassName={styles.label} compact
                     value={state.funprespParticipacao} onChange={handleFunprespParticipacaoChange}
