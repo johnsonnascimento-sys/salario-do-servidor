@@ -5,6 +5,7 @@ import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
 import { GlobalSettings } from '../components/Calculator/GlobalSettings';
 import { CalculatorHeader } from '../components/Calculator/CalculatorHeader';
+import { CalculatorStepHeader } from '../components/Calculator/CalculatorStepHeader';
 import { DynamicPayrollForm } from '../components/Calculator/DynamicPayrollForm';
 import { ObservationsSection } from '../components/Calculator/ObservationsSection';
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
@@ -319,7 +320,12 @@ export default function Calculator() {
         );
     }
 
-        return (
+    const currentSection = CALCULATOR_SECTIONS[step];
+    const stepDescription = courtConfig.transportIndemnity?.enabled
+        ? currentSection.descriptionWithTransportIndemnity ?? currentSection.description
+        : currentSection.description;
+
+    return (
         <>
             <MobileResultsBar
                 resultLabel={dailiesResultRows.length > 0 ? 'Total estimado' : 'Líquido do holerite'}
@@ -344,28 +350,12 @@ export default function Calculator() {
                 <div className="flex flex-col gap-5 min-[960px]:flex-row min-[960px]:items-start">
                 <CalculatorNavigation step={step} onChange={changeStep} />
                 <div className="min-w-0 flex-1">
-                <h2 ref={stepHeadingRef} tabIndex={-1} className={`${calculatorTargetClass} text-h3 font-bold text-neutral-900 dark:text-white mb-4`}>
-                    {CALCULATOR_SECTIONS[step].label}
-                </h2>
-                <p className="mb-6 text-body text-neutral-600 dark:text-neutral-300">{step === 6
-                    ? `Em Adicionar crédito, você encontra horas extras, substituição de função, férias, 13º salário${courtConfig.transportIndemnity?.enabled ? ', diárias e indenização de transporte' : ' e diárias'}.`
-                    : step === 7
-                        ? 'Inclua os descontos que aparecem na sua folha.'
-                        : step === 1
-                            ? 'Selecione os títulos reconhecidos e a carga de treinamento registrada para a competência.'
-                            : step === 4
-                            ? 'Informe seu regime previdenciário, o abono de permanência e sua participação na Funpresp, quando aplicável.'
-                            : step === 5
-                                ? 'Informe quantos dependentes são considerados para o Imposto de Renda. O resumo abaixo mostra a dedução e o cálculo mensal.'
-                                : step === 8
-                                    ? 'Registre observações que deverão acompanhar a impressão da simulação.'
-                                    : step === 9
-                                    ? 'Confira o valor líquido estimado e o detalhamento dos créditos e descontos da simulação.'
-                                    : step === 2
-                                        ? 'Revise as vantagens pessoais e adicionais lançados na sua remuneração.'
-                                        : step === 3
-                                            ? 'Preencha os auxílios que se aplicam a esta competência.'
-                                    : 'Preencha seus dados principais. Os valores são atualizados automaticamente.'}</p>
+                <CalculatorStepHeader
+                    title={currentSection.label}
+                    Icon={currentSection.Icon}
+                    description={stepDescription}
+                    headingRef={stepHeadingRef}
+                />
                 {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-secondary-300 bg-secondary-50 p-4 text-body text-secondary-900 dark:bg-secondary-950 dark:text-secondary-100">
                     <p>{exportError || saveFeedback}</p>
                     {!exportError && <button type="button" aria-label="Fechar mensagem" className="min-h-11 shrink-0 px-2 font-semibold" onClick={() => setSaveFeedback('')}>Fechar</button>}

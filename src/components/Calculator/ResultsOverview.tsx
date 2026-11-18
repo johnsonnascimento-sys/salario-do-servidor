@@ -32,6 +32,7 @@ export const ResultsOverview: React.FC<ResultsOverviewProps> = ({
                             {calculationReady ? formatCurrency(summary.payrollNet) : resultMessage}
                         </p>
                         <p className="mt-1 text-body text-secondary-100">Líquido do holerite · {state.mesRef}/{state.anoRef}</p>
+                        {calculationReady && <p className="mt-1 text-body-sm text-secondary-100">Os valores são atualizados automaticamente.</p>}
                     </div>
                 </div>
                 {calculationReady && <>
