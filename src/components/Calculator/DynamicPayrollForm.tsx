@@ -65,8 +65,7 @@ const getPersonalAdvantage = (rubrica: Rubrica): typeof PERSONAL_ADVANTAGES[numb
     return PERSONAL_ADVANTAGES.find(name => name === prefix);
 };
 
-const emptyPersonalAdvantage = (name: typeof PERSONAL_ADVANTAGES[number]): Rubrica => ({
-    id: `vantagem-pessoal-${name.toLowerCase()}`,
+const personalAdvantageDefaults = (name: typeof PERSONAL_ADVANTAGES[number]): Omit<Rubrica, 'id'> => ({
     vantagemPessoal: name,
     descricao: name,
     valor: 0,
@@ -282,11 +281,21 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const fixedTitles = new Map<string, string>();
     const personalRubrics = PERSONAL_ADVANTAGES.flatMap(name => {
         const saved = state.rubricasExtras.filter(rubrica => getPersonalAdvantage(rubrica) === name);
-        const cards = saved.length ? saved : [emptyPersonalAdvantage(name)];
-        fixedTitles.set(cards[0].id, name);
+        const cards = saved.length ? saved : [{
+            id: `vantagem-pessoal-${name.toLowerCase()}`,
+            ...personalAdvantageDefaults(name)
+        }];
+        for (const card of name === 'VPNI' ? cards : cards.slice(0, 1)) fixedTitles.set(card.id, name);
         return cards.map(rubrica => ({ ...rubrica, vantagemPessoal: name }));
     });
     const otherRubrics = state.rubricasExtras.filter(rubrica => !getPersonalAdvantage(rubrica));
+    const addVpni = () => {
+        const first = personalRubrics.find(rubrica => rubrica.vantagemPessoal === 'VPNI');
+        if (first && !state.rubricasExtras.some(saved => saved.id === first.id)) {
+            updateRubrica(first.id, 'valor', first.valor, first);
+        }
+        addRubrica(personalAdvantageDefaults('VPNI'));
+    };
     const manualRubricProps = {
         rubricasTax: state.rubricasTax,
         summaryRubrics: state.rubricasExtras,
@@ -405,6 +414,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     {...manualRubricProps}
                     rubricas={personalRubrics}
                     fixedTitles={fixedTitles}
+                    addVpni={addVpni}
                     updateRubrica={(id, field, value) => updateRubrica(
                         id, field, value, personalRubrics.find(rubrica => rubrica.id === id)
                     )}

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Trash2, SlidersHorizontal, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { Trash2, Plus, SlidersHorizontal, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { Rubrica, RubricaTaxDetail, PrevidenciaComplementarConfig } from '../../types';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
@@ -11,10 +11,13 @@ import { PensionRubricFields } from './PensionRubricFields';
 import { resolvePensionRubricRule } from '../../services/agency/engine/modules/pensionCatalog';
 import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 
+const VPNI_DESCRIPTIONS = ['VPNI — Lei nº 9.527/1997', 'VPNI — decisão judicial'];
+
 interface ManualRubricasSectionProps {
     mode?: 'C' | 'D';
     rubricas: Rubrica[];
     fixedTitles?: ReadonlyMap<string, string>;
+    addVpni?: () => void;
     summaryRubrics?: Rubrica[];
     styles: any;
     rubricasTax?: Record<string, RubricaTaxDetail>;
@@ -36,6 +39,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     mode = 'C',
     rubricas,
     fixedTitles,
+    addVpni,
     summaryRubrics = rubricas,
     styles,
     rubricasTax,
@@ -52,6 +56,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     updateRubrica,
     toPositiveNumber
 }) => {
+    const vpniId = useId();
     const [expandedEaCards, setExpandedEaCards] = useState<Record<string, boolean>>({});
 
     const toggleEaCard = (id: string, currentlyExpanded: boolean) => {
@@ -137,10 +142,10 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
     const filteredRubricas = rubricas.filter(rubrica => rubrica.tipo === mode);
 
-    return (
-        <div className={fixedTitles ? 'space-y-5' : 'space-y-4'}>
-            {/* Listagem de Cards de Rubricas Individuais */}
-            {filteredRubricas.map((rubrica, index) => {
+    const renderRubricas = (entries: Rubrica[]) => (
+        <>
+            {entries.map((rubrica, index) => {
+                const groupedVpni = Boolean(addVpni && rubrica.vantagemPessoal === 'VPNI');
                 const fixedTitle = fixedTitles?.get(rubrica.id);
                 const historical = Boolean(
                     rubrica.pssCompetenciaSeparada ||
@@ -378,7 +383,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </summary>
                         <div className="space-y-4 pt-2">
                             <fieldset className="flex flex-col gap-x-6 sm:flex-row sm:flex-wrap">
-                                <legend className="sr-only">Regime de tributação de {fixedTitle}</legend>
+                                <legend className="sr-only">Regime de tributação de {rubrica.descricao.trim() || fixedTitle}</legend>
                                 {([
                                     { value: 'mensal', label: 'IR mensal' },
                                     { value: 'rra', label: 'Exercícios anteriores (RRA)' },
@@ -509,9 +514,38 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         : [{ label: `${rubrica.descricao?.trim() || fixedTitle} Bruto`, value: rubrica.valor }];
 
                     return (
-                        <div key={rubrica.id} id={`manual-rubrica-${rubrica.id}`} tabIndex={-1} className={`${styles.card} space-y-4`}>
-                            <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3>
-                            {valueField}
+                        <div key={rubrica.id} id={`manual-rubrica-${rubrica.id}`} tabIndex={-1}
+                            role={groupedVpni ? 'group' : undefined} aria-label={groupedVpni ? `Lançamento de VPNI ${index + 1}` : undefined}
+                            className={groupedVpni
+                                ? 'min-w-0 space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700 sm:p-4'
+                                : `${styles.card} space-y-4`}>
+                            {groupedVpni ? (
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,10rem)_auto] sm:items-end">
+                                    <div>
+                                        <label htmlFor={`manual-description-${rubrica.id}`} className={styles.label}>Descrição no holerite</label>
+                                        <input id={`manual-description-${rubrica.id}`} type="text" list={`${vpniId}-descricoes`}
+                                            className={styles.input} value={rubrica.descricao} placeholder="VPNI"
+                                            onChange={event => updateRubrica(rubrica.id, 'descricao', event.target.value)}
+                                            onBlur={event => {
+                                                if (!event.target.value.trim()) updateRubrica(rubrica.id, 'descricao', 'VPNI');
+                                            }} />
+                                    </div>
+                                    {valueField}
+                                    {summaryRubrics.some(saved => saved.id === rubrica.id) && (
+                                        <button type="button" onClick={() => removeRubrica(rubrica.id)}
+                                            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 justify-self-start rounded-lg px-2 text-body-xs text-neutral-600 hover:bg-error-50 hover:text-error-700 dark:text-neutral-300 dark:hover:bg-error-950/30"
+                                            aria-label={`Remover lançamento de VPNI ${index + 1}`}>
+                                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                            <span className="sm:sr-only">Remover</span>
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <>
+                                    <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3>
+                                    {valueField}
+                                </>
+                            )}
                             {fixedTaxOptions}
                             <PresetGrossSummary compact lines={lines}>
                                 {calculationNotices}
@@ -580,6 +614,36 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     </div>
                 );
             })}
+        </>
+    );
+
+    const vpniEntries = addVpni ? filteredRubricas.filter(rubrica => rubrica.vantagemPessoal === 'VPNI') : [];
+    const otherEntries = addVpni ? filteredRubricas.filter(rubrica => rubrica.vantagemPessoal !== 'VPNI') : filteredRubricas;
+    const vpniTotal = vpniEntries.reduce((total, entry) => total + (Number(entry.valor) || 0), 0);
+
+    return (
+        <div className={fixedTitles ? 'space-y-5' : 'space-y-4'}>
+            {addVpni && (
+                <section aria-labelledby={`${vpniId}-titulo`} className={`${styles.card} space-y-4`}>
+                    <h3 id={`${vpniId}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">VPNI</h3>
+                    <datalist id={`${vpniId}-descricoes`}>
+                        {VPNI_DESCRIPTIONS.map(label => <option key={label} value={label} />)}
+                    </datalist>
+                    {renderRubricas(vpniEntries)}
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                        <button type="button" onClick={addVpni}
+                            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-300 px-3 text-body-xs font-semibold text-secondary-800 hover:bg-neutral-50 dark:border-neutral-700 dark:text-secondary-300 dark:hover:bg-neutral-800">
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            Adicionar outra VPNI
+                        </button>
+                        <div className="flex flex-wrap items-baseline gap-2 text-body-xs font-semibold">
+                            <span>Total da VPNI</span>
+                            <output aria-label="Total da VPNI" className="font-mono">{formatCurrency(vpniTotal)}</output>
+                        </div>
+                    </div>
+                </section>
+            )}
+            {renderRubricas(otherEntries)}
             {mode === 'C' && calculationReady && pensionMemory && rubricas.some(rubrica => rubrica.tipo === 'C' &&
                 (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
                     (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao')))) && (

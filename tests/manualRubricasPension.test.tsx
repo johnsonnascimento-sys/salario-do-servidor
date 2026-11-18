@@ -3,8 +3,12 @@ import test from 'node:test';
 import React, { useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create } from 'react-test-renderer';
+import { MemoryRouter } from 'react-router-dom';
+import { DynamicPayrollForm } from '../src/components/Calculator/DynamicPayrollForm';
 import { ManualRubricasSection } from '../src/components/Calculator/ManualRubricasSection';
-import type { Rubrica } from '../src/types';
+import { useCalculatorState } from '../src/hooks/calculator/useCalculatorState';
+import { INITIAL_STATE, type CourtConfig, type Rubrica } from '../src/types';
+import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
 import type { PensionCalculationMemory, PensionMemory, PensionParticipation } from '../src/types/pension';
 
 // Synthetic amounts isolate presentation behavior from official configuration.
@@ -69,6 +73,60 @@ test('VPNI e ATS exibem tributação independente do detalhamento e preservam co
     assert.equal(current('vpni').pssCompetenciaSeparada, false);
     assert.equal(current('vpni').incidePSS, true);
     assert.equal(current('ats').incidePSS, true);
+    act(() => tree.unmount());
+});
+
+test('card de VPNI adiciona lançamentos independentes e preserva a VPNI antiga em uma linha', () => {
+    const config: CourtConfig = {
+        orgSlug: 'jmu',
+        bases: { salario: {}, funcoes: {} },
+        values: {},
+        historico_ir: {},
+        historico_pss: {},
+        payrollRules: { gajRate: 0.5, specificGratificationRate: 0, vrRateOnCj1: 0, monthDayDivisor: 30,
+            overtimeMonthHours: 200, transportWorkdays: 20, transportDiscountRate: 0.06, irrfTopRate: 0.1 }
+    };
+    let calculator!: ReturnType<typeof useCalculatorState>;
+    function Form() {
+        calculator = useCalculatorState();
+        return <DynamicPayrollForm {...calculator} step={2} styles={{}} courtConfig={config} resultRows={[]} />;
+    }
+    let tree!: ReturnType<typeof create>;
+    act(() => {
+        tree = create(<MemoryRouter initialEntries={[{ pathname: '/', state: { startBlank: true } }]}><Form /></MemoryRouter>);
+    });
+    const entries = () => tree.root.findAllByType('div').filter(node => node.props['aria-label']?.startsWith('Lançamento de VPNI'));
+    const add = () => tree.root.findAllByType('button').find(node => node.children.includes('Adicionar outra VPNI'))!.props.onClick();
+    const total = () => tree.root.findByProps({ 'aria-label': 'Total da VPNI' }).children.join('').replace(/\s/g, ' ');
+
+    assert.equal(entries().length, 1);
+    act(add);
+    assert.equal(entries().length, 2);
+    assert.equal(new Set(calculator.state.rubricasExtras.map(item => item.id)).size, 2);
+
+    const saved: Rubrica = { ...rubric, id: 'vpni-antiga', descricao: 'VPNI', valor: 3164.46, incideIR: true, incidePSS: true, incideFunpresp: false };
+    act(() => calculator.setState({ ...INITIAL_STATE, rubricasExtras: [saved] }));
+    assert.equal(entries().length, 1);
+    assert.equal(total(), 'R$ 3.164,46');
+    assert.deepEqual(calculator.state.rubricasExtras, [saved]);
+
+    act(add);
+    const second = calculator.state.rubricasExtras[1].id;
+    const field = (id: string, name: string) => tree.root.findByProps({ id: `manual-${name}-${id}` });
+    act(() => field(saved.id, 'description').props.onChange({ target: { value: 'VPNI — Lei nº 9.527/1997' } }));
+    act(() => field(saved.id, 'value').props.onChange({ target: { value: '2171.59' } }));
+    act(() => field(second, 'description').props.onChange({ target: { value: 'Decisão judicial' } }));
+    act(() => field(second, 'value').props.onChange({ target: { value: '992.87' } }));
+    act(() => entries()[1].findByProps({ name: `manual-tributacao-${second}`, value: 'excluir' }).props.onChange());
+    assert.equal(total(), 'R$ 3.164,46');
+    assert.deepEqual(calculator.state.rubricasExtras.map(item => [item.id, item.vantagemPessoal, item.valor, item.incideIR]),
+        [[saved.id, 'VPNI', 2171.59, true], [second, 'VPNI', 992.87, false]]);
+    act(() => calculator.setState(hydrateCalculatorState(stripCalculatedFieldsFromCalculatorState(calculator.state))));
+    assert.equal(entries().length, 2);
+    assert.equal(field(second, 'description').props.value, 'Decisão judicial');
+    act(() => entries()[1].findByProps({ 'aria-label': 'Remover lançamento de VPNI 2' }).props.onClick());
+    assert.equal(entries().length, 1);
+    assert.equal(total(), 'R$ 2.171,59');
     act(() => tree.unmount());
 });
 

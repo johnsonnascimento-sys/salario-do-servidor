@@ -74,7 +74,9 @@ export const useCalculatorState = () => {
         };
         setState(prev => ({
             ...prev,
-            rubricasExtras: [newRubrica, ...prev.rubricasExtras]
+            rubricasExtras: newRubrica.vantagemPessoal === 'VPNI'
+                ? [...prev.rubricasExtras, newRubrica]
+                : [newRubrica, ...prev.rubricasExtras]
         }));
     }, []);
 
