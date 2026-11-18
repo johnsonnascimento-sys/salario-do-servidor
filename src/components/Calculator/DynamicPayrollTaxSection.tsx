@@ -60,9 +60,8 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     useEffect(() => {
         if (pendingOptions) setOptionsOpen(true);
     }, [pendingOptions, funprespAdditionalValidationError, pensionEngineError]);
-    const activeOptions = Number(Boolean(state.pssSobreFC)) + (participates && showFunprespSection ?
-        optionalItems.filter(([rule, field]) => config?.incidenceRules?.[rule] && state[field]).length +
-        Number(state.funprespFacul > 0) + Number((state.funprespFaculValor ?? 0) > 0) : 0);
+    const activeFunprespOptions = optionalItems.filter(([rule, field]) => config?.incidenceRules?.[rule] && state[field]).length +
+        Number(state.funprespFacul > 0) + Number((state.funprespFaculValor ?? 0) > 0);
     const irDiscountRows = calculationReady
         ? groupPayslipRowsForDisplay(resultRows, state).filter(row => row.type === 'D' && row.label.startsWith('IMPOSTO DE RENDA'))
         : [];
@@ -75,6 +74,17 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
     const hasSavedSubstitutionPss = state.substitutionEntries.length > 0
         ? state.substitutionEntries.some(entry => entry.pssIsEA)
         : state.substPssIsEA;
+    const unavailableSavedOptions = optionalItems.filter(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]);
+    const savedOptionsToReview = unavailableSavedOptions.length > 0 && (
+        <fieldset className="mt-3 space-y-2">
+            <legend className={styles.label}>Opções salvas que precisam de revisão</legend>
+            <p className={PENSION_HELP_CLASS}>A configuração atual não permite estas inclusões. Desmarque-as para continuar, ou confira a configuração e a competência desta simulação.</p>
+            {unavailableSavedOptions.map(([, field, label]) => <label key={field} className={styles.checkboxLabel}>
+                <input type="checkbox" className={styles.checkbox} checked onChange={event => { if (!event.target.checked) update(field, false); }} />
+                <span>{label} — inclusão salva</span>
+            </label>)}
+        </fieldset>
+    );
     return <div className="space-y-4">
         {activeSection === 'pension' && <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.</p>}
         {activeSection === 'pension' && <>
@@ -83,6 +93,10 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe o enquadramento da sua contribuição ao RPPS.</p>
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
+            <label className={`${styles.checkboxLabel} mt-2`}>
+                <input id={`${fieldId}-pssSobreFC`} type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
+                <span>Incluir FC/CJ na base do PSS</span>
+            </label>
         </section>
         <section id="abono-permanencia" tabIndex={-1} aria-labelledby={`${fieldId}-abono-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre abono de permanência', content: <>
@@ -106,14 +120,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </label>
             {state.recebeAbono && <PresetGrossSummary lines={abonoGrossLines} />}
         </section>
-        {optionalItems.some(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]) && <fieldset className="mt-3 space-y-2">
-            <legend className={styles.label}>Opções salvas que precisam de revisão</legend>
-            <p className={PENSION_HELP_CLASS}>A configuração atual não permite estas inclusões. Desmarque-as para continuar, ou confira a configuração e a competência desta simulação.</p>
-            {optionalItems.filter(([rule, field]) => state[field] && !config?.incidenceRules?.[rule]).map(([, field, label]) => <label key={field} className={styles.checkboxLabel}>
-                <input type="checkbox" className={styles.checkbox} checked onChange={event => { if (!event.target.checked) update(field, false); }} />
-                <span>{label} — inclusão salva</span>
-            </label>)}
-        </fieldset>}
+        {!(showFunprespSection && config) && savedOptionsToReview}
         {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre Funpresp-Jud', content: <>
                 <p>Informe sua participação e alíquota conforme o certificado de adesão ou contracheque. A adesão ao plano complementar é uma escolha separada do regime próprio (RPPS).</p>
@@ -166,17 +173,12 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     <p className="mt-2">O resultado completo ficará disponível depois dessa atualização. Você pode continuar preenchendo as outras verbas; seu rascunho será mantido.</p>
                     <details className="mt-2"><summary className="cursor-pointer underline">Informações para suporte</summary><p className="mt-2 break-words">{linkedError}</p></details>
                 </div> : <p id={urp?.reference ? undefined : "funpresp-urp-reference"} role="alert" className="text-body-xs text-error-600 dark:text-error-400">{linkedFeedback?.message || linkedError || funprespValidationError}</p>)}
-        </section>}
-        <details className={`${styles.card} space-y-3`}
-            open={optionsOpen} id={`${fieldId}-options`} onToggle={event => setOptionsOpen(event.currentTarget.open)}>
-            <summary className="cursor-pointer min-h-11 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
-                Opções adicionais de previdência ({activeOptions} {activeOptions === 1 ? 'ativa' : 'ativas'})
-            </summary>
-            <label className={styles.checkboxLabel}>
-                <input id={`${fieldId}-pssSobreFC`} type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
-                <span>PSS sobre FC/CJ (RPPS)</span>
-            </label>
-            {showFunprespSection && config && participates && <>
+            {savedOptionsToReview}
+            {participates && <details className="space-y-3 border-t border-neutral-200 pt-2 dark:border-neutral-700"
+                open={optionsOpen} id={`${fieldId}-options`} onToggle={event => setOptionsOpen(event.currentTarget.open)}>
+                <summary className="cursor-pointer min-h-11 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
+                    Opções adicionais da Funpresp ({activeFunprespOptions} {activeFunprespOptions === 1 ? 'ativa' : 'ativas'})
+                </summary>
                 {state.funprespRevisarOpcoes && <div role="alert" className="rounded-lg border border-amber-400 p-3 text-body-xs">
                     <p>Esta simulação foi salva com a base antiga da Funpresp. Confira as opções de inclusão antes de recalcular.</p>
                     <button type="button" className="mt-2 font-semibold underline" onClick={() => update('funprespRevisarOpcoes', false)}>Confirmar opções da Funpresp</button>
@@ -207,9 +209,9 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 </div>
                 <p className="text-body-xs text-neutral-600 dark:text-neutral-300">O desconto normal da Funpresp é calculado pela alíquota e pela base escolhidas. O aporte esporádico é um valor adicional: não informe nele o desconto normal do holerite.</p>
                 <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Contribuições facultativas não recebem contrapartida patronal. Pagamentos externos aparecem na memória e não reduzem o líquido da folha; a dedução anual será informada separadamente.</p>
-            </>}
-            {funprespAdditionalValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespAdditionalValidationError}</p>}
-        </details>
+                {funprespAdditionalValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespAdditionalValidationError}</p>}
+            </details>}
+        </section>}
         {hasSavedSubstitutionPss && (
             <p className={`${styles.card} text-body-xs text-neutral-600 dark:text-neutral-300`}>
                 Esta simulação anterior tem PSS sobre substituição de função. O cálculo mantém a incidência registrada.
