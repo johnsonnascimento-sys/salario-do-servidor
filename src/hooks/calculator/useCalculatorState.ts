@@ -78,6 +78,7 @@ export const useCalculatorState = () => {
                 ? [...prev.rubricasExtras, newRubrica]
                 : [newRubrica, ...prev.rubricasExtras]
         }));
+        return newRubrica.id;
     }, []);
 
     const removeRubrica = useCallback((id: string) => {

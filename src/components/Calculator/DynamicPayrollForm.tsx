@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { GripVertical, Sparkles } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
 import { ManualRubricasSection } from './ManualRubricasSection';
@@ -24,7 +24,7 @@ import {
     PresetGrossLine,
     PresetInstance,
     PREDEFINED_OPTIONS,
-    MULTI_INSTANCE_HINT_LABEL,
+    PRESET_CATALOG,
     toPositiveNumber,
     formatReferenciaMesAno
 } from './dynamicPayrollForm.helpers';
@@ -43,7 +43,7 @@ interface DynamicPayrollFormProps {
     update: (field: keyof CalculatorState, value: any) => void;
     updateSubstDays: (key: string, days: number) => void;
     courtConfig: CourtConfig;
-    addRubrica: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
+    addRubrica: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => string | void;
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any, fallback?: Rubrica) => void;
     styles: any;
@@ -133,9 +133,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         enabledPresets,
         movePreset,
         reorderAnnouncement,
-        availablePresets,
-        selectedPreset,
-        setSelectedPreset,
         reorderMode,
         setReorderMode,
         draggingPreset,
@@ -158,6 +155,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         instance.presetId !== 'gratificacao' && instance.presetId !== 'abono' &&
         (instance.presetId === 'pensao') === (step === 7)
     );
+    const rubricMode = step === 6 ? 'C' : step === 7 ? 'D' : null;
+    const [expandedRubricIds, setExpandedRubricIds] = useState<ReadonlySet<string>>(() => new Set());
+    const toggleRubric = (id: string) => setExpandedRubricIds(previous => {
+        const next = new Set(previous);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+    });
 
     const funcaoAtualValor =
         state.funcao && state.funcao !== noFunctionCode
@@ -433,30 +438,19 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 ))}
             </section>
 
-            <div id={step === 7 ? 'descontos' : step === 8 ? 'descontos-pensao' : undefined}
-                hidden={step !== 6 && step !== 7 && step !== 8} className="space-y-5">
-            <section id="creditos-eventuais" tabIndex={-1} className={`${styles.card} scroll-mt-24`} hidden={step !== 6}>
-                <h2 className={`${styles.sectionTitle} relative`}>
-                    <Sparkles className="w-4 h-4 text-secondary" />
-                    Créditos eventuais
-                </h2>
+            <div id={step === 6 ? 'creditos-eventuais' : step === 7 ? 'descontos' : step === 8 ? 'descontos-pensao' : undefined}
+                hidden={step !== 6 && step !== 7 && step !== 8} className="space-y-5" tabIndex={-1}>
+            <PresetControlsSection
+                mode={rubricMode}
+                instanceCount={visiblePresets.length + otherRubrics.filter(rubrica => rubrica.tipo === rubricMode).length}
+                enabledPresets={visiblePresets}
+                includePreset={includePreset}
+                transportIndemnityEnabled={transportIndemnityEnabled}
+                addRubrica={addRubrica}
+                expandCard={id => setExpandedRubricIds(previous => new Set(previous).add(id))}
+            >
 
-                <PresetControlsSection
-                    mode="C"
-                    styles={styles}
-                    selectedPreset={selectedPreset}
-                    setSelectedPreset={setSelectedPreset}
-                    availablePresets={availablePresets}
-                    includePreset={includePreset}
-                    multiInstanceHintLabel={MULTI_INSTANCE_HINT_LABEL}
-                    enabledPresets={enabledPresets}
-                    transportIndemnityEnabled={transportIndemnityEnabled}
-                    addRubrica={addRubrica}
-                    rubricas={otherRubrics}
-                />
-            </section>
-
-            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {(visiblePresets.length >= 2 || reorderMode) && <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button type="button" onClick={() => setReorderMode(previous => !previous)}
                     disabled={visiblePresets.length < 2 && !reorderMode}
                     className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-body font-semibold transition-colors disabled:opacity-40 ${reorderMode ? 'border-secondary bg-secondary text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800'}`}
@@ -465,7 +459,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     {reorderMode ? 'Concluir ordem' : `Reordenar cards (${visiblePresets.length})`}
                 </button>
                 {reorderMode && <p className="text-body-xs text-neutral-600 dark:text-neutral-300">Use os botões de mover ou arraste os cards para reorganizar a ordem.</p>}
-            </div>
+            </div>}
 
             <p role="status" aria-live="polite" className="sr-only">{reorderAnnouncement}</p>
             {enabledPresets.map((instance, index) => {
@@ -473,14 +467,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
                 if (!preset) return null;
                 const visibleIndex = visiblePresets.findIndex(item => item.key === instance.key);
+                const cardId = `preset-card-${instance.key}`;
 
                 return (
                     <div
-                        id={`preset-card-${instance.key}`}
+                        id={cardId}
                         data-preset-id={instance.presetId}
                         tabIndex={-1}
                         key={instance.key}
-                        className="scroll-mt-20 transition-all duration-300"
+                        className="scroll-mt-20 transition-shadow duration-300 data-[rubric-highlight]:rounded-xl data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2"
                         hidden={(instance.presetId === 'pensao') !== (step === 7)}
                     >
                         <PresetInstanceCard
@@ -490,7 +485,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             canMoveUp={visibleIndex > 0}
                             canMoveDown={visibleIndex >= 0 && visibleIndex < visiblePresets.length - 1}
                             movePreset={movePreset}
-                            presetLabel={preset.label}
+                            presetLabel={PRESET_CATALOG.find(item => item.id === instance.presetId)?.label ?? preset.label}
+                            editor={rubricMode ? {
+                                expanded: expandedRubricIds.has(cardId),
+                                toggle: () => toggleRubric(cardId)
+                            } : undefined}
                             reorderMode={reorderMode}
                             draggingPreset={draggingPreset}
                             handlePresetDragStart={handlePresetDragStart}
@@ -521,8 +520,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     mode={step === 7 || step === 8 ? 'D' : 'C'}
                     rubricas={otherRubrics}
                     updateRubrica={updateRubrica}
+                    editor={rubricMode ? { expandedIds: expandedRubricIds, toggle: toggleRubric } : undefined}
                 />
             </div>
+            </PresetControlsSection>
             <div hidden={step !== 4}>
             <PensionRetroForm state={inputState ?? state} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
                 pensionParams={pensionParams} pensionContexts={pensionContexts}

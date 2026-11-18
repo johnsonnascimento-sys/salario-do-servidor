@@ -1,287 +1,231 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { ArrowDownRight, Plus, Search, X } from 'lucide-react';
+import type { Rubrica } from '../../types';
 import {
-    Clock,
-    ArrowLeftRight,
-    Shield,
-    Sun,
-    Gift,
-    Plane,
-    Car,
-    Coins,
-    FileSpreadsheet,
-    Plus,
-    Check,
-    Search,
-    ArrowDownRight,
-    X,
-    Sparkles,
-    Scale
-} from 'lucide-react';
-import { Rubrica } from '../../types';
-import {
-    PredefinedRubricId,
-    MULTI_INSTANCE_PRESETS,
-    PRESET_CATEGORIES,
-    PRESET_CATALOG,
-    PresetInstance
+    MULTI_INSTANCE_PRESETS, PRESET_CATEGORIES, PRESET_CATALOG,
+    type PredefinedRubricId, type PresetInstance
 } from './dynamicPayrollForm.helpers';
-
-interface PresetOption {
-    id: PredefinedRubricId;
-    label: string;
-}
+import { rubricIcon } from './RubricCardHeading';
 
 interface PresetControlsSectionProps {
-    mode: 'C' | 'D';
-    styles: Record<string, string>;
-    selectedPreset: PredefinedRubricId | '';
-    setSelectedPreset: (value: PredefinedRubricId | '') => void;
-    availablePresets: PresetOption[];
-    includePreset: (presetId?: PredefinedRubricId) => void;
-    multiInstanceHintLabel: string;
-    enabledPresets?: PresetInstance[];
-    transportIndemnityEnabled?: boolean;
-    addRubrica?: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
-    rubricas?: Rubrica[];
+    mode: Rubrica['tipo'] | null;
+    instanceCount: number;
+    enabledPresets: PresetInstance[];
+    transportIndemnityEnabled: boolean;
+    includePreset: (presetId: PredefinedRubricId) => string | undefined;
+    addRubrica: (payload: Partial<Rubrica>) => string | void;
+    expandCard: (id: string) => void;
+    children: React.ReactNode;
 }
 
-const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-    hora_extra: Clock,
-    substituicao: ArrowLeftRight,
-    gratificacao: Shield,
-    ferias: Sun,
-    decimo: Gift,
-    diarias: Plane,
-    indenizacao_transporte: Car,
-    abono: Coins,
-    vantagens: FileSpreadsheet,
-    pensao: Scale
-};
+const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const desktopQuery = '(min-width: 960px)';
+const actionClass = 'inline-flex items-center justify-center gap-2 rounded-lg border border-secondary/40 px-3 py-2 text-body-sm font-semibold text-secondary-800 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:bg-secondary-950';
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
-    mode,
-    styles,
-    includePreset,
-    enabledPresets = [],
-    transportIndemnityEnabled = true,
-    addRubrica,
-    rubricas = []
+    mode, instanceCount, enabledPresets, transportIndemnityEnabled, includePreset, addRubrica, expandCard, children
 }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    useEffect(() => setSearchTerm(''), [mode]);
-    const pendingFocus = useRef<{ kind: 'preset' | 'manual'; previousIds: string[]; presetId: string } | null>(null);
+    const id = useId();
+    const [openMode, setOpenMode] = useState<Rubrica['tipo'] | null>(null);
+    const open = mode !== null && openMode === mode;
+    const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.(desktopQuery).matches));
+    const [search, setSearch] = useState('');
+    const [category, setCategory] = useState('todos');
+    const dialogRef = useRef<HTMLDialogElement>(null);
+    const searchRef = useRef<HTMLInputElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const focusTarget = useRef<string | null>(null);
+    const highlighted = useRef<HTMLElement | null>(null);
     const highlightTimer = useRef<ReturnType<typeof setTimeout>>();
-    const highlightedElement = useRef<HTMLElement | null>(null);
-    const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const credit = mode === 'C';
+    const addLabel = credit ? 'Adicionar crédito' : 'Adicionar desconto';
+    const term = normalizeSearch(search.trim());
+    const catalog = PRESET_CATALOG.filter(item =>
+        (item.category === 'descontos') === !credit &&
+        (item.id !== 'indenizacao_transporte' || transportIndemnityEnabled)
+    );
+    const filtered = catalog.filter(item =>
+        (category === 'todos' || item.category === category) &&
+        normalizeSearch([item.label, item.description, ...item.tags].join(' ')).includes(term)
+    );
 
-    const focusCard = (id: string) => {
-        const element = document.getElementById(id);
-        if (!element) return;
-        highlightedElement.current?.classList.remove('ring-2', 'ring-secondary-600', 'ring-offset-2');
-        clearTimeout(highlightTimer.current);
-        element.focus({ preventScroll: true });
-        element.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-        element.classList.add('ring-2', 'ring-secondary-600', 'ring-offset-2');
-        highlightedElement.current = element;
-        highlightTimer.current = setTimeout(() => element.classList.remove('ring-2', 'ring-secondary-600', 'ring-offset-2'), 1800);
-    };
-
-    useEffect(() => () => clearTimeout(highlightTimer.current), []);
     useEffect(() => {
-        const pending = pendingFocus.current;
-        if (!pending) return;
-        const added = pending.kind === 'preset'
-            ? enabledPresets.find(instance => instance.presetId === pending.presetId && !pending.previousIds.includes(instance.key))
-            : rubricas.find(rubrica => !pending.previousIds.includes(rubrica.id));
-        if (!added) return;
-        pendingFocus.current = null;
-        focusCard('key' in added ? `preset-card-${added.key}` : `manual-rubrica-${added.id}`);
-    }, [enabledPresets, rubricas]);
+        if (typeof window === 'undefined' || !window.matchMedia) return;
+        const media = window.matchMedia(desktopQuery);
+        const resize = () => setDesktop(media.matches);
+        media.addEventListener('change', resize);
+        return () => media.removeEventListener('change', resize);
+    }, []);
 
-    // Contagem de instâncias ativas por presetId
-    const activeCounts = useMemo(() => {
-        const counts: Record<string, number> = {};
-        enabledPresets.forEach(instance => {
-            counts[instance.presetId] = (counts[instance.presetId] || 0) + 1;
+    useEffect(() => {
+        if (openMode !== mode) setOpenMode(null);
+    }, [mode, openMode]);
+
+    useLayoutEffect(() => {
+        const dialog = dialogRef.current;
+        if (!open || !dialog) return;
+        if (desktop) dialog.show();
+        else dialog.showModal();
+        if (desktop) searchRef.current?.focus({ preventScroll: true });
+
+        const previousOverflow = document.body.style.overflow;
+        if (!desktop) document.body.style.overflow = 'hidden';
+        return () => {
+            dialog.close();
+            if (!desktop) document.body.style.overflow = previousOverflow;
+        };
+    }, [open, desktop]);
+
+    useLayoutEffect(() => {
+        if (open || !focusTarget.current) return;
+        const target = focusTarget.current;
+        focusTarget.current = null;
+        if (target === 'trigger') {
+            triggerRef.current?.focus();
+            return;
+        }
+
+        const card = document.getElementById(target);
+        if (!card) return;
+        highlighted.current?.removeAttribute('data-rubric-highlight');
+        clearTimeout(highlightTimer.current);
+        card.setAttribute('data-rubric-highlight', '');
+        highlighted.current = card;
+        (card.querySelector<HTMLElement>('[data-rubric-edit]') ?? card).focus({ preventScroll: true });
+        card.scrollIntoView({
+            block: 'start',
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
         });
+        highlightTimer.current = setTimeout(() => card.removeAttribute('data-rubric-highlight'), 1800);
+    }, [open]);
 
-        return counts;
-    }, [enabledPresets]);
+    useEffect(() => () => {
+        clearTimeout(highlightTimer.current);
+        highlighted.current?.removeAttribute('data-rubric-highlight');
+    }, []);
 
-    // Filtra o catálogo com base no termo de busca e disponibilidade do órgão
-    const filteredCatalog = useMemo(() => {
-        const term = normalizeSearch(searchTerm.trim());
-        return PRESET_CATALOG.filter(item => {
-            if ((item.category === 'descontos') !== (mode === 'D')) return false;
-            if (item.id === 'indenizacao_transporte' && !transportIndemnityEnabled) return false;
-
-            if (!term) return true;
-
-            const matchLabel = normalizeSearch(item.label).includes(term);
-            const matchDesc = normalizeSearch(item.description).includes(term);
-            const matchTags = item.tags.some(tag => normalizeSearch(tag).includes(term));
-            return matchLabel || matchDesc || matchTags;
-        });
-    }, [searchTerm, transportIndemnityEnabled, mode]);
-
-    const scrollToPresetCard = (presetId: string) => {
-        const instance = enabledPresets.find(item => item.presetId === presetId);
-        if (instance) focusCard(`preset-card-${instance.key}`);
+    const close = (target = 'trigger') => {
+        focusTarget.current = target;
+        setOpenMode(null);
     };
 
-    const handleAddManual = (payload: Partial<Rubrica>) => {
-        if (!addRubrica) return;
-        pendingFocus.current = { kind: 'manual', previousIds: rubricas.map(item => item.id), presetId: '' };
-        addRubrica(payload);
+    const reveal = (cardId: string, edit = false) => {
+        if (edit) expandCard(cardId);
+        close(cardId);
     };
 
-    const handleAddPreset = (presetId: PredefinedRubricId) => {
-        pendingFocus.current = { kind: 'preset', previousIds: enabledPresets.map(item => item.key), presetId };
-        includePreset(presetId);
+    const addPreset = (presetId: PredefinedRubricId) => {
+        const key = includePreset(presetId);
+        if (key) reveal(`preset-card-${key}`, true);
+    };
+
+    const addManual = () => {
+        const rubricId = addRubrica(credit ? { tipo: 'C', incideIR: true, incidePSS: true } : { tipo: 'D' });
+        if (rubricId) reveal(`manual-rubrica-${rubricId}`, true);
     };
 
     return (
-        <div className="space-y-4">
-            {/* Barra superior de ações e busca rápida */}
-            <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
-                <div className="relative flex-1 min-w-0">
-                    <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                        type="search"
-                        aria-label="Buscar verba ou adicional"
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        placeholder={mode === 'C' ? 'Buscar verba (ex.: hora extra)...' : 'Buscar desconto (ex.: pensão alimentícia)...'}
-                        className={`${styles.input} pl-9 pr-12 w-full`}
-                    />
-                    {searchTerm && (
-                        <button
-                            type="button"
-                            onClick={() => setSearchTerm('')}
-                            aria-label="Limpar busca"
-                            className="absolute right-0 top-1/2 min-h-11 min-w-11 flex items-center justify-center -translate-y-1/2 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-200"
-                        >
-                            <X className="w-3.5 h-3.5" />
-                        </button>
-                    )}
-                </div>
-
+        <div className={`grid min-w-0 items-start gap-5 ${open ? 'min-[960px]:grid-cols-[minmax(0,1fr)_minmax(20rem,50%)]' : ''}`}>
+            <div className="min-w-0 space-y-4">
+                {mode && <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                        {credit ? 'Créditos adicionados' : 'Descontos adicionados'} ({instanceCount})
+                    </h3>
+                    <button ref={triggerRef} type="button" aria-expanded={open} aria-controls={`${id}-catalog`}
+                        onClick={() => {
+                            if (open) {
+                                close();
+                                return;
+                            }
+                            setSearch('');
+                            setCategory('todos');
+                            setOpenMode(mode);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-secondary-800 px-4 py-2 font-semibold text-white hover:bg-secondary-900">
+                        <Plus className="h-4 w-4" aria-hidden="true" />{addLabel}
+                    </button>
+                </div>}
+                {mode && instanceCount === 0 && <p className="rounded-xl border border-dashed border-neutral-300 p-4 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
+                    Nenhum lançamento adicionado.
+                </p>}
+                {children}
             </div>
-
-            {addRubrica && (
-                <button type="button" onClick={() => handleAddManual(mode === 'C' ? { tipo: 'C', incideIR: true, incidePSS: true } : { tipo: 'D' })}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-secondary/30 px-4 py-2 font-semibold text-secondary hover:bg-secondary/10">
-                    <Plus className="h-4 w-4" /> {mode === 'C' ? 'Adicionar crédito avulso' : 'Adicionar desconto avulso'}
-                </button>
-            )}
-
-            {/* Categorias e Chips Visuais */}
-            {filteredCatalog.length === 0 ? (
-                <div className="p-6 text-center text-neutral-400 dark:text-neutral-500 bg-neutral-50 dark:bg-neutral-900/30 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
-                    <Search className="w-6 h-6 mx-auto mb-2 opacity-40" />
-                    <p className="text-body">Nenhum adicional ou verba encontrada para &ldquo;{searchTerm}&rdquo;.</p>
-                </div>
-            ) : (
+            <dialog ref={dialogRef} id={`${id}-catalog`} aria-labelledby={`${id}-title`}
+                onCancel={event => { event.preventDefault(); close(); }}
+                onKeyDown={event => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        close();
+                    }
+                }}
+                className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-y-auto overscroll-contain bg-white p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100 min-[960px]:sticky min-[960px]:top-4 min-[960px]:h-auto min-[960px]:max-h-[calc(100dvh-var(--calculator-bar-height,0px)-2rem)] min-[960px]:rounded-xl min-[960px]:border min-[960px]:border-neutral-200 dark:min-[960px]:border-neutral-700">
                 <div className="space-y-4">
-                    {PRESET_CATEGORIES.map(category => {
-                        const itemsInCategory = filteredCatalog.filter(item => item.category === category.id);
-                        if (itemsInCategory.length === 0) return null;
-
-                        return (
-                            <details key={category.id} open={Boolean(searchTerm)} className="group rounded-xl border border-neutral-200 bg-neutral-50/60 dark:border-neutral-700 dark:bg-neutral-900/30">
-                                <summary className="flex min-h-11 cursor-pointer list-none flex-col items-start justify-between gap-3 px-4 py-3 sm:flex-row sm:items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-600">
-                                    <span className="min-w-0"><span className="block text-body font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">{category.title}</span><span className="mt-0.5 block text-body text-neutral-500 dark:text-neutral-400">{category.subtitle}</span></span>
-                                    <span className="shrink-0 rounded-full bg-neutral-200 px-2 py-0.5 text-body text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{itemsInCategory.length}{itemsInCategory.some(item => (activeCounts[item.id] || 0) > 0) ? ` · ${itemsInCategory.reduce((sum, item) => sum + (activeCounts[item.id] || 0), 0)} ativa(s)` : ''}</span>
-                                </summary>
-                                <div className="space-y-2 px-3 pb-3">
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5">
-                                    {itemsInCategory.map(item => {
-                                        const count = activeCounts[item.id] || 0;
-                                        const isAdded = count > 0;
-                                        const isMulti = MULTI_INSTANCE_PRESETS.has(item.id);
-                                        const IconComponent = PRESET_ICONS[item.id] || Sparkles;
-
-                                        return (
-                                            <div
-                                                key={item.id}
-                                                className={`group relative flex flex-col justify-between p-3 rounded-xl border transition-all ${
-                                                    isAdded
-                                                        ? 'bg-secondary/5 dark:bg-secondary/10 border-secondary/30 dark:border-secondary/40 shadow-xs'
-                                                        : 'bg-white dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-700/80 hover:border-secondary/40 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 shadow-xs'
-                                                }`}
-                                            >
-                                                {/* Topo do chip: Ícone e Título */}
-                                                <div className="flex items-start gap-2.5 mb-2">
-                                                    <div className={`p-2 rounded-lg shrink-0 ${
-                                                        isAdded
-                                                            ? 'bg-secondary text-white shadow-xs'
-                                                            : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 group-hover:bg-secondary/10 group-hover:text-secondary transition-colors'
-                                                    }`}>
-                                                        <IconComponent className="w-4 h-4" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center justify-between gap-1">
-                                                            <h5 className="text-body font-semibold text-neutral-800 dark:text-neutral-200 leading-snug break-words" title={item.label}>
-                                                                {item.label}
-                                                            </h5>
-                                                        </div>
-                                                        <p className="text-body break-words text-neutral-500 dark:text-neutral-400 mt-0.5" title={item.description}>
-                                                            {item.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Rodapé do chip: Ações e Status */}
-                                                <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800/80 flex flex-wrap items-center justify-between gap-2">
-                                                    {isAdded ? (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => scrollToPresetCard(item.id)}
-                                                                className="inline-flex min-h-11 items-center gap-1 text-body font-semibold text-secondary-700 dark:text-secondary-400 hover:underline"
-                                                                title="Rolar suavemente até o card aberto na tela"
-                                                            >
-                                                                <Check className="w-3.5 h-3.5" />
-                                                                <span>{count > 1 ? `${count} ativas` : 'Adicionado'}</span>
-                                                                <ArrowDownRight className="w-3 h-3 ml-0.5 opacity-70" />
-                                                            </button>
-
-                                                            {isMulti && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleAddPreset(item.id)}
-                                                                    className="inline-flex min-h-11 items-center gap-1 px-3 py-2 rounded-md bg-secondary/10 hover:bg-secondary/20 text-secondary text-body font-bold uppercase transition-colors"
-                                                                    title="Adicionar mais uma instância deste card"
-                                                                >
-                                                                    <Plus className="w-3 h-3" />
-                                                                    Outra
-                                                                </button>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleAddPreset(item.id)}
-                                                            className="w-full inline-flex min-h-11 items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-neutral-100 hover:bg-secondary hover:text-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-secondary dark:hover:text-white transition-colors text-body font-semibold"
-                                                        >
-                                                            <Plus className="w-3.5 h-3.5" />
-                                                            <span>Adicionar</span>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                </div>
-                            </details>
-                        );
-                    })}
+                    <div className="flex items-center justify-between gap-2">
+                        <h3 id={`${id}-title`} className="text-h5 font-semibold">{addLabel}</h3>
+                        <button type="button" onClick={() => close()} aria-label="Fechar catálogo"
+                            className="inline-flex min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800">
+                            <X className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                    </div>
+                    <label className="flex min-h-11 items-center gap-2 rounded-lg border border-secondary/50 px-3 focus-within:ring-2 focus-within:ring-secondary">
+                        <Search className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                        <input ref={searchRef} type="search" value={search} onChange={event => setSearch(event.target.value)}
+                            aria-label={credit ? 'Buscar verba ou adicional' : 'Buscar desconto'}
+                            placeholder={credit ? 'Buscar verba ou adicional' : 'Buscar desconto'}
+                            className="w-full bg-transparent py-2" />
+                    </label>
+                    {credit && <div role="group" aria-label="Categorias" className="flex flex-wrap gap-2">
+                        {[{ id: 'todos', title: 'Todos' }, ...PRESET_CATEGORIES.filter(item => catalog.some(option => option.category === item.id))].map(item => (
+                            <button key={item.id} type="button" onClick={() => setCategory(item.id)} aria-pressed={item.id === category}
+                                className={`rounded-full border px-3 text-body-sm font-semibold ${item.id === category
+                                    ? 'border-secondary-800 bg-secondary-800 text-white'
+                                    : 'border-neutral-200 hover:border-secondary dark:border-neutral-700'}`}>
+                                {item.title}
+                            </button>
+                        ))}
+                    </div>}
+                    <ul className="space-y-2" aria-label="Rubricas disponíveis">
+                        {filtered.map(item => {
+                            const instances = enabledPresets.filter(instance => instance.presetId === item.id);
+                            const [first] = instances;
+                            const repeatable = MULTI_INSTANCE_PRESETS.has(item.id);
+                            const Icon = rubricIcon(item.id);
+                            return (
+                                <li key={item.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700">
+                                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${credit
+                                        ? 'bg-secondary-50 text-secondary-800 dark:bg-secondary-950 dark:text-secondary-300'
+                                        : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
+                                        <Icon className="h-4 w-4" aria-hidden="true" />
+                                    </span>
+                                    <div className="min-w-24 flex-1">
+                                        <h4 className="break-words font-semibold">{item.label}</h4>
+                                        <p className="text-body-sm text-neutral-600 dark:text-neutral-300">{item.description}</p>
+                                        {first && <p className="text-body-xs font-semibold text-secondary-800 dark:text-secondary-300">
+                                            {repeatable ? `${instances.length} ${instances.length === 1 ? 'lançamento' : 'lançamentos'}` : 'Adicionado'}
+                                        </p>}
+                                    </div>
+                                    <div className="ml-auto flex flex-wrap justify-end gap-2">
+                                        {first && <button type="button" className={actionClass}
+                                            aria-label={`Ver lançamento de ${item.label}`}
+                                            onClick={() => reveal(`preset-card-${first.key}`)}>
+                                            {repeatable ? <ArrowDownRight aria-hidden="true" className="h-4 w-4" /> : 'Ver lançamento'}
+                                        </button>}
+                                        {(!first || repeatable) && <button type="button" className={actionClass}
+                                            aria-label={`${first ? 'Adicionar outro lançamento de' : 'Adicionar'} ${item.label}`}
+                                            onClick={() => addPreset(item.id)}>
+                                            {first ? 'Adicionar outro' : 'Adicionar'}
+                                        </button>}
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                    {filtered.length === 0 && <p role="status" className="text-neutral-600 dark:text-neutral-300">Nenhuma rubrica encontrada.</p>}
+                    <button type="button" onClick={addManual} className={actionClass}>
+                        <Plus className="h-4 w-4" aria-hidden="true" />{addLabel} avulso
+                    </button>
                 </div>
-            )}
-
-
+            </dialog>
         </div>
     );
 };

@@ -23,6 +23,7 @@ export interface PresetGrossLine {
     value: number;
     isDiscount?: boolean;
     displayValue?: string;
+    cardAmount?: 'gross' | 'net' | 'credit' | 'discount';
 }
 
 export interface PresetInstance {
@@ -47,7 +48,6 @@ export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }
 ];
 
 export const MULTI_INSTANCE_PRESETS = new Set<string>(['hora_extra', 'substituicao']);
-export const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras, Substituicao';
 export const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
 export interface PresetCatalogItem {
@@ -61,69 +61,66 @@ export interface PresetCatalogItem {
 export const PRESET_CATEGORIES = [
     {
         id: 'trabalho',
-        title: 'Serviço Extraordinário e Substituições',
-        subtitle: 'Horas extras e substituição de função'
+        title: 'Trabalho'
     },
     {
         id: 'direitos',
-        title: 'Direitos Periódicos',
-        subtitle: 'Férias (1/3) e 13º salário'
+        title: 'Férias e 13º'
     },
     {
         id: 'indenizacoes',
-        title: 'Indenizações & Viagens',
-        subtitle: 'Diárias e ressarcimento de transporte'
+        title: 'Indenizações e viagens'
     },
-    { id: 'descontos', title: 'Descontos', subtitle: 'Descontos e obrigações da folha' }
+    { id: 'descontos', title: 'Descontos' }
 ] as const;
 
 export const PRESET_CATALOG: PresetCatalogItem[] = [
     {
         id: 'hora_extra',
-        label: 'Serviço Extraordinário (Horas Extras)',
-        description: 'Cálculo de 50% e 100% com divisor da jornada ordinária ou especial',
+        label: 'Horas extras',
+        description: 'Serviço extraordinário',
         category: 'trabalho',
-        tags: ['hora', 'extra', 'he', 'servico', 'extraordinario', '50%', '100%']
+        tags: ['hora extra', 'he', 'jornada', 'divisor', '50%', '100%']
     },
     {
         id: 'substituicao',
         label: 'Substituição de Função',
-        description: 'Substituição de titular de cargo em comissão ou função de confiança',
+        description: 'Exercício temporário em cargo ou função',
         category: 'trabalho',
-        tags: ['substituicao', 'funcao', 'cargo', 'comissao', 'titular', 'dias', 'fc', 'cj']
+        tags: ['substituicao', 'funcao de confianca', 'cargo em comissao', 'titular', 'dias', 'fc', 'cj']
     },
     {
         id: 'ferias',
-        label: 'Férias (1/3 Constitucional)',
-        description: 'Adicional de 1/3 da remuneração de referência e antecipações',
+        label: 'Férias',
+        description: 'Terço constitucional e antecipações',
         category: 'direitos',
         tags: ['ferias', '1/3', 'terco', 'constitucional', 'antecipadas']
     },
     {
         id: 'decimo',
-        label: 'Gratificação Natalina (13º Salário)',
-        description: '1ª parcela, 2ª parcela e apuração tributária de PSS e IRRF',
+        label: '13º salário',
+        description: 'Gratificação natalina',
         category: 'direitos',
         tags: ['13', 'decimo', 'terceiro', 'natalina', 'adiantamento', 'segunda']
     },
     {
         id: 'diarias',
         label: 'Diárias de Viagem',
-        description: 'Deslocamento a serviço, embarque e equipe no PJU',
+        description: 'Pagamento separado do holerite',
         category: 'indenizacoes',
-        tags: ['diarias', 'viagem', 'embarque', 'transporte', 'deslocamento']
+        tags: ['diarias', 'viagem', 'embarque', 'transporte', 'deslocamento', 'equipe']
     },
     {
         id: 'indenizacao_transporte',
         label: 'Indenização de Transporte',
-        description: 'Cumprimento de mandados por Oficial de Justiça (JMU e CJF)',
+        description: 'Diligências externas',
         category: 'indenizacoes',
-        tags: ['indenizacao', 'transporte', 'oficial', 'mandados', 'diligencias']
+        tags: ['indenizacao', 'transporte', 'oficial de justica', 'mandados', 'diligencias', 'jmu', 'cjf']
     },
     {
         id: 'pensao',
         label: 'Pensão Alimentícia',
-        description: 'Cálculo por percentual sobre remuneração/líquido ou valor fixo',
+        description: 'Percentual ou valor fixo',
         category: 'descontos',
         tags: ['pensao', 'alimenticia', 'alimentos', 'judicial', 'desconto', '%', 'fixo']
     }

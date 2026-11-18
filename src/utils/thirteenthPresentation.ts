@@ -30,7 +30,7 @@ export const unifiedThirteenthLines = (state: CalculatorState): PresetGrossLine[
         { label: 'Desconto IR (Total 13º salário)', value: state.ir13 || 0, isDiscount: true },
         { label: 'Desconto PSS (Total 13º salário)', value: state.pss13 || 0, isDiscount: true },
         { label: 'Desconto Funpresp (Total 13º salário)', value: state.valFunpresp13 || 0, isDiscount: true },
-        { label: 'Total 13º salário Bruto', value: round(memory.firstTotal + secondGross) },
+        { label: 'Total 13º salário Bruto', value: round(memory.firstTotal + secondGross), cardAmount: 'gross' },
         { label: 'Total 13º salário Líquido', value: round(memory.firstTotal + secondGross - deductions) },
         { label: 'Total 13º salário Bruto 1ª Parcela', value: memory.firstTotal },
         { label: 'Total 13º salário Líquido 1ª Parcela', value: memory.firstTotal },

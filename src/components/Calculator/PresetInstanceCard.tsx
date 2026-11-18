@@ -7,6 +7,7 @@ import { DailiesCalculationNotes, DailiesHelp } from './DailiesCalculationNotes'
 import { getDailiesPresentation } from './dailiesPresentation';
 import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
+import { RubricCardHeading } from './RubricCardHeading';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS } from './dynamicPayrollForm.helpers';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
 
@@ -37,6 +38,7 @@ interface PresetInstanceCardProps {
     courtConfig: CourtConfig;
     lines: PresetGrossLine[];
     calculationReady?: boolean;
+    editor?: { expanded: boolean; toggle: () => void };
 }
 
 const getPresetHeaderInfo = (
@@ -136,7 +138,8 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     updateSubstitutionEntry,
     courtConfig,
     lines,
-    calculationReady = false
+    calculationReady = false,
+    editor
 }) => {
     const headerInfo = getPresetHeaderInfo(instance.presetId, courtConfig, presetLabel, instance, state);
 
@@ -146,6 +149,9 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const dailiesPeriodReady = instance.presetId !== 'diarias' || (inputState ?? state).diariasModoDesconto !== 'periodo'
         || Boolean(getDailiesPresentation(inputState ?? state, courtConfig).period);
     const [infoOpen, setInfoOpen] = useState(false);
+    const showEditor = !editor || editor.expanded;
+    const panelId = `preset-editor-${instance.key}`;
+    const cardAmount = calculationReady && dailiesPeriodReady ? lines.find(line => line.cardAmount) : undefined;
     const infoRef = useRef<HTMLSpanElement>(null);
     useEffect(() => {
         if (!infoOpen || typeof document === 'undefined') return;
@@ -164,14 +170,28 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             onDragOver={handlePresetDragOver}
             onDrop={() => handlePresetDrop(instance.key)}
             onDragEnd={handlePresetDragEnd}
-            className={`${styles.card} space-y-4 transition-shadow ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            className={`${editor ? styles.rubricCard : styles.card} transition-shadow ${editor ? 'space-y-2' : 'space-y-4'} ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
+            {editor && <RubricCardHeading
+                title={`${presetLabel}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}`}
+                presetId={instance.presetId}
+                discount={instance.presetId === 'pensao'}
+                amount={cardAmount?.cardAmount ? { kind: cardAmount.cardAmount, value: cardAmount.value } : undefined}
+                notice={instance.presetId === 'indenizacao_transporte' && state.transporteIndenizacaoMemory?.status === 'unavailable'
+                    ? 'Valor indisponível nesta competência' : undefined}
+                panelId={panelId} expanded={editor.expanded} onToggle={editor.toggle}
+            />}
+            {reorderMode && movePreset && <div className="flex justify-end gap-1">
+                <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
+                <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
+            </div>}
+            <div id={panelId} hidden={!showEditor} className={showEditor ? 'space-y-4' : 'hidden'}>
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-2">
                 <div className={`flex min-w-0 flex-1 items-center gap-2 ${['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) ? '' : 'flex-wrap'}`}>
                     {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
-                    <h3 className="min-w-0 text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                    {!editor && <h3 className="min-w-0 text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
-                    </h3>
+                    </h3>}
                     {headerInfo.normBadge && !['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias', 'gratificacao'].includes(instance.presetId) && (
                         <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
                             {headerInfo.normBadge}
@@ -235,10 +255,6 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     <Trash2 className="w-4 h-4" />
                 </button>
                 </div>
-                {reorderMode && movePreset && <div className="col-span-2 flex justify-end gap-1">
-                        <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
-                        <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
-                </div>}
             </div>
 
             <PresetCardContent
@@ -261,10 +277,11 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 courtConfig={courtConfig}
             />
 
-            {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={(['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
+            {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={Boolean(editor) || ['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={((editor || ['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
                 {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
                 {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
             </PresetGrossSummary>}
+            </div>
         </div>
     );
 };

@@ -86,7 +86,7 @@ export const buildPresetGrossLines = ({
             const ir = roundCurrency(state.irFerias || 0);
             const advance = roundCurrency(state.feriasDesc || 0);
             return [
-                { label: 'Adicional 1/3 férias Bruto', value: gross },
+                { label: 'Adicional 1/3 férias Bruto', value: gross, cardAmount: 'gross' },
                 { label: 'Desconto IR (Adicional 1/3 férias)', value: ir, isDiscount: true },
                 { label: 'Desconto de férias antecipadas', value: advance, isDiscount: true },
                 { label: 'Adicional 1/3 férias Liquido', value: roundCurrency(gross - ir - advance) }
@@ -142,7 +142,7 @@ export const buildPresetGrossLines = ({
                 { label: '2ª parcela vencimento Líquido', value: segunda13VencLiquido },
                 { label: '2ª parcela FC/CJ Líquido', value: segunda13FcLiquido },
                 { label: 'Abono 13º Líquido', value: abono13Liquido },
-                { label: 'Total 13º salário Bruto', value: total13Bruto },
+                { label: 'Total 13º salário Bruto', value: total13Bruto, cardAmount: 'gross' },
                 { label: 'Total 13º salário Líquido', value: total13Liquido },
                 { label: 'Total 13º salário Bruto 1ª Parcela', value: totalPrimeiraParcelaBruto },
                 { label: 'Total 13º salário Líquido 1ª Parcela', value: totalPrimeiraParcelaLiquido },
@@ -174,7 +174,7 @@ export const buildPresetGrossLines = ({
                     : 'Desconto IR (Hora extra)';
             if (Math.abs(roundCurrency(he50Bruto + he100Bruto) - heTotalBruto) > 0.001) {
                 return [
-                    { label: 'Valor bruto manual/importado', value: heTotalBruto },
+                    { label: 'Valor bruto manual/importado', value: heTotalBruto, cardAmount: 'gross' },
                     { label: irLabel, value: heIr, isDiscount: true },
                     { label: 'Total hora extra Líquido', value: roundCurrency(Math.max(0, heTotalBruto - heIr)) },
                 ];
@@ -201,7 +201,7 @@ export const buildPresetGrossLines = ({
                 { label: 'Desconto PSS (Hora extra)', value: 0, isDiscount: true },
                 { label: 'Hora extra 50% Líquido', value: roundCurrency(Math.max(0, he50Bruto - desconto50)) },
                 { label: 'Hora extra 100% Líquido', value: roundCurrency(Math.max(0, he100Bruto - (heIr - desconto50))) },
-                { label: 'Total hora extra Bruto', value: heTotalBruto },
+                { label: 'Total hora extra Bruto', value: heTotalBruto, cardAmount: 'gross' },
                 { label: 'Total hora extra Líquido', value: roundCurrency(Math.max(0, heTotalBruto - heIr)) },
             ];
         }
@@ -235,7 +235,7 @@ export const buildPresetGrossLines = ({
                     { label: 'Total por dias (referência; não somado ao valor documentado)', value: entry.totalPorDias },
                     { label: 'Valor bruto documentado utilizado', value: entry.total },
                 ] : []),
-                { label: 'Total substituição Bruto', value: entry.total },
+                { label: 'Total substituição Bruto', value: entry.total, cardAmount: 'gross' },
                 { label: irLabel, value: ir, isDiscount: true },
                 { label: 'Desconto PSS (Substituição)', value: pss, isDiscount: true },
                 { label: 'Total substituição Líquido', value: roundCurrency(Math.max(0, entry.total - ir - pss)) },
@@ -281,7 +281,7 @@ export const buildPresetGrossLines = ({
                 { label: 'Dias informados', value: memory.days, displayValue: String(memory.days) },
                 { label: 'Divisor', value: memory.divisor, displayValue: String(memory.divisor) },
                 { label: `Cálculo: valor integral × ${memory.eligibleDays} ÷ ${memory.divisor}`, value: memory.amount },
-                { label: 'Valor a receber', value: memory.amount }
+                { label: 'Valor a receber', value: memory.amount, cardAmount: 'credit' }
             );
             return lines;
         }
@@ -376,7 +376,7 @@ export const buildPresetGrossLines = ({
                 { label: 'Desconto IR (Diárias)', value: 0, isDiscount: true },
                 { label: 'Desconto PSS (Diárias)', value: 0, isDiscount: true }
             );
-            lines.push({ label: 'Total diárias líquidas', value: roundCurrency(state.diariasValorTotal || 0) });
+            lines.push({ label: 'Total diárias líquidas', value: roundCurrency(state.diariasValorTotal || 0), cardAmount: 'net' });
 
             return lines;
         }
@@ -402,13 +402,15 @@ export const buildPresetGrossLines = ({
                 lines.push({
                     label: `Pensão alimentícia (${state.pensaoPercentual ?? 30}%)`,
                     value: valorFinal,
-                    isDiscount: true
+                    isDiscount: true,
+                    cardAmount: 'discount'
                 });
             } else {
                 lines.push({
                     label: 'Pensão alimentícia (valor fixo)',
                     value: valorFinal,
-                    isDiscount: true
+                    isDiscount: true,
+                    cardAmount: 'discount'
                 });
             }
             return lines;

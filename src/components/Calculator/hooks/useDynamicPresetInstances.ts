@@ -441,32 +441,34 @@ export const useDynamicPresetInstances = ({
 
         if (preset === 'hora_extra') {
             const newEntry = createOvertimeEntry();
+            const key = createUniqueId('preset-hora_extra');
             const hasActiveOvertimePreset = enabledPresets.some(item => item.presetId === 'hora_extra');
             update('overtimeEntries', hasActiveOvertimePreset ? [newEntry, ...state.overtimeEntries] : [newEntry]);
             setEnabledPresets(prev => [
                 {
-                    key: createUniqueId('preset-hora_extra'),
+                    key,
                     presetId: 'hora_extra',
                     overtimeEntryId: newEntry.id
                 },
                 ...prev
             ]);
-            return;
+            return key;
         }
 
         if (preset === 'substituicao') {
             const newEntry = createSubstitutionEntry();
+            const key = createUniqueId('preset-substituicao');
             const hasActiveSubstitutionPreset = enabledPresets.some(item => item.presetId === 'substituicao');
             update('substitutionEntries', hasActiveSubstitutionPreset ? [newEntry, ...state.substitutionEntries] : [newEntry]);
             setEnabledPresets(prev => [
                 {
-                    key: createUniqueId('preset-substituicao'),
+                    key,
                     presetId: 'substituicao',
                     substitutionEntryId: newEntry.id
                 },
                 ...prev
             ]);
-            return;
+            return key;
         }
 
         if (preset === 'abono') {
@@ -484,10 +486,12 @@ export const useDynamicPresetInstances = ({
             if (!state.pensaoPercentual) update('pensaoPercentual', 30);
         }
         if (enabledPresetIds.has(preset)) return;
+        const key = createUniqueId(`preset-${preset}`);
         setEnabledPresets(prev => [
-            { key: createUniqueId(`preset-${preset}`), presetId: preset },
+            { key, presetId: preset },
             ...prev
         ]);
+        return key;
     };
 
     const removePreset = (instance: PresetInstance) => {

@@ -8,6 +8,7 @@ const server = await createServer({
 });
 try {
     await server.ssrLoadModule('/tests/calculatorState.test.ts');
+    await server.ssrLoadModule('/tests/rubricCatalog.test.tsx');
 } finally {
     await server.close();
 }

@@ -11,6 +11,7 @@ import { PensionRubricFields } from './PensionRubricFields';
 import { resolvePensionRubricRule } from '../../services/agency/engine/modules/pensionCatalog';
 import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from './TaxAdjustmentPanel';
+import { RubricCardHeading } from './RubricCardHeading';
 
 const VPNI_DESCRIPTIONS = ['VPNI — Lei nº 9.527/1997', 'VPNI — decisão judicial'];
 
@@ -48,6 +49,7 @@ interface ManualRubricasSectionProps {
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     toPositiveNumber: (value: string) => number;
+    editor?: { expandedIds: ReadonlySet<string>; toggle: (id: string) => void };
 }
 
 export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
@@ -69,7 +71,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     competencia = '',
     removeRubrica,
     updateRubrica,
-    toPositiveNumber
+    toPositiveNumber,
+    editor
 }) => {
     const vpniId = useId();
     const [expandedEaCards, setExpandedEaCards] = useState<Record<string, boolean>>({});
@@ -99,6 +102,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
         return reasons.map(reason => `${rubrica.id}:${reason}`);
     });
     const pendingSignature = JSON.stringify(pendingSections);
+    const pendingIds = new Set(pendingSections.map(key => key.slice(0, key.lastIndexOf(':'))));
     const previousPendingSections = useRef(new Set<string>());
     useEffect(() => {
         const pending: string[] = JSON.parse(pendingSignature);
@@ -577,17 +581,28 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     );
                 }
 
+                const cardId = `manual-rubrica-${rubrica.id}`;
+                const editorId = `manual-editor-${rubrica.id}`;
+                const expanded = !editor || editor.expandedIds.has(cardId);
                 return (
                     <div
                         key={rubrica.id}
-                        id={`manual-rubrica-${rubrica.id}`}
+                        id={cardId}
                         tabIndex={-1}
-                        className={`${styles.card} space-y-3.5 border-l-4 transition-all ${
+                        className={`${editor ? styles.rubricCard : styles.card} ${editor ? 'space-y-2' : 'space-y-3.5'} border-l-4 transition-shadow data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2 ${
                             isCredito
                                 ? 'border-l-secondary-500 shadow-xs'
                                 : 'border-l-red-500 shadow-xs'
                         }`}
                     >
+                        {editor && <RubricCardHeading
+                            title={rubrica.descricao.trim() || `${isCredito ? 'Crédito' : 'Desconto'} avulso · ${index + 1}`}
+                            discount={!isCredito}
+                            amount={rubrica.valor > 0 ? { kind: isCredito ? 'gross' : 'discount', value: rubrica.valor } : undefined}
+                            notice={pendingIds.has(rubrica.id) ? 'Há dados a revisar' : undefined}
+                            panelId={editorId} expanded={expanded} onToggle={() => editor.toggle(cardId)}
+                        />}
+                        <div id={editorId} hidden={!expanded} className={expanded ? 'space-y-3.5' : 'hidden'}>
                         {/* Topo do Card: Badge de Tipo, Integração de Base e Exclusão */}
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
@@ -634,6 +649,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         {taxOptions}
                         {calculationReady && <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />}
                         {calculationNotices}
+                        </div>
                     </div>
                 );
             })}
