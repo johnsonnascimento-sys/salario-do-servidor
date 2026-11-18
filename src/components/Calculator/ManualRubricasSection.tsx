@@ -19,6 +19,24 @@ import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
 const VPNI_DESCRIPTIONS = ['VPNI — Lei nº 9.527/1997', 'VPNI — decisão judicial'];
 
+const VPNI_HELP = {
+    label: 'Explicação sobre VPNI',
+    content: <>
+        <p>A VPNI é uma parcela individual da remuneração. Pode decorrer da incorporação de quintos ou décimos de função comissionada, de diferenças de enquadramento ou de decisão judicial. Lance cada parcela separadamente, pelo valor em reais informado no contracheque da competência ou no documento de referência.</p>
+        <p><strong>Quintos e décimos.</strong> A Lei nº 6.732/1979 é um antecedente da incorporação. A Lei nº 9.527/1997 extinguiu a incorporação e transformou as parcelas então incorporadas em VPNI. A MP nº 2.225-45/2001 acrescentou o art. 62-A à Lei nº 8.112/1990, que também prevê a conversão em VPNI das incorporações a que se refere. A parcela convertida tem valor nominal em reais, desvinculado da tabela da função.</p>
+        <p><strong>Decisão judicial.</strong> A rubrica individualiza o crédito dos beneficiários abrangidos pelo processo, preserva a referência ao título judicial e permite controlar eventual absorção. Enquanto houver fundamento para o pagamento, a Súmula 279 do TCU orienta o pagamento em valor nominal, ressalvado o que dispuser a sentença. O Tema 494 do STF trata da perda de eficácia da sentença que concedeu um percentual quando ele é definitivamente incorporado aos ganhos.</p>
+        <p><strong>Absorção no PJU.</strong> O tratamento depende da origem da parcela, da lei e, quando houver, da decisão judicial. O art. 11, parágrafo único, da Lei nº 11.416/2006 protege as VPNIs permanentes nele previstas, inclusive quintos e décimos, contra redução, absorção ou compensação pelos reajustes das parcelas remuneratórias dos anexos da lei.</p>
+        <p><strong>VPNI de graduação do Técnico Judiciário.</strong> Use a página Adicional de Qualificação (AQ) para a parcela do art. 15, §§ 5º e 6º, da Lei nº 11.416/2006. A redação dada pela Lei nº 15.292/2025 prevê a transformação da VPNI de graduação em AQ nas situações abrangidas.</p>
+        <p className="flex flex-wrap gap-x-3 gap-y-1">
+            <a className="underline" href="https://www.planalto.gov.br/ccivil_03/leis/1970-1979/l6732.htm" target="_blank" rel="noreferrer">Lei nº 6.732/1979</a>
+            <a className="underline" href="https://www.planalto.gov.br/ccivil_03/leis/l9527.htm#art15" target="_blank" rel="noreferrer">Lei nº 9.527/1997, art. 15</a>
+            <a className="underline" href="https://www.planalto.gov.br/ccivil_03/leis/l8112cons.htm#art62a" target="_blank" rel="noreferrer">Lei nº 8.112/1990, art. 62-A</a>
+            <a className="underline" href="https://www2.camara.leg.br/legin/fed/lei/2006/lei-11416-15-dezembro-2006-548306-normaatualizada-pl.html" target="_blank" rel="noreferrer">Lei nº 11.416/2006, arts. 11 e 15</a>
+            <a className="underline" href="https://portal.stf.jus.br/processos/detalhe.asp?incidente=2659105" target="_blank" rel="noreferrer">Tema 494 do STF</a>
+            <a className="underline" href="https://pesquisa.apps.tcu.gov.br/doc/acordao-completo/2875/2023/Primeira%20C%C3%A2mara" target="_blank" rel="noreferrer">Súmula 279 citada pelo TCU</a>
+        </p>
+    </>
+};
 
 const PSS_OPTIONS = [
     { value: 'mensal', label: 'Mensal' },
@@ -556,7 +574,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
         <div className={fixedTitles ? 'space-y-5' : 'space-y-4'}>
             {addVpni && (
                 <section id="vantagem-vpni" tabIndex={-1} aria-labelledby={`${vpniId}-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-4`}>
-                    <CalculatorCardHeading help={{ label: 'Explicação sobre VPNI', content: <p>VPNI significa Vantagem Pessoal Nominalmente Identificada. Registre cada parcela conforme o contracheque ou o documento que a instituiu.</p> }}>
+                    <CalculatorCardHeading help={VPNI_HELP}>
                         <h3 id={`${vpniId}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">Vantagem Pessoal Nominalmente Identificada (VPNI)</h3>
                     </CalculatorCardHeading>
                     <datalist id={`${vpniId}-descricoes`}>
