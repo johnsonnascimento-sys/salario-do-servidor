@@ -447,8 +447,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 ))}
             </section>
 
-            <div id={step === 6 ? 'creditos-eventuais' : step === 7 ? 'descontos' : step === 8 ? 'descontos-pensao' : undefined}
-                hidden={step !== 6 && step !== 7 && step !== 8} className="space-y-5" tabIndex={-1}>
+            <div id={rubricMode === 'C' ? 'creditos-eventuais' : rubricMode === 'D' ? 'descontos' : undefined}
+                hidden={rubricMode === null} className="space-y-5" tabIndex={-1}>
             <PresetControlsSection
                 mode={rubricMode}
                 instanceCount={visiblePresets.length + otherRubrics.filter(rubrica => rubrica.tipo === rubricMode).length}
@@ -525,10 +525,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             })}
 
-            <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300" hidden={step !== 6 && step !== 7 && step !== 8}>
+            <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300">
                 <ManualRubricasSection
                     {...manualRubricProps}
-                    mode={step === 7 || step === 8 ? 'D' : 'C'}
+                    mode={rubricMode ?? 'C'}
                     rubricas={otherRubrics}
                     updateRubrica={updateRubrica}
                     editor={rubricMode ? { expandedIds: expandedRubricIds, toggle: toggleRubric } : undefined}
