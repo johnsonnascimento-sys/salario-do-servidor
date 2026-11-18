@@ -222,9 +222,9 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 Esta simulação anterior tem PSS sobre substituição de função. O cálculo mantém a incidência registrada.
             </p>
         )}
-        <details aria-label="Resumo calculado da previdência" className={`${styles.card} group`}>
+        <details aria-label="Contribuições previdenciárias" className={`${styles.card} group`}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
-                <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>
+                <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Contribuições previdenciárias</span>
                 <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
             </summary>
             <div className="space-y-1.5 pt-2 text-body-xs">
