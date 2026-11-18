@@ -24,32 +24,38 @@ const memory: PensionMemory = { mensal: month, thirteenth: { ...month, tipo: '13
     retroativos: [{ id: 'retro', competencia: '2025-12', tipo: 'mensal', modo: 'manual', destinoIR: 'ea',
         rpps: 10, complementar: 15 }] };
 
-test('VPNI e ATS exibem tributação independente do detalhamento e preservam competências salvas', () => {
+test('VPNI, ATS e crédito avulso compartilham o painel tributário e preservam competências salvas', () => {
     const vpni: Rubrica = { ...rubric, id: 'vpni', descricao: 'VPNI', incideIR: true, incidePSS: true, incideFunpresp: false };
     const ats: Rubrica = { ...vpni, id: 'ats', descricao: 'ATS', incideIR: false, isEA: true, competenciasEA: ['2024-07'] };
+    const credito: Rubrica = { ...ats, id: 'credito', descricao: 'Diferença salarial', competenciasEA: ['2024-08'] };
     const fixedTitles = new Map([['vpni', 'VPNI'], ['ats', 'ATS']]);
     const Form = () => {
-        const [rubricas, setRubricas] = useState([vpni, ats]);
+        const [rubricas, setRubricas] = useState([vpni, ats, credito]);
         return <ManualRubricasSection rubricas={rubricas} fixedTitles={fixedTitles}
-            calculationReady={false} funprespParticipacao="nao" competenciaReferencia="11/2026" styles={{}}
+            calculationReady funprespParticipacao="nao" competenciaReferencia="11/2026" styles={{}}
             removeRubrica={() => {}} toPositiveNumber={Number}
             updateRubrica={(id, field, value) => setRubricas(previous =>
                 previous.map(item => item.id === id ? { ...item, [field]: value } : item))} />;
     };
     const tree = create(<Form />);
-    const card = (id: string) => tree.root.findByProps({ id: `manual-rubrica-${id}` });
+    const card = (id: string) => tree.root.findByProps({ id: id === 'ats' ? 'vantagem-ats' : `manual-rubrica-${id}` });
     const radio = (id: string, value: string) => card(id).findByProps({ type: 'radio', name: `manual-tributacao-${id}`, value });
     const current = (id: string) => tree.root.findByType(ManualRubricasSection).props.rubricas.find((item: Rubrica) => item.id === id);
 
-    for (const id of ['vpni', 'ats']) {
-        const [tax, calculation] = card(id).findAllByType('details', { deep: false });
+    for (const id of ['vpni', 'ats', 'credito']) {
+        const content = id === 'credito' ? card(id).findByProps({ id: 'manual-editor-credito' }) : card(id);
+        const [tax, calculation] = content.findAllByType('details', { deep: false });
         const funpresp = tax.findAllByType('details').find(detail => detail.props.className.includes('group/funpresp'))!;
-        assert.equal(tax.findAllByProps({ type: 'radio' }).length, 6);
+        assert.equal(tax.findAllByType('input').filter(input => input.props.type === 'radio').length, 6);
         assert.equal(Boolean(funpresp.props.open), false);
-        assert.equal(tax.props.open, false);
+        assert.equal(tax.props.open, id === 'credito');
         assert.equal(calculation.findAllByType('input').length, 0);
-        assert.equal(calculation.findAllByType('details').length, 1);
-        assert.equal(card(id).findAllByProps({ id: `manual-description-${id}` }).length, 0);
+        const detailLabel = () => calculation.findByType('summary').findByType('p').children.join('');
+        assert.equal(detailLabel(), 'Ver detalhamento do cálculo');
+        act(() => calculation.findByType('summary').props.onClick({ preventDefault() {} }));
+        assert.equal(detailLabel(), 'Ocultar detalhamento');
+        assert.equal(tax.props.open, id === 'credito');
+        assert.equal(card(id).findAllByProps({ id: `manual-description-${id}` }).length, id === 'credito' ? 1 : 0);
     }
 
     assert.equal(radio('vpni', 'mensal').props.checked, true);
@@ -66,6 +72,11 @@ test('VPNI e ATS exibem tributação independente do detalhamento e preservam co
     assert.equal(current('ats').isEA, false);
     act(() => radio('ats', 'rra').props.onChange());
     assert.deepEqual(current('ats').competenciasEA, ['2024-07']);
+    act(() => radio('credito', 'excluir').props.onChange());
+    assert.equal(current('credito').incideIR, false);
+    assert.equal(current('credito').isEA, false);
+    act(() => radio('credito', 'rra').props.onChange());
+    assert.deepEqual(current('credito').competenciasEA, ['2024-08']);
 
     const pss = (value: string, id = 'vpni') => card(id).findByProps({ type: 'radio', name: `manual-pss-${id}`, value });
     act(() => pss('original').props.onChange());
@@ -83,6 +94,11 @@ test('VPNI e ATS exibem tributação independente do detalhamento e preservam co
     assert.equal(current('vpni').pssCompetenciaSeparada, false);
     assert.equal(current('vpni').incidePSS, true);
     assert.equal(current('ats').incidePSS, true);
+    act(() => pss('original', 'credito').props.onChange());
+    assert.equal(current('credito').pssCompetenciaSeparada, true);
+    assert.equal(current('credito').incidePSS, false);
+    assert.ok(card('credito').findAllByType('a').some(link => link.props.href === '#pension-retro-form'));
+    assert.equal(pss('mensal', 'ats').props.checked, true);
     act(() => tree.unmount());
 });
 

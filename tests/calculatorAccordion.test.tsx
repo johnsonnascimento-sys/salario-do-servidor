@@ -5,6 +5,7 @@ import { act, create } from 'react-test-renderer';
 import { Accordion } from '../src/components/ui/Accordion';
 import { SubstitutionCard } from '../src/components/Calculator/cards/SubstitutionCard';
 import { ManualRubricasSection } from '../src/components/Calculator/ManualRubricasSection';
+import { TaxAdjustmentPanel } from '../src/components/Calculator/TaxAdjustmentPanel';
 import { INITIAL_STATE } from '../src/types';
 import { VacationCard } from '../src/components/Calculator/cards/VacationCard';
 
@@ -77,23 +78,21 @@ test('recebimento automático de férias pode ser alternado pelo teclado', () =>
 });
 
 
-test('rubrica EA aberta por padrão recolhe no primeiro clique e mantém seus campos montados', () => {
-    const rubrica = { id: 'manual-ea', tipo: 'D' as const, descricao: 'Dedução anterior', valor: 100,
-        incideIR: false, incidePSS: false, isEA: true, competenciasEA: ['2024-01'], fundamentoDeducaoEA: 'Documento 1' };
+test('crédito EA aberto por padrão recolhe no primeiro acionamento e mantém seus campos montados', () => {
+    const rubrica = { id: 'manual-ea', tipo: 'C' as const, descricao: 'Crédito de exercício anterior', valor: 100,
+        incideIR: false, incidePSS: false, isEA: true, competenciasEA: ['2024-01'] };
     let tree: ReturnType<typeof create>;
     act(() => { tree = create(<ManualRubricasSection rubricas={[rubrica]} styles={{}} totalCreditos={0}
         totalDescontos={100} calculationReady={false} funprespParticipacao="nao" addRubrica={() => {}}
         removeRubrica={() => {}} updateRubrica={() => {}} toPositiveNumber={Number} />); });
-    const trigger = () => tree.root.findByProps({ id: 'manual-advanced-trigger-manual-ea' });
-    const panel = () => tree.root.findByProps({ id: 'manual-advanced-manual-ea' });
-    assert.equal(trigger().props['aria-expanded'], true);
+    const panel = () => tree.root.findByType(TaxAdjustmentPanel).findAllByType('details')[0];
+    assert.equal(panel().props.open, true);
     const inputs = panel().findAllByType('input').length;
-    act(() => trigger().props.onClick());
-    assert.equal(trigger().props['aria-expanded'], false);
-    assert.equal(panel().props.hidden, true);
+    act(() => panel().props.onToggle({ currentTarget: { open: false } }));
+    assert.equal(panel().props.open, false);
     assert.equal(panel().findAllByType('input').length, inputs);
-    act(() => trigger().props.onClick());
-    assert.equal(panel().props.hidden, false);
+    act(() => panel().props.onToggle({ currentTarget: { open: true } }));
+    assert.equal(panel().props.open, true);
     act(() => tree.unmount());
 });
 
@@ -106,13 +105,13 @@ test('rubrica que passa a exigir natureza abre opções e respeita recolhimento 
         removeRubrica={() => {}} updateRubrica={() => {}} toPositiveNumber={Number} />;
     let tree: ReturnType<typeof create>;
     act(() => { tree = create(render(0)); });
-    const trigger = () => tree.root.findByProps({ id: 'manual-advanced-trigger-classificacao' });
-    assert.equal(trigger().props['aria-expanded'], false);
+    const panel = () => tree.root.findByType(TaxAdjustmentPanel).findAllByType('details')[0];
+    assert.equal(panel().props.open, false);
     act(() => tree.update(render(100)));
-    assert.equal(trigger().props['aria-expanded'], true);
-    act(() => trigger().props.onClick());
-    assert.equal(trigger().props['aria-expanded'], false);
+    assert.equal(panel().props.open, true);
+    act(() => panel().props.onToggle({ currentTarget: { open: false } }));
+    assert.equal(panel().props.open, false);
     act(() => tree.update(render(200, 'Descrição editada')));
-    assert.equal(trigger().props['aria-expanded'], false);
+    assert.equal(panel().props.open, false);
     act(() => tree.unmount());
 });
