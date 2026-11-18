@@ -45,7 +45,7 @@ interface DynamicPayrollFormProps {
     courtConfig: CourtConfig;
     addRubrica: (payload?: Rubrica['tipo'] | Partial<Rubrica>) => void;
     removeRubrica: (id: string) => void;
-    updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
+    updateRubrica: (id: string, field: keyof Rubrica, value: any, fallback?: Rubrica) => void;
     styles: any;
 }
 
@@ -55,6 +55,27 @@ const FIXED_BENEFITS: Array<PresetInstance & { title: string }> = [
     { key: 'aux-transporte-fixed', presetId: 'aux_transporte', title: 'Auxílio-transporte' },
     { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar' }
 ];
+
+const PERSONAL_ADVANTAGES = ['VPNI', 'ATS'] as const;
+
+const getPersonalAdvantage = (rubrica: Rubrica): typeof PERSONAL_ADVANTAGES[number] | undefined => {
+    if (rubrica.tipo !== 'C') return undefined;
+    if (rubrica.vantagemPessoal !== undefined) return rubrica.vantagemPessoal ?? undefined;
+    const prefix = rubrica.descricao?.trim().match(/^(VPNI|ATS)\b/i)?.[0].toUpperCase();
+    return PERSONAL_ADVANTAGES.find(name => name === prefix);
+};
+
+const emptyPersonalAdvantage = (name: typeof PERSONAL_ADVANTAGES[number]): Rubrica => ({
+    id: `vantagem-pessoal-${name.toLowerCase()}`,
+    vantagemPessoal: name,
+    descricao: name,
+    valor: 0,
+    tipo: 'C',
+    incideIR: true,
+    incidePSS: true,
+    isEA: false,
+    pssCompetenciaSeparada: false
+});
 
 export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     step,
@@ -258,6 +279,31 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         />
     );
 
+    const fixedTitles = new Map<string, string>();
+    const personalRubrics = PERSONAL_ADVANTAGES.flatMap(name => {
+        const saved = state.rubricasExtras.filter(rubrica => getPersonalAdvantage(rubrica) === name);
+        const cards = saved.length ? saved : [emptyPersonalAdvantage(name)];
+        fixedTitles.set(cards[0].id, name);
+        return cards.map(rubrica => ({ ...rubrica, vantagemPessoal: name }));
+    });
+    const otherRubrics = state.rubricasExtras.filter(rubrica => !getPersonalAdvantage(rubrica));
+    const manualRubricProps = {
+        rubricasTax: state.rubricasTax,
+        summaryRubrics: state.rubricasExtras,
+        calculationReady: calculationReady && Boolean(state.pensionMemory),
+        funprespParticipacao: state.funprespParticipacao,
+        pensionRetroEntries: (inputState ?? state).pensionRetroEntries,
+        pensionConfig: courtConfig.previdenciaComplementar,
+        pensionMemory: calculationReady ? state.pensionMemory : undefined,
+        competencia: pensionParams.competencia,
+        irEaEntryTax: state.irEaEntryTax,
+        irEaCurrentYearKeys: state.irEaCurrentYearKeys,
+        competenciaReferencia,
+        styles,
+        removeRubrica,
+        toPositiveNumber
+    };
+
     return (
         <>
             <section id="remuneracao" tabIndex={-1} className="scroll-mt-24" hidden={step > 6}>
@@ -354,6 +400,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 </div>
             </section>
 
+            <section id="vantagens-pessoais" tabIndex={-1} className="scroll-mt-24" hidden={step !== 2}>
+                <ManualRubricasSection
+                    {...manualRubricProps}
+                    rubricas={personalRubrics}
+                    fixedTitles={fixedTitles}
+                    updateRubrica={(id, field, value) => updateRubrica(
+                        id, field, value, personalRubrics.find(rubrica => rubrica.id === id)
+                    )}
+                />
+            </section>
+
             <section id="beneficios" tabIndex={-1} className="space-y-5 scroll-mt-24" hidden={step !== 3}>
                 {FIXED_BENEFITS.map(instance => (
                     <div key={instance.key} className={`${styles.card} space-y-4`}>
@@ -364,33 +421,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         <PresetGrossSummary compact lines={calculationReady ? getPresetGrossLines(instance) : []} />
                     </div>
                 ))}
-                <div className={`${styles.card} scroll-mt-24`}>
-                    <h2 className={`${styles.sectionTitle} relative`}>
-                        <Sparkles className="w-4 h-4 text-secondary" />
-                        Vantagens Pessoais
-                    </h2>
-                    <PresetControlsSection
-                        mode="C"
-                        styles={styles}
-                        selectedPreset={selectedPreset}
-                        setSelectedPreset={setSelectedPreset}
-                        availablePresets={availablePresets}
-                        includePreset={includePreset}
-                        multiInstanceHintLabel={MULTI_INSTANCE_HINT_LABEL}
-                        enabledPresets={enabledPresets}
-                        transportIndemnityEnabled={transportIndemnityEnabled}
-                        addRubrica={addRubrica}
-                        rubricas={state.rubricasExtras}
-                        catalogCategory="beneficios"
-                        showAddManual={false}
-                        onCardAdded={id => {
-                            const element = document.getElementById(id);
-                            if (!element) return;
-                            element.focus({ preventScroll: true });
-                            element.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-                        }}
-                    />
-                </div>
             </section>
 
             <div id={step === 7 ? 'descontos' : step === 8 ? 'descontos-pensao' : undefined}
@@ -412,8 +442,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     enabledPresets={enabledPresets}
                     transportIndemnityEnabled={transportIndemnityEnabled}
                     addRubrica={addRubrica}
-                    rubricas={state.rubricasExtras}
-                    catalogCategory="eventuais"
+                    rubricas={otherRubrics}
                 />
             </section>
 
@@ -478,22 +507,10 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
             <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300" hidden={step !== 6 && step !== 7 && step !== 8}>
                 <ManualRubricasSection
+                    {...manualRubricProps}
                     mode={step === 7 || step === 8 ? 'D' : 'C'}
-                    rubricas={state.rubricasExtras}
-                    rubricasTax={state.rubricasTax}
-                    calculationReady={calculationReady && Boolean(state.pensionMemory)}
-                    funprespParticipacao={state.funprespParticipacao}
-                    pensionRetroEntries={(inputState ?? state).pensionRetroEntries}
-                    pensionConfig={courtConfig.previdenciaComplementar}
-                    pensionMemory={calculationReady ? state.pensionMemory : undefined}
-                    competencia={pensionParams.competencia}
-                    irEaEntryTax={state.irEaEntryTax}
-                    irEaCurrentYearKeys={state.irEaCurrentYearKeys}
-                    competenciaReferencia={competenciaReferencia}
-                    styles={styles}
-                    removeRubrica={removeRubrica}
+                    rubricas={otherRubrics}
                     updateRubrica={updateRubrica}
-                    toPositiveNumber={toPositiveNumber}
                 />
             </div>
             <div hidden={step !== 4}>

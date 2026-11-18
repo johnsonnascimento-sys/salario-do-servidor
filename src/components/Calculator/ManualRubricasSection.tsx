@@ -22,6 +22,8 @@ import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 interface ManualRubricasSectionProps {
     mode?: 'C' | 'D';
     rubricas: Rubrica[];
+    fixedTitles?: ReadonlyMap<string, string>;
+    summaryRubrics?: Rubrica[];
     styles: any;
     rubricasTax?: Record<string, RubricaTaxDetail>;
     calculationReady: boolean;
@@ -41,6 +43,8 @@ interface ManualRubricasSectionProps {
 export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     mode = 'C',
     rubricas,
+    fixedTitles,
+    summaryRubrics = rubricas,
     styles,
     rubricasTax,
     irEaEntryTax,
@@ -145,6 +149,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
         <div className="space-y-4">
             {/* Listagem de Cards de Rubricas Individuais */}
             {filteredRubricas.map((rubrica, index) => {
+                const fixedTitle = fixedTitles?.get(rubrica.id);
                 const historical = Boolean(
                     rubrica.pssCompetenciaSeparada ||
                     (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)
@@ -168,7 +173,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         {/* Topo do Card: Badge de Tipo, Integração de Base e Exclusão */}
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
-                                <span
+                                {fixedTitle ? <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3> : <span
                                     className={`px-2.5 py-0.5 rounded-full text-body-xs font-bold ${
                                         isCredito
                                             ? 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-400 border border-secondary-500/20'
@@ -176,7 +181,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     }`}
                                 >
                                     {isCredito ? 'Crédito' : 'Desconto'} #{index + 1}
-                                </span>
+                                </span>}
 
                                 {isCredito && (
                                     <span className="inline-flex items-center gap-1 text-body-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
@@ -192,7 +197,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 )}
                             </div>
 
-                            <button
+                            {!fixedTitle && <button
                                 type="button"
                                 onClick={() => removeRubrica(rubrica.id)}
                                 className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center text-neutral-400 hover:text-red-500 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
@@ -200,7 +205,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 title="Remover este lançamento avulso"
                             >
                                 <Trash2 className="w-4 h-4" />
-                            </button>
+                            </button>}
                         </div>
 
                         {/* Campos Principais: Tipo, Descrição e Valor */}
@@ -215,7 +220,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     value={rubrica.descricao}
                                     placeholder={
                                         isCredito
-                                            ? 'Ex.: VPNI, ATS, Acerto Retroativo, Diferença Salarial...'
+                                            ? 'Ex.: Acerto Retroativo, Diferença Salarial...'
                                             : 'Ex.: Empréstimo Consignado, Plano de Saúde, Coparticipação, Pensão...'
                                     }
                                     onChange={e => updateRubrica(rubrica.id, 'descricao', e.target.value)}
@@ -223,8 +228,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 <datalist id={`sugestoes-${rubrica.id}`}>
                                     {isCredito ? (
                                         <>
-                                            <option value="VPNI" />
-                                            <option value="ATS" />
                                             <option value="Acerto Retroativo (Exercício Anterior)" />
                                             <option value="Diferença Salarial" />
                                             <option value="Restituição / Reposição ao Erário" />
@@ -247,7 +250,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     <span>Sugestões rápidas:</span>
                                     {isCredito ? (
                                         <>
-                                            {['VPNI', 'ATS', 'Acerto Retroativo', 'Diferença Salarial'].map(sugestao => (
+                                            {['Acerto Retroativo', 'Diferença Salarial'].map(sugestao => (
                                                 <button
                                                     key={sugestao}
                                                     type="button"
@@ -473,13 +476,13 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             </p>
                         )}
 
-                        {rubrica.tipo === 'C' && !calculationReady && (
+                        {rubrica.tipo === 'C' && (!fixedTitle || rubrica.valor > 0) && !calculationReady && (
                             <p role="status" className="text-body-xs text-neutral-600 dark:text-neutral-300">
                                 Resumo de descontos e líquido indisponível enquanto o cálculo não for concluído.
                             </p>
                         )}
 
-                        {rubrica.tipo === 'C' && calculationReady && (!rubricasTax?.[rubrica.id] || (rubricasTax[rubrica.id].funpresp > 0)) && (
+                        {rubrica.tipo === 'C' && (!fixedTitle || rubrica.valor > 0) && calculationReady && (!rubricasTax?.[rubrica.id] || (rubricasTax[rubrica.id].funpresp > 0)) && (
                             <p role="status" className="text-body-xs text-neutral-600 dark:text-neutral-300">
                                 Líquido individual indisponível para esta rubrica. Confira o cálculo atualizado da folha.
                             </p>
@@ -490,7 +493,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
             {mode === 'C' && calculationReady && pensionMemory && rubricas.some(rubrica => rubrica.tipo === 'C' &&
                 (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
                     (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao')))) && (
-                <SharedPensionSummary memory={pensionMemory} rubricas={rubricas} />
+                <SharedPensionSummary memory={pensionMemory} rubricas={summaryRubrics} />
             )}
         </div>
     );

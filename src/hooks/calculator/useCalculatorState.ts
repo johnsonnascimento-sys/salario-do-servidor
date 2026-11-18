@@ -85,13 +85,31 @@ export const useCalculatorState = () => {
         }));
     }, []);
 
-    const updateRubrica = useCallback((id: string, field: keyof Rubrica, value: any) => {
-        setState(prev => ({
-            ...prev,
-            rubricasExtras: prev.rubricasExtras.map(r => r.id === id ? { ...r, [field]: value,
+    const updateRubrica = useCallback((id: string, field: keyof Rubrica, value: any, fallback?: Rubrica) => {
+        setState(prev => {
+            const existing = prev.rubricasExtras.find(rubrica => rubrica.id === id);
+            const current = existing ?? fallback;
+            if (!current) return prev;
+
+            const updated = {
+                ...current,
+                ...(fallback?.vantagemPessoal
+                    ? { vantagemPessoal: fallback.vantagemPessoal }
+                    : field === 'descricao' && current.vantagemPessoal === undefined
+                        ? { vantagemPessoal: null }
+                        : {}),
+                [field]: value,
                 ...(['valor', 'tipo', 'pensionRubricId', 'pensionOptionDate', 'pensionOptionReference', 'incideFunpresp', 'funprespCompetenciaSeparada', 'pssCompetenciaSeparada'].includes(field)
-                    ? { pensionOptionAmountConfirmed: false } : {}) } : r)
-        }));
+                    ? { pensionOptionAmountConfirmed: false } : {})
+            };
+
+            return {
+                ...prev,
+                rubricasExtras: existing
+                    ? prev.rubricasExtras.map(rubrica => rubrica.id === id ? updated : rubrica)
+                    : [updated, ...prev.rubricasExtras]
+            };
+        });
     }, []);
 
     const handleTipoCalculoChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {

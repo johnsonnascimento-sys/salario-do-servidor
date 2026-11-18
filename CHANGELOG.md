@@ -1,6 +1,6 @@
 ## Cards de VPNI e ATS em Vantagens Pessoais — 17/11/2026
 
-- Movidos os chips de inclusão dos cards individuais de VPNI e ATS para a página Vantagens Pessoais, separados entre si e mantendo a criação dos lançamentos manuais correspondentes. Removido o card legado agregado VPNI/ATS; a seção Créditos eventuais mantém as demais rubricas eventuais.
+- VPNI e ATS aparecem em dois cards fixos na etapa Vantagens pessoais do menu, com as incidências e o detalhamento das rubricas manuais. Lançamentos existentes mantêm valores, incidências e vínculos. A etapa Benefícios volta a exibir apenas os auxílios fixos.
 
 ## Card de GAACTA e Licença Compensatória — 17/11/2026
 

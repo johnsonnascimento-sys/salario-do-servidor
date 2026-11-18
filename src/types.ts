@@ -205,6 +205,7 @@ export interface RubricaTaxDetail {
 }
 
 export interface Rubrica {
+  vantagemPessoal?: 'VPNI' | 'ATS' | null;
   competenciasEA?: string[];
   fundamentoDeducaoEA?: string;
   id: string;

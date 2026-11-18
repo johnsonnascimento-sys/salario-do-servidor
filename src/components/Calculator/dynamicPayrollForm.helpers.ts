@@ -46,17 +46,15 @@ export const PREDEFINED_OPTIONS: Array<{ id: PredefinedRubricId; label: string }
     { id: 'substituicao', label: 'Substituicao' }
 ];
 
-export const MULTI_INSTANCE_PRESETS = new Set<string>(['hora_extra', 'substituicao', 'vpni', 'ats']);
+export const MULTI_INSTANCE_PRESETS = new Set<string>(['hora_extra', 'substituicao']);
 export const MULTI_INSTANCE_HINT_LABEL = 'Horas Extras, Substituicao';
 export const DEFAULT_PRESETS: PredefinedRubricId[] = [];
 
-export type PresetCatalogItemId = PredefinedRubricId | 'vpni' | 'ats';
-
 export interface PresetCatalogItem {
-    id: PresetCatalogItemId;
+    id: PredefinedRubricId;
     label: string;
     description: string;
-    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'beneficios' | 'descontos';
+    category: 'trabalho' | 'direitos' | 'indenizacoes' | 'descontos';
     tags: string[];
 }
 
@@ -75,11 +73,6 @@ export const PRESET_CATEGORIES = [
         id: 'indenizacoes',
         title: 'Indenizações & Viagens',
         subtitle: 'Diárias e ressarcimento de transporte'
-    },
-    {
-        id: 'beneficios',
-        title: 'Benefícios & Vantagens',
-        subtitle: 'Abono de permanência e vantagens pessoais (VPNI/ATS)'
     },
     { id: 'descontos', title: 'Descontos', subtitle: 'Descontos e obrigações da folha' }
 ] as const;
@@ -126,20 +119,6 @@ export const PRESET_CATALOG: PresetCatalogItem[] = [
         description: 'Cumprimento de mandados por Oficial de Justiça (JMU e CJF)',
         category: 'indenizacoes',
         tags: ['indenizacao', 'transporte', 'oficial', 'mandados', 'diligencias']
-    },
-    {
-        id: 'vpni',
-        label: 'VPNI',
-        description: 'Vantagem Pessoal Nominalmente Identificada (Quintos/Décimos)',
-        category: 'beneficios',
-        tags: ['vpni', 'quintos', 'decimos', 'vantagem', 'pessoal', 'incorporacao']
-    },
-    {
-        id: 'ats',
-        label: 'ATS',
-        description: 'Adicional por Tempo de Serviço (Anuênios)',
-        category: 'beneficios',
-        tags: ['ats', 'anuenios', 'tempo', 'servico', 'adicional']
     },
     {
         id: 'pensao',

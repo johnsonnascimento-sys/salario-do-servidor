@@ -59,6 +59,7 @@ Regra de precedencia: `org > power > global`.
 
 1. A calculadora apresenta, nesta ordem, Dados básicos, Adicional de Qualificação (AQ), Vantagens pessoais, Benefícios, Previdência e abono, Imposto de Renda, Créditos Eventuais, Descontos, Observações/Notas e Resultado.
 2. As páginas organizam a coleta dos dados; não duplicam nem alteram os valores e regras do motor oficial.
+3. A página Vantagens pessoais exibe cards fixos e independentes de VPNI e ATS, usando o fluxo de rubricas manuais e preservando os lançamentos existentes.
 
 ### 4.1 Rubricas manuais
 
@@ -143,7 +144,7 @@ Cada rubrica manual deve suportar:
 
 ### 4.8 Catálogo visual de verbas, adicionais e benefícios (cards pré-definidos)
 
-1. O seletor de verbas e adicionais apresenta as opções divididas visualmente por categorias conceituais (Trabalho Extraordinário & Funções, Direitos Periódicos, Indenizações & Viagens, Benefícios & Vantagens), com campo de busca instantânea e botões de ação rápida em substituição a dropdowns fechados que ocultam as opções do usuário.
+1. O seletor de verbas e adicionais apresenta as opções divididas visualmente por categorias conceituais (Trabalho Extraordinário & Funções, Direitos Periódicos, Indenizações & Viagens, Descontos), com campo de busca instantânea e botões de ação rápida em substituição a dropdowns fechados que ocultam as opções do usuário.
 2. Cada chip informa claramente o estado da verba: se não adicionada, inclusão em 1 clique; se já adicionada, rolagem suave (*scroll into view*) com destaque visual temporário até o card na tela.
 3. Cards que permitem repetição (como Hora Extra e Substituição de Função) informam a quantidade ativa no chip e oferecem botão rápido para inclusão de nova instância, mantendo configurações e cálculos estritamente isolados.
 4. No detalhamento final, rubricas repetidas devem ser apresentadas sem consolidar incidências distintas de forma ambígua.
@@ -167,7 +168,7 @@ Cada rubrica manual deve suportar:
 6. A memória de cálculo unitária informa os valores da Hora Normal (com identificação do divisor aplicado), Hora Extra (+50%) e Hora Extra (+100%) integrada organicamente ao Resumo Calculado (`PresetGrossSummary`) do card de Serviço Extraordinário, preservando o padrão visual e a consistência arquitetural do sistema.
 7. No modo de cálculo por função substituída, as horas são remuneradas apenas quando o valor da função de destino supera a função atual acrescida da gratificação específica, seguindo o limite do card de Substituição. Destinos menores ou iguais não geram valor nesse modo e seus campos ficam desabilitados conforme a elegibilidade devolvida pelo motor. Entradas antigas inelegíveis, horas globais residuais e valores brutos manuais são ignorados nesse modo. Para HE pela função atual ou valor bruto documentado, usar o modo comum; servidor sem função pode usar a remuneração de função superior efetivamente substituída.
 
-8. Cada card de HE permite selecionar a composição da base remuneratória, persistida em `OvertimeEntry.composicaoBase`. O motor devolve parcelas, valores, seleções e subtotal; a UI apenas exibe e coleta escolhas. Vencimento, GAJ, FC/CJ, AQ, gratificação específica e abono iniciam selecionados; GAACTA e créditos dinâmicos por ID iniciam desmarcados. A VPNI e o ATS são oferecidos pelos créditos dinâmicos adicionados em Benefícios & Vantagens; os campos legados VPNI — Lei, VPNI — Decisão e ATS não são oferecidos nem somados diretamente à base de HE. O abono utiliza o PSS mensal atual, inclusive rubricas contributivas, independentemente da seleção de HE e da função substituída. A seleção não altera as incidências das parcelas originais nem o critério de elegibilidade da substituição. Férias e gratificação natalina não são oferecidas na composição.
+8. Cada card de HE permite selecionar a composição da base remuneratória, persistida em `OvertimeEntry.composicaoBase`. O motor devolve parcelas, valores, seleções e subtotal; a UI apenas exibe e coleta escolhas. Vencimento, GAJ, FC/CJ, AQ, gratificação específica e abono iniciam selecionados; GAACTA e créditos dinâmicos por ID iniciam desmarcados. A VPNI e o ATS são oferecidos pelas rubricas dos cards fixos da página Vantagens pessoais; os campos legados VPNI — Lei, VPNI — Decisão e ATS não são oferecidos nem somados diretamente à base de HE. O abono utiliza o PSS mensal atual, inclusive rubricas contributivas, independentemente da seleção de HE e da função substituída. A seleção não altera as incidências das parcelas originais nem o critério de elegibilidade da substituição. Férias e gratificação natalina não são oferecidas na composição.
 
 ## 5. Admin e seguranca operacional
 
