@@ -4,11 +4,6 @@ import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from '../TaxAd
 import { SubstitutionEntry } from '../../../types';
 import type { SubstitutionFunctionDetail } from '../../../types/irEa';
 
-const SUBSTITUTION_PSS_OPTIONS = [
-    { value: 'excluir', label: 'Sem incidência' },
-    { value: 'ea', label: 'Exercícios anteriores (EA)' }
-];
-
 interface SubstitutionCardProps {
     entry: SubstitutionEntry;
     updateEntry: (id: string, patch: Partial<SubstitutionEntry>) => void;
@@ -26,7 +21,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
 }) => {
     const fieldId = React.useId();
     const irRegime = entry.excluirIR ? 'excluir' : entry.isEA ? 'rra' : 'mensal';
-    const [taxOpen, setTaxOpen] = React.useState(Boolean(entry.isEA || entry.excluirIR || entry.pssIsEA || entry.valorBrutoManual !== undefined));
+    const [taxOpen, setTaxOpen] = React.useState(Boolean(entry.isEA || entry.excluirIR || entry.valorBrutoManual !== undefined));
     const [functionToAdd, setFunctionToAdd] = React.useState('');
     const selectRef = React.useRef<HTMLSelectElement>(null);
     const daysRefs = React.useRef<Record<string, HTMLInputElement | null>>({});
@@ -133,7 +128,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                     })}
                 </div>
             </div>
-            <TaxAdjustmentPanel open={taxOpen} onToggle={setTaxOpen} summary={`${IR_SUMMARY[irRegime]} · ${entry.pssIsEA ? 'PSS de exercícios anteriores' : 'Sem PSS'}`}>
+            <TaxAdjustmentPanel open={taxOpen} onToggle={setTaxOpen} summary={IR_SUMMARY[irRegime]}>
                 <TaxChoices title="Imposto de Renda (IR)" name={`${fieldId}-tributacao`} value={irRegime}
                     options={IR_OPTIONS} onChange={value => updateEntry(entry.id, {
                         isEA: value === 'rra',
@@ -146,8 +141,6 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                         onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
                         styles={styles} competenciaReferencia={competenciaReferencia} />
                 )}
-                <TaxChoices title="Previdência (PSS)" name={`${fieldId}-pss`} value={entry.pssIsEA ? 'ea' : 'excluir'}
-                    options={SUBSTITUTION_PSS_OPTIONS} onChange={value => updateEntry(entry.id, { pssIsEA: value === 'ea' })} />
                 {(entry.isEA || hasManualGross) && <div className="space-y-2">
                     <label htmlFor={`${fieldId}-manual-gross`} className={styles.label}>Valor bruto documentado da substituição (R$, opcional)</label>
                     <input id={`${fieldId}-manual-gross`} type="number" min="0" step="0.01" className={styles.input}

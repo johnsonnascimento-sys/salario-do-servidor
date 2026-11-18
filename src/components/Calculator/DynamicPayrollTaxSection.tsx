@@ -70,6 +70,9 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             (row.label.startsWith('CONTRIBUIÇÃO RPPS') || row.label.startsWith('FUNPRESP-JUD')))
         : [];
     const pensionDiscountTotal = pensionDiscountRows.reduce((total, row) => total + row.value, 0);
+    const hasSavedSubstitutionPss = state.substitutionEntries.length > 0
+        ? state.substitutionEntries.some(entry => entry.pssIsEA)
+        : state.substPssIsEA;
     return <div className="space-y-4">
         {activeSection === 'pension' && <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.</p>}
         {activeSection === 'pension' && <>
@@ -193,6 +196,11 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </>}
             {funprespAdditionalValidationError && <p role="alert" className="text-body-xs text-error-600 dark:text-error-400">{funprespAdditionalValidationError}</p>}
         </details>
+        {hasSavedSubstitutionPss && (
+            <p className={`${styles.card} text-body-xs text-neutral-600 dark:text-neutral-300`}>
+                Esta simulação anterior tem PSS sobre substituição de função. O cálculo mantém a incidência registrada.
+            </p>
+        )}
         <details aria-label="Resumo calculado da previdência" className={`${styles.card} group`}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                 <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Resumo calculado</span>

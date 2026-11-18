@@ -164,7 +164,7 @@ tree.unmount();
 console.log('IR-EA UI: inputs, original months, reload, official gross/tax allocation, manual EA, invalidation and errors passed.');
 
 
-// Substitution advanced options preserve independent tax flags and documented EA inputs.
+// Substitution displays only income tax choices and preserves saved PSS and EA inputs.
 const { SubstitutionCard } = await import('../src/components/Calculator/cards/SubstitutionCard');
 let substitution: any = { id: 'subst-ui', dias: { fc1: 4 }, isEA: true, excluirIR: false, pssIsEA: true, competenciasEA: ['2024-02'], valorBrutoManual: 5000 };
 const substPatches: any[] = [];
@@ -177,18 +177,31 @@ assert.equal(drawer.props.open, true);
 assert.ok(drawer.findAllByType('summary')[0].findAllByType('span').some(span => span.children.includes('Ajustar tributação')));
 assert.equal(substPatches.length, 0, 'Abrir um snapshot não altera os dados');
 const taxRadios = drawer.findAllByType('input').filter(input => input.props.type === 'radio');
-const irRadios = taxRadios.filter(input => input.props.name.endsWith('-tributacao'));
-const pssRadios = taxRadios.filter(input => input.props.name.endsWith('-pss'));
-assert.deepEqual(irRadios.map(input => input.props.checked), [false, true, false]);
-assert.deepEqual(pssRadios.map(input => [input.props.value, input.props.checked]), [['excluir', false], ['ea', true]]);
-act(() => pssRadios[0].props.onChange());
-assert.deepEqual(substPatches.pop(), { id: 'subst-ui', patch: { pssIsEA: false } });
-act(() => irRadios.find(input => input.props.value === 'excluir')!.props.onChange());
+assert.deepEqual(taxRadios.map(input => [input.props.value, input.props.checked]),
+    [['mensal', false], ['rra', true], ['excluir', false]]);
+assert.ok(drawer.findAllByType('summary')[0].findAllByType('span').some(span => span.children.includes('IR em RRA')));
+assert.doesNotMatch(JSON.stringify(substTree.toJSON()), /Previdência \(PSS\)|PSS de exercícios anteriores/);
+act(() => taxRadios.find(input => input.props.value === 'excluir')!.props.onChange());
 assert.deepEqual(substPatches.pop(), { id: 'subst-ui', patch: { excluirIR: true, isEA: false, competenciasEA: ['2024-02'] } });
 assert.equal(substitution.pssIsEA, true, 'IR não modifica seleção de PSS');
 assert.equal(drawer.findAllByType('input').find(input => input.props.type === 'number')!.props.value, 5000);
 assert.deepEqual(substitution.competenciasEA, ['2024-02']);
 substTree.unmount();
+
+const { DynamicPayrollTaxSection } = await import('../src/components/Calculator/DynamicPayrollTaxSection');
+const renderPension = (patch: Partial<CalculatorState>) => React.createElement(DynamicPayrollTaxSection, {
+    activeSection: 'pension', state: { ...INITIAL_STATE, ...patch }, styles, resultRows: [],
+    update() {}, handleRegimePrevChange() {}, handleFunprespParticipacaoChange() {},
+    showFunprespSection: false, funprespNormalOptions: [], calculationReady: false, deducaoPorDependente: 0, abonoGrossLines: [],
+});
+const savedPssNotice = /simulação anterior tem PSS sobre substituição de função/;
+const pensionTree = create(renderPension({ substitutionEntries: [substitution] }));
+assert.match(JSON.stringify(pensionTree.toJSON()), savedPssNotice);
+act(() => pensionTree.update(renderPension({ substPssIsEA: true })));
+assert.match(JSON.stringify(pensionTree.toJSON()), savedPssNotice);
+act(() => pensionTree.update(renderPension({ substPssIsEA: true, substitutionEntries: [{ ...substitution, pssIsEA: false }] })));
+assert.doesNotMatch(JSON.stringify(pensionTree.toJSON()), savedPssNotice);
+pensionTree.unmount();
 
 const { OvertimeCard } = await import('../src/components/Calculator/cards/OvertimeCard');
 const overtimePatches: unknown[] = [];
