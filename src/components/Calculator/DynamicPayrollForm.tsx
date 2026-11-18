@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
 import type { PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { usePensionSelection } from './hooks/usePensionSelection';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, X } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
 import { getTablesForPeriod } from '../../utils/calculations';
+import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { ManualRubricasSection } from './ManualRubricasSection';
 import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
 import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
@@ -25,8 +26,10 @@ import type { PayslipResultRow } from '../../types/user';
 import {
     PresetGrossLine,
     PresetInstance,
+    MULTI_INSTANCE_PRESETS,
     PREDEFINED_OPTIONS,
     PRESET_CATALOG,
+    PredefinedRubricId,
     toPositiveNumber,
     formatReferenciaMesAno
 } from './dynamicPayrollForm.helpers';
@@ -156,6 +159,65 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         functionKeys,
         transportIndemnityEnabled
     });
+
+    const [removedCard, setRemovedCard] = useState<{
+        name: string;
+        cardId: string;
+        presetId?: PredefinedRubricId;
+        restore: (current: CalculatorState, instances: PresetInstance[]) => void;
+    } | null>(null);
+    const undoButton = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (removedCard) undoButton.current?.focus({ preventScroll: true });
+    }, [removedCard]);
+
+    const currentInputs = inputState ?? state;
+    const periodRevision = useRef(0);
+    useEffect(() => {
+        periodRevision.current += 1;
+    }, [currentInputs.anoRef, currentInputs.mesRef]);
+
+    const removeManualCard = (id: string) => {
+        const index = currentInputs.rubricasExtras.findIndex(rubrica => rubrica.id === id);
+        if (index < 0) return;
+        const rubrica = currentInputs.rubricasExtras[index];
+        const revisionOnRemoval = periodRevision.current;
+        const linkedEntries = (inputs: CalculatorState) => inputs.pensionRetroEntries?.filter(entry =>
+            entry.vinculos?.some(link => link.rubricaId === id)) ?? [];
+        const originalLinks = linkedEntries(currentInputs);
+        removeRubrica(id);
+        setRemovedCard({
+            name: rubrica.descricao.trim() || (rubrica.tipo === 'C' ? 'Crédito avulso' : 'Desconto avulso'),
+            cardId: `manual-rubrica-${id}`,
+            restore: current => {
+                const rows = current.rubricasExtras;
+                if (rows.some(row => row.id === id)) return;
+                const links = linkedEntries(current);
+                const confirmationStale = periodRevision.current !== revisionOnRemoval ||
+                    links.length !== originalLinks.length || links.some((entry, i) => entry !== originalLinks[i]);
+                const restored = rubrica.pensionOptionAmountConfirmed && confirmationStale
+                    ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica;
+                updateMany({ rubricasExtras: [...rows.slice(0, index), restored, ...rows.slice(index)] });
+            }
+        });
+    };
+    const removePresetCard = (instance: PresetInstance) => {
+        const restore = removePreset(instance);
+        if (!restore) return;
+        const name = PRESET_CATALOG.find(item => item.id === instance.presetId)?.label
+            ?? PREDEFINED_OPTIONS.find(item => item.id === instance.presetId)?.label
+            ?? 'Rubrica';
+        setRemovedCard({ name, cardId: `preset-card-${instance.key}`, presetId: instance.presetId, restore });
+    };
+    const undoRemoval = () => {
+        if (!removedCard) return;
+        removedCard.restore(currentInputs, enabledPresets);
+        setRemovedCard(null);
+        requestAnimationFrame(() => {
+            const card = document.getElementById(removedCard.cardId);
+            if (card?.getClientRects().length) card.focus();
+        });
+    };
 
     const visiblePresets = enabledPresets.filter(instance =>
         instance.presetId !== 'gratificacao' && instance.presetId !== 'abono' &&
@@ -320,12 +382,24 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         irEaCurrentYearKeys: state.irEaCurrentYearKeys,
         competenciaReferencia,
         styles,
-        removeRubrica,
+        removeRubrica: removeManualCard,
         toPositiveNumber
     };
 
     return (
         <>
+            {removedCard && <div
+                className="fixed inset-x-4 bottom-[calc(var(--calculator-bar-height,100px)_+_4.5rem)] z-40 mx-auto flex max-w-md items-center gap-2 rounded-xl border border-neutral-200 bg-white p-2 pl-3 shadow-xl min-[960px]:bottom-[calc(var(--calculator-bar-height,100px)_+_1rem)] dark:border-neutral-700 dark:bg-neutral-900">
+                <p role="status" className="min-w-0 flex-1 truncate text-body-sm">Removido: {removedCard.name}</p>
+                <button ref={undoButton} type="button" onClick={undoRemoval}
+                    className="min-h-11 shrink-0 rounded-lg px-2 font-semibold text-secondary-800 hover:bg-secondary-50 focus-visible:outline focus-visible:outline-2 dark:text-secondary-300 dark:hover:bg-secondary-950">
+                    Desfazer
+                </button>
+                <button type="button" aria-label="Fechar aviso de remoção" onClick={() => setRemovedCard(null)}
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700">
+                    <X size={18} aria-hidden="true" />
+                </button>
+            </div>}
             <section id="remuneracao" tabIndex={-1} className="scroll-mt-24" hidden={step > 6}>
                 <div hidden={step !== 0} className="space-y-5">
                 <DynamicPayrollBaseSection
@@ -351,18 +425,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 </section>
 
                 <section id="gratificacao-especifica" tabIndex={-1} aria-labelledby="gratificacao-especifica-titulo" className={`${styles.card} ${calculatorTargetClass}`}>
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <CalculatorCardHeading help={{ label: "Sobre GAE e GAS", content: <>
+                        <p className="font-semibold">Quando escolher cada opção?</p>
+                        <p className="mt-2"><strong>GAE:</strong> para atividade externa vinculada às atribuições do cargo.</p>
+                        <p className="mt-2"><strong>GAS:</strong> para atividade de segurança vinculada às atribuições do cargo.</p>
+                        <p className="mt-2">Norma: Lei nº 11.416/2006, arts. 16 e 17.</p>
+                    </> }}>
                         <h4 id="gratificacao-especifica-titulo" className={`${styles.innerBoxTitle} !mb-0`}>Gratificação específica (GAE / GAS)</h4>
-                        <details className="relative">
-                            <summary aria-label="Sobre GAE e GAS" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">?</span></summary>
-                            <div className="absolute left-0 top-full z-20 mt-1 w-72 max-w-[min(18rem,80vw)] rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                                <p className="font-semibold">Quando escolher cada opção?</p>
-                                <p className="mt-2"><strong>GAE:</strong> para atividade externa vinculada às atribuições do cargo.</p>
-                                <p className="mt-2"><strong>GAS:</strong> para atividade de segurança vinculada às atribuições do cargo.</p>
-                                <p className="mt-2">Norma: Lei nº 11.416/2006, arts. 16 e 17.</p>
-                            </div>
-                        </details>
-                    </div>
+                    </CalculatorCardHeading>
                     {renderPreset(GRATIFICATION_INSTANCE)}
                     <div className="mt-2"><PresetGrossSummary compact lines={getPresetGrossLines(GRATIFICATION_INSTANCE)} /></div>
                 </section>
@@ -455,7 +525,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 enabledPresets={visiblePresets}
                 searchDestination={presetSearchDestination}
                 onSearchFallback={onSearchFallback}
-                includePreset={includePreset}
+                includePreset={presetId => {
+                    const key = includePreset(presetId);
+                    if (key && removedCard?.presetId === presetId && !MULTI_INSTANCE_PRESETS.has(presetId)) setRemovedCard(null);
+                    return key;
+                }}
                 transportIndemnityEnabled={transportIndemnityEnabled}
                 addRubrica={addRubrica}
                 expandCard={id => setExpandedRubricIds(previous => new Set(previous).add(id))}
@@ -507,7 +581,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             handlePresetDragOver={handlePresetDragOver}
                             handlePresetDrop={handlePresetDrop}
                             handlePresetDragEnd={handlePresetDragEnd}
-                            removePreset={removePreset}
+                            removePreset={removePresetCard}
                             state={state}
                             inputState={inputState}
                             update={update}

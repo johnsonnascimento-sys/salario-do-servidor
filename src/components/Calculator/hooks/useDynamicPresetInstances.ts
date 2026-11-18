@@ -326,7 +326,7 @@ export const useDynamicPresetInstances = ({
         substitutionLegacyMigratedRef.current = true;
     }, [hasLegacySubstitution, state.substDias, state.substIsEA, state.substPssIsEA, state.substitutionEntries.length, update]);
 
-    const clearPreset = (presetId: PredefinedRubricId) => {
+    const clearPreset = (presetId: PredefinedRubricId, update: UseDynamicPresetInstancesParams['update']) => {
         switch (presetId) {
             case 'aq':
                 update('aqTituloPerc', 0);
@@ -397,7 +397,6 @@ export const useDynamicPresetInstances = ({
                 update('substIsEA', false);
                 update('substPssIsEA', false);
                 update('substitutionEntries', []);
-                functionKeys.forEach(key => updateSubstDays(key, 0));
                 break;
             case 'indenizacao_transporte':
                 update('transporteIndenizacaoAtivo', false);
@@ -495,30 +494,40 @@ export const useDynamicPresetInstances = ({
     };
 
     const removePreset = (instance: PresetInstance) => {
+        const index = enabledPresets.findIndex(item => item.key === instance.key);
+        if (index < 0) return;
         const remainingInstances = enabledPresets.filter(item => item.key !== instance.key);
         setEnabledPresets(remainingInstances);
 
-        if (instance.presetId === 'hora_extra' && instance.overtimeEntryId) {
-            update(
-                'overtimeEntries',
-                state.overtimeEntries.filter(entry => entry.id !== instance.overtimeEntryId)
-            );
-        }
-        if (instance.presetId === 'substituicao' && instance.substitutionEntryId) {
-            update(
-                'substitutionEntries',
-                state.substitutionEntries.filter(entry => entry.id !== instance.substitutionEntryId)
-            );
+        const overtime = initialState.overtimeEntries.find(entry => entry.id === instance.overtimeEntryId);
+        const substitution = initialState.substitutionEntries.find(entry => entry.id === instance.substitutionEntryId);
+        if (overtime) update('overtimeEntries', initialState.overtimeEntries.filter(entry => entry.id !== overtime.id));
+        if (substitution) update('substitutionEntries', initialState.substitutionEntries.filter(entry => entry.id !== substitution.id));
+
+        const previousFields = new Map<keyof CalculatorState, CalculatorState[keyof CalculatorState]>();
+        if (!remainingInstances.some(item => item.presetId === instance.presetId)) {
+            clearPreset(instance.presetId, (field, value) => {
+                if (field !== 'overtimeEntries' && field !== 'substitutionEntries') previousFields.set(field, initialState[field]);
+                update(field, value);
+            });
+            if (instance.presetId === 'substituicao') {
+                previousFields.set('substDias', initialState.substDias);
+                functionKeys.forEach(key => updateSubstDays(key, 0));
+            }
         }
 
-        const stillEnabled = remainingInstances.some(item => item.presetId === instance.presetId);
-        if (!stillEnabled) {
-            clearPreset(instance.presetId);
-        }
+        if (!selectedPreset) setSelectedPreset(instance.presetId);
 
-        if (!selectedPreset) {
-            setSelectedPreset(instance.presetId);
-        }
+        return (current: CalculatorState, currentInstances: PresetInstance[]) => {
+            const samePresetExists = currentInstances.some(item => item.presetId === instance.presetId);
+            if (samePresetExists && !MULTI_INSTANCE_PRESETS.has(instance.presetId)) return;
+            if (!samePresetExists) previousFields.forEach((value, field) => update(field, value));
+            if (overtime) update('overtimeEntries', [...current.overtimeEntries, overtime]);
+            if (substitution) update('substitutionEntries', [...current.substitutionEntries, substitution]);
+            setEnabledPresets(previous => [
+                ...previous.slice(0, index), instance, ...previous.slice(index)
+            ]);
+        };
     };
 
     const handlePresetDragStart = (presetKey: string) => {

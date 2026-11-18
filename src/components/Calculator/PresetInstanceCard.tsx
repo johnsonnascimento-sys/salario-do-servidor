@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ArrowUp, ArrowDown, GripVertical, Info, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { VacationOverview } from './VacationOverview';
 import { ThirteenthOverview } from './ThirteenthOverview';
@@ -7,6 +7,7 @@ import { DailiesCalculationNotes, DailiesHelp } from './DailiesCalculationNotes'
 import { getDailiesPresentation } from './dailiesPresentation';
 import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
+import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { RubricCardHeading } from './RubricCardHeading';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS, roundCurrency } from './dynamicPayrollForm.helpers';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
@@ -148,7 +149,6 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const [dailiesEditing, setDailiesEditing] = useState(false);
     const dailiesPeriodReady = instance.presetId !== 'diarias' || (inputState ?? state).diariasModoDesconto !== 'periodo'
         || Boolean(getDailiesPresentation(inputState ?? state, courtConfig).period);
-    const [infoOpen, setInfoOpen] = useState(false);
     const showEditor = !editor || editor.expanded;
     const panelId = `preset-editor-${instance.key}`;
     const cardLines = calculationReady && dailiesPeriodReady ? lines : [];
@@ -158,15 +158,37 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     // Os totais do 13º incluem o adiantamento. O cabeçalho mostra o saldo desta folha.
     const advanceDebit = instance.presetId === 'decimo' ? state.debitoPrimeiraParcela13 ?? 0 : 0;
     const amountForPayroll = (value: number) => advanceDebit ? roundCurrency(value - advanceDebit) : value;
-    const infoRef = useRef<HTMLSpanElement>(null);
-    useEffect(() => {
-        if (!infoOpen || typeof document === 'undefined') return;
-        const outside = (event: PointerEvent) => { if (!infoRef.current?.contains(event.target as Node)) setInfoOpen(false); };
-        const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setInfoOpen(false); };
-        document.addEventListener('pointerdown', outside);
-        document.addEventListener('keydown', escape);
-        return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
-    }, [infoOpen]);
+    const repeatable = MULTI_INSTANCE_PRESETS.has(instance.presetId);
+    const instanceTitle = repeatable ? `${headerInfo.title} · Instância ${instanceNumber}` : headerInfo.title;
+    const remove = {
+        label: `Remover ${headerInfo.title}${repeatable ? `, instância ${instanceNumber}` : ''}`,
+        onClick: () => removePreset(instance)
+    };
+    const transport = instance.presetId === 'indenizacao_transporte';
+    const hasHelp = Boolean(headerInfo.normBadge) || transport;
+    const help = hasHelp ? {
+        label: transport ? 'Informações sobre indenização de transporte' : `Informações sobre ${headerInfo.title}`,
+        content: <>
+            <p className="font-semibold">{headerInfo.title}</p>
+            {!transport && instance.presetId !== 'diarias' && <p>{headerInfo.normBadge}</p>}
+            {instance.presetId === 'diarias' ? <DailiesHelp config={courtConfig} /> : instance.presetId === 'decimo' ? <>
+                <span className="mt-2 block">A 1ª parcela é o adiantamento, sem IR e PSS. Na 2ª parcela, as retenções consideram a remuneração integral e o abatimento do adiantamento, sem PSS sobre FC/CJ.</span>
+                <span className="mt-2 block">Use Personalizar cálculo para escolher a composição da remuneração ou informar os valores recebidos.</span>
+            </> : instance.presetId === 'ferias' ? <>
+                <span className="mt-2 block">O adicional de 1/3 de férias corresponde a um terço da remuneração de referência do servidor no período de usufruto (art. 7º, XVII, da CF/88 c/c art. 76 da Lei nº 8.112/1990).</span>
+                <span className="mt-2 block">Use Personalizar cálculo para escolher a composição, informar um valor manual ou ajustar o desconto por recebimento anterior.</span>
+            </> : instance.presetId === 'gratificacao' ? <>
+                <span className="mt-2 block">A GAE e a GAS correspondem a 35% do vencimento básico, conforme os arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006.</span>
+                <span className="mt-2 block">Use Personalizar cálculo para conferir a composição da base e os ajustes aplicados.</span>
+            </> : instance.presetId === 'substituicao' ? <span className="mt-2 block">Adicione as funções substituídas e informe os dias correspondentes. Consulte Ver detalhamento do cálculo para conferir a diferença remuneratória, o divisor aplicado e os descontos da simulação.</span> : null}
+            {transport && <>
+                <span className="mt-2 block">{headerInfo.normBadge || 'Não há norma cadastrada e vigente para esta competência.'}</span>
+                <span className="mt-2 block">{courtConfig.transportIndemnity?.info}</span>
+                <span className="mt-2 block">{['cjf', 'trf'].some(slug => (courtConfig.orgSlug || '').toLowerCase().startsWith(slug)) ? 'Destinada ao Analista Judiciário, Área Judiciária, especialidade Oficial de Justiça Avaliador Federal. Exclua férias, licenças, afastamentos e dias usados no cálculo de diárias. É vedado o uso de veículo oficial ou suprimento de fundos para a finalidade.' : 'Destinada ao Oficial de Justiça Avaliador Federal ou servidor designado ad hoc. Exclua afastamentos e demais impedimentos, inclusive dias incompatíveis com diárias.'}</span>
+                <span className="mt-2 block">O pagamento depende de comprovação e atestação; este valor é uma simulação.</span>
+            </>}
+        </>
+    } : undefined;
 
     return (
         <div
@@ -186,108 +208,41 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 net={net === undefined ? undefined : amountForPayroll(net)}
                 notice={instance.presetId === 'indenizacao_transporte' && state.transporteIndenizacaoMemory?.status === 'unavailable'
                     ? 'Valor indisponível nesta competência' : undefined}
+                help={help} remove={remove}
                 panelId={panelId} expanded={editor.expanded} onToggle={editor.toggle}
             />}
+            {!editor && <CalculatorCardHeading help={help} remove={remove}>
+                <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{instanceTitle}</h3>
+            </CalculatorCardHeading>}
             {reorderMode && movePreset && <div className="flex justify-end gap-1">
                 <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
                 <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
             </div>}
             <div id={panelId} hidden={!showEditor} className={showEditor ? 'space-y-4' : 'hidden'}>
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-2">
-                <div className={`flex min-w-0 flex-1 items-center gap-2 ${['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId) ? '' : 'flex-wrap'}`}>
-                    {reorderMode && <GripVertical className="w-4 h-4 text-neutral-400" />}
-                    {!editor && <h3 className="min-w-0 text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
-                        {headerInfo.title}{MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}
-                    </h3>}
-                    {headerInfo.normBadge && !['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias', 'gratificacao'].includes(instance.presetId) && (
-                        <span className="text-body-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded">
-                            {headerInfo.normBadge}
-                        </span>
-                    )}
-                    {instance.presetId === 'hora_extra' && (
-                        <details className="relative">
-                            <summary aria-label={`Informações sobre ${headerInfo.title}`} className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700"><span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">i</span></summary>
-                            <div className="absolute left-0 top-full z-20 mt-1 w-72 max-w-[min(18rem,80vw)] rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                                <p className="font-semibold">{headerInfo.title}</p>
-                                <p className="mt-2">{headerInfo.normBadge || 'Não há norma cadastrada e vigente para esta competência.'}</p>
-                            </div>
-                        </details>
-                    )}
-                    {['decimo', 'substituicao', 'ferias', 'diarias', 'gratificacao'].includes(instance.presetId) && (
-                        <span ref={infoRef} className="relative inline-flex">
-                            <button type="button" aria-label={`Informações sobre ${headerInfo.title}`}
-                                aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} onClick={() => setInfoOpen(open => !open)}
-                                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                                <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">?</span>
-                            </button>
-                            {infoOpen && <span id={`info-${instance.key}`} role="note" className="fixed left-4 right-4 top-1/3 z-tooltip max-h-[60vh] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-80 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                                <span className="block font-semibold">{headerInfo.title}</span>
-                                {instance.presetId !== 'diarias' && <span className="mt-2 block">{headerInfo.normBadge}</span>}
-                                {instance.presetId === 'diarias' ? <DailiesHelp config={courtConfig} /> : instance.presetId === 'decimo' ? <>
-                                <span className="mt-2 block">A 1ª parcela é o adiantamento, sem IR e PSS. Na 2ª parcela, as retenções consideram a remuneração integral e o abatimento do adiantamento, sem PSS sobre FC/CJ.</span>
-                                <span className="mt-2 block">Use Personalizar cálculo para escolher a composição da remuneração ou informar os valores recebidos.</span>
-                                </> : instance.presetId === 'ferias' ? <>
-                                <span className="mt-2 block">O adicional de 1/3 de férias corresponde a um terço da remuneração de referência do servidor no período de usufruto (art. 7º, XVII, da CF/88 c/c art. 76 da Lei nº 8.112/1990).</span>
-                                <span className="mt-2 block">Use Personalizar cálculo para escolher a composição, informar um valor manual ou ajustar o desconto por recebimento anterior.</span>
-                                </> : instance.presetId === 'gratificacao' ? <>
-                                <span className="mt-2 block">A GAE e a GAS correspondem a 35% do vencimento básico, conforme os arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006.</span>
-                                <span className="mt-2 block">Use Personalizar cálculo para conferir a composição da base e os ajustes aplicados.</span>
-                                </> : <span className="mt-2 block">Adicione as funções substituídas e informe os dias correspondentes. Consulte Ver detalhamento do cálculo para conferir a diferença remuneratória, o divisor aplicado e os descontos da simulação.</span>}
-                            </span>}
-                        </span>
-                    )}
-                    {instance.presetId === 'indenizacao_transporte' && (
-                        <span ref={infoRef} className="relative inline-flex" onMouseEnter={() => setInfoOpen(true)} onMouseLeave={() => setInfoOpen(false)} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setInfoOpen(false); }} onPointerDown={e => e.stopPropagation()}>
-                            <button type="button" aria-label="Informações sobre indenização de transporte" aria-expanded={infoOpen} aria-controls={`info-${instance.key}`} aria-describedby={infoOpen ? `info-${instance.key}` : undefined} onFocus={() => setInfoOpen(true)} onClick={e => { e.stopPropagation(); setInfoOpen(true); }} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-neutral-500 hover:text-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary">
-                                <Info className="h-4 w-4" />
-                            </button>
-                            {infoOpen && <span id={`info-${instance.key}`} role="tooltip" className="fixed left-4 right-4 top-1/3 z-tooltip sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-72 rounded-lg border border-neutral-200 bg-white p-3 text-body-xs normal-case tracking-normal text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
-                                <span className="block font-semibold">{headerInfo.title}</span>
-                                <span className="mt-2 block">{headerInfo.normBadge || 'Não há norma cadastrada e vigente para esta competência.'}</span>
-                                <span className="mt-2 block">{courtConfig.transportIndemnity?.info}</span>
-                                <span className="mt-2 block">{['cjf', 'trf'].some(slug => (courtConfig.orgSlug || '').toLowerCase().startsWith(slug)) ? 'Destinada ao Analista Judiciário, Área Judiciária, especialidade Oficial de Justiça Avaliador Federal. Exclua férias, licenças, afastamentos e dias usados no cálculo de diárias. É vedado o uso de veículo oficial ou suprimento de fundos para a finalidade.' : 'Destinada ao Oficial de Justiça Avaliador Federal ou servidor designado ad hoc. Exclua afastamentos e demais impedimentos, inclusive dias incompatíveis com diárias.'}</span>
-                                <span className="mt-2 block">O pagamento depende de comprovação e atestação; este valor é uma simulação.</span>
-                            </span>}
-                        </span>
-                    )}
+                <PresetCardContent
+                    instance={instance}
+                    calculationReady={calculationReady}
+                    inputState={inputState}
+                    onVacationEditingChange={setVacationEditing}
+                    onThirteenthEditingChange={setThirteenthEditing}
+                    onDailiesEditingChange={setDailiesEditing}
+                    vacationOverview={instance.presetId === 'ferias' ? <VacationOverview lines={lines} calculationReady={calculationReady} /> : undefined}
+                    thirteenthOverview={instance.presetId === 'decimo' ? <ThirteenthOverview lines={lines} calculationReady={calculationReady} /> : undefined}
+                    state={state}
+                    update={update}
+                    styles={styles}
+                    isNovoAQ={isNovoAQ}
+                    competenciaReferencia={competenciaReferencia}
+                    functionKeys={functionKeys}
+                    updateOvertimeEntry={updateOvertimeEntry}
+                    updateSubstitutionEntry={updateSubstitutionEntry}
+                    courtConfig={courtConfig}
+                />
 
-                </div>
-                <div className="flex shrink-0 items-start">
-                <button
-                    type="button"
-                    onClick={() => removePreset(instance)}
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-neutral-500 hover:text-error-500 p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
-                    aria-label={`Remover ${headerInfo.title}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? `, instância ${instanceNumber}` : ''}`}
-                >
-                    <Trash2 className="w-4 h-4" />
-                </button>
-                </div>
-            </div>
-
-            <PresetCardContent
-                instance={instance}
-                calculationReady={calculationReady}
-                inputState={inputState}
-                onVacationEditingChange={setVacationEditing}
-                onThirteenthEditingChange={setThirteenthEditing}
-                onDailiesEditingChange={setDailiesEditing}
-                vacationOverview={instance.presetId === 'ferias' ? <VacationOverview lines={lines} calculationReady={calculationReady} /> : undefined}
-                thirteenthOverview={instance.presetId === 'decimo' ? <ThirteenthOverview lines={lines} calculationReady={calculationReady} /> : undefined}
-                state={state}
-                update={update}
-                styles={styles}
-                isNovoAQ={isNovoAQ}
-                competenciaReferencia={competenciaReferencia}
-                functionKeys={functionKeys}
-                updateOvertimeEntry={updateOvertimeEntry}
-                updateSubstitutionEntry={updateSubstitutionEntry}
-                courtConfig={courtConfig}
-            />
-
-            {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={Boolean(editor) || ['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={((editor || ['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
-                {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
-                {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
-            </PresetGrossSummary>}
+                {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={Boolean(editor) || ['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={((editor || ['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
+                    {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
+                    {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
+                </PresetGrossSummary>}
             </div>
         </div>
     );

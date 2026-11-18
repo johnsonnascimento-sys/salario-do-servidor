@@ -489,21 +489,6 @@ test('transporte CJF: exportação preserva mês de serviço, pagamento e alerta
 });
 
 test('transporte: acessibilidade do botão Info com mouse, teclado e Escape', async () => {
-  const listeners: Record<string, Function[]> = {};
-  (globalThis as any).document = {
-    addEventListener: (type: string, fn: Function) => {
-      listeners[type] = listeners[type] || [];
-      listeners[type].push(fn);
-    },
-    removeEventListener: (type: string, fn: Function) => {
-      listeners[type] = (listeners[type] || []).filter(l => l !== fn);
-    },
-    dispatchEvent: (event: any) => {
-      (listeners[event.type] || []).forEach(fn => fn(event));
-      return true;
-    }
-  };
-
   const state = { ...initial(), transporteIndenizacaoAtivo: true, transporteIndenizacaoDias: 20,
     transporteIndenizacaoMemory: calculateCJF(20, cjfConfig, '2026-05') };
   const instance = { key: 'preset-indenizacao_transporte', presetId: 'indenizacao_transporte' as const };
@@ -537,19 +522,19 @@ test('transporte: acessibilidade do botão Info com mouse, teclado e Escape', as
   const infoButton = tree.root.findByProps({ 'aria-label': 'Informações sobre indenização de transporte' });
   assert.equal(infoButton.props['aria-expanded'], false);
 
-  // Click / focus abre info
+  // O botão abre o painel de ajuda
   await act(async () => {
-    infoButton.props.onClick({ stopPropagation: () => {} });
+    infoButton.props.onClick();
   });
   assert.equal(infoButton.props['aria-expanded'], true);
-  const tooltip = tree.root.findByProps({ role: 'tooltip' });
-  assert(tooltip.findAllByType('span').some(node => typeof node.props.children === 'string' && node.props.children.includes('Oficial de Justiça Avaliador Federal')));
+  const help = tree.root.findByProps({ role: 'note' });
+  assert(help.findAllByType('span').some(node => typeof node.props.children === 'string' && node.props.children.includes('Oficial de Justiça Avaliador Federal')));
   assert(tree.root.findByProps({ 'aria-label': 'Diminuir dias de serviço externo' }));
   assert(tree.root.findByProps({ 'aria-label': 'Aumentar dias de serviço externo' }));
 
   // Escape fecha
   await act(async () => {
-    (globalThis as any).document.dispatchEvent({ type: 'keydown', key: 'Escape' });
+    help.parent!.props.onKeyDown({ key: 'Escape', stopPropagation: () => {} });
   });
   assert.equal(infoButton.props['aria-expanded'], false);
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Trash2, Plus, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Plus, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { Rubrica, RubricaTaxDetail, PrevidenciaComplementarConfig } from '../../types';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { PresetGrossLine } from './dynamicPayrollForm.helpers';
@@ -11,6 +11,7 @@ import { PensionRubricFields } from './PensionRubricFields';
 import { resolvePensionRubricRule } from '../../services/agency/engine/modules/pensionCatalog';
 import { IrEaCompetencias, getDefaultEaCompetencia } from './IrEaCompetencias';
 import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from './TaxAdjustmentPanel';
+import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { RubricCardHeading } from './RubricCardHeading';
 import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
@@ -415,26 +416,26 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 ? 'min-w-0 space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700 sm:p-4'
                                 : `${styles.card} ${calculatorTargetClass} space-y-4`}>
                             {groupedVpni ? (
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,10rem)_auto] sm:items-end">
-                                    <div>
-                                        <label htmlFor={`manual-description-${rubrica.id}`} className={styles.label}>Descrição no holerite</label>
-                                        <input id={`manual-description-${rubrica.id}`} type="text" list={`${vpniId}-descricoes`}
-                                            className={styles.input} value={rubrica.descricao} placeholder="VPNI"
-                                            onChange={event => updateRubrica(rubrica.id, 'descricao', event.target.value)}
-                                            onBlur={event => {
-                                                if (!event.target.value.trim()) updateRubrica(rubrica.id, 'descricao', 'VPNI');
-                                            }} />
+                                <>
+                                    <CalculatorCardHeading remove={summaryRubrics.some(saved => saved.id === rubrica.id) ? {
+                                        label: `Remover lançamento de VPNI ${index + 1}`,
+                                        onClick: () => removeRubrica(rubrica.id)
+                                    } : undefined}>
+                                        <h4 className="font-semibold">Lançamento de VPNI {index + 1}</h4>
+                                    </CalculatorCardHeading>
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(7rem,10rem)] sm:items-end">
+                                        <div>
+                                            <label htmlFor={`manual-description-${rubrica.id}`} className={styles.label}>Descrição no holerite</label>
+                                            <input id={`manual-description-${rubrica.id}`} type="text" list={`${vpniId}-descricoes`}
+                                                className={styles.input} value={rubrica.descricao} placeholder="VPNI"
+                                                onChange={event => updateRubrica(rubrica.id, 'descricao', event.target.value)}
+                                                onBlur={event => {
+                                                    if (!event.target.value.trim()) updateRubrica(rubrica.id, 'descricao', 'VPNI');
+                                                }} />
+                                        </div>
+                                        {valueField}
                                     </div>
-                                    {valueField}
-                                    {summaryRubrics.some(saved => saved.id === rubrica.id) && (
-                                        <button type="button" onClick={() => removeRubrica(rubrica.id)}
-                                            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 justify-self-start rounded-lg px-2 text-body-xs text-neutral-600 hover:bg-error-50 hover:text-error-700 dark:text-neutral-300 dark:hover:bg-error-950/30"
-                                            aria-label={`Remover lançamento de VPNI ${index + 1}`}>
-                                            <Trash2 className="h-4 w-4" aria-hidden="true" />
-                                            <span className="sm:sr-only">Remover</span>
-                                        </button>
-                                    )}
-                                </div>
+                                </>
                             ) : (
                                 <>
                                     <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3>
@@ -449,6 +450,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     );
                 }
 
+                const title = rubrica.descricao.trim() || `${isCredito ? 'Crédito' : 'Desconto'} avulso · ${index + 1}`;
+                const remove = { label: `Remover ${title}`, onClick: () => removeRubrica(rubrica.id) };
                 const cardId = `manual-rubrica-${rubrica.id}`;
                 const editorId = `manual-editor-${rubrica.id}`;
                 const expanded = !editor || editor.expandedIds.has(cardId);
@@ -464,16 +467,18 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 : 'border-l-red-500 shadow-xs'
                         }`}
                     >
-                        {editor && <RubricCardHeading
-                            title={rubrica.descricao.trim() || `${isCredito ? 'Crédito' : 'Desconto'} avulso · ${index + 1}`}
+                        {editor ? <RubricCardHeading
+                            title={title} remove={remove}
                             discount={!isCredito}
                             amount={rubrica.valor > 0 ? { kind: isCredito ? 'gross' : 'discount', value: rubrica.valor } : undefined}
                             net={lines.find(line => line.cardAmount === 'net')?.value}
                             notice={pendingIds.has(rubrica.id) ? 'Há dados a revisar' : undefined}
                             panelId={editorId} expanded={expanded} onToggle={() => editor.toggle(cardId)}
-                        />}
+                        /> : <CalculatorCardHeading remove={remove}>
+                            <h4 className="font-semibold">{title}</h4>
+                        </CalculatorCardHeading>}
                         <div id={editorId} hidden={!expanded} className={expanded ? 'space-y-3.5' : 'hidden'}>
-                        {/* Topo do Card: Badge de Tipo, Integração de Base e Exclusão */}
+                        {/* Indicadores de incidência do lançamento */}
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
                                 <span
@@ -500,15 +505,6 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 )}
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={() => removeRubrica(rubrica.id)}
-                                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center text-neutral-400 hover:text-red-500 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                aria-label="Remover rubrica"
-                                title="Remover este lançamento avulso"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">

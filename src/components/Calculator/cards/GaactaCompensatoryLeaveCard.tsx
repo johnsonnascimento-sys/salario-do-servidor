@@ -1,3 +1,4 @@
+import { CalculatorCardHeading } from '../CalculatorCardHeading';
 import React, { useId, useLayoutEffect, useRef, useState } from 'react';
 import { AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import type { CalculatorState, CourtConfig } from '../../../types';
@@ -144,23 +145,17 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
 
     return (
         <section className={`${styles.card} space-y-4`} aria-labelledby={`${id}-title`}>
-            <div className="relative flex flex-wrap items-center gap-2">
+            <CalculatorCardHeading help={{ label: "Normas e vigência de GAACTA e Licença Compensatória", content: <>
+                <p className="font-semibold">Normas e vigência</p>
+                <p><strong>GAACTA.</strong> Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa para ocupantes de cargos em comissão nas condições da norma aplicável. O cálculo usa o percentual vigente sobre a base selecionada.</p>
+                <p><strong>Licença Compensatória.</strong> A simulação estima a indenização pelos dias informados, conforme a base escolhida.</p>
+                {isJmu ? <>
+                    <p>A Resolução STM nº 376, de 6 de agosto de 2025, produziu efeitos a partir de 1º de julho de 2025.</p>
+                    <p>A Resolução STM nº 397, de 19 de junho de 2026, revogou a Resolução STM nº 376/2025 e instituiu a GAACTA, com efeitos financeiros a partir de 1º de junho de 2026.</p>
+                </> : <p>{rule?.reference || 'A vigência da GAACTA segue a regra cadastrada para o órgão e a competência selecionados.'}</p>}
+            </> }}>
                 <h4 id={`${id}-title`} className={`${styles.innerBoxTitle} !mb-0`}>GAACTA / Licença Compensatória</h4>
-                <details>
-                    <summary aria-label="Normas e vigência de GAACTA e Licença Compensatória" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-xs font-bold">?</span>
-                    </summary>
-                    <div className="absolute left-0 top-full z-20 mt-1 w-full space-y-2 rounded-xl border border-neutral-200 bg-white p-4 text-body-xs text-neutral-700 shadow-lg dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 sm:w-96">
-                        <p className="font-semibold">Normas e vigência</p>
-                        <p><strong>GAACTA.</strong> Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa para ocupantes de cargos em comissão nas condições da norma aplicável. O cálculo usa o percentual vigente sobre a base selecionada.</p>
-                        <p><strong>Licença Compensatória.</strong> A simulação estima a indenização pelos dias informados, conforme a base escolhida.</p>
-                        {isJmu ? <>
-                            <p>A Resolução STM nº 376, de 6 de agosto de 2025, produziu efeitos a partir de 1º de julho de 2025.</p>
-                            <p>A Resolução STM nº 397, de 19 de junho de 2026, revogou a Resolução STM nº 376/2025 e instituiu a GAACTA, com efeitos financeiros a partir de 1º de junho de 2026.</p>
-                        </> : <p>{rule?.reference || 'A vigência da GAACTA segue a regra cadastrada para o órgão e a competência selecionados.'}</p>}
-                    </div>
-                </details>
-            </div>
+            </CalculatorCardHeading>
             {validityWarning && <div role="status" className="flex items-start gap-2 rounded-xl border border-warning-200 bg-warning-50 p-3 text-body-xs text-warning-800 dark:border-warning-800 dark:bg-warning-950/30 dark:text-warning-300">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <p>{validityWarning}</p>
