@@ -411,7 +411,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 
                     return (
                         <div key={rubrica.id} id={fixedTitle === 'ATS' ? 'vantagem-ats' : `manual-rubrica-${rubrica.id}`} tabIndex={-1}
-                            role="group" aria-label={groupedVpni ? `Lançamento de VPNI ${index + 1}` : fixedTitle}
+                            role="group" aria-label={groupedVpni ? `Lançamento de VPNI ${index + 1}` : fixedTitle === 'ATS' ? 'Adicional por Tempo de Serviço' : fixedTitle}
                             className={groupedVpni
                                 ? 'min-w-0 space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700 sm:p-4'
                                 : `${styles.card} ${calculatorTargetClass} space-y-4`}>
@@ -438,7 +438,14 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{fixedTitle}</h3>
+                                    <CalculatorCardHeading help={fixedTitle === 'ATS' ? {
+                                        label: 'Explicação sobre Adicional por Tempo de Serviço',
+                                        content: <p>ATS significa Adicional por Tempo de Serviço, também conhecido como anuênio. Informe o valor conforme o contracheque.</p>
+                                    } : undefined}>
+                                        <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                                            {fixedTitle === 'ATS' ? 'Adicional por Tempo de Serviço (ATS)' : fixedTitle}
+                                        </h3>
+                                    </CalculatorCardHeading>
                                     {valueField}
                                 </>
                             )}
@@ -533,7 +540,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
         <div className={fixedTitles ? 'space-y-5' : 'space-y-4'}>
             {addVpni && (
                 <section id="vantagem-vpni" tabIndex={-1} aria-labelledby={`${vpniId}-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-4`}>
-                    <h3 id={`${vpniId}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">VPNI</h3>
+                    <CalculatorCardHeading help={{ label: 'Explicação sobre VPNI', content: <p>VPNI significa Vantagem Pessoal Nominalmente Identificada. Registre cada parcela conforme o contracheque ou o documento que a instituiu.</p> }}>
+                        <h3 id={`${vpniId}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">Vantagem Pessoal Nominalmente Identificada (VPNI)</h3>
+                    </CalculatorCardHeading>
                     <datalist id={`${vpniId}-descricoes`}>
                         {VPNI_DESCRIPTIONS.map(label => <option key={label} value={label} />)}
                     </datalist>
