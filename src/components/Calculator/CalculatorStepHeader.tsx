@@ -12,7 +12,7 @@ interface CalculatorStepHeaderProps {
 
 export function CalculatorStepHeader({ title, Icon, description, headingRef }: CalculatorStepHeaderProps) {
     return (
-        <header className="mb-5 flex items-center gap-3 rounded-2xl border border-secondary-200 bg-secondary-50 px-6 py-4 dark:border-secondary-800/70 dark:bg-secondary-950/40">
+        <header className="mb-5 flex items-center gap-3 rounded-2xl border border-secondary-100 bg-secondary-50 px-6 py-4 dark:border-secondary-800/40 dark:bg-secondary-950/40">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary-100 text-secondary-800 dark:bg-secondary-900 dark:text-secondary-200">
                 <Icon className="h-5 w-5" aria-hidden="true" />
             </span>
