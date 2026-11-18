@@ -140,19 +140,30 @@ test('card de VPNI adiciona lançamentos independentes e preserva a VPNI antiga 
     act(() => tree.unmount());
 });
 
-const render = ({ current = rubric, ready = true, participation = 'patrocinado', withMemory = true, dataMemory = memory,
+const render = ({ current = rubric, ready = true, participation = 'patrocinado', withMemory = true, dataMemory = memory, compact = false,
     taxes = { r: { ir: 0, pss: 0, funpresp: 85, totalDescontos: 85, liquido: 915 } } }: {
-        current?: Rubrica; ready?: boolean; participation?: PensionParticipation; withMemory?: boolean; dataMemory?: PensionMemory;
+        current?: Rubrica; ready?: boolean; participation?: PensionParticipation; withMemory?: boolean; dataMemory?: PensionMemory; compact?: boolean;
         taxes?: Record<string, { ir: number; pss: number; funpresp: number; totalDescontos: number; liquido: number }>;
     } = {}) => renderToStaticMarkup(<ManualRubricasSection rubricas={[current]} styles={{}} totalCreditos={1000}
         totalDescontos={0} rubricasTax={taxes} calculationReady={ready} funprespParticipacao={participation}
-        pensionMemory={withMemory ? dataMemory : undefined} addRubrica={() => {}} removeRubrica={() => {}}
+        pensionMemory={withMemory ? dataMemory : undefined} editor={compact ? { expandedIds: new Set(), toggle() {} } : undefined}
+        addRubrica={() => {}} removeRubrica={() => {}}
         updateRubrica={() => {}} toPositiveNumber={Number} />).replace(/\s|&nbsp;/g, ' ');
 
 test('não apresenta resumo antigo nem líquido enquanto a apuração está pendente', () => {
     const html = render({ ready: false });
     assert.match(html, /Resumo de descontos e líquido indisponível/);
     assert.doesNotMatch(html, /Resumo compartilhado da Funpresp|Parcela teste Líquido|915,00|85,00/);
+});
+
+test('crédito avulso recolhido mostra o líquido apurado e o oculta durante recálculo ou apuração compartilhada', () => {
+    const taxes = { r: { ir: 100, pss: 0, funpresp: 0, totalDescontos: 100, liquido: 900 } };
+    const options = { compact: true, taxes, participation: 'nao' as const };
+    const amount = /<dt[^>]*>Líquido<\/dt><dd[^>]*>R\$ 900,00<\/dd>/;
+    assert.match(render(options), amount);
+    assert.doesNotMatch(render({ ...options, ready: false }), amount);
+    assert.doesNotMatch(render({ ...options, participation: 'vinculado' }), amount);
+    assert.doesNotMatch(render({ ...options, current: { ...rubric, pssCompetenciaSeparada: true } }), amount);
 });
 
 test('não participante tem líquido recalculado, sem desconto individual ou rateio legado', () => {

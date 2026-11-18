@@ -150,7 +150,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 lines.push({ label: `Desconto PSS (${label})`, value: tax.pss, isDiscount: true });
             }
             if (!sharedPension && !sharedHistoricalPss && !(tax.funpresp > 0)) {
-                lines.push({ label: `${label} Líquido`, value: tax.liquido });
+                lines.push({ label: `${label} Líquido`, value: tax.liquido, cardAmount: 'net' });
             }
         } else if (calculationReady) {
             lines.push({ label: `${label} Líquido`, value: valor });
@@ -584,6 +584,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 const cardId = `manual-rubrica-${rubrica.id}`;
                 const editorId = `manual-editor-${rubrica.id}`;
                 const expanded = !editor || editor.expandedIds.has(cardId);
+                const lines = calculationReady ? getRubricaLines(rubrica, index) : [];
                 return (
                     <div
                         key={rubrica.id}
@@ -599,6 +600,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             title={rubrica.descricao.trim() || `${isCredito ? 'Crédito' : 'Desconto'} avulso · ${index + 1}`}
                             discount={!isCredito}
                             amount={rubrica.valor > 0 ? { kind: isCredito ? 'gross' : 'discount', value: rubrica.valor } : undefined}
+                            net={lines.find(line => line.cardAmount === 'net')?.value}
                             notice={pendingIds.has(rubrica.id) ? 'Há dados a revisar' : undefined}
                             panelId={editorId} expanded={expanded} onToggle={() => editor.toggle(cardId)}
                         />}
@@ -647,7 +649,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         </div>
 
                         {taxOptions}
-                        {calculationReady && <PresetGrossSummary lines={getRubricaLines(rubrica, index)} />}
+                        {calculationReady && <PresetGrossSummary lines={lines} />}
                         {calculationNotices}
                         </div>
                     </div>

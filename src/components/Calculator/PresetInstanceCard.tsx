@@ -151,7 +151,10 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const [infoOpen, setInfoOpen] = useState(false);
     const showEditor = !editor || editor.expanded;
     const panelId = `preset-editor-${instance.key}`;
-    const cardAmount = calculationReady && dailiesPeriodReady ? lines.find(line => line.cardAmount) : undefined;
+    const cardLines = calculationReady && dailiesPeriodReady ? lines : [];
+    const cardAmount = cardLines.find(line => line.cardAmount && line.cardAmount !== 'net')
+        ?? cardLines.find(line => line.cardAmount === 'net');
+    const net = cardLines.find(line => line.cardAmount === 'net')?.value;
     const infoRef = useRef<HTMLSpanElement>(null);
     useEffect(() => {
         if (!infoOpen || typeof document === 'undefined') return;
@@ -177,6 +180,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 presetId={instance.presetId}
                 discount={instance.presetId === 'pensao'}
                 amount={cardAmount?.cardAmount ? { kind: cardAmount.cardAmount, value: cardAmount.value } : undefined}
+                net={net}
                 notice={instance.presetId === 'indenizacao_transporte' && state.transporteIndenizacaoMemory?.status === 'unavailable'
                     ? 'Valor indisponível nesta competência' : undefined}
                 panelId={panelId} expanded={editor.expanded} onToggle={editor.toggle}

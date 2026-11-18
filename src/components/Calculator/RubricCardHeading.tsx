@@ -18,7 +18,6 @@ export const rubricIcon = (id?: PredefinedRubricId) => (id && icons[id]) || File
 const amountLabels = {
     gross: 'Bruto',
     net: 'Líquido',
-    credit: 'Crédito',
     discount: 'Desconto'
 };
 
@@ -27,6 +26,7 @@ interface RubricCardHeadingProps {
     presetId?: PredefinedRubricId;
     discount?: boolean;
     amount?: { value: number; kind: NonNullable<PresetGrossLine['cardAmount']> };
+    net?: number;
     notice?: string;
     panelId: string;
     expanded: boolean;
@@ -34,7 +34,7 @@ interface RubricCardHeadingProps {
 }
 
 export function RubricCardHeading({
-    title, presetId, discount, amount, notice, panelId, expanded, onToggle
+    title, presetId, discount, amount, net, notice, panelId, expanded, onToggle
 }: RubricCardHeadingProps) {
     const Icon = rubricIcon(presetId);
     return (
@@ -48,10 +48,16 @@ export function RubricCardHeading({
                 <h4 className="break-words font-semibold text-neutral-900 dark:text-neutral-100">{title}</h4>
                 {notice && <p className="text-body-xs font-medium text-amber-800 dark:text-amber-300">{notice}</p>}
             </div>
-            {amount && <p className={`shrink-0 text-right tabular-nums ${discount ? 'text-red-700 dark:text-red-300' : ''}`}>
-                <span className="block text-body-xs">{amountLabels[amount.kind]}</span>
-                <strong>{formatCurrency(amount.value)}</strong>
-            </p>}
+            {amount && <dl className={`ml-auto flex flex-wrap justify-end gap-x-3 gap-y-1 text-right tabular-nums ${discount ? 'text-red-700 dark:text-red-300' : ''}`}>
+                <div>
+                    <dt className="text-body-xs">{amountLabels[amount.kind]}</dt>
+                    <dd className="font-semibold">{formatCurrency(amount.value)}</dd>
+                </div>
+                {!expanded && amount.kind !== 'net' && net !== undefined && <div>
+                    <dt className="text-body-xs">{amountLabels.net}</dt>
+                    <dd className="font-bold">{formatCurrency(net)}</dd>
+                </div>}
+            </dl>}
             <button type="button" data-rubric-edit aria-expanded={expanded} aria-controls={panelId}
                 aria-label={`${expanded ? 'Recolher' : 'Editar'} ${title}`} onClick={onToggle}
                 className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-lg px-3 text-body-sm font-semibold text-secondary-800 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:bg-secondary-950">

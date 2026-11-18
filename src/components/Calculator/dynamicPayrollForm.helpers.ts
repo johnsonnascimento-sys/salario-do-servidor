@@ -23,7 +23,7 @@ export interface PresetGrossLine {
     value: number;
     isDiscount?: boolean;
     displayValue?: string;
-    cardAmount?: 'gross' | 'net' | 'credit' | 'discount';
+    cardAmount?: 'gross' | 'net' | 'discount';
 }
 
 export interface PresetInstance {
