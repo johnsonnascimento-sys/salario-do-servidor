@@ -357,7 +357,7 @@ export default function Calculator() {
                 {header}
                 <div className="flex flex-1 flex-col min-[960px]:flex-row">
                 <CalculatorNavigation step={step} onChange={changeStep} mobileOpen={mobileStepsOpen} onCloseMobile={closeMobileSteps} />
-                <div data-calculator-content className="min-w-0 flex-1 px-4 pt-3 sm:px-6 min-[960px]:px-8 min-[960px]:pt-5" style={{ paddingBottom: barHeight + 24 }}>
+                <div data-calculator-content className="min-w-0 flex-1 px-4 pb-[calc(var(--calculator-bar-height)_+_1.5rem)] pt-3 sm:px-6 min-[960px]:px-8 min-[960px]:pb-6 min-[960px]:pt-5">
                 <CalculatorSearch courtConfig={courtConfig} onSelect={selectSearchResult} />
                 <CalculatorStepHeader
                     title={currentSection.label}
