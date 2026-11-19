@@ -198,7 +198,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             onDragOver={handlePresetDragOver}
             onDrop={() => handlePresetDrop(instance.key)}
             onDragEnd={handlePresetDragEnd}
-            className={`${editor ? styles.rubricCard : styles.card} transition-shadow ${editor ? 'space-y-2' : 'space-y-4'} ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            className={`${editor ? (instance.presetId === 'pensao' ? styles.rubricCard : styles.creditStatementRow) : styles.card} transition-shadow ${editor ? 'space-y-2' : 'space-y-4'} ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
             {editor && <RubricCardHeading
                 title={`${presetLabel}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}`}

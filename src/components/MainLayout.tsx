@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useMatch } from 'react-router-dom';
-import { Sun, Moon, Heart, Mail, MapPin } from 'lucide-react';
+import { Sun, Moon, Heart, Mail, MapPin, Menu } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { VersionBadge } from './ui/VersionBadge';
 
@@ -57,7 +57,28 @@ const MainLayout: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="py-3 lg:hidden">
+                    {isCalculator && <div className="flex min-h-14 items-center justify-between gap-2 lg:hidden">
+                        <Link to="/beta-access" className="flex min-w-0 items-center gap-2">
+                            <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" />
+                            <span className="text-body font-extrabold tracking-tight">Salário do <span className="gradient-text">Servidor</span></span>
+                        </Link>
+                        <div className="flex shrink-0 items-center">
+                            <button type="button" onClick={toggleTheme} aria-label={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
+                                className="grid h-11 w-11 place-items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                                {isDark ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+                            </button>
+                            <details className="relative">
+                                <summary aria-label="Menu do site" className="grid h-11 w-11 cursor-pointer list-none place-items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                                    <Menu size={20} aria-hidden="true" />
+                                </summary>
+                                <div className="absolute right-0 z-40 mt-1 w-36 rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+                                    <Link to="/acesso" className="flex min-h-11 items-center rounded px-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">Minha Área</Link>
+                                    <Link to="/apoiar" className="flex min-h-11 items-center rounded px-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">Apoiar</Link>
+                                </div>
+                            </details>
+                        </div>
+                    </div>}
+                    <div className={`py-3 lg:hidden ${isCalculator ? 'hidden' : ''}`}>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0 flex-1">
                                 <Link to="/beta-access" className="flex min-w-0 items-center gap-2">

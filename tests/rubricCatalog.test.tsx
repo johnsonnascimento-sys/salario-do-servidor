@@ -8,7 +8,7 @@ import type { PresetSearchDestination } from '../src/components/Calculator/calcu
 
 test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', (context) => {
     let focused = '';
-    let currentDialog: 'desktop' | 'mobile' | null = null;
+    let currentDialog: 'inline' | 'modal' | null = null;
     const highlighted = new Set<string>();
     const focusedCard = (id: string) => ({
         focus: () => { focused = id; },
@@ -52,8 +52,8 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
     act(() => {
         tree = create(<Catalog />, { createNodeMock: element => {
             if (element.type === 'dialog') return {
-                show: () => { currentDialog = 'desktop'; },
-                showModal: () => { currentDialog = 'mobile'; },
+                show: () => { currentDialog = 'inline'; },
+                showModal: () => { currentDialog = 'modal'; },
                 close: () => { currentDialog = null; }
             };
             return { focus: () => { focused = String(element.type); } };
@@ -67,7 +67,7 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
             .find(title => title.startsWith('Créditos adicionados'));
 
         open();
-        assert.equal(currentDialog, 'desktop');
+        assert.equal(currentDialog, 'modal');
         assert.equal(focused, 'input');
         assert.equal(control('Adicionar Indenização de Transporte'), undefined);
         act(() => tree.root.findByType('input').props.onChange({ target: { value: 'servico extraordinario' } }));
@@ -85,7 +85,7 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
         assert.equal(focused, 'preset-card-overtime-new');
 
         act(() => tree.update(<Catalog searchDestination={{ kind: 'preset', step: 6, presetId: 'ferias' }} />));
-        assert.equal(currentDialog, 'desktop');
+        assert.equal(currentDialog, 'modal');
         assert.equal(focused, 'button');
         assert.equal(tree.root.findAllByType('li').length, 1);
         assert.ok(control('Adicionar Férias'));

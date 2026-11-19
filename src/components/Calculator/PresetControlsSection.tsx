@@ -45,6 +45,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const handledSearch = useRef<PresetSearchDestination | null>(null);
     const focusCard = useCalculatorTargetFocus();
     const credit = mode === 'C';
+    const inlineCatalog = desktop && !credit;
     const addLabel = credit ? 'Adicionar crédito' : 'Adicionar desconto';
     const term = normalizeSearch(search.trim());
     const catalog = useMemo(() => PRESET_CATALOG.filter(item =>
@@ -71,17 +72,17 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     useLayoutEffect(() => {
         const dialog = dialogRef.current;
         if (!open || !dialog) return;
-        if (desktop) dialog.show();
+        if (inlineCatalog) dialog.show();
         else dialog.showModal();
-        if (desktop) searchRef.current?.focus({ preventScroll: true });
+        searchRef.current?.focus({ preventScroll: true });
 
         const previousOverflow = document.body.style.overflow;
-        if (!desktop) document.body.style.overflow = 'hidden';
+        if (!inlineCatalog) document.body.style.overflow = 'hidden';
         return () => {
             dialog.close();
-            if (!desktop) document.body.style.overflow = previousOverflow;
+            if (!inlineCatalog) document.body.style.overflow = previousOverflow;
         };
-    }, [open, desktop]);
+    }, [open, inlineCatalog]);
 
     useLayoutEffect(() => {
         if (open || !focusTarget.current) return;
@@ -141,9 +142,9 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     };
 
     return (
-        <div className={`grid min-w-0 items-start gap-5 ${open ? 'min-[960px]:grid-cols-[minmax(0,1fr)_minmax(20rem,50%)]' : ''}`}>
-            <div className="min-w-0 space-y-4">
-                {mode && <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className={`grid min-w-0 items-start gap-5 ${open && inlineCatalog ? 'min-[960px]:grid-cols-[minmax(0,1fr)_minmax(20rem,50%)]' : ''}`}>
+            <div className={`min-w-0 ${credit ? 'space-y-2' : 'space-y-4'}`}>
+                {mode && <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {credit ? 'Créditos adicionados' : 'Descontos adicionados'} ({instanceCount})
                     </h3>
@@ -158,7 +159,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                             setExactSearch(null);
                             setOpenMode(mode);
                         }}
-                        className="inline-flex items-center gap-2 rounded-lg bg-secondary-800 px-4 py-2 font-semibold text-white hover:bg-secondary-900">
+                        className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-secondary-800 px-4 py-2 font-semibold text-white hover:bg-secondary-900">
                         <Plus className="h-4 w-4" aria-hidden="true" />{addLabel}
                     </button>
                 </div>}
@@ -175,7 +176,11 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                         close();
                     }
                 }}
-                className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-y-auto overscroll-contain bg-white p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100 min-[960px]:static min-[960px]:h-auto min-[960px]:overflow-visible min-[960px]:overscroll-auto min-[960px]:rounded-xl min-[960px]:border min-[960px]:border-neutral-200 dark:min-[960px]:border-neutral-700">
+                className={`overflow-y-auto overscroll-contain bg-white p-4 text-neutral-900 backdrop:bg-neutral-950/55 dark:bg-neutral-900 dark:text-neutral-100 ${inlineCatalog
+                    ? 'static m-0 w-full max-w-none rounded-xl border border-neutral-200 dark:border-neutral-700'
+                    : credit && desktop
+                        ? 'm-auto max-h-[85dvh] w-[calc(100%_-_2rem)] max-w-[38rem] rounded-2xl border border-neutral-200 p-6 shadow-xl dark:border-neutral-700'
+                        : 'm-0 h-[100dvh] max-h-none w-full max-w-none pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]'}`}>
                 <div className="space-y-4">
                     <div className="flex items-center justify-between gap-2">
                         <h3 id={`${id}-title`} className="text-h5 font-semibold">{addLabel}</h3>

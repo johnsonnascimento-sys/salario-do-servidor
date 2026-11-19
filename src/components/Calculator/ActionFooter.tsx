@@ -55,7 +55,9 @@ export const ActionFooter: React.FC<ActionFooterProps> = ({
                             exportMenu.current.querySelector('summary')?.focus();
                         }
                     }}>
-                        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg bg-white px-4 py-3 text-body font-bold text-secondary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+                        <summary className={`flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg border px-4 py-3 text-body font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white ${calculationReady
+                            ? 'border-white bg-white text-secondary-900'
+                            : 'border-secondary-400 text-secondary-100 hover:bg-white/10'}`}>
                             <Download size={18} aria-hidden="true" />Exportar<ChevronDown size={16} aria-hidden="true" />
                         </summary>
                         <div className="absolute bottom-full right-0 mb-3 w-52 space-y-1 rounded-xl border border-neutral-200 bg-white p-2 text-neutral-800 shadow-xl dark:border-neutral-600 dark:bg-neutral-800 dark:text-white">

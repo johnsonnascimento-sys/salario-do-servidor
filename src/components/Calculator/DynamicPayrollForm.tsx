@@ -467,7 +467,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     deducaoPorDependente={courtConfig.values?.deducao_dep ?? 0}
                     abonoGrossLines={getPresetGrossLines(ABONO_INSTANCE)}
                 />
-
+                <PensionRetroForm state={{ ...currentInputs, rubricasExtras: state.rubricasExtras }} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
+                    pensionParams={pensionParams} pensionContexts={pensionContexts}
+                    invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
+                        ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
+                    allowNormalization={!pensionSelection.incompatible} />
                 </div>
                 <div hidden={step !== 5}>
                 <DynamicPayrollTaxSection
@@ -611,13 +615,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 />
             </div>
             </PresetControlsSection>
-            <div hidden={step !== 4}>
-            <PensionRetroForm state={{ ...currentInputs, rubricasExtras: state.rubricasExtras }} pensionMemory={calculationReady ? state.pensionMemory : undefined} update={update} styles={styles} pssTableOptions={pssOptions}
-                pensionParams={pensionParams} pensionContexts={pensionContexts}
-                invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
-                    ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
-                allowNormalization={!pensionSelection.incompatible} />
-            </div>
             </div>
         </>
     );

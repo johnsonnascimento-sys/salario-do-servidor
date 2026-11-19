@@ -1,6 +1,7 @@
 import { getPensionErrorFeedback } from '../utils/pensionFeedback';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { ChevronDown, AlertCircle } from 'lucide-react';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
 import { GlobalSettings } from '../components/Calculator/GlobalSettings';
@@ -91,10 +92,17 @@ export default function Calculator() {
     const [saveFeedback, setSaveFeedback] = useState('');
     const [barHeight, setBarHeight] = useState(120);
     const [step, setStep] = useState(0);
+    const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
+    const mobileStepsTrigger = useRef<HTMLButtonElement>(null);
     const [searchDestination, setSearchDestination] = useState<CalculatorSearchDestination | null>(null);
     const stepHeadingRef = useRef<HTMLHeadingElement>(null);
     const focusSearchTarget = useCalculatorTargetFocus();
     const initialScrollDone = useRef(false);
+
+    const closeMobileSteps = useCallback((restoreFocus = true) => {
+        setMobileStepsOpen(false);
+        if (restoreFocus) mobileStepsTrigger.current?.focus({ preventScroll: true });
+    }, []);
 
     useLayoutEffect(() => {
         const previousScrollRestoration = window.history.scrollRestoration;
@@ -133,6 +141,7 @@ export default function Calculator() {
         if (searchDestination?.step !== step) return;
         if (searchDestination.kind !== 'preset') {
             const target = searchDestination.kind === 'element' ? document.getElementById(searchDestination.elementId) : null;
+            if (target instanceof HTMLDetailsElement) target.open = true;
             if (!focusSearchTarget(target)) focusSearchFallback();
         }
         setSearchDestination(null);
@@ -324,6 +333,21 @@ export default function Calculator() {
     const stepDescription = courtConfig.transportIndemnity?.enabled
         ? currentSection.descriptionWithTransportIndemnity ?? currentSection.description
         : currentSection.description;
+    const reviewPendingAssessment = () => selectSearchResult({
+        kind: 'element', step: 4, elementId: 'pension-retro-form'
+    });
+    const pendingActionClass = step === 9
+        ? 'min-h-11 rounded-lg bg-secondary-800 px-4 font-semibold text-white hover:bg-secondary-900'
+        : 'min-h-11 font-semibold underline underline-offset-4';
+    const pendingAction = onlyEmptyRetroDrafts
+        ? <button type="button" className={pendingActionClass} onClick={() =>
+            update('pensionRetroEntries', (state.pensionRetroEntries ?? []).filter(entry => !emptyRetroDraftIds.includes(entry.id)))
+        }>Descartar competência vazia</button>
+        : <button type="button" className={pendingActionClass}
+            onClick={reviewPendingAssessment}>Revisar apuração</button>;
+    const pendingRubrics = calculationPending
+        ? state.rubricasExtras.filter(rubrica => calculationPending.rubricaIds.includes(rubrica.id))
+        : [];
 
     return (
         <>
@@ -340,21 +364,29 @@ export default function Calculator() {
                 onClearCalculator={handleClearCalculator}
             />
 
-            <div className="calculator-workspace max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6" style={{ paddingBottom: barHeight + 40, '--calculator-bar-height': `${barHeight}px` } as React.CSSProperties}>
+            <div className="calculator-workspace mx-auto max-w-6xl px-4 pt-3 sm:px-6 min-[960px]:pt-6 lg:px-8" style={{ paddingBottom: barHeight + 40, '--calculator-bar-height': `${barHeight}px` } as React.CSSProperties}>
                 <CalculatorHeader
                     navigate={navigate}
                     agencyName={agencyName}
                 />
                 <CalculatorSearch courtConfig={courtConfig} onSelect={selectSearchResult} />
 
-                <div className="flex flex-col gap-5 min-[960px]:flex-row min-[960px]:items-start">
-                <CalculatorNavigation step={step} onChange={changeStep} />
+                <div className="flex flex-col min-[960px]:flex-row min-[960px]:items-start min-[960px]:gap-5">
+                <CalculatorNavigation step={step} onChange={changeStep} mobileOpen={mobileStepsOpen} onCloseMobile={closeMobileSteps} />
                 <div className="min-w-0 flex-1">
                 <CalculatorStepHeader
                     title={currentSection.label}
                     Icon={currentSection.Icon}
                     description={stepDescription}
                     headingRef={stepHeadingRef}
+                    mobileStep={`Etapa ${step + 1} de ${CALCULATOR_SECTIONS.length}`}
+                    mobileAction={<button ref={mobileStepsTrigger} type="button" aria-label="Abrir etapas da simulação"
+                        aria-haspopup="dialog" aria-expanded={mobileStepsOpen}
+                        aria-controls={mobileStepsOpen ? 'calculator-mobile-navigation' : undefined}
+                        onClick={() => setMobileStepsOpen(true)}
+                        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-secondary-100 text-secondary-800 dark:bg-secondary-950 dark:text-secondary-200 min-[960px]:hidden">
+                        <ChevronDown size={20} aria-hidden="true" />
+                    </button>}
                 />
                 {(saveFeedback || exportError) && <div role="status" aria-live="polite" className="mb-6 flex items-start justify-between gap-4 rounded-xl border border-secondary-300 bg-secondary-50 p-4 text-body text-secondary-900 dark:bg-secondary-950 dark:text-secondary-100">
                     <p>{exportError || saveFeedback}</p>
@@ -376,23 +408,12 @@ export default function Calculator() {
                         <p className="mt-1">{displayCalculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
                         {pensionFeedback && <a href="#funpresp-settings" className="mt-2 inline-block font-semibold underline">Ver dados da Funpresp</a>}
                     </div>}
-                    {calculationPending && <div id="calculator-pension-pending" role="status" aria-live="polite" className="rounded-xl border border-warning-300 bg-warning-50 dark:bg-warning-900/20 p-4 text-body text-warning-700 dark:text-warning-300">
-                        <p className="font-semibold">Apuração pendente</p>
-                        {onlyEmptyRetroDrafts ? <>
-                            <p className="mt-1">Há uma competência anterior vazia no rascunho, sem verba retroativa vinculada. Ela impede a conclusão do cálculo.</p>
-                            <button type="button" className="mt-2 font-semibold underline" onClick={() =>
-                                update('pensionRetroEntries', (state.pensionRetroEntries ?? []).filter(entry => !emptyRetroDraftIds.includes(entry.id)))
-                            }>Descartar competência vazia</button>
-                        </> : <>
-                            <p className="mt-1">{calculationPending.message}</p>
-                            <p className="mt-2">Revise os dados da competência anterior na seção de verbas retroativas. Seus dados foram mantidos.</p>
-                            <a href="#pension-retro-form" className="mt-2 inline-block font-semibold underline">Revisar contribuição de verbas retroativas</a>
-                        </>}
-                        <ul className="mt-2 list-disc pl-5">
-                            {state.rubricasExtras.filter(rubrica => calculationPending.rubricaIds.includes(rubrica.id)).map(rubrica =>
-                                <li key={rubrica.id}>{rubrica.descricao.trim() || 'Rubrica manual sem descrição'}</li>)}
-                        </ul>
-                        <p className="mt-2">O resultado final, o salvamento do holerite e a exportação ficam indisponíveis até a apuração ser concluída.</p>
+                    {calculationPending && step !== 9 && <div id="calculator-pension-pending" className="flex flex-wrap items-center justify-between gap-x-4 rounded-lg border border-warning-300 bg-warning-50 px-3 py-1 text-body-sm text-warning-800 dark:border-warning-800 dark:bg-warning-900/20 dark:text-warning-200">
+                        <p className="flex items-center gap-2" role="status">
+                            <AlertCircle size={16} className="shrink-0" aria-hidden="true" />
+                            {onlyEmptyRetroDrafts ? 'Há uma competência anterior vazia.' : 'A apuração previdenciária precisa de revisão.'}
+                        </p>
+                        {pendingAction}
                     </div>}
                     <DynamicPayrollForm
                         step={step}
@@ -424,7 +445,23 @@ export default function Calculator() {
                     />
                     </div>
                     <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== 9}>
-                    <ResultsOverview state={effectiveState} resultRows={resultRows} dailiesResultRows={dailiesResultRows} calculationReady={calculationReady} resultMessage={resultMessage} />
+                    {calculationPending ? <div id="calculator-pension-pending" className="divide-y divide-warning-200 overflow-hidden rounded-xl border border-warning-300 dark:divide-warning-800 dark:border-warning-800">
+                        <div role="status" className="flex items-center gap-3 bg-warning-50 px-4 py-4 text-warning-800 dark:bg-warning-900/30 dark:text-warning-200">
+                            <AlertCircle size={22} className="shrink-0" aria-hidden="true" />
+                            <h3 className="text-h5 font-bold">Apuração pendente</h3>
+                        </div>
+                        <div className="space-y-3 bg-white px-4 py-4 text-body dark:bg-neutral-800 sm:px-6">
+                            <p>{onlyEmptyRetroDrafts
+                                ? 'Há uma competência anterior vazia no rascunho, sem verba retroativa vinculada.'
+                                : calculationPending.message.replace(/^Apuração pendente\s*(\([^)]+\))?:\s*(.)/i, (_, competence: string | undefined, first: string) =>
+                                    (competence ? `${competence.slice(1, -1)} · ` : '') + first.toLocaleUpperCase('pt-BR'))}</p>
+                            {pendingRubrics.length > 0 && <ul aria-label="Rubricas a revisar" className="list-disc space-y-1 break-words pl-5 font-semibold">
+                                {pendingRubrics.map(rubrica => <li key={rubrica.id}>{rubrica.descricao.trim() || 'Rubrica manual sem descrição'}</li>)}
+                            </ul>}
+                            <div className="text-secondary-800 dark:text-secondary-300">{pendingAction}</div>
+                            <p className="text-body-sm text-neutral-600 dark:text-neutral-300">Salvar e exportar ficam disponíveis após a revisão.</p>
+                        </div>
+                    </div> : <ResultsOverview state={effectiveState} resultRows={resultRows} dailiesResultRows={dailiesResultRows} calculationReady={calculationReady} resultMessage={resultMessage} />}
                     {calculationReady ? <ResultsSummary
                         dailiesResultRows={dailiesResultRows}
                         state={effectiveState}
@@ -433,10 +470,9 @@ export default function Calculator() {
                         calculationError={calculationError}
                         courtConfig={courtConfig}
                         styles={styles}
-                    /> : <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
+                    /> : !calculationPending && <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
-                        {calculationPending ? 'Conclua a apuração previdenciária para apresentar o resultado final.'
-                            : (pensionFeedback?.configuration ? 'Aguardando a atualização da Funpresp para concluir o holerite.' : displayCalculationError) || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
+                        {(pensionFeedback?.configuration ? 'Aguardando a atualização da Funpresp para concluir o holerite.' : displayCalculationError) || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
                     </p>}
                     {!calculationReady && calculationError?.includes('IR-EA') && (
                         <div id="apuracao-ir-ea" className="scroll-mt-20">

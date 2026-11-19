@@ -5,11 +5,12 @@ interface CalculatorCardHeadingProps {
     children: React.ReactNode;
     help?: { label: string; content: React.ReactNode };
     remove?: { label: string; onClick: () => void };
+    statement?: { amount: React.ReactNode; edit: React.ReactNode };
 }
 
 const actionClass = 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:text-neutral-300 dark:hover:bg-neutral-700';
 
-export function CalculatorCardHeading({ children, help, remove }: CalculatorCardHeadingProps) {
+export function CalculatorCardHeading({ children, help, remove, statement }: CalculatorCardHeadingProps) {
     const [helpOpen, setHelpOpen] = useState(false);
     const helpId = useId();
     const helpButton = useRef<HTMLButtonElement>(null);
@@ -22,9 +23,13 @@ export function CalculatorCardHeading({ children, help, remove }: CalculatorCard
                 helpButton.current?.focus();
             }
         }}>
-            <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1 self-center [overflow-wrap:anywhere]">{children}</div>
-                {(help || remove) && <div className="flex shrink-0 items-start gap-1">
+            <div className={statement
+                ? 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 min-[960px]:grid-cols-[minmax(0,1fr)_11rem_11.5rem]'
+                : 'flex items-start justify-between gap-2'}>
+                <div className={`min-w-0 flex-1 self-center [overflow-wrap:anywhere] ${statement ? 'col-span-2 min-[960px]:col-span-1' : ''}`}>{children}</div>
+                {statement && <div className="min-w-0 min-[960px]:text-right">{statement.amount}</div>}
+                {(help || remove || statement) && <div className="flex shrink-0 items-center justify-end">
+                    {statement?.edit}
                     {help && <button type="button" ref={helpButton} className={actionClass}
                         id={`${helpId}-trigger`} aria-label={help.label} aria-expanded={helpOpen} aria-controls={helpId}
                         onClick={() => setHelpOpen(open => !open)}>

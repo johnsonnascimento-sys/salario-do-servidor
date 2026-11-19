@@ -311,10 +311,10 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
 
     return (
-        <div className="mb-6 relative overflow-hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 px-6 py-5 shadow-sm space-y-5">
+        <div className="relative space-y-3 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 min-[960px]:space-y-5 min-[960px]:px-6 min-[960px]:py-5">
             <div className="absolute top-0 right-0 w-28 h-28 bg-secondary-500/5 dark:bg-secondary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
 
-            <div className="flex items-center justify-between gap-4 flex-wrap relative z-10 border-b border-neutral-100 dark:border-neutral-700/60 pb-3">
+            <div className="relative z-10 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
                     <h3 className="text-h4 font-bold text-neutral-800 dark:text-neutral-100">
@@ -325,14 +325,14 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+            <div className="relative z-10 space-y-2">
                 <div>
                     <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
                     <div className="flex gap-2">
                         <select
                             id="payroll-month"
                             aria-label="Mês da folha"
-                            className={`${styles.input} flex-1`}
+                            className={`${styles.input} min-w-0 flex-1`}
                             value={monthLabelByNumber(clampedReference.month)}
                             onChange={e => update('mesRef', e.target.value)}
                         >
@@ -344,7 +344,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                         <select
                             id="payroll-year"
                             aria-label="Ano da folha"
-                            className={`${styles.input} !w-28 shrink-0 font-mono font-semibold`}
+                            className={`${styles.input} !w-24 shrink-0 font-mono font-semibold sm:!w-28`}
                             value={clampedReference.year}
                             onChange={e => update('anoRef', Number(e.target.value))}
                         >
@@ -358,13 +358,13 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                     </p>
                 </div>
 
-                <div className="flex flex-col justify-center rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-700/60 p-3.5">
-                    <div className="flex items-start gap-2">
-                        <Info className="w-4 h-4 text-secondary-500 shrink-0 mt-0.5" />
-                        <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
-                            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                Enquadramento Normativo:
-                            </span>{' '}
+                <details className="rounded-lg bg-neutral-50 px-3 dark:bg-neutral-900/50">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-body-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                        <Info className="h-4 w-4 shrink-0 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
+                        Enquadramento normativo
+                        <span className="ml-auto" aria-hidden="true">⌄</span>
+                    </summary>
+                    <div className="pb-3 text-body-xs text-neutral-600 dark:text-neutral-300">
                             {state.simularDerrubadaVeto && clampedReference.year >= 2027 ? (
                                 <span>
                                     Cálculo condicional com simulação de derrubada do Veto nº 45/2025.
@@ -378,9 +378,8 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                                     Aplicação das tabelas históricas da <strong>Lei nº 11.416/2006</strong> vigentes no período.
                                 </span>
                             )}
-                        </div>
                     </div>
-                </div>
+                </details>
             </div>
 
             {isAnoComVeto && (

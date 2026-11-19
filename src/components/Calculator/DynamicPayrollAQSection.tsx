@@ -22,9 +22,8 @@ export const DynamicPayrollAQSection: React.FC<DynamicPayrollAQSectionProps> = (
             <p className="mt-2">O VR corresponde a 6,5% do valor integral da CJ-1. O reconhecimento e a implementação observam as condições legais e a regulamentação do órgão.</p>
             <p className="mt-2"><a href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11416.htm" target="_blank" rel="noopener noreferrer" className="font-medium underline">Lei nº 11.416/2006, arts. 14 e 15 · Lei nº 15.292/2025</a></p>
         </> }}>
-            <h4 className={`${styles.innerBoxTitle} !mb-0`}>Adicional de Qualificação (AQ)</h4>
+            <span className="text-body-sm font-semibold">Critérios e valor de referência</span>
         </CalculatorCardHeading>
-        <p className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Selecione os títulos reconhecidos e a carga de treinamento registrada para esta competência.</p>
         {renderPreset(AQ_INSTANCE)}
         <div className="mt-2"><PresetGrossSummary compact lines={getPresetGrossLines(AQ_INSTANCE)} /></div>
     </div>

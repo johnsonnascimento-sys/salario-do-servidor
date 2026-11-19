@@ -502,9 +502,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         key={rubrica.id}
                         id={cardId}
                         tabIndex={-1}
-                        className={`${editor ? styles.rubricCard : styles.card} ${editor ? 'space-y-2' : 'space-y-3.5'} border-l-4 transition-shadow data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2 ${
+                        className={`${editor ? (isCredito ? styles.creditStatementRow : styles.rubricCard) : styles.card} ${editor ? 'space-y-2' : 'space-y-3.5'} border-l-4 transition-shadow data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2 ${
                             isCredito
-                                ? 'border-l-secondary-500 shadow-xs'
+                                ? 'border-l-secondary-500'
                                 : 'border-l-red-500 shadow-xs'
                         }`}
                     >

@@ -51,7 +51,7 @@ export const PensionRetroForm: React.FC<Props> = ({ state, pensionMemory, update
         id: newRetroId(), competencia: '', modo: 'completo', tipo: 'mensal', vinculos: [],
     } satisfies PensionRetroEntry]);
     if (!openForHistory) return null;
-    return <details id="pension-retro-form" className={`${styles.innerBox} mt-4 scroll-mt-20`} open>
+    return <details id="pension-retro-form" tabIndex={-1} className={`${styles.innerBox} mt-4 scroll-mt-20`} open>
         <summary className="cursor-pointer text-body-xs font-bold uppercase text-neutral-700 dark:text-neutral-300">Contribuição previdenciária de verbas retroativas</summary>
         {eligible.length > 0 ? <p className="mt-2 text-body-xs">Informe a competência original e vincule o valor de cada verba retroativa para apurar a contribuição correspondente.</p>
             : <p className="mt-2 text-body-xs">Há uma competência anterior salva sem verba retroativa ativa. Complete os dados se ela ainda se aplica ou use “Remover competência” abaixo para descartá-la.</p>}
