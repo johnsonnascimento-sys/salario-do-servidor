@@ -425,7 +425,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                         calculationReady={calculationReady} functionValues={currentTables.funcoes ?? {}} styles={styles} />
                 </section>
 
-                <section id="gratificacao-especifica" tabIndex={-1} aria-labelledby="gratificacao-especifica-titulo" className={`${styles.card} ${calculatorTargetClass}`}>
+                <section id="gratificacao-especifica" tabIndex={-1} aria-labelledby="gratificacao-especifica-titulo" className={`${styles.formSection} ${calculatorTargetClass}`}>
                     <CalculatorCardHeading help={{ label: "Sobre GAE e GAS", content: <>
                         <p className="font-semibold">Quando escolher cada opção?</p>
                         <p className="mt-2"><strong>GAE:</strong> para atividade externa vinculada às atribuições do cargo.</p>
@@ -513,7 +513,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             <section id="beneficios" tabIndex={-1} className="space-y-5 scroll-mt-24" hidden={step !== 3}>
                 {FIXED_BENEFITS.map(instance => (
                     <section key={instance.key} id={instance.key} tabIndex={-1} aria-labelledby={`${instance.key}-titulo`}
-                        className={`${styles.card} ${calculatorTargetClass} space-y-4`}>
+                        className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
                         <h3 id={`${instance.key}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                             {instance.title}
                         </h3>
@@ -541,7 +541,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 expandCard={id => setExpandedRubricIds(previous => new Set(previous).add(id))}
             >
 
-            {(visiblePresets.length >= 2 || reorderMode) && <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {(visiblePresets.length >= 2 || reorderMode) && <div className="mb-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button type="button" onClick={() => setReorderMode(previous => !previous)}
                     disabled={visiblePresets.length < 2 && !reorderMode}
                     className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-body font-semibold transition-colors disabled:opacity-40 ${reorderMode ? 'border-secondary bg-secondary text-white' : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800'}`}
@@ -553,6 +553,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </div>}
 
             <p role="status" aria-live="polite" className="sr-only">{reorderAnnouncement}</p>
+            <div className={visiblePresets.length || otherRubrics.some(rubrica => rubrica.tipo === rubricMode)
+                ? 'border-t border-neutral-200 dark:border-neutral-700' : undefined}>
             {enabledPresets.map((instance, index) => {
                 if (instance.presetId === 'gratificacao' || instance.presetId === 'abono') return null;
                 const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
@@ -613,6 +615,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     updateRubrica={updateRubrica}
                     editor={rubricMode ? { expandedIds: expandedRubricIds, toggle: toggleRubric } : undefined}
                 />
+            </div>
             </div>
             </PresetControlsSection>
             </div>

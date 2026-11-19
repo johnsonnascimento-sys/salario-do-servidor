@@ -125,8 +125,8 @@ export default function Calculator() {
         setSearchDestination(null);
         setStep(nextStep);
         window.requestAnimationFrame(() => {
-            stepHeadingRef.current?.focus();
-            stepHeadingRef.current?.scrollIntoView({ block: 'start' });
+            stepHeadingRef.current?.focus({ preventScroll: true });
+            window.scrollTo({ top: 0, behavior: 'instant' });
         });
     };
 
@@ -301,30 +301,19 @@ export default function Calculator() {
         : calculationStatus === 'selection_required' ? 'Revise a participação previdenciária'
             : calculationStatus === 'error' ? (pensionFeedback?.configuration ? 'Funpresp em atualização' : pensionFeedback?.title || 'Cálculo indisponível') : 'Calculando...';
 
-    if (loadingConfig || loadingAgency) {
+    const loading = loadingConfig || loadingAgency;
+    const unavailable = agencyError || configError || !courtConfig;
+    const header = <CalculatorHeader agencyName={loadingAgency || agencyError ? undefined : agencyName} />;
+    if (loading || unavailable || !courtConfig || restoreError || !restoreReady) {
+        const message = loading ? 'Carregando…' : unavailable
+            ? agencyError || configError || 'Configuração indisponível.'
+            : restoreError || 'Carregando holerite salvo…';
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500 animate-pulse">Carregando...</p>
-            </div>
-        );
-    }
-
-    if (agencyError || configError || !courtConfig) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
-                <p className="text-neutral-500 dark:text-neutral-300">
-                    {agencyError || configError || 'Configuracao indisponivel.'}
-                </p>
-            </div>
-        );
-    }
-
-    if (restoreError || !restoreReady) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900">
-                <p className="text-neutral-500 dark:text-neutral-300">
-                    {restoreError || 'Carregando holerite salvo...'}
-                </p>
+            <div className="calculator-workspace calculator-shell">
+                {header}
+                <div className="flex min-h-[45dvh] items-center justify-center p-6 text-center">
+                    <p role={!loading && (unavailable || restoreError) ? 'alert' : 'status'} className="text-neutral-600 dark:text-neutral-300">{message}</p>
+                </div>
             </div>
         );
     }
@@ -364,19 +353,14 @@ export default function Calculator() {
                 onClearCalculator={handleClearCalculator}
             />
 
-            <div className="calculator-workspace mx-auto max-w-6xl px-4 pt-3 sm:px-6 min-[960px]:pt-6 lg:px-8" style={{ paddingBottom: barHeight + 40, '--calculator-bar-height': `${barHeight}px` } as React.CSSProperties}>
-                <CalculatorHeader
-                    navigate={navigate}
-                    agencyName={agencyName}
-                />
-                <CalculatorSearch courtConfig={courtConfig} onSelect={selectSearchResult} />
-
-                <div className="flex flex-col min-[960px]:flex-row min-[960px]:items-start min-[960px]:gap-5">
+            <div className="calculator-workspace calculator-shell flex flex-col" style={{ '--calculator-bar-height': `${barHeight}px` } as React.CSSProperties}>
+                {header}
+                <div className="flex flex-1 flex-col min-[960px]:flex-row">
                 <CalculatorNavigation step={step} onChange={changeStep} mobileOpen={mobileStepsOpen} onCloseMobile={closeMobileSteps} />
-                <div className="min-w-0 flex-1">
+                <div data-calculator-content className="min-w-0 flex-1 px-4 pt-3 sm:px-6 min-[960px]:px-8 min-[960px]:pt-5" style={{ paddingBottom: barHeight + 24 }}>
+                <CalculatorSearch courtConfig={courtConfig} onSelect={selectSearchResult} />
                 <CalculatorStepHeader
                     title={currentSection.label}
-                    Icon={currentSection.Icon}
                     description={stepDescription}
                     headingRef={stepHeadingRef}
                     mobileStep={`Etapa ${step + 1} de ${CALCULATOR_SECTIONS.length}`}

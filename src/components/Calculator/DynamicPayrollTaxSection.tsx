@@ -86,9 +86,8 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         </fieldset>
     );
     return <div className="space-y-4">
-        {activeSection === 'pension' && <p id={`${fieldId}-tax-help`} className="mb-3 text-body text-neutral-600 dark:text-neutral-300">Informe seu regime previdenciário e, se aplicável, sua participação na Funpresp e o recebimento de abono de permanência.</p>}
         {activeSection === 'pension' && <>
-        <section id="regime-previdenciario" tabIndex={-1} aria-labelledby={`${fieldId}-regime-titulo`} className={`${styles.card} ${calculatorTargetClass}`}>
+        <section id="regime-previdenciario" tabIndex={-1} aria-labelledby={`${fieldId}-regime-titulo`} className={`${styles.formSection} ${calculatorTargetClass}`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre regime previdenciário', content: <>
                 <p>O Regime Próprio de Previdência Social (RPPS) é a previdência do servidor. Se o seu regime é limitado ao teto do INSS, a simulação aplica esse limite ao valor usado para calcular a contribuição previdenciária. Consulte seu cadastro funcional para confirmar o regime.</p>
                 <p>Ao marcar a opção de função comissionada (FC) ou cargo em comissão (CJ), a simulação inclui o valor dessa parcela no cálculo da contribuição previdenciária mensal (PSS). Marque a opção se essa parcela fizer parte da base de contribuição da sua folha. Se tiver dúvida, consulte a unidade de gestão de pessoas do seu órgão.</p>
@@ -103,7 +102,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 <span>Incluir função comissionada ou cargo em comissão no cálculo da contribuição previdenciária</span>
             </label>
         </section>
-        <section id="abono-permanencia" tabIndex={-1} aria-labelledby={`${fieldId}-abono-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
+        <section id="abono-permanencia" tabIndex={-1} aria-labelledby={`${fieldId}-abono-titulo`} className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre abono de permanência', content: <>
                 <p>O abono de permanência é devido ao servidor que já cumpriu os requisitos para aposentadoria voluntária e opta por permanecer em atividade. Nesta simulação, o valor corresponde à contribuição previdenciária (PSS) e é lançado como crédito na competência.</p>
                 <p>Fundamento constitucional: art. 40, § 19, da Constituição Federal, conforme a regra de aposentadoria aplicável ao servidor. Para servidores que preencheram os requisitos até a entrada em vigor da EC nº 103/2019, aplica-se também o art. 3º, § 3º, da emenda, que preserva os critérios anteriores, inclusive o abono de permanência.</p>
@@ -126,7 +125,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             {state.recebeAbono && <PresetGrossSummary lines={abonoGrossLines} />}
         </section>
         {!(showFunprespSection && config) && savedOptionsToReview}
-        {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.card} ${calculatorTargetClass} space-y-3`}>
+        {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre Funpresp-Jud', content: <>
                 <p>Informe sua participação e alíquota conforme o certificado de adesão ou contracheque. A adesão ao plano complementar é uma escolha separada do regime próprio (RPPS).</p>
                 {pensionContext?.unavailableReasons && Object.entries(pensionContext.unavailableReasons).map(([key, reason]) => <p key={key}>{key === 'patrocinado' ? 'Participação patrocinada indisponível' : 'Participação vinculada indisponível'}: {reason}</p>)}
@@ -218,11 +217,11 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             </details>}
         </section>}
         {hasSavedSubstitutionPss && (
-            <p className={`${styles.card} text-body-xs text-neutral-600 dark:text-neutral-300`}>
+            <p className={`${styles.formSection} text-body-xs text-neutral-600 dark:text-neutral-300`}>
                 Esta simulação anterior tem PSS sobre substituição de função. O cálculo mantém a incidência registrada.
             </p>
         )}
-        <details aria-label="Contribuições previdenciárias" className={`${styles.card} group`}>
+        <details aria-label="Contribuições previdenciárias" className={`${styles.formSection} group`}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                 <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Contribuições previdenciárias</span>
                 <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
@@ -253,9 +252,8 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         </>
         }
         {activeSection === 'incomeTax' && <>
-        <section id="dependentes-ir" tabIndex={-1} aria-labelledby={`${fieldId}-dependentes-titulo`} className={`${styles.card} ${calculatorTargetClass}`}>
+        <section id="dependentes-ir" tabIndex={-1} aria-labelledby={`${fieldId}-dependentes-titulo`} className={`${styles.formSection} ${calculatorTargetClass}`}>
             <h5 id={`${fieldId}-dependentes-titulo`} className="mb-1 text-h5 font-semibold">Dependentes para IR</h5>
-            <p className="mb-3 text-body-xs text-neutral-600 dark:text-neutral-300">Informe a quantidade de dependentes considerados no imposto de renda.</p>
             <div className="max-w-xs">
             <div>
                 <label htmlFor={`${fieldId}-dependentes`} className={styles.label}>Dependentes (IR)</label>
@@ -272,7 +270,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                 ]} />
             </div>
         </section>
-        <details aria-label="Descontos de Imposto de Renda" className={`${styles.card} group`}>
+        <details aria-label="Descontos de Imposto de Renda" className={`${styles.formSection} group`}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 select-none">
                 <span className="text-label font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Descontos de Imposto de Renda</span>
                 <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />

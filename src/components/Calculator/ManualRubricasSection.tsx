@@ -502,11 +502,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         key={rubrica.id}
                         id={cardId}
                         tabIndex={-1}
-                        className={`${editor ? (isCredito ? styles.creditStatementRow : styles.rubricCard) : styles.card} ${editor ? 'space-y-2' : 'space-y-3.5'} border-l-4 transition-shadow data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2 ${
-                            isCredito
-                                ? 'border-l-secondary-500'
-                                : 'border-l-red-500 shadow-xs'
-                        }`}
+                        className={`${editor ? styles.statementRow : `${styles.card} space-y-3.5`} transition-shadow data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2`}
                     >
                         {editor ? <RubricCardHeading
                             title={title} remove={remove}
@@ -518,7 +514,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         /> : <CalculatorCardHeading remove={remove}>
                             <h4 className="font-semibold">{title}</h4>
                         </CalculatorCardHeading>}
-                        <div id={editorId} hidden={!expanded} className={expanded ? 'space-y-3.5' : 'hidden'}>
+                        <div id={editorId} hidden={!expanded} className={expanded ? `space-y-3.5 ${editor ? styles.statementEditor : ''}` : 'hidden'}>
                         {/* Indicadores de incidência do lançamento */}
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
@@ -571,7 +567,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     const vpniTotal = vpniEntries.reduce((total, entry) => total + (Number(entry.valor) || 0), 0);
 
     return (
-        <div className={fixedTitles ? 'space-y-5' : 'space-y-4'}>
+        <div className={editor ? undefined : fixedTitles ? 'space-y-5' : 'space-y-4'}>
             {addVpni && (
                 <section id="vantagem-vpni" tabIndex={-1} aria-labelledby={`${vpniId}-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-4`}>
                     <CalculatorCardHeading help={VPNI_HELP}>

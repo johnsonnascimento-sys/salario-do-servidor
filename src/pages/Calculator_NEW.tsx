@@ -27,7 +27,7 @@ export default function Calculator() {
     initiateExportPDF,
     initiateExportExcel,
     handleTipoCalculoChange,
-    navigate,
+    agencyName,
     pendingExportType,
     addRubrica,
     removeRubrica,
@@ -56,13 +56,7 @@ export default function Calculator() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
-      <CalculatorHeader
-        courtConfig={courtConfig}
-        state={state}
-        update={update}
-        navigate={navigate}
-        styles={styles}
-      />
+      <CalculatorHeader agencyName={agencyName} />
 
       <GlobalSettings
         state={state}

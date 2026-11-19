@@ -39,7 +39,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
 }) => {
     const fieldId = React.useId();
     return (
-        <section id="dados-principais" tabIndex={-1} aria-labelledby={`${fieldId}-titulo`} className={`${styles.card} ${calculatorTargetClass}`}>
+        <section id="dados-principais" tabIndex={-1} aria-labelledby={`${fieldId}-titulo`} className={`${styles.formSection} ${calculatorTargetClass}`}>
             <h4 id={`${fieldId}-titulo`} className={styles.innerBoxTitle}>Dados principais</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>

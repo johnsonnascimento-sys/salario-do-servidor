@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useMatch } from 'react-router-dom';
-import { Sun, Moon, Heart, Mail, MapPin, Menu } from 'lucide-react';
+import { Sun, Moon, Heart, Mail, MapPin } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { VersionBadge } from './ui/VersionBadge';
+
+export interface SiteTheme { isDark: boolean; toggleTheme: () => void }
 
 const MainLayout: React.FC = () => {
     const [isDark, setIsDark] = useState(false);
@@ -21,7 +23,7 @@ const MainLayout: React.FC = () => {
 
     return (
         <div className="font-display bg-background-light dark:bg-background-dark text-neutral-900 dark:text-neutral-100 min-h-screen flex flex-col transition-colors duration-300">
-            <header className={`${isCalculator ? "" : "sticky top-0 z-50 "}bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800`}>
+            {!isCalculator && <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white/90 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/90">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="hidden h-20 lg:flex lg:items-center lg:justify-between">
                         <div className="flex min-w-0 items-center gap-8">
@@ -57,28 +59,7 @@ const MainLayout: React.FC = () => {
                         </div>
                     </div>
 
-                    {isCalculator && <div className="flex min-h-14 items-center justify-between gap-2 lg:hidden">
-                        <Link to="/beta-access" className="flex min-w-0 items-center gap-2">
-                            <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" />
-                            <span className="text-body font-extrabold tracking-tight">Salário do <span className="gradient-text">Servidor</span></span>
-                        </Link>
-                        <div className="flex shrink-0 items-center">
-                            <button type="button" onClick={toggleTheme} aria-label={isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}
-                                className="grid h-11 w-11 place-items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                {isDark ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
-                            </button>
-                            <details className="relative">
-                                <summary aria-label="Menu do site" className="grid h-11 w-11 cursor-pointer list-none place-items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                    <Menu size={20} aria-hidden="true" />
-                                </summary>
-                                <div className="absolute right-0 z-40 mt-1 w-36 rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
-                                    <Link to="/acesso" className="flex min-h-11 items-center rounded px-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">Minha Área</Link>
-                                    <Link to="/apoiar" className="flex min-h-11 items-center rounded px-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">Apoiar</Link>
-                                </div>
-                            </details>
-                        </div>
-                    </div>}
-                    <div className={`py-3 lg:hidden ${isCalculator ? 'hidden' : ''}`}>
+                    <div className="py-3 lg:hidden">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0 flex-1">
                                 <Link to="/beta-access" className="flex min-w-0 items-center gap-2">
@@ -108,10 +89,10 @@ const MainLayout: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </header>
+            </header>}
 
             <main className="flex-grow">
-                <Outlet />
+                <Outlet context={{ isDark, toggleTheme } satisfies SiteTheme} />
             </main>
 
             <footer className="bg-navy-dark text-neutral-400 pt-20 pb-10 transition-colors duration-300">

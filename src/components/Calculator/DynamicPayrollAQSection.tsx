@@ -16,7 +16,7 @@ export const DynamicPayrollAQSection: React.FC<DynamicPayrollAQSectionProps> = (
     renderPreset,
     getPresetGrossLines
 }) => (
-    <div className={styles.card}>
+    <div className={styles.formSection}>
         <CalculatorCardHeading help={{ label: "Sobre o Adicional de Qualificação", content: <>
             <p>O AQ reconhece títulos e ações de capacitação em áreas de interesse do órgão. A regra anterior utiliza percentuais do vencimento básico; a Lei nº 15.292/2025 utiliza múltiplos do Valor de Referência (VR).</p>
             <p className="mt-2">O VR corresponde a 6,5% do valor integral da CJ-1. O reconhecimento e a implementação observam as condições legais e a regulamentação do órgão.</p>

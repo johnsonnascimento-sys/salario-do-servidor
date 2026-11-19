@@ -11,7 +11,7 @@ interface ObservationsSectionProps {
 
 export const ObservationsSection: React.FC<ObservationsSectionProps> = ({ state, update, styles }) => {
     return (
-        <section id="observacoes" tabIndex={-1} className={`${styles.card} scroll-mt-24`}>
+        <section id="observacoes" tabIndex={-1} className={`${styles.formSection} scroll-mt-24`}>
             <h3 id="calculator-notes-label" className={styles.sectionTitle}>
                 <FileText className="h-4 w-4" /> Observações / Notas
             </h3>

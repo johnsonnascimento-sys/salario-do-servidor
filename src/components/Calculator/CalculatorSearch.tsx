@@ -55,7 +55,7 @@ export const CalculatorSearch = ({ courtConfig, onSelect }: CalculatorSearchProp
     };
 
     return (
-        <div role="search" aria-label="Calculadora" className="mb-5 max-w-xl" onBlur={dismiss}>
+        <div role="search" aria-label="Calculadora" className="mb-4 max-w-md min-[960px]:mb-5" onBlur={dismiss}>
             <label htmlFor={id} className="flex min-h-11 items-center gap-3 rounded-xl border border-neutral-300 bg-white px-4 focus-within:ring-2 focus-within:ring-secondary-600 dark:border-neutral-600 dark:bg-neutral-900">
                 <Search className="h-5 w-5 shrink-0 text-secondary-700 dark:text-secondary-300" aria-hidden="true" />
                 <span className="sr-only">Buscar na calculadora</span>

@@ -198,7 +198,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             onDragOver={handlePresetDragOver}
             onDrop={() => handlePresetDrop(instance.key)}
             onDragEnd={handlePresetDragEnd}
-            className={`${editor ? (instance.presetId === 'pensao' ? styles.rubricCard : styles.creditStatementRow) : styles.card} transition-shadow ${editor ? 'space-y-2' : 'space-y-4'} ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            className={`${editor ? styles.statementRow : `${styles.card} space-y-4`} transition-shadow ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
             {editor && <RubricCardHeading
                 title={`${presetLabel}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}`}
@@ -218,7 +218,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
                 <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
             </div>}
-            <div id={panelId} hidden={!showEditor} className={showEditor ? 'space-y-4' : 'hidden'}>
+            <div id={panelId} hidden={!showEditor} className={showEditor ? `space-y-4 ${editor ? styles.statementEditor : ''}` : 'hidden'}>
                 <PresetCardContent
                     instance={instance}
                     calculationReady={calculationReady}

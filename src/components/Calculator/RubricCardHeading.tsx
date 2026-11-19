@@ -73,16 +73,9 @@ export function RubricCardHeading({
             {expanded ? 'Recolher' : 'Editar'}
         </button>
     );
-    if (!discount) {
-        return <CalculatorCardHeading help={help} remove={remove} statement={{ amount: amounts, edit }}>{label}</CalculatorCardHeading>;
-    }
     return (
-        <div className="space-y-2">
-            <CalculatorCardHeading help={help} remove={remove}>{label}</CalculatorCardHeading>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                {amounts}
-                {edit}
-            </div>
-        </div>
+        <CalculatorCardHeading help={help} remove={remove} statement={{ amount: amounts, edit }}>
+            {label}
+        </CalculatorCardHeading>
     );
 }

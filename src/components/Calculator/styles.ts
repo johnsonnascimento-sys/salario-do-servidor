@@ -1,8 +1,9 @@
 
 export const styles = {
     card: "bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 shadow-sm",
-    rubricCard: "min-w-0 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 sm:p-4",
-    creditStatementRow: "min-w-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-800 sm:px-4",
+    formSection: "min-w-0 border-b border-neutral-200 pb-5 dark:border-neutral-700",
+    statementRow: "min-w-0 border-b border-neutral-200 py-2 dark:border-neutral-700",
+    statementEditor: "mt-2 rounded-lg bg-neutral-50 p-3 dark:bg-neutral-800/60 sm:p-4",
     sectionTitle: "text-h4 font-bold text-neutral-900 dark:text-neutral-100 mb-5 flex items-center gap-3",
     label: "field-label",
     input: "w-full min-w-0 min-h-11 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2.5 text-body-lg font-normal normal-case tracking-normal text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-secondary-600 focus:border-secondary-600 outline-none transition-all",

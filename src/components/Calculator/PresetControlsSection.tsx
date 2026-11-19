@@ -143,7 +143,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
     return (
         <div className={`grid min-w-0 items-start gap-5 ${open && inlineCatalog ? 'min-[960px]:grid-cols-[minmax(0,1fr)_minmax(20rem,50%)]' : ''}`}>
-            <div className={`min-w-0 ${credit ? 'space-y-2' : 'space-y-4'}`}>
+            <div className="min-w-0">
                 {mode && <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
                         {credit ? 'Créditos adicionados' : 'Descontos adicionados'} ({instanceCount})

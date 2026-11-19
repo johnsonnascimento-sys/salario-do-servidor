@@ -44,16 +44,16 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
             <button key={label} type="button" onClick={() => { onCloseMobile(false); onChange(index); }}
                 aria-current={current ? 'step' : undefined} aria-label={compact || hint ? label : undefined}
                 aria-describedby={hintId} title={compact ? [label, hint].filter(Boolean).join(' · ') : undefined}
-                className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 ${current ? 'bg-secondary-800 text-white' : 'text-neutral-700 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700'}`}>
+                className={`flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-body-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 ${current ? 'bg-secondary-100 text-secondary-900 shadow-[inset_3px_0_0] shadow-secondary-700 dark:bg-secondary-900 dark:text-secondary-100 dark:shadow-secondary-300' : 'text-neutral-700 hover:bg-neutral-200/70 dark:text-neutral-200 dark:hover:bg-neutral-800'}`}>
                 <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                 {!compact && <span>
                     {label}
-                    {hint && <span id={hintId} className={`mt-0.5 block text-body-xs font-normal ${current ? 'text-secondary-100' : 'text-neutral-600 dark:text-neutral-300'}`}>{hint}</span>}
+                    {hint && <span id={hintId} className="mt-0.5 block text-body-xs font-normal text-neutral-600 dark:text-neutral-300">{hint}</span>}
                 </span>}
             </button>
         );
     });
-    return <nav aria-label="Etapas da simulação" className={`min-w-0 min-[960px]:shrink-0 ${mobileOpen ? '' : 'hidden min-[960px]:block'} ${collapsed ? 'min-[960px]:w-16' : 'min-[960px]:w-56'}`}>
+    return <nav data-calculator-steps aria-label="Etapas da simulação" className={`min-w-0 dark:border-neutral-700 dark:bg-neutral-900 min-[960px]:shrink-0 min-[960px]:border-r min-[960px]:border-neutral-200 min-[960px]:bg-neutral-50 dark:min-[960px]:bg-neutral-950/45 ${mobileOpen ? '' : 'hidden min-[960px]:block'} ${collapsed ? 'min-[960px]:w-[4.25rem]' : 'min-[960px]:w-56'}`}>
         <div className="min-[960px]:hidden">
             {mobileOpen && <div className="fixed inset-0 z-[60] flex items-end bg-neutral-950/60" onClick={event => { if (event.target === event.currentTarget) onCloseMobile(); }}>
                 <div ref={dialogRef} id="calculator-mobile-navigation" role="dialog" aria-modal="true" aria-labelledby="calculator-mobile-navigation-title" className="max-h-[90dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-4 pb-6 pt-4 shadow-xl dark:bg-neutral-900" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
@@ -67,10 +67,14 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
                 </div>
             </div>}
         </div>
-        <div className="hidden rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800 min-[960px]:block">
-            <button type="button" onClick={() => setCollapsed(value => !value)} aria-label={collapsed ? 'Expandir etapas' : 'Recolher etapas'} aria-expanded={!collapsed} className="mb-2 flex min-h-11 w-full items-center justify-center rounded-lg text-neutral-600 hover:bg-white dark:text-neutral-200 dark:hover:bg-neutral-700">
-                {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <><PanelLeftClose className="mr-2 h-5 w-5" /> Recolher etapas</>}
-            </button>
+        <div className="hidden px-2 py-4 min-[960px]:block">
+            <div className={`mb-2 flex items-center gap-2 ${collapsed ? 'justify-center' : 'justify-between pl-3'}`}>
+                {!collapsed && <p className="text-body-xs font-semibold text-neutral-600 dark:text-neutral-300">Etapas da simulação</p>}
+                <button type="button" onClick={() => setCollapsed(value => !value)} aria-label={collapsed ? 'Expandir etapas' : 'Recolher etapas'}
+                    aria-expanded={!collapsed} className="grid h-11 w-11 shrink-0 place-items-center rounded-md text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                    {collapsed ? <PanelLeftOpen className="h-5 w-5" aria-hidden="true" /> : <PanelLeftClose className="h-5 w-5" aria-hidden="true" />}
+                </button>
+            </div>
             <div className="space-y-1">{items(collapsed, 'desktop')}</div>
         </div>
     </nav>;

@@ -311,24 +311,15 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
 
 
     return (
-        <div className="relative space-y-3 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 min-[960px]:space-y-5 min-[960px]:px-6 min-[960px]:py-5">
-            <div className="absolute top-0 right-0 w-28 h-28 bg-secondary-500/5 dark:bg-secondary-500/10 rounded-full -mr-8 -mt-8 blur-2xl pointer-events-none"></div>
-
-            <div className="relative z-10 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
-                    <h3 className="text-h4 font-bold text-neutral-800 dark:text-neutral-100">
-                        Mês e ano da folha
-                    </h3>
-                </div>
-
-
-            </div>
-
-            <div className="relative z-10 space-y-2">
+        <div className="space-y-3 border-b border-neutral-200 pb-5 dark:border-neutral-700">
+            <h3 className="flex items-center gap-2 text-h5 font-semibold text-neutral-800 dark:text-neutral-100">
+                <Calendar className="h-5 w-5 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
+                Mês e ano da folha
+            </h3>
+            <div className="space-y-2">
                 <div>
                     <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
-                    <div className="flex gap-2">
+                    <div className="flex max-w-md gap-2">
                         <select
                             id="payroll-month"
                             aria-label="Mês da folha"
@@ -358,11 +349,11 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                     </p>
                 </div>
 
-                <details className="rounded-lg bg-neutral-50 px-3 dark:bg-neutral-900/50">
+                <details className="group w-fit max-w-full">
                     <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-body-sm font-semibold text-neutral-800 dark:text-neutral-200">
                         <Info className="h-4 w-4 shrink-0 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
                         Enquadramento normativo
-                        <span className="ml-auto" aria-hidden="true">⌄</span>
+                        <span className="ml-auto group-open:rotate-180" aria-hidden="true">⌄</span>
                     </summary>
                     <div className="pb-3 text-body-xs text-neutral-600 dark:text-neutral-300">
                             {state.simularDerrubadaVeto && clampedReference.year >= 2027 ? (
