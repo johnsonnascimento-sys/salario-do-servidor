@@ -144,7 +144,7 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
     );
 
     return (
-        <section className={`${styles.card} space-y-4`} aria-labelledby={`${id}-title`}>
+        <section className={`${styles.formSection} space-y-4`} aria-labelledby={`${id}-title`}>
             <CalculatorCardHeading help={{ label: "Normas e vigência de GAACTA e Licença Compensatória", content: <>
                 <p className="font-semibold">Normas e vigência</p>
                 <p><strong>GAACTA.</strong> Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa para ocupantes de cargos em comissão nas condições da norma aplicável. O cálculo usa o percentual vigente sobre a base selecionada.</p>
