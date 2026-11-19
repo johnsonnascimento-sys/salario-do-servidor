@@ -1,7 +1,7 @@
 import { getPensionErrorFeedback } from '../utils/pensionFeedback';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronDown, AlertCircle } from 'lucide-react';
+import { ChevronDown, AlertCircle, List } from 'lucide-react';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
 import { GlobalSettings } from '../components/Calculator/GlobalSettings';
@@ -93,11 +93,21 @@ export default function Calculator() {
     const [barHeight, setBarHeight] = useState(120);
     const [step, setStep] = useState<number>(CALCULATOR_STEP.competence);
     const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
-    const mobileStepsTrigger = useRef<HTMLButtonElement>(null);
+    const mobileStepsTrigger = useRef<HTMLButtonElement | null>(null);
     const [searchDestination, setSearchDestination] = useState<CalculatorSearchDestination | null>(null);
     const stepHeadingRef = useRef<HTMLHeadingElement>(null);
     const focusSearchTarget = useCalculatorTargetFocus();
     const initialScrollDone = useRef(false);
+
+    const mobileStepsTriggerProps = {
+        'aria-haspopup': 'dialog' as const,
+        'aria-expanded': mobileStepsOpen,
+        'aria-controls': mobileStepsOpen ? 'calculator-mobile-navigation' : undefined,
+        onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+            mobileStepsTrigger.current = event.currentTarget;
+            setMobileStepsOpen(true);
+        }
+    };
 
     const closeMobileSteps = useCallback((restoreFocus = true) => {
         setMobileStepsOpen(false);
@@ -357,17 +367,14 @@ export default function Calculator() {
                 {header}
                 <div className="flex flex-1 flex-col min-[960px]:flex-row">
                 <CalculatorNavigation step={step} onChange={changeStep} mobileOpen={mobileStepsOpen} onCloseMobile={closeMobileSteps} />
-                <div data-calculator-content className="min-w-0 flex-1 px-4 pb-[calc(var(--calculator-bar-height)_+_1.5rem)] pt-3 sm:px-6 min-[960px]:px-8 min-[960px]:pb-6 min-[960px]:pt-5">
+                <div data-calculator-content className="min-w-0 flex-1 px-4 pb-[calc(var(--calculator-bar-height)_+_4.5rem)] pt-3 sm:px-6 min-[960px]:px-8 min-[960px]:pb-6 min-[960px]:pt-5">
                 <CalculatorSearch courtConfig={courtConfig} onSelect={selectSearchResult} />
                 <CalculatorStepHeader
                     title={currentSection.label}
                     description={stepDescription}
                     headingRef={stepHeadingRef}
                     mobileStep={`Etapa ${step + 1} de ${CALCULATOR_SECTIONS.length}`}
-                    mobileAction={<button ref={mobileStepsTrigger} type="button" aria-label="Abrir etapas da simulação"
-                        aria-haspopup="dialog" aria-expanded={mobileStepsOpen}
-                        aria-controls={mobileStepsOpen ? 'calculator-mobile-navigation' : undefined}
-                        onClick={() => setMobileStepsOpen(true)}
+                    mobileAction={<button type="button" aria-label="Abrir etapas da simulação" {...mobileStepsTriggerProps}
                         className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-secondary-100 text-secondary-800 dark:bg-secondary-950 dark:text-secondary-200 min-[960px]:hidden">
                         <ChevronDown size={20} aria-hidden="true" />
                     </button>}
@@ -481,6 +488,12 @@ export default function Calculator() {
 
                 </div>
                 </div>
+
+                <button type="button" {...mobileStepsTriggerProps}
+                    className="fixed bottom-[calc(var(--calculator-bar-height)_+_0.75rem)] right-4 z-40 inline-flex min-h-11 items-center gap-2 rounded-full border border-secondary-700 bg-secondary-800 px-4 text-body-sm font-semibold text-white shadow-lg hover:bg-secondary-900 dark:border-secondary-400 min-[960px]:hidden">
+                    <List size={18} aria-hidden="true" />
+                    Etapas
+                </button>
 
                 <ActionFooter
                     resultLabel={dailiesResultRows.length > 0 ? 'Total estimado' : 'Líquido do holerite'}
