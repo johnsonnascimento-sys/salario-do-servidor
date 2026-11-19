@@ -8,7 +8,7 @@ import type { PresetSearchDestination } from '../src/components/Calculator/calcu
 
 test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', (context) => {
     let focused = '';
-    let currentDialog: 'inline' | 'modal' | null = null;
+    let currentDialog: 'modal' | null = null;
     const highlighted = new Set<string>();
     const focusedCard = (id: string) => ({
         focus: () => { focused = id; },
@@ -35,10 +35,10 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
         else Reflect.deleteProperty(globalThis, 'document');
     });
 
-    function Catalog({ searchDestination }: { searchDestination?: PresetSearchDestination }) {
+    function Catalog({ searchDestination, mode = 'C' }: { searchDestination?: PresetSearchDestination; mode?: 'C' | 'D' }) {
         const [instances, setInstances] = useState<PresetInstance[]>([{ key: 'overtime-old', presetId: 'hora_extra' }]);
         const [expanded, expandCard] = useState('');
-        return <PresetControlsSection mode="C" instanceCount={instances.length} enabledPresets={instances} searchDestination={searchDestination}
+        return <PresetControlsSection mode={mode} instanceCount={instances.length} enabledPresets={instances} searchDestination={searchDestination}
             transportIndemnityEnabled={false} includePreset={presetId => {
                 const key = 'overtime-new';
                 setInstances(previous => [{ presetId, key }, ...previous]);
@@ -52,7 +52,6 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
     act(() => {
         tree = create(<Catalog />, { createNodeMock: element => {
             if (element.type === 'dialog') return {
-                show: () => { currentDialog = 'inline'; },
                 showModal: () => { currentDialog = 'modal'; },
                 close: () => { currentDialog = null; }
             };
@@ -95,6 +94,15 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
         assert.equal(currentDialog, null);
         assert.equal(focused, 'preset-card-overtime-new');
         assert.equal(count(), 'Créditos adicionados (2)');
+        act(() => tree.update(<Catalog mode="D" />));
+        act(() => control('Adicionar desconto')!.props.onClick());
+        assert.equal(currentDialog, 'modal');
+        assert.equal(focused, 'input');
+        assert.equal(tree.root.findAllByType('li').length, 1);
+        assert.ok(control('Adicionar Pensão Alimentícia'));
+        act(() => control('Fechar catálogo')!.props.onClick());
+        assert.equal(currentDialog, null);
+        assert.equal(focused, 'button');
     } finally {
         act(() => tree.unmount());
     }

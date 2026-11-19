@@ -67,7 +67,7 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
                 </div>
             </div>}
         </div>
-        <div className="hidden px-2 py-4 min-[960px]:block">
+        <div className="hidden max-h-[max(5rem,calc(100dvh_-_var(--calculator-bar-height,120px)_-_5.5rem))] overflow-y-auto px-2 py-2 min-[960px]:block">
             <div className={`mb-2 flex items-center gap-2 ${collapsed ? 'justify-center' : 'justify-between pl-3'}`}>
                 {!collapsed && <p className="text-body-xs font-semibold text-neutral-600 dark:text-neutral-300">Etapas da simulação</p>}
                 <button type="button" onClick={() => setCollapsed(value => !value)} aria-label={collapsed ? 'Expandir etapas' : 'Recolher etapas'}
@@ -75,7 +75,7 @@ export const CalculatorNavigation: React.FC<CalculatorNavigationProps> = ({ step
                     {collapsed ? <PanelLeftOpen className="h-5 w-5" aria-hidden="true" /> : <PanelLeftClose className="h-5 w-5" aria-hidden="true" />}
                 </button>
             </div>
-            <div className="space-y-1">{items(collapsed, 'desktop')}</div>
+            <div>{items(collapsed, 'desktop')}</div>
         </div>
     </nav>;
 };

@@ -49,6 +49,10 @@
     }
 
     @media (min-width: 960px) {
+        html:has(.calculator-shell) {
+            scrollbar-gutter: stable;
+        }
+
         .calculator-shell, .calculator-result-dock {
             width: min(72rem, calc(100% - 3rem));
             margin-inline: auto;

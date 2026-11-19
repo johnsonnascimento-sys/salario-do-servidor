@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDownRight, Plus, Search, X } from 'lucide-react';
 import type { Rubrica } from '../../types';
 import {
@@ -23,7 +23,6 @@ interface PresetControlsSectionProps {
 }
 
 const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-const desktopQuery = '(min-width: 960px)';
 const actionClass = 'inline-flex items-center justify-center gap-2 rounded-lg border border-secondary/40 px-3 py-2 text-body-sm font-semibold text-secondary-800 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:bg-secondary-950';
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
@@ -33,7 +32,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const id = useId();
     const [openMode, setOpenMode] = useState<Rubrica['tipo'] | null>(null);
     const open = mode !== null && openMode === mode;
-    const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.(desktopQuery).matches));
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('todos');
     const [exactSearch, setExactSearch] = useState<PresetSearchDestination | null>(null);
@@ -45,7 +43,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const handledSearch = useRef<PresetSearchDestination | null>(null);
     const focusCard = useCalculatorTargetFocus();
     const credit = mode === 'C';
-    const inlineCatalog = desktop && !credit;
     const addLabel = credit ? 'Adicionar crédito' : 'Adicionar desconto';
     const term = normalizeSearch(search.trim());
     const catalog = useMemo(() => PRESET_CATALOG.filter(item =>
@@ -57,14 +54,6 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         normalizeSearch([item.label, item.description, ...item.tags].join(' ')).includes(term)
     );
 
-    useEffect(() => {
-        if (typeof window === 'undefined' || !window.matchMedia) return;
-        const media = window.matchMedia(desktopQuery);
-        const resize = () => setDesktop(media.matches);
-        media.addEventListener('change', resize);
-        return () => media.removeEventListener('change', resize);
-    }, []);
-
     useLayoutEffect(() => {
         setOpenMode(current => current === mode ? current : null);
     }, [mode]);
@@ -72,17 +61,16 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     useLayoutEffect(() => {
         const dialog = dialogRef.current;
         if (!open || !dialog) return;
-        if (inlineCatalog) dialog.show();
-        else dialog.showModal();
+        dialog.showModal();
         searchRef.current?.focus({ preventScroll: true });
 
         const previousOverflow = document.body.style.overflow;
-        if (!inlineCatalog) document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
         return () => {
             dialog.close();
-            if (!inlineCatalog) document.body.style.overflow = previousOverflow;
+            document.body.style.overflow = previousOverflow;
         };
-    }, [open, inlineCatalog]);
+    }, [open]);
 
     useLayoutEffect(() => {
         if (open || !focusTarget.current) return;
@@ -124,7 +112,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
 
     useLayoutEffect(() => {
         if (open && exactSearch) addResultRef.current?.focus();
-    }, [open, exactSearch, desktop]);
+    }, [open, exactSearch]);
 
     const reveal = (cardId: string, edit = false) => {
         if (edit) expandCard(cardId);
@@ -142,32 +130,30 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     };
 
     return (
-        <div className={`grid min-w-0 items-start gap-5 ${open && inlineCatalog ? 'min-[960px]:grid-cols-[minmax(0,1fr)_minmax(20rem,50%)]' : ''}`}>
-            <div className="min-w-0">
-                {mode && <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
-                        {credit ? 'Créditos adicionados' : 'Descontos adicionados'} ({instanceCount})
-                    </h3>
-                    <button ref={triggerRef} type="button" aria-expanded={open} aria-controls={`${id}-catalog`}
-                        onClick={() => {
-                            if (open) {
-                                close();
-                                return;
-                            }
-                            setSearch('');
-                            setCategory('todos');
-                            setExactSearch(null);
-                            setOpenMode(mode);
-                        }}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-secondary-800 px-4 py-2 font-semibold text-white hover:bg-secondary-900">
-                        <Plus className="h-4 w-4" aria-hidden="true" />{addLabel}
-                    </button>
-                </div>}
-                {mode && instanceCount === 0 && <p className="rounded-xl border border-dashed border-neutral-300 p-4 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
-                    Nenhum lançamento adicionado.
-                </p>}
-                {children}
-            </div>
+        <div className="min-w-0">
+            {mode && <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                    {credit ? 'Créditos adicionados' : 'Descontos adicionados'} ({instanceCount})
+                </h3>
+                <button ref={triggerRef} type="button" aria-expanded={open} aria-controls={`${id}-catalog`}
+                    onClick={() => {
+                        if (open) {
+                            close();
+                            return;
+                        }
+                        setSearch('');
+                        setCategory('todos');
+                        setExactSearch(null);
+                        setOpenMode(mode);
+                    }}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-secondary-800 px-4 py-2 font-semibold text-white hover:bg-secondary-900">
+                    <Plus className="h-4 w-4" aria-hidden="true" />{addLabel}
+                </button>
+            </div>}
+            {mode && instanceCount === 0 && <p className="rounded-xl border border-dashed border-neutral-300 p-4 text-neutral-600 dark:border-neutral-700 dark:text-neutral-300">
+                Nenhum lançamento adicionado.
+            </p>}
+            {children}
             <dialog ref={dialogRef} id={`${id}-catalog`} aria-labelledby={`${id}-title`}
                 onCancel={event => { event.preventDefault(); close(); }}
                 onKeyDown={event => {
@@ -176,11 +162,12 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                         close();
                     }
                 }}
-                className={`overflow-y-auto overscroll-contain bg-white p-4 text-neutral-900 backdrop:bg-neutral-950/55 dark:bg-neutral-900 dark:text-neutral-100 ${inlineCatalog
-                    ? 'static m-0 w-full max-w-none rounded-xl border border-neutral-200 dark:border-neutral-700'
-                    : credit && desktop
-                        ? 'm-auto max-h-[85dvh] w-[calc(100%_-_2rem)] max-w-[38rem] rounded-2xl border border-neutral-200 p-6 shadow-xl dark:border-neutral-700'
-                        : 'm-0 h-[100dvh] max-h-none w-full max-w-none pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]'}`}>
+                className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-y-auto overscroll-contain bg-white px-4
+                    pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]
+                    text-neutral-900 backdrop:bg-neutral-950/55 dark:bg-neutral-900 dark:text-neutral-100
+                    min-[960px]:m-auto min-[960px]:h-auto min-[960px]:max-h-[85dvh] min-[960px]:w-[calc(100%_-_2rem)]
+                    min-[960px]:max-w-[38rem] min-[960px]:rounded-2xl min-[960px]:border min-[960px]:border-neutral-200 min-[960px]:p-6
+                    min-[960px]:shadow-xl dark:min-[960px]:border-neutral-700">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between gap-2">
                         <h3 id={`${id}-title`} className="text-h5 font-semibold">{addLabel}</h3>
