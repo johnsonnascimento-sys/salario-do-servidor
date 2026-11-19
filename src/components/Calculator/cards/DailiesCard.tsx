@@ -154,7 +154,7 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state: savedState, inp
             </> : <p role="status" className={hintClass}>Aguardando cálculo. Os totais serão exibidos após a conclusão da simulação e o preenchimento da viagem.</p>}
             <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700"><button ref={buttonRef} type="button" className={actionClass} onClick={openEditor}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo</button></div>
         </> : <section aria-labelledby={`${id}-title`} className="space-y-5">
-            <h4 ref={headingRef} tabIndex={-1} id={`${id}-title`} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2">Personalizar diárias de viagem</h4>
+            <h4 ref={headingRef} tabIndex={-1} id={`${id}-title`} className="text-h5 focus-visible:outline focus-visible:outline-2">Personalizar diárias de viagem</h4>
             <section className={sectionClass} aria-labelledby={`${id}-additional`}>
                 <h5 id={`${id}-additional`} className="font-semibold">{additionalLabel}</h5>
                 {isJmu ? <><label htmlFor={`${id}-embarkation`} className={styles.label}>Percurso coberto</label><select id={`${id}-embarkation`} className={styles.input} value={state.diariasEmbarque} onChange={e => update('diariasEmbarque', e.target.value)}>

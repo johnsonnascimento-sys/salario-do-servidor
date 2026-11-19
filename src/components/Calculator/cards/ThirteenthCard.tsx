@@ -130,10 +130,10 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                 <button ref={buttonRef} type="button" className={actionClass} onClick={openEditor}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo</button>
             </div>
         </> : <section aria-labelledby={`${fieldId}-title`} className="space-y-6">
-            <h4 ref={headingRef} tabIndex={-1} id={`${fieldId}-title`} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2">Personalizar 13º salário</h4>
+            <h4 ref={headingRef} tabIndex={-1} id={`${fieldId}-title`} className="text-h5 focus-visible:outline focus-visible:outline-2">Personalizar 13º salário</h4>
             {partial && <p className="text-body-xs text-warning-700 dark:text-warning-300">A configuração anterior seleciona componentes diferentes. Aplicar ajustes confirma o recebimento unificado das parcelas selecionadas, preservando os valores recuperados nas listas.</p>}
             <section aria-labelledby={`${fieldId}-composition`} className="space-y-3">
-                <h5 id={`${fieldId}-composition`} className="text-body font-semibold">Composição da remuneração de referência (13º)</h5>
+                <h5 id={`${fieldId}-composition`} className="text-body font-semibold">Composição da remuneração de referência</h5>
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Selecione as parcelas que integram o cálculo. O abono mensal desta composição é distinto do abono próprio do 13º apurado pelo motor.</p>
                 <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700 [&>label]:py-3">
                     {/* Vencimento Básico */}
@@ -336,7 +336,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
 
                 {/* Subtotal da Base Apurada */}
                 <div className={styles.internalTotalWrapper}>
-                    <span className={styles.internalTotalLabel}>Base apurada da remuneração (13º)</span>
+                    <span className={styles.internalTotalLabel}>Base de cálculo do 13º salário</span>
                     <span className={styles.internalTotalValue}>{formatCurrency(totalBaseApurada)}</span>
                 </div>
             </section>

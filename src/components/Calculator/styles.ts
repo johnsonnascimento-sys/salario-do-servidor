@@ -13,8 +13,8 @@ export const styles = {
     accordionContent: "p-5 border-t border-neutral-100 dark:border-neutral-700",
     accordionWrapper: "bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-sm transition-all hover:shadow-md",
     internalTotalWrapper: "mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-700 flex flex-wrap justify-between items-center gap-2",
-    internalTotalLabel: "text-label font-bold text-neutral-400 uppercase tracking-widest",
-    internalTotalValue: "text-body font-bold text-neutral-700 dark:text-white font-mono",
+    internalTotalLabel: "text-body font-semibold text-neutral-700 dark:text-neutral-200",
+    internalTotalValue: "font-mono text-body font-semibold text-neutral-900 dark:text-neutral-100",
     actionButton: "w-full min-h-11 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 text-body font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors",
     valueDisplay: "text-body font-bold text-neutral-700 dark:text-neutral-200 font-mono",
 

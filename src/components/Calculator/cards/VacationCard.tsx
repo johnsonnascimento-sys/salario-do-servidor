@@ -201,9 +201,9 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                     <button ref={buttonRef} type="button" className={actionClass} onClick={openEditor}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculo</button>
                 </div>
             </> : <section aria-labelledby={`${fieldId}-title`} className="space-y-6">
-                <h4 ref={headingRef} tabIndex={-1} id={`${fieldId}-title`} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2">Personalizar férias</h4>
+                <h4 ref={headingRef} tabIndex={-1} id={`${fieldId}-title`} className="text-h5 focus-visible:outline focus-visible:outline-2">Personalizar férias</h4>
             <section aria-labelledby={`${fieldId}-composition`} className="space-y-3">
-                <h5 id={`${fieldId}-composition`} className="text-body font-semibold">Composição da remuneração de referência (Férias)</h5>
+                <h5 id={`${fieldId}-composition`} className="text-body font-semibold">Composição da remuneração de referência</h5>
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Selecione as parcelas que integram o cálculo de 1/3.</p>
                 <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700 [&>label]:py-3">
                     {/* Vencimento Básico */}
@@ -402,14 +402,13 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                     </div>
                 </div>
 
-                {/* Subtotal da Base Apurada e Adicional Correspondente */}
-                <div hidden={preview.loading || Boolean(preview.error)} className="pt-3 border-t border-neutral-100 dark:border-neutral-700 space-y-2">
-                    <div className="flex justify-between items-center">
-                        <span className="text-body-xs text-neutral-600 dark:text-neutral-400">Base apurada da remuneração (Férias)</span>
-                        <span className="font-mono text-body-xs text-neutral-800 dark:text-neutral-200 font-bold">{formatCurrency(totalBaseApurada)}</span>
+                <div hidden={preview.loading || Boolean(preview.error)} className="border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-body text-neutral-600 dark:text-neutral-300">Base de cálculo das férias</span>
+                        <span className={styles.internalTotalValue}>{formatCurrency(totalBaseApurada)}</span>
                     </div>
                     <div className={styles.internalTotalWrapper}>
-                        <span className={styles.internalTotalLabel}>1/3 Constitucional correspondente</span>
+                        <span className={styles.internalTotalLabel}>Adicional de férias (1/3 constitucional)</span>
                         <span className={styles.internalTotalValue}>{formatCurrency(tercoCalculado)}</span>
                     </div>
                 </div>
@@ -441,7 +440,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                     />
                     Recebido 1/3 de férias em um mês anterior
                 </label>
-                <p className="text-label text-neutral-400 mt-1 ml-6">
+                <p className="ml-6 mt-1 text-body-xs text-neutral-600 dark:text-neutral-300">
                     Marque se recebeu o pagamento no contracheque anterior.
                 </p>
 
@@ -457,7 +456,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                             Alterar valor do desconto manualmente
                         </label>
                         <div className="flex items-center justify-between gap-3">
-                            <span className="text-label text-neutral-500 dark:text-neutral-400">
+                            <span className="text-body text-neutral-600 dark:text-neutral-300">
                                 Desconto aplicado
                             </span>
                             <span className={styles.valueDisplay}>

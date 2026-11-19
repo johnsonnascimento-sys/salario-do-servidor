@@ -299,7 +299,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         </label>
                     )}
 
-                    {/* Férias (1/3 Constitucional) */}
+                    {/* Férias (1/3 constitucional) */}
                     {valorFerias > 0 && (
                         <label className={styles.checkboxLabel}>
                             <input
@@ -309,7 +309,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                                 onChange={e => update('pensaoIncideFerias', e.target.checked)}
                             />
                             <span className="flex-1 flex flex-wrap items-center justify-between gap-2">
-                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Férias (1/3 Constitucional)</span>
+                                <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Férias (1/3 constitucional)</span>
                                 <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(valorFerias)}</span>
                             </span>
                         </label>
@@ -323,7 +323,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         {/* BLOCO 1: Créditos que compõem a Base Bruta */}
                         <div className="space-y-2">
                             <div className="flex flex-wrap items-center justify-between">
-                                <span className="text-body-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                <span className="text-body font-semibold text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
                                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                     1. Créditos que compõem a Base Bruta da Pensão:
                                 </span>
@@ -588,7 +588,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         {/* BLOCO 2: Deduções da Base (Cálculo sobre o Valor Líquido) */}
                         <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
                             <div className="flex flex-wrap items-center justify-between">
-                                <span className="text-body-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+                                <span className="text-body font-semibold text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
                                     <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
                                     2. Descontos Dedutíveis da Base (Cálculo sobre o Líquido):
                                 </span>
@@ -720,25 +720,25 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
 
                     <div className="p-3.5 rounded-xl bg-neutral-100/80 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700/80 space-y-2.5">
                         <div className="flex flex-wrap items-center justify-between text-body-xs">
-                            <span className="text-neutral-600 dark:text-neutral-400">Base Bruta:</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">Base bruta</span>
                             <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200">{formatCurrency(totalBaseBruta)}</span>
                         </div>
                         <div className="flex flex-wrap items-center justify-between text-body-xs">
-                            <span className="text-neutral-600 dark:text-neutral-400">(-) Descontos Dedutíveis:</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">Descontos dedutíveis</span>
                             <span className="font-mono font-semibold text-red-600 dark:text-red-400">- {formatCurrency(totalDeducoes)}</span>
                         </div>
                         <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex flex-wrap items-center justify-between text-body-xs font-bold">
-                            <span className="text-neutral-800 dark:text-neutral-200">(=) Base Líquida de Incidência:</span>
+                            <span className="text-neutral-800 dark:text-neutral-200">Base líquida de incidência</span>
                             <span className="font-mono text-secondary">{formatCurrency(baseLiquida)}</span>
                         </div>
                         <div className="flex flex-wrap items-center justify-between text-body-xs">
-                            <span className="text-neutral-600 dark:text-neutral-400">(×) Alíquota da Pensão:</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">Alíquota da pensão</span>
                             <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">{percentual}%</span>
                         </div>
                         <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 flex flex-wrap items-center justify-between">
-                            <span className="text-body-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
+                            <span className="text-body font-semibold text-red-700 dark:text-red-400 flex items-center gap-1.5">
                                 <HeartHandshake className="w-4 h-4" />
-                                Valor Final da Pensão Alimentícia
+                                Valor da pensão alimentícia
                             </span>
                             <span className="font-mono text-body font-bold text-red-700 dark:text-red-400">
                                 {formatCurrency(valorCalculado)}
@@ -751,7 +751,7 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                 <div className="space-y-3 p-4 bg-secondary/5 dark:bg-secondary/10 rounded-xl border border-secondary/20">
                     <div>
                         <label className="text-body-xs font-bold text-secondary-900 dark:text-secondary-200 block mb-1">
-                            Valor Fixo Mensal da Pensão Alimentícia (R$)
+                            Valor mensal fixo da pensão alimentícia (R$)
                         </label>
                         <p className="text-body-xs text-neutral-500 dark:text-neutral-400 mb-2">
                             Informe o valor exato fixado em decisão judicial ou escritura pública de alimentos.
@@ -774,9 +774,9 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                     </div>
 
                     <div className="pt-2 border-t border-secondary/20 flex flex-wrap items-center justify-between">
-                        <span className="text-body-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
+                        <span className="text-body font-semibold text-red-700 dark:text-red-400 flex items-center gap-1.5">
                             <HeartHandshake className="w-4 h-4" />
-                            Valor Final da Pensão Alimentícia
+                            Valor da pensão alimentícia
                         </span>
                         <span className="font-mono text-body font-bold text-red-700 dark:text-red-400">
                             {formatCurrency(valorCalculado)}

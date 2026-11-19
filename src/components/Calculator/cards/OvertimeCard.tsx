@@ -391,7 +391,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
             </div>
             </>}
             {draft && <section className="space-y-4" aria-label="Personalizar cálculo de Serviço Extraordinário">
-                <h4 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Personalizar Serviço Extraordinário</h4>
+                <h4 className="text-h5 text-neutral-900 dark:text-neutral-100">Personalizar horas extras</h4>
                     <details className="group" open={selectedOption === 'custom' || undefined}>
                         <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40 px-3 py-2 text-body font-semibold text-neutral-700 dark:text-neutral-300 hover:text-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary min-h-11 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700">
                             <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
