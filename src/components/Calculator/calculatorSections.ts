@@ -1,4 +1,4 @@
-import { Award, Coins, FileText, HandCoins, MinusCircle, PlusCircle, ReceiptText, Shield, StickyNote, UserRound } from 'lucide-react';
+import { Award, Calendar, Coins, FileText, HandCoins, MinusCircle, PlusCircle, ReceiptText, Shield, StickyNote, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface CalculatorSection {
@@ -11,11 +11,30 @@ interface CalculatorSection {
 
 const eventCreditsDescription = 'Em Adicionar crédito, você encontra horas extras, substituição de função, férias, 13º salário';
 
+export const CALCULATOR_STEP = {
+    competence: 0,
+    basic: 1,
+    qualification: 2,
+    personalAdvantages: 3,
+    benefits: 4,
+    pension: 5,
+    incomeTax: 6,
+    credits: 7,
+    discounts: 8,
+    notes: 9,
+    result: 10
+} as const;
+
 export const CALCULATOR_SECTIONS: CalculatorSection[] = [
+    {
+        label: 'Competência',
+        Icon: Calendar,
+        description: 'Escolha o mês e o ano da folha que deseja simular.',
+    },
     {
         label: 'Dados básicos',
         Icon: UserRound,
-        description: 'Escolha o mês da folha e informe seu cargo e padrão.',
+        description: 'Informe seu cargo, classe, padrão e função.',
     },
     {
         label: 'Adicional de Qualificação (AQ)',

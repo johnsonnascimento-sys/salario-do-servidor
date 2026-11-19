@@ -3,6 +3,7 @@ import test from 'node:test';
 import React, { useState } from 'react';
 import { act, create } from 'react-test-renderer';
 import { PresetControlsSection } from '../src/components/Calculator/PresetControlsSection';
+import { CALCULATOR_STEP } from '../src/components/Calculator/calculatorSections';
 import type { PresetInstance } from '../src/components/Calculator/dynamicPayrollForm.helpers';
 import type { PresetSearchDestination } from '../src/components/Calculator/calculatorSearchIndex';
 
@@ -83,14 +84,14 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
         act(() => control('Ver lançamento de Horas extras')!.props.onClick());
         assert.equal(focused, 'preset-card-overtime-new');
 
-        act(() => tree.update(<Catalog searchDestination={{ kind: 'preset', step: 6, presetId: 'ferias' }} />));
+        act(() => tree.update(<Catalog searchDestination={{ kind: 'preset', step: CALCULATOR_STEP.credits, presetId: 'ferias' }} />));
         assert.equal(currentDialog, 'modal');
         assert.equal(focused, 'button');
         assert.equal(tree.root.findAllByType('li').length, 1);
         assert.ok(control('Adicionar Férias'));
         assert.equal(count(), 'Créditos adicionados (2)');
 
-        act(() => tree.update(<Catalog searchDestination={{ kind: 'preset', step: 6, presetId: 'hora_extra' }} />));
+        act(() => tree.update(<Catalog searchDestination={{ kind: 'preset', step: CALCULATOR_STEP.credits, presetId: 'hora_extra' }} />));
         assert.equal(currentDialog, null);
         assert.equal(focused, 'preset-card-overtime-new');
         assert.equal(count(), 'Créditos adicionados (2)');

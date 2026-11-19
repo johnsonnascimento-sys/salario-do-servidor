@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create } from 'react-test-renderer';
 import { MemoryRouter } from 'react-router-dom';
 import { DynamicPayrollForm } from '../src/components/Calculator/DynamicPayrollForm';
+import { CALCULATOR_STEP } from '../src/components/Calculator/calculatorSections';
 import { ManualRubricasSection } from '../src/components/Calculator/ManualRubricasSection';
 import { useCalculatorState } from '../src/hooks/calculator/useCalculatorState';
 import { INITIAL_STATE, type CourtConfig, type Rubrica } from '../src/types';
@@ -171,7 +172,7 @@ test('card de VPNI adiciona lançamentos independentes e preserva a VPNI antiga 
     let calculator!: ReturnType<typeof useCalculatorState>;
     function Form() {
         calculator = useCalculatorState();
-        return <DynamicPayrollForm {...calculator} step={2} styles={{}} courtConfig={config} resultRows={[]} />;
+        return <DynamicPayrollForm {...calculator} step={CALCULATOR_STEP.personalAdvantages} styles={{}} courtConfig={config} resultRows={[]} />;
     }
     let tree!: ReturnType<typeof create>;
     act(() => {

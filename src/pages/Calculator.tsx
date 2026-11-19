@@ -13,7 +13,7 @@ import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ResultsOverview } from '../components/Calculator/ResultsOverview';
 import { CalculatorNavigation } from '../components/Calculator/CalculatorNavigation';
 import { CalculatorSearch } from '../components/Calculator/CalculatorSearch';
-import { CALCULATOR_SECTIONS } from '../components/Calculator/calculatorSections';
+import { CALCULATOR_SECTIONS, CALCULATOR_STEP } from '../components/Calculator/calculatorSections';
 import type { CalculatorSearchDestination } from '../components/Calculator/calculatorSearchIndex';
 import { calculatorTargetClass, useCalculatorTargetFocus } from '../components/Calculator/hooks/useCalculatorTargetFocus';
 import { IrEaContextSection } from '../components/Calculator/IrEaContextSection';
@@ -91,7 +91,7 @@ export default function Calculator() {
     const [restoreError, setRestoreError] = useState('');
     const [saveFeedback, setSaveFeedback] = useState('');
     const [barHeight, setBarHeight] = useState(120);
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState<number>(CALCULATOR_STEP.competence);
     const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
     const mobileStepsTrigger = useRef<HTMLButtonElement>(null);
     const [searchDestination, setSearchDestination] = useState<CalculatorSearchDestination | null>(null);
@@ -151,14 +151,14 @@ export default function Calculator() {
         const handleHashChange = () => {
             const hash = window.location.hash;
             setSearchDestination(null);
-            if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea' || hash === '#memoria-ir-ea') setStep(9);
-            else if (hash === '#funpresp-settings' || hash === '#pension-retro-form') setStep(4);
-            else if (hash === '#dependentes-ir') setStep(5);
-            else if (hash === '#verbas' || hash === '#manual-rubricas-section') setStep(6);
-            else if (hash === '#descontos') setStep(7);
-            else if (hash === '#observacoes') setStep(8);
-            else if (hash === '#remuneracao') setStep(0);
-            else if (hash === '#competencia') setStep(0);
+            if (hash === '#resultado' || hash === '#detalhamento' || hash === '#apuracao-ir-ea' || hash === '#memoria-ir-ea') setStep(CALCULATOR_STEP.result);
+            else if (hash === '#funpresp-settings' || hash === '#pension-retro-form') setStep(CALCULATOR_STEP.pension);
+            else if (hash === '#dependentes-ir') setStep(CALCULATOR_STEP.incomeTax);
+            else if (hash === '#verbas' || hash === '#manual-rubricas-section') setStep(CALCULATOR_STEP.credits);
+            else if (hash === '#descontos') setStep(CALCULATOR_STEP.discounts);
+            else if (hash === '#observacoes') setStep(CALCULATOR_STEP.notes);
+            else if (hash === '#remuneracao') setStep(CALCULATOR_STEP.basic);
+            else if (hash === '#competencia') setStep(CALCULATOR_STEP.competence);
             if (hash && document.getElementById(hash.slice(1))) {
                 window.requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
             }
@@ -323,9 +323,9 @@ export default function Calculator() {
         ? currentSection.descriptionWithTransportIndemnity ?? currentSection.description
         : currentSection.description;
     const reviewPendingAssessment = () => selectSearchResult({
-        kind: 'element', step: 4, elementId: 'pension-retro-form'
+        kind: 'element', step: CALCULATOR_STEP.pension, elementId: 'pension-retro-form'
     });
-    const pendingActionClass = step === 9
+    const pendingActionClass = step === CALCULATOR_STEP.result
         ? 'min-h-11 rounded-lg bg-secondary-800 px-4 font-semibold text-white hover:bg-secondary-900'
         : 'min-h-11 font-semibold underline underline-offset-4';
     const pendingAction = onlyEmptyRetroDrafts
@@ -377,7 +377,7 @@ export default function Calculator() {
                     {!exportError && <button type="button" aria-label="Fechar mensagem" className="min-h-11 shrink-0 px-2 font-semibold" onClick={() => setSaveFeedback('')}>Fechar</button>}
                 </div>}
                 <div className="space-y-5">
-                    <section id="competencia" tabIndex={-1} aria-label="Competência" className={calculatorTargetClass} hidden={step !== 0}>
+                    <section id="competencia" tabIndex={-1} aria-label="Competência" className={calculatorTargetClass} hidden={step !== CALCULATOR_STEP.competence}>
                     <GlobalSettings
                         key={`global-settings-${formKey}`}
                         state={effectiveState}
@@ -392,7 +392,7 @@ export default function Calculator() {
                         <p className="mt-1">{displayCalculationError || 'O cálculo retornou um erro sem descrição. Seus dados preenchidos foram mantidos.'}</p>
                         {pensionFeedback && <a href="#funpresp-settings" className="mt-2 inline-block font-semibold underline">Ver dados da Funpresp</a>}
                     </div>}
-                    {calculationPending && step !== 9 && <div id="calculator-pension-pending" className="flex flex-wrap items-center justify-between gap-x-4 rounded-lg border border-warning-300 bg-warning-50 px-3 py-1 text-body-sm text-warning-800 dark:border-warning-800 dark:bg-warning-900/20 dark:text-warning-200">
+                    {calculationPending && step !== CALCULATOR_STEP.result && <div id="calculator-pension-pending" className="flex flex-wrap items-center justify-between gap-x-4 rounded-lg border border-warning-300 bg-warning-50 px-3 py-1 text-body-sm text-warning-800 dark:border-warning-800 dark:bg-warning-900/20 dark:text-warning-200">
                         <p className="flex items-center gap-2" role="status">
                             <AlertCircle size={16} className="shrink-0" aria-hidden="true" />
                             {onlyEmptyRetroDrafts ? 'Há uma competência anterior vazia.' : 'A apuração previdenciária precisa de revisão.'}
@@ -421,14 +421,14 @@ export default function Calculator() {
                         updateRubrica={updateRubrica}
                         styles={styles}
                     />
-                    <div hidden={step !== 8}>
+                    <div hidden={step !== CALCULATOR_STEP.notes}>
                     <ObservationsSection
                         state={effectiveState}
                         update={update}
                         styles={styles}
                     />
                     </div>
-                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== 9}>
+                    <section id="resultado" tabIndex={-1} aria-label="Resultado da simulação" className="scroll-mt-28 space-y-5" hidden={step !== CALCULATOR_STEP.result}>
                     {calculationPending ? <div id="calculator-pension-pending" className="divide-y divide-warning-200 overflow-hidden rounded-xl border border-warning-300 dark:divide-warning-800 dark:border-warning-800">
                         <div role="status" className="flex items-center gap-3 bg-warning-50 px-4 py-4 text-warning-800 dark:bg-warning-900/30 dark:text-warning-200">
                             <AlertCircle size={22} className="shrink-0" aria-hidden="true" />
@@ -475,8 +475,8 @@ export default function Calculator() {
                 </div>
 
                 <div className="mt-6 flex justify-between gap-3">
-                    {step > 0 ? <button type="button" onClick={() => changeStep(step - 1)} className="min-h-11 rounded-lg border border-neutral-300 px-5 py-2 font-semibold text-neutral-700 dark:border-neutral-600 dark:text-neutral-100">Voltar</button> : <span />}
-                    {step < 9 && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-secondary-800 px-5 py-2 font-semibold text-white hover:bg-secondary-900">{step === 8 ? 'Ver resultado' : 'Avançar'}</button>}
+                    {step > CALCULATOR_STEP.competence ? <button type="button" onClick={() => changeStep(step - 1)} className="min-h-11 rounded-lg border border-neutral-300 px-5 py-2 font-semibold text-neutral-700 dark:border-neutral-600 dark:text-neutral-100">Voltar</button> : <span />}
+                    {step < CALCULATOR_STEP.result && <button type="button" onClick={() => changeStep(step + 1)} className="min-h-11 rounded-lg bg-secondary-800 px-5 py-2 font-semibold text-white hover:bg-secondary-900">{step === CALCULATOR_STEP.notes ? 'Ver resultado' : 'Avançar'}</button>}
                 </div>
 
                 </div>

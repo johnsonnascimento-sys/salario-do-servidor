@@ -1,5 +1,5 @@
 import type { CourtConfig } from '../../types';
-import { CALCULATOR_SECTIONS } from './calculatorSections';
+import { CALCULATOR_SECTIONS, CALCULATOR_STEP } from './calculatorSections';
 import { PRESET_CATALOG, type PredefinedRubricId } from './dynamicPayrollForm.helpers';
 
 export type CalculatorSearchDestination =
@@ -23,10 +23,10 @@ const normalizeSearch = (value: string) => value.normalize('NFKD')
     .trim();
 
 const sectionAliases: Record<number, string[]> = {
-    1: ['AQ', 'títulos', 'treinamento', 'AQ títulos', 'AQ treinamento'],
-    5: ['IR', 'IRRF'],
-    8: ['anotações'],
-    9: ['holerite', 'contracheque', 'resultado da simulação']
+    [CALCULATOR_STEP.qualification]: ['AQ', 'títulos', 'treinamento', 'AQ títulos', 'AQ treinamento'],
+    [CALCULATOR_STEP.incomeTax]: ['IR', 'IRRF'],
+    [CALCULATOR_STEP.notes]: ['anotações'],
+    [CALCULATOR_STEP.result]: ['holerite', 'contracheque', 'resultado da simulação']
 };
 
 const element = (step: number, elementId: string, label: string, aliases: string[] = []): SearchEntry => ({
@@ -34,18 +34,18 @@ const element = (step: number, elementId: string, label: string, aliases: string
 });
 
 const fixedEntries = [
-    element(0, 'competencia', 'Competência', ['mês', 'ano', 'referência']),
-    element(0, 'dados-principais', 'Dados principais', ['cargo', 'classe', 'padrão', 'FC/CJ', 'função', 'vencimento básico', 'GAJ', 'auxílio-alimentação']),
-    element(0, 'gaacta-licenca', 'GAACTA / Licença Compensatória', ['GAACTA', 'licença compensatória']),
-    element(0, 'gratificacao-especifica', 'Gratificação específica (GAE / GAS)', ['GAE', 'GAS']),
-    element(2, 'vantagem-vpni', 'VPNI', ['vantagem pessoal nominalmente identificada']),
-    element(2, 'vantagem-ats', 'ATS', ['adicional por tempo de serviço', 'anuênio']),
-    element(3, 'aux-transporte-fixed', 'Auxílio-transporte'),
-    element(3, 'pre-escolar-fixed', 'Auxílio pré-escolar', ['creche', 'auxílio creche']),
-    element(4, 'regime-previdenciario', 'Regime previdenciário', ['RPPS', 'PSS', 'previdência']),
-    element(4, 'abono-permanencia', 'Abono de permanência', ['abono']),
-    element(4, 'funpresp-settings', 'Funpresp-Jud', ['Funpresp', 'previdência complementar']),
-    element(5, 'dependentes-ir', 'Dependentes para IR', ['dependentes', 'dedução por dependente'])
+    element(CALCULATOR_STEP.competence, 'competencia', 'Mês e ano da folha', ['mês', 'ano', 'referência', 'enquadramento normativo']),
+    element(CALCULATOR_STEP.basic, 'dados-principais', 'Dados principais', ['cargo', 'classe', 'padrão', 'FC/CJ', 'função', 'vencimento básico', 'GAJ', 'auxílio-alimentação']),
+    element(CALCULATOR_STEP.basic, 'gaacta-licenca', 'GAACTA / Licença Compensatória', ['GAACTA', 'licença compensatória']),
+    element(CALCULATOR_STEP.basic, 'gratificacao-especifica', 'Gratificação específica (GAE / GAS)', ['GAE', 'GAS']),
+    element(CALCULATOR_STEP.personalAdvantages, 'vantagem-vpni', 'VPNI', ['vantagem pessoal nominalmente identificada']),
+    element(CALCULATOR_STEP.personalAdvantages, 'vantagem-ats', 'ATS', ['adicional por tempo de serviço', 'anuênio']),
+    element(CALCULATOR_STEP.benefits, 'aux-transporte-fixed', 'Auxílio-transporte'),
+    element(CALCULATOR_STEP.benefits, 'pre-escolar-fixed', 'Auxílio pré-escolar', ['creche', 'auxílio creche']),
+    element(CALCULATOR_STEP.pension, 'regime-previdenciario', 'Regime previdenciário', ['RPPS', 'PSS', 'previdência']),
+    element(CALCULATOR_STEP.pension, 'abono-permanencia', 'Abono de permanência', ['abono']),
+    element(CALCULATOR_STEP.pension, 'funpresp-settings', 'Funpresp-Jud', ['Funpresp', 'previdência complementar']),
+    element(CALCULATOR_STEP.incomeTax, 'dependentes-ir', 'Dependentes para IR', ['dependentes', 'dedução por dependente'])
 ];
 
 export const buildCalculatorSearchIndex = (config: Pick<CourtConfig, 'previdenciaComplementar' | 'transportIndemnity'>): SearchEntry[] => {
@@ -54,7 +54,7 @@ export const buildCalculatorSearchIndex = (config: Pick<CourtConfig, 'previdenci
     }));
     const presets = PRESET_CATALOG.filter(item => item.id !== 'indenizacao_transporte' || config.transportIndemnity?.enabled)
         .map(({ id, label, description, tags, category }): SearchEntry => ({
-            id, label, aliases: [description, ...tags], destination: { kind: 'preset', step: category === 'descontos' ? 7 : 6, presetId: id }
+            id, label, aliases: [description, ...tags], destination: { kind: 'preset', step: category === 'descontos' ? CALCULATOR_STEP.discounts : CALCULATOR_STEP.credits, presetId: id }
         }));
     return [...sections, ...fixedEntries.filter(entry => entry.id !== 'funpresp-settings' || config.previdenciaComplementar?.enabled), ...presets];
 };
