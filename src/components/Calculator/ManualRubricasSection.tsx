@@ -435,8 +435,8 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                         <div key={rubrica.id} id={fixedTitle === 'ATS' ? 'vantagem-ats' : `manual-rubrica-${rubrica.id}`} tabIndex={-1}
                             role="group" aria-label={groupedVpni ? `Lançamento de VPNI ${index + 1}` : fixedTitle === 'ATS' ? 'Adicional por Tempo de Serviço' : fixedTitle}
                             className={groupedVpni
-                                ? 'min-w-0 space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-700 sm:p-4'
-                                : `${styles.card} ${calculatorTargetClass} space-y-4`}>
+                                ? 'min-w-0 space-y-3 py-4 first:pt-0 last:pb-0'
+                                : `${styles.formSection} ${calculatorTargetClass} space-y-4`}>
                             {groupedVpni ? (
                                 <>
                                     <CalculatorCardHeading remove={summaryRubrics.some(saved => saved.id === rubrica.id) ? {
@@ -569,14 +569,16 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     return (
         <div className={editor ? undefined : fixedTitles ? 'space-y-5' : 'space-y-4'}>
             {addVpni && (
-                <section id="vantagem-vpni" tabIndex={-1} aria-labelledby={`${vpniId}-titulo`} className={`${styles.card} ${calculatorTargetClass} space-y-4`}>
+                <section id="vantagem-vpni" tabIndex={-1} aria-labelledby={`${vpniId}-titulo`} className={`${styles.formSection} ${calculatorTargetClass} space-y-4`}>
                     <CalculatorCardHeading help={VPNI_HELP}>
                         <h3 id={`${vpniId}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">Vantagem Pessoal Nominalmente Identificada (VPNI)</h3>
                     </CalculatorCardHeading>
                     <datalist id={`${vpniId}-descricoes`}>
                         {VPNI_DESCRIPTIONS.map(label => <option key={label} value={label} />)}
                     </datalist>
-                    {renderRubricas(vpniEntries)}
+                    <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                        {renderRubricas(vpniEntries)}
+                    </div>
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-3 dark:border-neutral-700">
                         <button type="button" onClick={addVpni}
                             className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-300 px-3 text-body-xs font-semibold text-secondary-800 hover:bg-neutral-50 dark:border-neutral-700 dark:text-secondary-300 dark:hover:bg-neutral-800">
