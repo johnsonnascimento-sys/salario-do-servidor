@@ -35,13 +35,14 @@ const element = (step: number, elementId: string, label: string, aliases: string
 
 const fixedEntries = [
     element(CALCULATOR_STEP.competence, 'competencia', 'Mês e ano da folha', ['mês', 'ano', 'referência', 'enquadramento normativo']),
-    element(CALCULATOR_STEP.basic, 'dados-principais', 'Dados principais', ['cargo', 'classe', 'padrão', 'FC/CJ', 'função', 'PSS sobre FC/CJ', 'vencimento básico', 'GAJ', 'auxílio-alimentação']),
+    element(CALCULATOR_STEP.basic, 'dados-principais', 'Dados principais', ['cargo', 'classe', 'padrão', 'FC/CJ', 'função', 'PSS sobre FC/CJ', 'vencimento básico', 'GAJ']),
     element(CALCULATOR_STEP.basic, 'gaacta-licenca', 'GAACTA / Licença Compensatória', ['GAACTA', 'licença compensatória']),
     element(CALCULATOR_STEP.basic, 'gratificacao-especifica', 'Gratificação específica (GAE / GAS)', ['GAE', 'GAS']),
     element(CALCULATOR_STEP.personalAdvantages, 'vantagem-vpni', 'VPNI', ['vantagem pessoal nominalmente identificada']),
     element(CALCULATOR_STEP.personalAdvantages, 'vantagem-ats', 'ATS', ['adicional por tempo de serviço', 'anuênio']),
     element(CALCULATOR_STEP.benefits, 'aux-transporte-fixed', 'Auxílio-transporte'),
     element(CALCULATOR_STEP.benefits, 'pre-escolar-fixed', 'Auxílio pré-escolar', ['creche', 'auxílio creche']),
+    element(CALCULATOR_STEP.benefits, 'aux-alimentacao-fixed', 'Auxílio-alimentação', ['alimentação', 'vale alimentação']),
     element(CALCULATOR_STEP.pension, 'regime-previdenciario', 'Regime previdenciário', ['RPPS', 'PSS', 'previdência']),
     element(CALCULATOR_STEP.pension, 'abono-permanencia', 'Abono de permanência', ['abono']),
     element(CALCULATOR_STEP.pension, 'funpresp-settings', 'Funpresp-Jud', ['Funpresp', 'previdência complementar']),

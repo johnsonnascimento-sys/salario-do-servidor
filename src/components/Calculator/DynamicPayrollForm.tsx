@@ -5,7 +5,8 @@ import type { PensionSelectionContexts } from '../../services/agency/engine/modu
 import { usePensionSelection } from './hooks/usePensionSelection';
 import { GripVertical, X } from 'lucide-react';
 import { CalculatorState, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry } from '../../types';
-import { getTablesForPeriod } from '../../utils/calculations';
+import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
+import { BenefitHelp, type BenefitHelpKind } from './BenefitHelp';
 import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { ManualRubricasSection } from './ManualRubricasSection';
 import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
@@ -60,9 +61,9 @@ interface DynamicPayrollFormProps {
 
 const GRATIFICATION_INSTANCE: PresetInstance = { key: 'gratificacao-fixed', presetId: 'gratificacao' };
 const ABONO_INSTANCE: PresetInstance = { key: 'abono-fixed', presetId: 'abono' };
-const FIXED_BENEFITS: Array<PresetInstance & { title: string }> = [
-    { key: 'aux-transporte-fixed', presetId: 'aux_transporte', title: 'Auxílio-transporte' },
-    { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar' }
+const FIXED_BENEFITS: Array<PresetInstance & { title: string; helpKind: BenefitHelpKind }> = [
+    { key: 'aux-transporte-fixed', presetId: 'aux_transporte', title: 'Auxílio-transporte', helpKind: 'transport' },
+    { key: 'pre-escolar-fixed', presetId: 'pre_escolar', title: 'Auxílio pré-escolar', helpKind: 'preschool' }
 ];
 
 const PERSONAL_ADVANTAGES = ['VPNI', 'ATS'] as const;
@@ -517,13 +518,33 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 {FIXED_BENEFITS.map(instance => (
                     <section key={instance.key} id={instance.key} tabIndex={-1} aria-labelledby={`${instance.key}-titulo`}
                         className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
-                        <h3 id={`${instance.key}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
-                            {instance.title}
-                        </h3>
+                        <CalculatorCardHeading help={{
+                            label: `Sobre ${instance.title}`,
+                            content: <BenefitHelp kind={instance.helpKind} orgSlug={courtConfig.orgSlug} state={state} calculationReady={calculationReady} />
+                        }}>
+                            <h3 id={`${instance.key}-titulo`} className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                                {instance.title}
+                            </h3>
+                        </CalculatorCardHeading>
                         {renderPreset(instance)}
                         <PresetGrossSummary compact lines={calculationReady ? getPresetGrossLines(instance) : []} />
                     </section>
                 ))}
+                <section id="aux-alimentacao-fixed" tabIndex={-1} aria-labelledby="aux-alimentacao-titulo"
+                    className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
+                    <CalculatorCardHeading help={{
+                        label: 'Sobre Auxílio-alimentação',
+                        content: <BenefitHelp kind="food" orgSlug={courtConfig.orgSlug} state={state} calculationReady={calculationReady} />
+                    }}>
+                        <h3 id="aux-alimentacao-titulo" className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                            Auxílio-alimentação
+                        </h3>
+                    </CalculatorCardHeading>
+                    <dl className="flex flex-wrap items-center justify-between gap-2 text-body-xs">
+                        <dt className="text-neutral-600 dark:text-neutral-300">{calculationReady && state.auxAlimentacaoProporcional ? 'Valor proporcional na simulação' : 'Valor na simulação'}</dt>
+                        <dd className="font-mono font-semibold">{calculationReady ? formatCurrency(state.auxAlimentacao) : '—'}</dd>
+                    </dl>
+                </section>
             </section>
 
             <div id={rubricMode === 'C' ? 'creditos-eventuais' : rubricMode === 'D' ? 'descontos' : undefined}
