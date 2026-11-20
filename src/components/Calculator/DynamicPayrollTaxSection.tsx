@@ -89,8 +89,20 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         {activeSection === 'pension' && <>
         <section id="regime-previdenciario" tabIndex={-1} aria-labelledby={`${fieldId}-regime-titulo`} className={`${styles.formSection} ${calculatorTargetClass}`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre regime previdenciário', content: <>
-                <p>O Regime Próprio de Previdência Social (RPPS) é a previdência do servidor. Se o seu regime é limitado ao teto do INSS, a simulação aplica esse limite ao valor usado para calcular a contribuição previdenciária. Consulte seu cadastro funcional para confirmar o regime.</p>
-                <p>A inclusão de FC/CJ na base do PSS mensal pode ser ajustada em Dados básicos, abaixo da seleção da função.</p>
+                <p>O Regime Próprio de Previdência Social (RPPS) é a previdência do servidor público. O PSS é a contribuição para esse regime que aparece no contracheque. Selecione o limite que se aplica à sua contribuição na competência da folha.</p>
+                <ul className="list-disc space-y-1 pl-5">
+                    <li><strong>Sem limite do teto do INSS.</strong> O PSS é calculado sobre as parcelas que compõem a base do RPPS, sem aplicar o teto do INSS.</li>
+                    <li><strong>Limitada ao teto do INSS.</strong> O PSS é calculado sobre a base do RPPS até o teto vigente na competência selecionada.</li>
+                </ul>
+                <p>No Poder Judiciário da União, <strong>14/10/2013</strong> é o marco de início do regime de previdência complementar. Em regra, o limite se aplica a quem ingressou sob o novo regime ou formalizou a migração. Se você veio de outro cargo público sem interrupção do vínculo, confirme seu enquadramento com a Gestão de Pessoas. A data da posse no cargo atual, por si só, pode ser insuficiente.</p>
+                <p>Para reproduzir a inclusão de FC/CJ na base do PSS mensal do seu contracheque, marque a opção em Dados básicos, abaixo da seleção da função.</p>
+                <p className="space-x-1">
+                    <strong>Fundamentos legais</strong>{' '}
+                    <a className="underline" href="https://portal.stf.jus.br/constituicao-supremo/artigo.asp?abrirArtigo=40&amp;abrirBase=CF" target="_blank" rel="noreferrer">Constituição Federal, art. 40, caput e §§ 14 a 16</a>{' · '}
+                    <a className="underline" href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l10.887.htm" target="_blank" rel="noreferrer">Lei nº 10.887/2004, art. 4º</a>{' · '}
+                    <a className="underline" href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12618.htm" target="_blank" rel="noreferrer">Lei nº 12.618/2012, arts. 1º e 3º</a>{' · '}
+                    <a className="underline" href="https://www.funprespjud.com.br/wp-content/uploads/2022/02/portaria_559_11-10-2013_dou_14102013.pdf" target="_blank" rel="noreferrer">Portaria Previc nº 559/2013, publicada em 14/10/2013</a>
+                </p>
             </>}}>
                 <h5 id={`${fieldId}-regime-titulo`} className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
             </CalculatorCardHeading>
@@ -123,11 +135,21 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         {!(showFunprespSection && config) && savedOptionsToReview}
         {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre Funpresp-Jud', content: <>
-                <p>Informe sua participação e alíquota conforme o certificado de adesão ou contracheque. A adesão ao plano complementar é uma escolha separada do regime próprio (RPPS).</p>
+                <p>A Funpresp-Jud administra o plano de previdência complementar <strong>JusMP-Prev</strong>. O limite do RPPS e a inscrição no plano são informações distintas. Para reproduzir seu contracheque, selecione a modalidade e a alíquota que estavam vigentes no seu cadastro do plano no mês da folha.</p>
                 {pensionContext?.unavailableReasons && Object.entries(pensionContext.unavailableReasons).map(([key, reason]) => <p key={key}>{key === 'patrocinado' ? 'Participação patrocinada indisponível' : 'Participação vinculada indisponível'}: {reason}</p>)}
-                <p>Na participação patrocinada, o participante contribui sobre a parcela da remuneração de participação acima do teto do RGPS, e o patrocinador contribui paritariamente até o limite previsto. Na participação vinculada, o participante escolhe a base de contribuição, sem contrapartida do patrocinador. Os valores e condições dependem do regulamento e da sua adesão.</p>
-                <p>Fundamento legal: Lei nº 12.618/2012, que institui o regime de previdência complementar dos servidores públicos federais, e regulamento do Plano de Benefícios JusMP-Prev da Funpresp-Jud.</p>
-                <p><a className="underline" href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12618.htm" target="_blank" rel="noreferrer">Lei nº 12.618/2012</a>{' · '}<a className="underline" href="https://www.funprespjud.com.br/legislacao-e-normas/" target="_blank" rel="noreferrer">Legislação e regulamento da Funpresp-Jud</a>{' · '}<a className="underline" href="https://www.funprespjud.com.br/adesao/" target="_blank" rel="noreferrer">Informações de adesão e contribuição</a></p>
+                <ul className="list-disc space-y-1 pl-5">
+                    <li><strong>Patrocinada.</strong> Para participantes com RPPS limitado ao teto do INSS e remuneração elegível acima desse teto. A contribuição normal é calculada sobre a parcela elegível que excede o teto. O órgão contribui com valor igual ao da contribuição normal do participante, até o limite previsto.</li>
+                    <li><strong>Vinculada.</strong> Pode se aplicar a quem mantém o RPPS sem o limite do teto ou a quem, mesmo sujeito ao teto, tem remuneração igual ou inferior a ele, conforme as regras do plano. A contribuição incide sobre a base escolhida dentro dos limites do plano, sem contrapartida do órgão. No campo <strong>Base de contribuição escolhida no plano</strong>, informe o valor sobre o qual a alíquota é aplicada.</li>
+                </ul>
+                <p>Se você optou por incluir a <strong>FC/CJ</strong> na base do plano, confira essa escolha em <strong>Opções adicionais da Funpresp</strong>. Ela é independente da opção de incluir a mesma parcela no PSS em Dados básicos.</p>
+                <p className="space-x-1">
+                    <strong>Fundamentos legais</strong>{' '}
+                    <a className="underline" href="https://portal.stf.jus.br/constituicao-supremo/artigo.asp?abrirArtigo=40&amp;abrirBase=CF" target="_blank" rel="noreferrer">Constituição Federal, art. 40, §§ 14 e 15</a>{' e '}
+                    <a className="underline" href="https://portal.stf.jus.br/constituicao-supremo/artigo.asp?abrirArtigo=202&amp;abrirBase=CF" target="_blank" rel="noreferrer">art. 202</a>{' · '}
+                    <a className="underline" href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12618.htm" target="_blank" rel="noreferrer">Lei nº 12.618/2012, arts. 1º, 13 e 16</a>{' · '}
+                    <a className="underline" href="https://www.funprespjud.com.br/wp-content/uploads/2021/09/Plano-de-Beneficios-FunprespJud_2018.pdf" target="_blank" rel="noreferrer">Regulamento do plano JusMP-Prev</a>{' · '}
+                    <a className="underline" href="https://www.funprespjud.com.br/adesao/" target="_blank" rel="noreferrer">Informações de adesão e contribuição</a>
+                </p>
             </>}}>
                 <h5 id={`${fieldId}-funpresp-title`} className="mb-1 text-h5 font-semibold">Funpresp-Jud</h5>
             </CalculatorCardHeading>
