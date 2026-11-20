@@ -37,6 +37,8 @@ const baseOptions = [
 ] as const;
 
 const nonNegative = (value: string) => Math.max(0, Number(value) || 0);
+const formatGaactaPercentage = (percentage: number) =>
+    percentage.toLocaleString('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
 
 const jmuLicenseStart = '2025-07';
 const jmuGaactaStart = '2026-06';
@@ -68,6 +70,7 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
     const month = toReferenceMonthIndex(state.mesRef);
     const competence = month ? `${state.anoRef}-${String(month).padStart(2, '0')}` : '';
     const rule = resolveGaactaRule(courtConfig, competence);
+    const licenseDivisor = courtConfig.payrollRules?.monthDayDivisor;
     let validityWarning = '';
     if (competence && mode === 'licenca' && isJmu) {
         if (competence < jmuLicenseStart) {
@@ -108,12 +111,12 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
     const lines = calculationReady ? [
         ...(state.gaactaAtivo ? [
             { label: 'Base apurada da GAACTA', value: state.gaactaBaseCalculo },
-            ...(rule ? [{ label: 'Percentual da GAACTA', value: 0, displayValue: (state.gaactaPercentual || rule.percentage).toLocaleString('pt-BR', { style: 'percent', maximumFractionDigits: 2 }) }] : []),
+            ...(rule ? [{ label: 'Percentual da GAACTA', value: 0, displayValue: formatGaactaPercentage(state.gaactaPercentual || rule.percentage) }] : []),
             { label: 'Total da GAACTA', value: state.gaactaValor }
         ] : []),
         ...(mode === 'licenca' || bothSelected ? [
             { label: 'Dias a indenizar', value: 0, displayValue: String(state.licencaDias) },
-            { label: 'Divisor mensal', value: 0, displayValue: String(courtConfig.payrollRules?.monthDayDivisor ?? '—') },
+            { label: 'Divisor mensal', value: 0, displayValue: String(licenseDivisor ?? '—') },
             { label: 'Abono estimado na base', value: 0, displayValue: state.incluirAbonoLicenca ? 'Incluído' : 'Excluído' },
             { label: 'Total da licença', value: state.licencaValor }
         ] : [])
@@ -146,10 +149,13 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
 
     return (
         <section className={`${styles.formSection} space-y-4`} aria-labelledby={`${id}-title`}>
-            <CalculatorCardHeading help={{ label: "Normas e vigência de GAACTA e Licença Compensatória", content: <>
-                <p className="font-semibold">Normas e vigência</p>
-                <p><strong>GAACTA.</strong> Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa para ocupantes de cargos em comissão nas condições da norma aplicável. O cálculo usa o percentual vigente sobre a base selecionada.</p>
-                <p><strong>Licença Compensatória.</strong> A simulação estima a indenização pelos dias informados, conforme a base escolhida.</p>
+            <CalculatorCardHeading help={{ label: "Cálculo, normas e vigência de GAACTA e Licença Compensatória", content: <>
+                <p className="font-semibold">Cálculo, normas e vigência</p>
+                <p><strong>GAACTA.</strong> Gratificação por Atuação de Alta Complexidade, Técnica e Administrativa para ocupantes de cargos em comissão nas condições da norma aplicável. {rule
+                    ? <>Na competência selecionada, o percentual é de <strong>{formatGaactaPercentage(rule.percentage)} sobre a remuneração</strong>.</>
+                    : 'Não há percentual de GAACTA cadastrado e vigente para este órgão na competência selecionada.'}</p>
+                <p>Em <strong>Personalizar cálculo</strong>, você pode conferir as parcelas da base da simulação, como vencimento básico, GAJ, cargo em comissão e adicional de qualificação, ou informar uma base manual.</p>
+                <p><strong>Licença Compensatória.</strong> A indenização é proporcional aos dias informados. A simulação usa <strong>base selecionada ÷ divisor mensal{licenseDivisor ? ` (${licenseDivisor})` : ''} × dias a indenizar</strong>. A base é composta pelas parcelas marcadas em <strong>Personalizar cálculo</strong>, com abono de permanência estimado se essa opção estiver marcada.</p>
                 {isJmu ? <>
                     <p>A Resolução STM nº 376, de 6 de agosto de 2025, produziu efeitos a partir de 1º de julho de 2025.</p>
                     <p>A Resolução STM nº 397, de 19 de junho de 2026, revogou a Resolução STM nº 376/2025 e instituiu a GAACTA, com efeitos financeiros a partir de 1º de junho de 2026.</p>
