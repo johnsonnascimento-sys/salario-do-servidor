@@ -194,6 +194,7 @@ export const useCalculatorResults = (
                     diariasCorteLdo: bd.diariasCorteLdo || 0,
                     diariasDescAlim: bd.diariasDescAlim ?? bd.diariasDeducoes ?? 0,
                     diariasDescTransp: bd.diariasDescTransp || 0,
+                    diariasDescTranspRetorno: bd.diariasDescTranspRetorno || 0,
                     diariasDiasDescontoAlimentacaoCalc: bd.diariasDiasDescAlim || 0,
                     diariasDiasDescontoTransporteCalc: bd.diariasDiasDescTransp || 0,
                     licencaValor: bd.licencaCompensatoria || 0,

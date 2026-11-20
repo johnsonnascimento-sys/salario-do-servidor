@@ -86,6 +86,7 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'diariasCorteLdo',
     'diariasDescAlim',
     'diariasDescTransp',
+    'diariasDescTranspRetorno',
     'diariasDiasDescontoAlimentacaoCalc',
     'diariasDiasDescontoTransporteCalc',
     'licencaValor',

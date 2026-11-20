@@ -45,6 +45,7 @@ export function BenefitHelp({ kind, orgSlug, state, calculationReady }: BenefitH
                     {competence === STM_TRANSPORT_CHANGE_MONTH && <> Até a mudança, aplicava-se o <Source href={STM_PREVIOUS_TRANSPORT}>Ato Normativo STM nº 309/2018</Source>.</>}
                 </p>}
                 {isFederalJustice && <p>No CJF e na Justiça Federal de 1º e 2º graus, a concessão segue a <Source href={CJF_RESOLUTION}>Resolução CJF nº 4/2008, arts. 2º a 16</Source>. A <Source href="https://www.cjf.jus.br/publico/biblioteca/Res%20605-2019%20publ.pdf">Resolução CJF nº 605/2019</Source> atualizou a regra sobre os meios de transporte.</p>}
+                {(isJmu || isFederalJustice) && <p>Para servidor efetivo, a cota-parte incide sobre o vencimento básico proporcional aos dias de referência do benefício. Se o gasto for igual ou inferior à cota-parte, o auxílio fica zerado. Nas diárias de viagem, o desconto proporcional usa o auxílio após a cota-parte.</p>}
             </>}
             {kind === 'preschool' && <>
                 <p>O auxílio pré-escolar é pago por dependente elegível. Informe a quantidade de dependentes e confira a cota por dependente na competência da folha.</p>

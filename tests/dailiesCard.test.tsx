@@ -187,6 +187,28 @@ test('JMU ignora trechos vazios/residuais; JF concilia motor, resumo e resultado
     }
 });
 
+test('resumo das diárias e restituição usam o desconto líquido calculado para o retorno', async () => {
+    const raw = input({
+        auxTransporteGasto: 640, diariasEmbarque: 'nenhum', diariasDescontarTransporte: true,
+        diariasModoDesconto: 'periodo', diariasDataInicio: '2026-11-09', diariasDataFim: '2026-11-10'
+    });
+    for (const org of ['jmu', 'cjf']) {
+        const court = { ...config, orgSlug: org };
+        const engine = new AgencyCalculationEngine();
+        const agency = { slug: org, name: org, type: 'judiciary' };
+        let latest!: ReturnType<typeof useCalculatorResults>;
+        function Harness() { latest = useCalculatorResults(raw, engine, court, agency); return null; }
+        let tree!: ReturnType<typeof create>;
+        await act(async () => { tree = create(<Harness />); });
+        assert.equal(latest.calculationStatus, 'ready', latest.calculationError || '');
+        const lines = linesFor(latest.effectiveState, court);
+        assert.equal(lines.find(line => line.label === 'Desconto aux. transporte (diária inteira)')?.value, 20);
+        assert.equal(lines.find(line => line.label === 'Desconto aux. transporte (meia diária)')?.value, 10);
+        assert.equal(latest.dailiesResultRows.find(row => row.label === 'RESTITUIÇÃO AUX. TRANSP. (DIÁRIAS)')?.value, 30);
+        act(() => tree.unmount());
+    }
+});
+
 test('ausência legada de trechos na JF preserva seletor; [] explícito significa nenhum', async () => {
     const court = { ...config, orgSlug: 'cjf' };
     for (const [selection, expected] of [['completo', 80], ['metade', 40], ['nenhum', 0]] as const) {

@@ -127,6 +127,7 @@ Cada rubrica manual deve suportar:
 5. No PJU, os valores de diarias e adicionais sao data-driven e podem ser derivados percentualmente da diaria de Ministro do STF (Res. CNJ 73/2009) com regras e percentuais setoriais por ramo/orgao (Ato STM 799/2024, Res. CJF 340/2015, etc.).
 6. No modo por datas, fins de semana sao deduzidos automaticamente por calendario, e feriados/pontos facultativos locais podem ser marcados interativamente pelo usuario para a viagem, evitando acoplamento a calendarios fixos de orgaos especificos.
 7. Para servidores do PJU, disponibilizar opcao de viagem em assessoramento direto a magistrado com diaria a 80% do Ministro do STF (art. 6º, § 1º, da Res. CNJ 73/2009 c/c Res. CNJ 564/2024), mantendo a diaria comum no percentual regular do cargo/funcao (como CJ-4 a 60%).
+8. Na JMU e na Justiça Federal, descontar das diárias o auxílio-transporte devido após a cota-parte, proporcionalmente aos dias de desconto e ao divisor configurado (art. 10, § 3º, do Ato Normativo STM nº 799/2024 e art. 9º da Resolução CJF nº 4/2008). Se o gasto informado for igual ou inferior à cota-parte em centavos, zerar o crédito e o débito do benefício. Quando configurado o meio desconto no retorno, o motor fornece seu valor ao detalhamento.
 
 ### 4.5 Detalhamento final
 

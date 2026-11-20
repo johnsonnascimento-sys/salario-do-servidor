@@ -59,11 +59,12 @@ export async function calculateBenefits(params: IAgencyCalculationParams): Promi
         const desc =
             (baseCalculoDesc / payrollRules.monthDayDivisor * payrollRules.transportWorkdays) *
             payrollRules.transportDiscountRate;
+        const cotaParte = Math.round(desc * 100) / 100;
 
-        if (desc >= auxTranspCred) {
+        if (cotaParte >= auxTranspCred) {
             auxTranspCred = 0;
         } else {
-            auxTranspDeb = desc;
+            auxTranspDeb = cotaParte;
         }
     }
 

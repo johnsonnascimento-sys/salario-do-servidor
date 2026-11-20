@@ -331,9 +331,7 @@ export const buildPresetGrossLines = ({
             const meioDescAuxAlimRetorno = periodSummary?.halfDiscountApplied && state.diariasDescontarAlimentacao
                 ? roundCurrency((state.auxAlimentacao / discountRules.foodDivisor) * 0.5)
                 : 0;
-            const meioDescAuxTranspRetorno = periodSummary?.halfDiscountApplied && state.diariasDescontarTransporte
-                ? roundCurrency((state.auxTransporteValor / discountRules.transportDivisor) * 0.5)
-                : 0;
+            const meioDescAuxTranspRetorno = state.diariasDescTranspRetorno || 0;
             const totalDescAuxAlim = roundCurrency(state.diariasDescAlim || 0);
             const totalDescAuxTransp = roundCurrency(state.diariasDescTransp || 0);
             const descAuxAlimDiariaInteira = roundCurrency(Math.max(0, totalDescAuxAlim - meioDescAuxAlimRetorno));

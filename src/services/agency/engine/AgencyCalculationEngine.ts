@@ -236,6 +236,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 diariasCorteLdo: dailies.corteLdo,
                 diariasDescAlim: dailies.descAlim,
                 diariasDescTransp: dailies.descTransp,
+                diariasDescTranspRetorno: dailies.descTranspRetorno,
                 diariasDiasDescAlim: dailies.diasDescontoAlim,
                 diariasDiasDescTransp: dailies.diasDescontoTransp,
                 licencaCompensatoria: compensatoryLeave,

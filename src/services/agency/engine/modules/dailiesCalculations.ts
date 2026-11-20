@@ -31,6 +31,7 @@ export interface DailiesResult {
     deducoes: number;
     descAlim: number;
     descTransp: number;
+    descTranspRetorno: number;
     diasDescontoAlim: number;
     diasDescontoTransp: number;
 }
@@ -139,8 +140,11 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
     const deducaoAlimentacao = params.diariasDescontarAlimentacao
         ? (benefits.auxAlimentacao / discountRules.foodDivisor) * discountDays.foodDays
         : 0;
-    const deducaoTransporte = params.diariasDescontarTransporte
-        ? (benefits.auxTransporte / discountRules.transportDivisor) * discountDays.transportDays
+    const auxTransporteLiquido = round2(benefits.auxTransporte - benefits.auxTransporteDebito);
+    const auxTransportePorDia = auxTransporteLiquido / discountRules.transportDivisor;
+    const deducaoTransporte = auxTransportePorDia * discountDays.transportDays;
+    const deducaoTransporteRetorno = periodSummary?.halfDiscountApplied && params.diariasDescontarTransporte
+        ? auxTransportePorDia * 0.5
         : 0;
     const totalDeducoes = deducaoAlimentacao + deducaoTransporte;
 
@@ -155,6 +159,7 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
         deducoes: round2(totalDeducoes),
         descAlim: round2(deducaoAlimentacao),
         descTransp: round2(deducaoTransporte),
+        descTranspRetorno: round2(deducaoTransporteRetorno),
         diasDescontoAlim: round2(discountDays.foodDays),
         diasDescontoTransp: round2(discountDays.transportDays),
     };

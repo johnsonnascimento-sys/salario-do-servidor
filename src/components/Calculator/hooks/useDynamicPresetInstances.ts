@@ -414,6 +414,7 @@ export const useDynamicPresetInstances = ({
                 update('diariasDiasDescontoTransporte', 0);
                 update('diariasDiasDescontoAlimentacaoCalc', 0);
                 update('diariasDiasDescontoTransporteCalc', 0);
+                update('diariasDescTranspRetorno', 0);
                 update('diariasDescontarAlimentacao', true);
                 update('diariasDescontarTransporte', true);
                 update('diariasCorteLdo', 0);

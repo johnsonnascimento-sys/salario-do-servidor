@@ -11,6 +11,7 @@ export const DailiesHelp: React.FC<{ config: CourtConfig }> = ({ config }) => {
         {!norms.length && <span className="mt-2 block">Regulamentação do órgão selecionado.</span>}
         <span className="mt-2 block">Os valores seguem a tabela vigente de diárias e não acompanham o mês/ano selecionado na folha.</span>
         <span className="mt-2 block">Use Personalizar cálculo para ajustar o adicional, feriados, condições da viagem, descontos de auxílios e benefícios fornecidos. Sábados, domingos e feriados indicados são excluídos dos descontos automáticos de auxílios, sem excluir as diárias da viagem.</span>
+        <span className="mt-2 block">O desconto de auxílio-transporte é proporcional ao valor do benefício após a cota-parte.</span>
         {config.dailies?.embarkationDescription && <span className="mt-2 block">{config.dailies.embarkationDescription}</span>}
         {info?.notes?.map((note, index) => <span key={index} className="mt-2 block">{note}</span>)}
     </>;

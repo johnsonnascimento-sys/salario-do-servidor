@@ -11,8 +11,70 @@ import {
     enumerateDaysInRange,
 } from '../src/utils/dailiesRules';
 import { calculateDailies } from '../src/services/agency/engine/modules/dailiesCalculations';
+import { calculateBenefits } from '../src/services/agency/engine/modules/benefitsCalculations';
+import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToParams';
 import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
-import { DailiesConfig, EffectiveConfig } from '../src/types';
+import { INITIAL_STATE, type CourtConfig, type DailiesConfig, type EffectiveConfig } from '../src/types';
+
+test('JMU e CJF usam o auxílio-transporte após a cota-parte nas diárias e no retorno', async () => {
+    for (const orgSlug of ['jmu', 'cjf']) {
+        const config: CourtConfig = {
+            orgSlug,
+            bases: { salario: { tecnico: { A1: 5000.17 } }, funcoes: { 'FC-1': 1200, 'CJ-1': 5000 } },
+            careerCatalog: { noFunctionCode: '0', noFunctionLabel: 'Sem função', cargoLabels: {} },
+            payrollRules: {
+                monthDayDivisor: 30, transportWorkdays: 22, transportDiscountRate: 0.06,
+                gajRate: 1.4, specificGratificationRate: 0.35, vrRateOnCj1: 0.05,
+                overtimeMonthHours: 200, irrfTopRate: 0.275
+            },
+            dailies: {
+                rates: { tecnico: 660.13 },
+                discountRules: {
+                    foodDivisor: 22, transportDivisor: 22, excludeWeekendsAndHolidays: true,
+                    holidays: [], halfDailyOnBusinessReturnDay: true, halfDiscountOnBusinessReturnDay: true
+                }
+            }
+        };
+        const params = mapStateToAgencyParams({
+            ...INITIAL_STATE, cargo: 'tecnico', padrao: 'A1', funcao: '0', auxTransporteGasto: 600,
+            diariasQtd: 1, diariasModoDesconto: 'manual', diariasDiasDescontoTransporte: 1,
+            diariasDescontarAlimentacao: false, diariasDescontarTransporte: true
+        }, orgSlug, config);
+        for (const funcao of ['0', 'FC-1', 'CJ-1']) {
+            const benefit = await calculateBenefits({ ...params, funcao });
+            assert.equal(benefit.auxTransporte, 600);
+            assert.equal(benefit.auxTransporteDebito, 220.01);
+        }
+
+        const manual = await calculateDailies(params);
+        assert.equal(manual.descTransp, 17.27);
+        assert.equal(manual.descTranspRetorno, 0);
+        assert.equal(manual.valor, 642.86);
+
+        const period = {
+            ...params, diariasModoDesconto: 'periodo' as const,
+            diariasDataInicio: '2026-11-13', diariasDataFim: '2026-11-17', diariasFeriados: ['2026-11-16']
+        };
+        const byDate = await calculateDailies(period);
+        assert.equal(byDate.diasDescontoTransp, 1.5);
+        assert.equal(byDate.descTransp, 25.91);
+        assert.equal(byDate.descTranspRetorno, 8.64);
+
+        const withoutDiscount = await calculateDailies({ ...period, diariasDescontarTransporte: false });
+        assert.equal(withoutDiscount.descTransp, 0);
+        assert.equal(withoutDiscount.descTranspRetorno, 0);
+
+        for (const auxTransporteGasto of [0, 100, 220.01]) {
+            const input = { ...period, auxTransporteGasto };
+            const benefit = await calculateBenefits(input);
+            assert.equal(benefit.auxTransporte, 0);
+            assert.equal(benefit.auxTransporteDebito, 0);
+            const dailies = await calculateDailies(input);
+            assert.equal(dailies.descTransp, 0);
+            assert.equal(dailies.descTranspRetorno, 0);
+        }
+    }
+});
 
 test('resolveRateKeyCandidates resolve candidatos adequados para cargos efetivos, funções e magistratura', () => {
     // Analista puro

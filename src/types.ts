@@ -553,6 +553,7 @@ export interface CalculatorState {
   diariasCorteLdo: number;
   diariasDescAlim: number;
   diariasDescTransp: number;
+  diariasDescTranspRetorno: number;
   diariasExtHospedagem: boolean;
   diariasExtAlimentacao: boolean;
   diariasExtTransporte: boolean;
@@ -628,6 +629,7 @@ export type CalculatedPayrollState = Pick<
   | 'diariasCorteLdo'
   | 'diariasDescAlim'
   | 'diariasDescTransp'
+  | 'diariasDescTranspRetorno'
   | 'diariasDiasDescontoAlimentacaoCalc'
   | 'diariasDiasDescontoTransporteCalc'
   | 'licencaValor'
@@ -901,6 +903,7 @@ export const INITIAL_STATE: CalculatorState = {
   diariasCorteLdo: 0,
   diariasDescAlim: 0,
   diariasDescTransp: 0,
+  diariasDescTranspRetorno: 0,
   diariasExtHospedagem: false,
   diariasExtAlimentacao: false,
   diariasExtTransporte: false,

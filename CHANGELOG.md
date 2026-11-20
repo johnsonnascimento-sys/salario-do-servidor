@@ -1,3 +1,8 @@
+## Desconto do auxílio-transporte nas diárias — 20/11/2026
+
+- JMU e Justiça Federal calculam o desconto nas diárias sobre o auxílio devido após a cota-parte, conforme o art. 10, § 3º, do Ato Normativo STM nº 799/2024 e o art. 9º da Resolução CJF nº 4/2008.
+- A cota-parte é apurada em centavos antes de comparar com o gasto. O detalhamento da meia diária de retorno usa o desconto fornecido pelo motor.
+
 ## Cota do auxílio pré-escolar — 20/11/2026
 
 - Apenas a quantidade de dependentes elegíveis pode ser editada. A cota por dependente e o total calculado aparecem no mesmo padrão visual do auxílio-alimentação.
