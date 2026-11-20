@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Calendar, Scale } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import { AdjustmentScheduleEntry, CalculatorState, CourtConfig } from '../../types';
 import { CalculatorCardHeading } from './CalculatorCardHeading';
 import {
@@ -330,7 +330,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     const selectedCompetence = `${String(clampedReference.month).padStart(2, '0')}/${clampedReference.year}`;
 
     return (
-        <div className="space-y-3 border-b border-neutral-200 pb-5 dark:border-neutral-700">
+        <div className="max-w-2xl space-y-3">
             <CalculatorCardHeading help={{ label: 'Enquadramento normativo da competência', content: (
                 <div className="space-y-2" aria-live="polite">
                     <p><strong>Enquadramento normativo de {selectedCompetence}</strong></p>
@@ -357,12 +357,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                         </p>
                     )}
                 </div>
-            ) }}>
-                <h3 className="flex items-center gap-2 text-h5 font-semibold text-neutral-800 dark:text-neutral-100">
-                    <Calendar className="h-5 w-5 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
-                    Mês e ano da folha
-                </h3>
-            </CalculatorCardHeading>
+            ) }} />
             <div className="space-y-2">
                 <div>
                     <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
