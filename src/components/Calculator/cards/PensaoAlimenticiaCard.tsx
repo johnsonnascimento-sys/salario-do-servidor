@@ -1,6 +1,5 @@
-import { Accordion } from '../../ui/Accordion';
-import React, { useMemo, useEffect } from 'react';
-import { Scale, Percent, DollarSign, CheckCircle2, ShieldCheck, HeartHandshake } from 'lucide-react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
+import { Scale, Percent, DollarSign, CheckCircle2, ShieldCheck, HeartHandshake, SlidersHorizontal } from 'lucide-react';
 import { CalculatorState, CourtConfig } from '../../../types';
 import { formatCurrency } from '../../../utils/calculations';
 
@@ -14,15 +13,48 @@ interface PensaoAlimenticiaCardProps {
 }
 
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
+const pensionCompositionFields = [
+    'pensaoIncideVencimento', 'pensaoIncideGAJ', 'pensaoIncideFuncao', 'pensaoIncideAQTitulo',
+    'pensaoIncideAQTreino', 'pensaoIncideGrat', 'pensaoIncideGAACTA', 'pensaoGAACTAEscolhaExplicita',
+    'pensaoIncideVPNI', 'pensaoIncideATS', 'pensaoIncideAbono', 'pensaoIncide13', 'pensaoIncideFerias',
+    'pensaoIncideHoraExtra', 'pensaoIncideSubstituicao', 'pensaoRubricasCreditoInclusas',
+    'pensaoOutrasParcelas', 'pensaoDeduzirIRRF', 'pensaoDeduzirPSS', 'pensaoDeduzirFunpresp',
+    'pensaoRubricasDescontoInclusas', 'pensaoOutrosDescontosDedutiveis'
+] as const satisfies readonly (keyof CalculatorState)[];
 
 export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
-    state,
-    update,
+    state: savedState,
+    update: saveField,
     styles,
     courtConfig,
     calculationReady
 }) => {
     const fieldId = React.useId();
+    const [draft, setDraft] = useState<CalculatorState | null>(null);
+    const editorButtonRef = useRef<HTMLButtonElement>(null);
+    const editorHeadingRef = useRef<HTMLHeadingElement>(null);
+    const isEditing = Boolean(draft);
+    const state = draft ? { ...savedState, ...draft } : savedState;
+    const update = (field: keyof CalculatorState, value: any) => {
+        if (draft && (pensionCompositionFields as readonly (keyof CalculatorState)[]).includes(field)) {
+            setDraft(current => current ? { ...current, [field]: value } : current);
+        }
+        else saveField(field, value);
+    };
+    const closeEditor = (apply: boolean) => {
+        if (apply && draft) pensionCompositionFields.forEach(field => {
+            if (JSON.stringify(draft[field]) !== JSON.stringify(savedState[field])) saveField(field, draft[field]);
+        });
+        setDraft(null);
+    };
+    useEffect(() => {
+        if (isEditing) {
+            editorHeadingRef.current?.focus({ preventScroll: true });
+            editorHeadingRef.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+        } else {
+            editorButtonRef.current?.focus({ preventScroll: true });
+        }
+    }, [isEditing]);
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
     const funcaoValorBruta = useMemo(() => {
         if (!state.funcao || state.funcao === noFunctionCode || !courtConfig?.bases?.funcoes) {
@@ -318,8 +350,8 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         </fieldset>
                     )}
 
-                    <Accordion title="Composição da base da pensão"
-                        summary={`Créditos ${formatCurrency(totalBaseBruta)} · Abatimentos ${formatCurrency(totalDeducoes)}`}>
+                    {draft && <section className="space-y-4" aria-labelledby={`${fieldId}-composition-title`}>
+                        <h4 ref={editorHeadingRef} tabIndex={-1} id={`${fieldId}-composition-title`} className="text-h5 text-neutral-900 dark:text-neutral-100 focus-visible:outline focus-visible:outline-2">Composição da base da pensão</h4>
                         {/* BLOCO 1: Créditos que compõem a Base Bruta */}
                         <div className="space-y-2">
                             <div className="flex flex-wrap items-center justify-between">
@@ -716,7 +748,16 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
                         </div>
 
                         {/* BLOCO 3: Resumo Matemático e Fechamento */}
-                    </Accordion>
+                        <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                            <button type="button" onClick={() => closeEditor(false)} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600">Cancelar</button>
+                            <button type="button" onClick={() => closeEditor(true)} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-secondary px-4 py-2 text-body font-semibold text-white hover:bg-secondary-700">Aplicar composição</button>
+                        </div>
+                    </section>}
+
+                    {!draft && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                        <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Base líquida: <strong className="font-mono">{formatCurrency(baseLiquida)}</strong></p>
+                        <button ref={editorButtonRef} type="button" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:border-neutral-600" onClick={() => setDraft({ ...savedState })}><SlidersHorizontal size={16} aria-hidden="true" />Personalizar cálculos</button>
+                    </div>}
 
                     <div className="p-3.5 rounded-xl bg-neutral-100/80 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700/80 space-y-2.5">
                         <div className="flex flex-wrap items-center justify-between text-body-xs">
