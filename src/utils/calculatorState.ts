@@ -45,6 +45,8 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'irEaCurrentYearKeys',
     'overtimeCalculatedEntries',
     'substitutionCalculatedEntries',
+    'dadosPrincipaisIr',
+    'dadosPrincipaisPss',
     'aqIr',
     'aqPss',
     'gratIr',

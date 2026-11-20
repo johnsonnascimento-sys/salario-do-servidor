@@ -189,6 +189,8 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 funprespDedutivelIR: deductions.pensionMemory.dedutivelIRFolha,
                 baseRpps: deductions.pensionMemory.baseRpps,
                 baseFunpresp: deductions.pensionMemory.baseComplementar,
+                dadosPrincipaisIr: deductions.dadosPrincipaisIr,
+                dadosPrincipaisPss: deductions.dadosPrincipaisPss,
                 aqIr: deductions.aqIr,
                 aqPss: deductions.aqPss,
                 gratIr: deductions.gratIr,

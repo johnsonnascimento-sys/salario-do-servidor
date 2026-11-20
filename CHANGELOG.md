@@ -1,5 +1,7 @@
 ## ATS por percentual do vencimento básico — 18/11/2026
 
+- Corrige o detalhamento de Dados principais para apresentar IR e PSS proporcionais ao salário base, GAJ e função.
+
 - O card de ATS aceita valor fixo ou percentual adquirido, com digitação direta e botões de ajuste. O motor resolve o valor em centavos pelo vencimento básico do cargo efetivo na competência selecionada.
 - A migração versiona o limite de 35% na configuração de folha do PJU. A opção percentual depende da configuração do órgão. Holerites anteriores continuam no modo de valor fixo.
 

@@ -152,6 +152,8 @@ export const useCalculatorResults = (
                     irEaCurrentYearKeys: bd.irEaCurrentYearKeys,
                     overtimeCalculatedEntries: bd.overtimeCalculatedEntries,
                     substitutionCalculatedEntries: bd.substitutionCalculatedEntries,
+                    dadosPrincipaisIr: bd.dadosPrincipaisIr || 0,
+                    dadosPrincipaisPss: bd.dadosPrincipaisPss || 0,
                     aqIr: bd.aqIr || 0,
                     aqPss: bd.aqPss || 0,
                     gratIr: bd.gratIr || 0,

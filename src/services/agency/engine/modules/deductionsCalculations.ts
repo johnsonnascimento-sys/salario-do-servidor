@@ -35,6 +35,8 @@ export interface DeductionsResult {
     irEaCurrentYearKeys: string[];
     overtimeCalculatedEntries: CalculatedOvertimeEntry[];
     substitutionCalculatedEntries: CalculatedSubstitutionEntry[];
+    dadosPrincipaisIr: number;
+    dadosPrincipaisPss: number;
     aqIr: number;
     aqPss: number;
     gratIr: number;
@@ -258,6 +260,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const irEffectiveRate = baseIR > 0 ? irMensal / baseIR : 0;
     const vantagensBase = (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
 
+    const dadosPrincipaisIr = (baseVencimento + gaj + funcaoValor) * irEffectiveRate;
+    const dadosPrincipaisPss = (baseVencimento + gaj + (params.pssSobreFC ? funcaoValor : 0)) * pssEffectiveRate;
     const aqIr = (aqTituloVal + aqTreinoVal) * irEffectiveRate;
     const aqPss = aqTituloVal * pssEffectiveRate;
     const gratIr = gratVal * irEffectiveRate;
@@ -350,6 +354,8 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         irEaCurrentYearKeys: [...currentEaKeys],
         overtimeCalculatedEntries: overtime.entries,
         substitutionCalculatedEntries: substitution.entries,
+        dadosPrincipaisIr,
+        dadosPrincipaisPss,
         aqIr,
         aqPss,
         gratIr,

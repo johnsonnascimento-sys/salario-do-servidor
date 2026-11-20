@@ -82,8 +82,8 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                     { label: 'Função (FC/CJ)', value: calculationReady ? state.funcaoValor || 0 : 0 },
                     { label: 'Auxílio Alimentação', value: state.auxAlimentacao || 0 },
                     ...(calculationReady ? [
-                        { label: 'Desconto IR mensal (total da folha)', value: state.irMensal || 0, isDiscount: true },
-                        { label: 'Desconto PSS mensal (total da folha)', value: state.pssMensal || 0, isDiscount: true }
+                        { label: 'Desconto IR (salário base, GAJ e FC/CJ)', value: state.dadosPrincipaisIr || 0, isDiscount: true },
+                        { label: 'Desconto PSS (salário base, GAJ e FC/CJ)', value: state.dadosPrincipaisPss || 0, isDiscount: true }
                     ] : [])
                 ]} />
             </div>
