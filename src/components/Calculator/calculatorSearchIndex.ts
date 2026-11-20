@@ -35,7 +35,7 @@ const element = (step: number, elementId: string, label: string, aliases: string
 
 const fixedEntries = [
     element(CALCULATOR_STEP.competence, 'competencia', 'Mês e ano da folha', ['mês', 'ano', 'referência', 'enquadramento normativo']),
-    element(CALCULATOR_STEP.basic, 'dados-principais', 'Dados principais', ['cargo', 'classe', 'padrão', 'FC/CJ', 'função', 'vencimento básico', 'GAJ', 'auxílio-alimentação']),
+    element(CALCULATOR_STEP.basic, 'dados-principais', 'Dados principais', ['cargo', 'classe', 'padrão', 'FC/CJ', 'função', 'PSS sobre FC/CJ', 'vencimento básico', 'GAJ', 'auxílio-alimentação']),
     element(CALCULATOR_STEP.basic, 'gaacta-licenca', 'GAACTA / Licença Compensatória', ['GAACTA', 'licença compensatória']),
     element(CALCULATOR_STEP.basic, 'gratificacao-especifica', 'Gratificação específica (GAE / GAS)', ['GAE', 'GAS']),
     element(CALCULATOR_STEP.personalAdvantages, 'vantagem-vpni', 'VPNI', ['vantagem pessoal nominalmente identificada']),

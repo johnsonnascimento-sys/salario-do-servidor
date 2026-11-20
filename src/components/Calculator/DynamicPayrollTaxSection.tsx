@@ -90,17 +90,13 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
         <section id="regime-previdenciario" tabIndex={-1} aria-labelledby={`${fieldId}-regime-titulo`} className={`${styles.formSection} ${calculatorTargetClass}`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre regime previdenciário', content: <>
                 <p>O Regime Próprio de Previdência Social (RPPS) é a previdência do servidor. Se o seu regime é limitado ao teto do INSS, a simulação aplica esse limite ao valor usado para calcular a contribuição previdenciária. Consulte seu cadastro funcional para confirmar o regime.</p>
-                <p>Ao marcar a opção de função comissionada (FC) ou cargo em comissão (CJ), a simulação inclui o valor dessa parcela no cálculo da contribuição previdenciária mensal (PSS). Marque a opção se essa parcela fizer parte da base de contribuição da sua folha. Se tiver dúvida, consulte a unidade de gestão de pessoas do seu órgão.</p>
+                <p>A inclusão de FC/CJ na base do PSS mensal pode ser ajustada em Dados básicos, abaixo da seleção da função.</p>
             </>}}>
                 <h5 id={`${fieldId}-regime-titulo`} className="mb-1 text-h5 font-semibold">Regime previdenciário</h5>
             </CalculatorCardHeading>
             <PensionRegimeSelect className={styles.input} labelClassName={styles.label} compact
                 label="Base de cálculo da contribuição"
                 value={state.regimePrev} onChange={handleRegimePrevChange} disabled={!pensionContext} />
-            <label className={`${styles.checkboxLabel} mt-2`}>
-                <input id={`${fieldId}-pssSobreFC`} type="checkbox" className={styles.checkbox} checked={state.pssSobreFC} onChange={e => update('pssSobreFC', e.target.checked)} />
-                <span>Incluir função comissionada ou cargo em comissão no cálculo da contribuição previdenciária</span>
-            </label>
         </section>
         <section id="abono-permanencia" tabIndex={-1} aria-labelledby={`${fieldId}-abono-titulo`} className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
             <CalculatorCardHeading help={{ label: 'Explicação sobre abono de permanência', content: <>
@@ -229,7 +225,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
             <div className="space-y-1.5 pt-2 text-body-xs">
                 <dl className="space-y-1.5">
                     <div className="flex flex-wrap justify-between gap-2"><dt>Regime previdenciário</dt><dd>{pensionRegimeGroup(state.regimePrev) === 'rpc' ? 'Limitado ao teto do INSS' : 'Sem limite do teto do INSS'}</dd></div>
-                    <div className="flex flex-wrap justify-between gap-2"><dt>Função comissionada ou cargo em comissão na base da contribuição</dt><dd>{state.pssSobreFC ? 'Incluído' : 'Não incluído'}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-2"><dt>FC/CJ na base do PSS mensal</dt><dd>{state.pssSobreFC ? 'Incluída' : 'Não incluída'}</dd></div>
                     {showFunprespSection && <div className="flex flex-wrap justify-between gap-2"><dt>Participação na Funpresp</dt><dd>{state.funprespParticipacao === 'nao' ? 'Não participa' : state.funprespParticipacao === 'patrocinado' ? 'Patrocinada — com contrapartida' : 'Vinculada — sem contrapartida'}</dd></div>}
                 </dl>
                 {calculationReady ? <>

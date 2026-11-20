@@ -6,6 +6,7 @@ import { create, act } from 'react-test-renderer';
 import { INITIAL_STATE, CalculatorState, PrevidenciaComplementarConfig } from '../src/types';
 import { useFunprespForm } from '../src/components/Calculator/hooks/useFunprespForm';
 import { DynamicPayrollTaxSection } from '../src/components/Calculator/DynamicPayrollTaxSection';
+import { DynamicPayrollBaseSection } from '../src/components/Calculator/DynamicPayrollBaseSection';
 import { ActionFooter } from '../src/components/Calculator/ActionFooter';
 import { PensionRegimeSelect, pensionRegimeGroup } from '../src/components/Calculator/PensionRegimeSelect';
 import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
@@ -128,6 +129,29 @@ for (const regime of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
     });
 }
 
+test('Dados principais controla PSS sobre FC/CJ e explica a configuração separada da Funpresp', () => {
+    const calls: any[] = [];
+    const tree = create(React.createElement(DynamicPayrollBaseSection, {
+        styles: {}, state: state({ pssSobreFC: true, funcao: 'fc1' }), resultRows: [],
+        cargoOptions: [], padroes: [], salaryByCargo: {}, functionKeys: ['fc1'], functionValues: { fc1: 500 },
+        noFunctionCode: 'sem', noFunctionLabel: 'Sem função', baseVencimento: 0, gaj: 0, calculationReady: false,
+        handleCargoChange: () => {}, update: (key, value) => calls.push([key, value]),
+    }));
+    const pss = tree.root.findByProps({ type: 'checkbox' });
+    const functionSelect = tree.root.findAllByType('select').find(select => select.props.id.endsWith('-funcao'))!;
+    assert.equal(pss.parent?.parent, functionSelect.parent);
+    assert.equal(pss.props.checked, true);
+    act(() => pss.props.onChange({ target: { checked: false } }));
+    assert.deepEqual(calls, [['pssSobreFC', false]]);
+
+    const help = tree.root.findByProps({ 'aria-label': 'Explicação sobre cargos, remuneração e PSS sobre FC/CJ' });
+    act(() => help.props.onClick());
+    const note = tree.root.findByProps({ role: 'note' });
+    assert.match(note.findAllByType('p').map(p => p.children.join('')).join(' '), /Funpresp-Jud.*Previdência e abono/);
+    assert.match(note.findByType('a').children.join(''), /Lei nº 11\.416\/2006/);
+    tree.unmount();
+});
+
 test('opções adicionais contam apenas opções ativas e recolher não muda entradas', () => {
     const input = state({ regimePrev: 'rpc', funprespParticipacao: 'patrocinado', funprespAliq: .03,
         pssSobreFC: true, funprespIncluirFC: true, funprespFacul: .01, funprespFaculValor: 25 });
@@ -143,13 +167,8 @@ test('opções adicionais contam apenas opções ativas e recolher não muda ent
     assert.equal(help.props['aria-expanded'], false);
     act(() => help.props.onClick());
     const helpText = regime.findByProps({ role: 'note' }).findAllByType('p').map(paragraph => paragraph.children.join('')).join(' ');
-    assert.match(helpText, /função comissionada \(FC\) ou cargo em comissão \(CJ\).*contribuição previdenciária mensal \(PSS\)/);
-    const pssLabel = regime.findAllByType('label').find(label => label.children.some(child =>
-        typeof child !== 'string' && child.type === 'span' && child.children.join('').includes('função comissionada ou cargo em comissão')));
-    const pss = pssLabel!.findByType('input');
-    assert.equal(pss.props.checked, true);
-    act(() => pss.props.onChange({ target: { checked: false } }));
-    assert.deepEqual(calls.splice(0), [['pssSobreFC', false]]);
+    assert.match(helpText, /FC\/CJ na base do PSS mensal.*Dados básicos/);
+    assert.equal(regime.findAllByType('input').filter(input => input.props.type === 'checkbox').length, 0);
     const funpresp = tree.root.findByProps({ id: 'funpresp-settings' });
     const details = funpresp.findAllByType('details').find(details => details.props.onToggle)!;
     assert.match(details.findByType('summary').children.join(''), /Opções adicionais da Funpresp.*3.*ativas/);
@@ -360,7 +379,7 @@ for (const regimePrev of ['antigo', 'novo_antigo', 'migrado', 'rpc'] as const) {
             update: () => {}, handleRegimePrevChange: () => {}, showFunprespSection: true,
             previdenciaComplementar: config, funprespNormalOptions: [], handleFunprespParticipacaoChange: () => {}, calculationReady: true };
         const tree = create(renderTaxSection(props));
-        const summary = () => tree.root.findByProps({ 'aria-label': 'Resumo calculado da previdência' });
+        const summary = () => tree.root.findByProps({ 'aria-label': 'Contribuições previdenciárias' });
         const text = () => JSON.stringify(summary().findAllByType('dd').map(item => item.children));
         assert.match(text(), regimePrev === 'migrado' || regimePrev === 'rpc' ? /Limitado ao teto do INSS/ : /Sem limite do teto do INSS/);
         assert.match(text(), /Não participa/);

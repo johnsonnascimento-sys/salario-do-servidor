@@ -1,3 +1,7 @@
+## Incidência de PSS sobre FC/CJ em Dados principais — 20/11/2026
+
+- A opção de PSS fica abaixo da seleção de FC/CJ. A ajuda do card cita a Lei nº 11.416/2006 e indica onde configurar a inclusão separada na Funpresp-Jud.
+
 ## Descontos por rubrica em Dados principais — 20/11/2026
 
 - Dados principais exibe IR e PSS separadamente para Salário Base, GAJ e FC/CJ, com os valores do detalhamento do Resultado. O rateio de PSS considera a incidência selecionada para FC/CJ.
