@@ -12,7 +12,6 @@ import { ObservationsSection } from '../components/Calculator/ObservationsSectio
 import { ResultsSummary } from '../components/Calculator/ResultsSummary';
 import { ResultsOverview } from '../components/Calculator/ResultsOverview';
 import { CalculatorNavigation } from '../components/Calculator/CalculatorNavigation';
-import { CalculatorSearch } from '../components/Calculator/CalculatorSearch';
 import { CALCULATOR_SECTIONS, CALCULATOR_STEP } from '../components/Calculator/calculatorSections';
 import type { CalculatorSearchDestination } from '../components/Calculator/calculatorSearchIndex';
 import { calculatorTargetClass, useCalculatorTargetFocus } from '../components/Calculator/hooks/useCalculatorTargetFocus';
@@ -313,7 +312,8 @@ export default function Calculator() {
 
     const loading = loadingConfig || loadingAgency;
     const unavailable = agencyError || configError || !courtConfig;
-    const header = <CalculatorHeader agencyName={loadingAgency || agencyError ? undefined : agencyName} />;
+    const header = <CalculatorHeader agencyName={loadingAgency || agencyError ? undefined : agencyName}
+        courtConfig={courtConfig} onSelectSearchResult={selectSearchResult} />;
     if (loading || unavailable || !courtConfig || restoreError || !restoreReady) {
         const message = loading ? 'Carregando…' : unavailable
             ? agencyError || configError || 'Configuração indisponível.'
@@ -368,7 +368,6 @@ export default function Calculator() {
                 <div className="flex flex-1 flex-col min-[960px]:flex-row">
                 <CalculatorNavigation step={step} onChange={changeStep} mobileOpen={mobileStepsOpen} onCloseMobile={closeMobileSteps} />
                 <div data-calculator-content className="min-w-0 flex-1 px-4 pb-[calc(var(--calculator-bar-height)_+_4.5rem)] pt-3 sm:px-6 min-[960px]:px-8 min-[960px]:pb-6 min-[960px]:pt-5">
-                <CalculatorSearch courtConfig={courtConfig} onSelect={selectSearchResult} />
                 <CalculatorStepHeader
                     title={currentSection.label}
                     description={stepDescription}

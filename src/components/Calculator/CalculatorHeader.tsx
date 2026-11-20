@@ -2,6 +2,9 @@ import { useRef } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { ArrowLeftRight, Landmark, Menu, Moon, Sun } from 'lucide-react';
 import type { SiteTheme } from '../MainLayout';
+import type { CourtConfig } from '../../types';
+import type { CalculatorSearchDestination } from './calculatorSearchIndex';
+import { CalculatorSearch } from './CalculatorSearch';
 import logo from '../../assets/logo.png';
 
 const SITE_LINKS = [
@@ -14,12 +17,16 @@ const SITE_LINKS = [
 
 const headerAction = 'grid h-11 w-11 shrink-0 place-items-center rounded-lg text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800';
 
-export function CalculatorHeader({ agencyName }: { agencyName?: string }) {
+export function CalculatorHeader({ agencyName, courtConfig, onSelectSearchResult }: {
+    agencyName?: string;
+    courtConfig?: CourtConfig;
+    onSelectSearchResult?: (destination: CalculatorSearchDestination) => void;
+}) {
     const theme = useOutletContext<SiteTheme | undefined>();
     const menuRef = useRef<HTMLDetailsElement>(null);
 
     return (
-        <header data-calculator-header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-t-[inherit] border-b border-neutral-200 px-4 py-1 dark:border-neutral-700 min-[960px]:grid-cols-[auto_minmax(0,1fr)_auto] min-[960px]:gap-x-6 min-[960px]:px-5 min-[960px]:py-2">
+        <header data-calculator-header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-t-[inherit] border-b border-neutral-200 px-4 py-1 dark:border-neutral-700 min-[960px]:grid-cols-[auto_auto_minmax(12rem,1fr)_auto] min-[960px]:gap-x-5 min-[960px]:px-5 min-[960px]:py-2">
             <h1 className="sr-only">Simulador de remuneração</h1>
             <Link to="/beta-access" className="flex min-h-11 min-w-0 items-center gap-2">
                 <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" />
@@ -34,7 +41,9 @@ export function CalculatorHeader({ agencyName }: { agencyName?: string }) {
                     <span className={agencyName ? 'hidden min-[960px]:inline' : ''}>{agencyName ? 'Trocar órgão' : 'Selecionar órgão'}</span>
                 </span>
             </Link>
-            <div className="col-start-2 row-start-1 flex items-center min-[960px]:col-start-3">
+            {courtConfig && onSelectSearchResult && <CalculatorSearch courtConfig={courtConfig} onSelect={onSelectSearchResult}
+                className="col-span-2 row-start-3 mb-1 min-w-0 min-[960px]:col-span-1 min-[960px]:col-start-3 min-[960px]:row-start-1 min-[960px]:mb-0" />}
+            <div className="col-start-2 row-start-1 flex items-center min-[960px]:col-start-4">
                 {theme && <button type="button" className={headerAction} onClick={theme.toggleTheme}
                     aria-label={theme.isDark ? 'Ativar tema claro' : 'Ativar tema escuro'}>
                     {theme.isDark ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
