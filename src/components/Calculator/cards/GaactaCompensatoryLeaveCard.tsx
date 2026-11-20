@@ -61,6 +61,7 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
 
     const org = (courtConfig.orgSlug || '').toLowerCase();
     const isJmu = org === 'jmu' || org === 'stm';
+    const isCjf = org === 'cjf';
     const gaactaAvailable = Boolean(state.gaactaAtivo || courtConfig.gaactaRules?.enabled || isJmu || org === 'cjf' || org.startsWith('trf'));
     const bothSelected = state.gaactaAtivo && state.licencaDias > 0;
     const mode = bothSelected ? null : state.gaactaAtivo ? 'gaacta' : state.licencaDias > 0 || licenseSelected ? 'licenca' : 'none';
@@ -152,6 +153,9 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
                 {isJmu ? <>
                     <p>A Resolução STM nº 376, de 6 de agosto de 2025, produziu efeitos a partir de 1º de julho de 2025.</p>
                     <p>A Resolução STM nº 397, de 19 de junho de 2026, revogou a Resolução STM nº 376/2025 e instituiu a GAACTA, com efeitos financeiros a partir de 1º de junho de 2026.</p>
+                </> : isCjf ? <>
+                    <p>A <a className="underline" href="https://www.cjf.jus.br/publico/biblioteca/Res_986-2026.pdf" target="_blank" rel="noopener noreferrer">Resolução CJF nº 986/2026</a> instituiu a GAACTA nas estruturas do Conselho da Justiça Federal, com efeitos financeiros desde 1º de junho de 2026 (art. 7º).</p>
+                    <p>O art. 6º revogou a <a className="underline" href="https://www.cjf.jus.br/publico/biblioteca/Res_965-2025.pdf" target="_blank" rel="noopener noreferrer">Resolução CJF nº 965/2025</a>, que disciplinava as funções relevantes singulares e fundamentava a licença compensatória para ocupantes de CJ-2 a CJ-4 no Conselho.</p>
                 </> : <p>{rule?.reference || 'A vigência da GAACTA segue a regra cadastrada para o órgão e a competência selecionados.'}</p>}
             </> }}>
                 <h4 id={`${id}-title`} className={`${styles.innerBoxTitle} !mb-0`}>GAACTA / Licença Compensatória</h4>
