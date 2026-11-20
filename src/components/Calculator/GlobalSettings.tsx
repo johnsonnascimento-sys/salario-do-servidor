@@ -330,8 +330,10 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     const selectedCompetence = `${String(clampedReference.month).padStart(2, '0')}/${clampedReference.year}`;
 
     return (
-        <div className="max-w-2xl space-y-3">
-            <CalculatorCardHeading help={{ label: 'Enquadramento normativo da competência', content: (
+        <div className={`${styles.formSection} max-w-2xl space-y-3`}>
+            <div className="flex items-center justify-between gap-2">
+                <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
+                <CalculatorCardHeading help={{ label: 'Enquadramento normativo da competência', content: (
                 <div className="space-y-2" aria-live="polite">
                     <p><strong>Enquadramento normativo de {selectedCompetence}</strong></p>
                     {projectionApplied ? (
@@ -357,10 +359,12 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                         </p>
                     )}
                 </div>
-            ) }} />
+                ) }}>
+                    <span className="sr-only">Enquadramento normativo</span>
+                </CalculatorCardHeading>
+            </div>
             <div className="space-y-2">
                 <div>
-                    <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
                     <div className="flex max-w-md gap-2">
                         <select
                             id="payroll-month"
