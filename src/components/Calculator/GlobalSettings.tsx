@@ -79,7 +79,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     styles,
     preserveRestoredGlobals = false,
 }) => {
-    const compactLabel = styles.label;
 
     const schedules = useMemo(
         () => [...(courtConfig.adjustment_schedule || [])].sort((a, b) => a.period - b.period),
@@ -330,10 +329,8 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     const selectedCompetence = `${String(clampedReference.month).padStart(2, '0')}/${clampedReference.year}`;
 
     return (
-        <div className={`${styles.formSection} max-w-2xl space-y-3`}>
-            <div className="flex items-center justify-between gap-2">
-                <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
-                <CalculatorCardHeading help={{ label: 'Enquadramento normativo da competência', content: (
+        <div className={styles.formSection}>
+            <CalculatorCardHeading help={{ label: 'Enquadramento normativo da competência', content: (
                 <div className="space-y-2" aria-live="polite">
                     <p><strong>Enquadramento normativo de {selectedCompetence}</strong></p>
                     {projectionApplied ? (
@@ -359,46 +356,40 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                         </p>
                     )}
                 </div>
-                ) }}>
-                    <span className="sr-only">Enquadramento normativo</span>
-                </CalculatorCardHeading>
-            </div>
-            <div className="space-y-2">
-                <div>
-                    <div className="flex max-w-md gap-2">
-                        <select
-                            id="payroll-month"
-                            aria-label="Mês da folha"
-                            className={`${styles.input} min-w-0 flex-1`}
-                            value={monthLabelByNumber(clampedReference.month)}
-                            onChange={e => update('mesRef', e.target.value)}
-                        >
-                            {allowedMonths.map(item => (
-                                <option key={item.label} value={item.label}>{item.label}</option>
-                            ))}
-                        </select>
+            ) }}>
+                <label htmlFor="payroll-month" className="text-body-sm font-semibold">Competência do holerite</label>
+            </CalculatorCardHeading>
+            <div className="flex max-w-md gap-2">
+                <select
+                    id="payroll-month"
+                    aria-label="Mês da folha"
+                    className={`${styles.input} min-w-0 flex-1`}
+                    value={monthLabelByNumber(clampedReference.month)}
+                    onChange={e => update('mesRef', e.target.value)}
+                >
+                    {allowedMonths.map(item => (
+                        <option key={item.label} value={item.label}>{item.label}</option>
+                    ))}
+                </select>
 
-                        <select
-                            id="payroll-year"
-                            aria-label="Ano da folha"
-                            className={`${styles.input} !w-24 shrink-0 font-mono font-semibold sm:!w-28`}
-                            value={clampedReference.year}
-                            onChange={e => update('anoRef', Number(e.target.value))}
-                        >
-                            {allowedYears.map(year => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <p className="mt-1.5 text-body-xs text-neutral-500 dark:text-neutral-400">
-                        Seleciona automaticamente as tabelas salariais, faixas de IR, PSS e auxílios da época.
-                    </p>
-                </div>
-
+                <select
+                    id="payroll-year"
+                    aria-label="Ano da folha"
+                    className={`${styles.input} !w-24 shrink-0 font-mono font-semibold sm:!w-28`}
+                    value={clampedReference.year}
+                    onChange={e => update('anoRef', Number(e.target.value))}
+                >
+                    {allowedYears.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
+                </select>
             </div>
+            <p className="mt-1.5 text-body-xs text-neutral-500 dark:text-neutral-400">
+                Seleciona automaticamente as tabelas salariais, faixas de IR, PSS e auxílios da época.
+            </p>
 
             {(showProjectionControl || projectionApplied) && (
-                <div className="relative z-10 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
+                <div className="relative z-10 mt-3 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
                     <div className="flex items-start gap-3">
                         <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div className="space-y-1">
