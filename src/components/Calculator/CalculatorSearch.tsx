@@ -57,13 +57,13 @@ export const CalculatorSearch = ({ courtConfig, onSelect, className }: Calculato
 
     return (
         <div role="search" aria-label="Calculadora" className={`relative w-full ${className ?? 'mb-4 max-w-md min-[960px]:mb-5'}`} onBlur={dismiss}>
-            <label htmlFor={id} className="flex min-h-11 items-center gap-3 rounded-xl border border-neutral-300 bg-white px-4 focus-within:ring-2 focus-within:ring-secondary-600 dark:border-neutral-600 dark:bg-neutral-900">
+            <label htmlFor={id} className="flex min-h-11 items-center gap-3 rounded-lg border border-neutral-300 bg-white px-3 focus-within:border-secondary-600 focus-within:ring-2 focus-within:ring-secondary-600 dark:border-neutral-600 dark:bg-neutral-900">
                 <Search className="h-5 w-5 shrink-0 text-secondary-700 dark:text-secondary-300" aria-hidden="true" />
                 <span className="sr-only">Buscar na calculadora</span>
-                <input id={id} type="search" role="combobox" autoComplete="off" aria-autocomplete="list"
+                <input id={id} data-calculator-search-input type="search" role="combobox" autoComplete="off" aria-autocomplete="list"
                     aria-expanded={hasOptions} aria-controls={hasOptions ? listId : undefined} aria-activedescendant={activeId}
                     placeholder="Buscar na calculadora" value={query}
-                    className="min-w-0 w-full bg-transparent py-2 text-body text-neutral-900 outline-none placeholder:text-neutral-600 dark:text-neutral-100 dark:placeholder:text-neutral-400"
+                    className="min-w-0 w-full bg-transparent py-2 text-base text-neutral-900 outline-none placeholder:text-neutral-600 focus-visible:!outline-none min-[960px]:text-body-sm dark:text-neutral-100 dark:placeholder:text-neutral-400"
                     onFocus={() => setExpanded(true)} onKeyDown={handleKeyDown}
                     onChange={event => {
                         setQuery(event.target.value);
