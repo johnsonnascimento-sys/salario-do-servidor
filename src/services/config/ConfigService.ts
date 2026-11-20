@@ -351,7 +351,7 @@ export class ConfigService {
                             'Não computar os dias que servirem de base para o cálculo de diárias (art. 55, § 2º). A existência de diárias no mês não exclui automaticamente a indenização dos demais dias elegíveis.',
                             'É vedada a concessão de suprimento de fundos para tal finalidade, bem como a utilização de veículo oficial (art. 57).',
                             'A prestação dos serviços deve ser atestada pelo titular da unidade (art. 56); este cálculo constitui uma simulação.',
-                            'Portaria CJF nº 182/2026 publicada no DOU em 08/04/2026, com efeitos financeiros a partir de 01/01/2026 (R$ 2.391,30). Período de 2025 regido pela Portaria CJF nº 43/2025 (R$ 2.289,21).',
+                                'Valor integral: R$ 2.391,30 (20 dias), fixado pela Portaria CJF nº 182/2026, publicada no DOU em 08/04/2026, com efeitos financeiros desde 01/01/2026. Em 2025, o valor integral era R$ 2.289,21, conforme Portaria CJF nº 43/2025.',
                             'Não incidem IR (Decreto nº 9.580/2018, art. 35, I, \'e\'), PSS (Lei nº 10.887/2004, art. 4º, § 1º, III) nem contribuição Funpresp-Jud, nem há desconto sobre auxílio-alimentação.'
                         ],
                         incidences: { ir: false, pss: false, funpresp: false }

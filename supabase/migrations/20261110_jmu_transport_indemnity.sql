@@ -34,7 +34,7 @@ DECLARE
       "Considere somente dias elegíveis, já excluídos férias, licenças e demais afastamentos, ainda que considerados de efetivo exercício (art. 3º, § 2º, do ATN STM nº 212/2017).",
       "Exclua os dias impedidos pelo recebimento de diárias, nos termos do art. 4º, § 2º, do ATN STM nº 212/2017, incluído pelo ATN nº 536/2022. Havendo diárias no mês, confira as datas; a coincidência mensal não elimina o direito dos demais dias.",
       "Não são elegíveis a remessa de autos à DPU ou ao MPM para intimação (art. 1º, § 4º), nem o uso de veículo oficial ou suprimento de fundos para essa finalidade (art. 4º).",
-      "A simulação não substitui formulário, diligências, certidões e atestação pelo juiz ou diretor exigidos pelo art. 3º do ATN STM nº 212/2017.",
+      "Valor integral: R$ 2.168,46 (20 dias), fixado pelo ATN STM nº 935/2026, vigente desde 13/02/2026. A simulação não substitui formulário, diligências, certidões e atestação pelo juiz ou diretor exigidos pelo art. 3º do ATN STM nº 212/2017.",
       "IR isento: Decreto nº 9.580/2018, art. 35, I, e. PSS excluído: Lei nº 10.887/2004, art. 4º, § 1º, III. Fora do salário de participação ordinário da Funpresp-Jud.",
       "O valor vigente desde 13/02/2026 não é aplicado automaticamente a competências anteriores ou ao mês de transição sem dados suficientes."
     ],
