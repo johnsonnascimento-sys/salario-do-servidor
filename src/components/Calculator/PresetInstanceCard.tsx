@@ -155,6 +155,8 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const cardAmount = cardLines.find(line => line.cardAmount && line.cardAmount !== 'net')
         ?? cardLines.find(line => line.cardAmount === 'net');
     const net = cardLines.find(line => line.cardAmount === 'net')?.value;
+    const alimony = instance.presetId === 'pensao';
+    const detailLines = alimony && editor ? cardLines.filter(line => line !== cardAmount) : lines;
     // Os totais do 13º incluem o adiantamento. O cabeçalho mostra o saldo desta folha.
     const advanceDebit = instance.presetId === 'decimo' ? state.debitoPrimeiraParcela13 ?? 0 : 0;
     const amountForPayroll = (value: number) => advanceDebit ? roundCurrency(value - advanceDebit) : value;
@@ -203,7 +205,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             {editor && <RubricCardHeading
                 title={`${presetLabel}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}`}
                 presetId={instance.presetId}
-                discount={instance.presetId === 'pensao'}
+                discount={alimony}
                 amount={cardAmount?.cardAmount ? { kind: cardAmount.cardAmount, value: amountForPayroll(cardAmount.value) } : undefined}
                 net={net === undefined ? undefined : amountForPayroll(net)}
                 notice={instance.presetId === 'indenizacao_transporte' && state.transporteIndenizacaoMemory?.status === 'unavailable'
@@ -239,7 +241,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                     courtConfig={courtConfig}
                 />
 
-                {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={Boolean(editor) || ['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={((editor || ['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)) && !calculationReady) || !dailiesPeriodReady ? [] : lines}>
+                {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={Boolean(editor) || ['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={((editor || ['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)) && !calculationReady) || !dailiesPeriodReady ? [] : detailLines}>
                     {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
                     {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
                 </PresetGrossSummary>}

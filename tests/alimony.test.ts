@@ -12,7 +12,7 @@ import {
 } from '../src/components/Calculator/dynamicPayrollForm.helpers';
 import { buildPresetGrossLines } from '../src/components/Calculator/presetGrossLines';
 
-test('GAACTA na pensão: migra seleção antiga e preserva inclusão expressa após recarregar', () => {
+test('GAACTA na pensão: só aplica a seleção ao confirmar e preserva a inclusão expressa', () => {
     assert.equal(hydrateCalculatorState({ pensaoIncideGAACTA: true }).pensaoIncideGAACTA, false);
     let current: CalculatorState;
     const Harness = () => {
@@ -27,17 +27,54 @@ test('GAACTA na pensão: migra seleção antiga e preserva inclusão expressa ap
     };
     let tree: ReturnType<typeof create>;
     act(() => { tree = create(React.createElement(Harness)); });
+    const click = (text: string) => act(() => {
+        tree.root.findAllByType('button').find(button => button.children.includes(text))!.props.onClick();
+    });
+    const mode = (value: string) => act(() => {
+        tree.root.findAllByType('input').find(input => input.props.type === 'radio' && input.props.value === value)!.props.onChange();
+    });
     const checkbox = () => tree.root.findAllByType('label').find(label =>
         label.findAllByType('span').some(span => span.children.includes('GAACTA (Alta Complexidade)')))!.findByType('input');
-    assert.equal(checkbox().props.checked, false);
     assert.equal(current!.pensao, 200);
+    click('Personalizar cálculo');
+    assert.equal(tree.root.findAllByType('input').some(input => input.props.type === 'radio'), false);
+    assert.equal(checkbox().props.checked, false);
     act(() => checkbox().props.onChange({ target: { checked: true } }));
-    assert.equal(current!.pensao, 400);
     assert.equal(checkbox().props.checked, true);
+    assert.equal(current!.pensao, 200);
+    assert.equal(current!.pensaoBaseBruta, 1000);
+    assert.equal(current!.pensaoBaseCalculo, 1000);
+    assert.equal(current!.pensaoGAACTAEscolhaExplicita, false);
+    click('Cancelar');
+    assert.equal(current!.pensao, 200);
+
+    click('Personalizar cálculo');
+    assert.equal(checkbox().props.checked, false);
+    act(() => checkbox().props.onChange({ target: { checked: true } }));
+    click('Aplicar ajustes');
+    assert.equal(current!.pensao, 400);
+    assert.equal(current!.pensaoBaseBruta, 2000);
+    assert.equal(current!.pensaoBaseCalculo, 2000);
     const restored = hydrateCalculatorState(stripCalculatedFieldsFromCalculatorState(current!));
     assert.equal(restored.pensaoIncideGAACTA, true);
     assert.equal(restored.pensaoGAACTAEscolhaExplicita, true);
+
+    mode('fixo');
+    assert.equal(tree.root.findAllByType('button').some(button => button.children.includes('Personalizar cálculo')), false);
+    act(() => {
+        tree.root.findAllByType('input').find(input => input.props.id?.endsWith('-pensaoValorFixo'))!
+            .props.onChange({ target: { value: '350' } });
+    });
+    assert.equal(current!.pensao, 350);
+    mode('percentual');
+    assert.equal(current!.pensao, 400);
+    assert.equal(current!.pensaoValorFixo, 350);
+
+    click('Personalizar cálculo');
+    assert.equal(checkbox().props.checked, true);
     act(() => checkbox().props.onChange({ target: { checked: false } }));
+    assert.equal(current!.pensao, 400);
+    click('Aplicar ajustes');
     assert.equal(current!.pensao, 200);
     act(() => tree.unmount());
 });
@@ -184,6 +221,7 @@ test('Pensão Alimentícia: buildPresetGrossLines gera linhas de fechamento do c
     assert.ok(linesPercentual.some(l => l.label === 'Base bruta apurada da pensão' && l.value === 10000));
     assert.ok(linesPercentual.some(l => l.label === 'Deduções acordadas da base' && l.value === 2000 && l.isDiscount));
     assert.ok(linesPercentual.some(l => l.label === 'Base líquida de incidência' && l.value === 8000));
+    assert.ok(linesPercentual.some(l => l.label === 'Alíquota da pensão' && l.displayValue === '30%'));
     assert.ok(linesPercentual.some(l => l.label === 'Pensão alimentícia (30%)' && l.value === 2400 && l.isDiscount));
 
     const stateFixo: CalculatorState = {
@@ -205,4 +243,5 @@ test('Pensão Alimentícia: buildPresetGrossLines gera linhas de fechamento do c
     });
 
     assert.ok(linesFixo.some(l => l.label === 'Pensão alimentícia (valor fixo)' && l.value === 1800 && l.isDiscount));
+    assert.equal(linesFixo.length, 1);
 });

@@ -378,32 +378,26 @@ export const buildPresetGrossLines = ({
             ];
         }
         case 'pensao': {
+            const valorFinal = roundCurrency(state.pensao || 0);
+            if (state.pensaoTipo === 'fixo') {
+                return [{ label: 'Pensão alimentícia (valor fixo)', value: valorFinal, isDiscount: true, cardAmount: 'discount' }];
+            }
+
             const baseBruta = roundCurrency(state.pensaoBaseBruta || 0);
             const deducoes = roundCurrency(state.pensaoTotalDeducoes || 0);
             const baseLiquida = roundCurrency(state.pensaoBaseCalculo || 0);
-            const valorFinal = roundCurrency(state.pensao || 0);
+            const percentual = state.pensaoPercentual ?? 30;
             const lines: PresetGrossLine[] = [
                 { label: 'Base bruta apurada da pensão', value: baseBruta }
             ];
             if (deducoes > 0) {
                 lines.push({ label: 'Deduções acordadas da base', value: deducoes, isDiscount: true });
             }
-            if (state.pensaoTipo === 'percentual') {
-                lines.push({ label: 'Base líquida de incidência', value: baseLiquida });
-                lines.push({
-                    label: `Pensão alimentícia (${state.pensaoPercentual ?? 30}%)`,
-                    value: valorFinal,
-                    isDiscount: true,
-                    cardAmount: 'discount'
-                });
-            } else {
-                lines.push({
-                    label: 'Pensão alimentícia (valor fixo)',
-                    value: valorFinal,
-                    isDiscount: true,
-                    cardAmount: 'discount'
-                });
-            }
+            lines.push(
+                { label: 'Base líquida de incidência', value: baseLiquida },
+                { label: 'Alíquota da pensão', value: percentual, displayValue: `${percentual.toLocaleString('pt-BR')}%` },
+                { label: `Pensão alimentícia (${percentual}%)`, value: valorFinal, isDiscount: true, cardAmount: 'discount' }
+            );
             return lines;
         }
         default:
