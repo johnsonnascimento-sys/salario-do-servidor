@@ -17,6 +17,7 @@ interface DynamicPayrollBaseSectionProps {
     noFunctionLabel: string;
     baseVencimento: number;
     gaj: number;
+    calculationReady: boolean;
     handleCargoChange: (cargo: CalculatorState['cargo']) => void;
     update: (field: keyof CalculatorState, value: any) => void;
 }
@@ -34,6 +35,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
     noFunctionLabel,
     baseVencimento,
     gaj,
+    calculationReady,
     handleCargoChange,
     update
 }) => {
@@ -77,7 +79,12 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                 <PresetGrossSummary compact lines={[
                     { label: 'Salário Base', value: baseVencimento },
                     { label: 'Gratificação de Atividade Judiciária (GAJ)', value: gaj },
-                    { label: 'Auxílio Alimentação', value: state.auxAlimentacao || 0 }
+                    { label: 'Função (FC/CJ)', value: calculationReady ? state.funcaoValor || 0 : 0 },
+                    { label: 'Auxílio Alimentação', value: state.auxAlimentacao || 0 },
+                    ...(calculationReady ? [
+                        { label: 'Desconto IR mensal (total da folha)', value: state.irMensal || 0, isDiscount: true },
+                        { label: 'Desconto PSS mensal (total da folha)', value: state.pssMensal || 0, isDiscount: true }
+                    ] : [])
                 ]} />
             </div>
         </section>

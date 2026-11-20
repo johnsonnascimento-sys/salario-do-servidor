@@ -415,6 +415,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     cargoLabels={careerCatalog?.cargoLabels}
                     noFunctionCode={noFunctionCode}
                     noFunctionLabel={noFunctionLabel}
+                    calculationReady={calculationReady}
                     baseVencimento={baseVencimento}
                     gaj={gaj}
                     handleCargoChange={handleCargoChange}
