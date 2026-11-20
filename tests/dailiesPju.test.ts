@@ -384,6 +384,36 @@ test('mapEffectiveConfig mapeia corretamente metadados normativos e rótulo din�
     assert.deepEqual(courtConfig.dailies.normativeInfo?.notes, ['Nota 1', 'Nota 2']);
 });
 
+test('tabela nominal ativa do CJF substitui valores derivados e mantém os parâmetros de desconto', () => {
+    const previous = {
+        valid_from: '2023-09-21', valid_to: '2026-06-09', source: 'Tabela encerrada',
+        rates: { tecnico: 660.13, analista: 806.82 },
+        minister_per_diem: 1466.95, embarkation_additional: { completo: 645.46, metade: 322.73 },
+        per_diem_limit: 1153.37, embarkation_description: 'Descrição anterior'
+    };
+    const active = {
+        ...previous, valid_from: '2026-06-10', valid_to: null, source: 'Portaria CJF nº 315/2026',
+        rates: { tecnico: 695.49, analista: 850.04, cj: 850.04, fc1: 695.49, juiz: 1394.84 },
+        minister_per_diem: 1545.53, embarkation_additional: { completo: 680, metade: 340 }, per_diem_limit: 1165.27
+    };
+    const { dailies } = mapEffectiveConfigToCourtConfig({ org_slug: 'cjf', dailies_rules: {
+        rates: previous.rates, embarkation_additional: previous.embarkation_additional,
+        derived_from_minister: { enabled: true, minister_per_diem: 1466.95,
+            rates_percentages: { tecnico: 0.45 }, embarkation_percentage_full: 0.44 },
+        tariff_versions: [previous, active],
+        discount_rules: { transport_divisor: 22, return_day_half_discount_business_day: true }
+    } } as EffectiveConfig);
+    assert.equal(resolveDailiesDailyRate({ dailiesConfig: dailies, cargo: 'tecnico' }), 695.49);
+    assert.equal(resolveDailiesDailyRate({ dailiesConfig: dailies, cargo: 'tecnico', funcao: 'CJ-4' }), 850.04);
+    assert.equal(resolveDailiesDailyRate({ dailiesConfig: dailies, cargo: 'analista', funcao: 'FC-1' }), 695.49);
+    assert.equal(resolveAssistedAuthorityDailyRate(dailies, 'ministro_cjf').serverRate, 1236.42);
+    assert.equal(resolveDailiesEmbarkationAdditional({ dailiesConfig: dailies, embarkationType: 'completo' }), 680);
+    assert.equal(dailies?.ldoCap?.perDiemLimit, 1165.27);
+    assert.equal(dailies?.normativeInfo?.localRuleLabel, active.source);
+    assert.equal(dailies?.discountRules?.transportDivisor, 22);
+    assert.equal(dailies?.discountRules?.halfDiscountOnBusinessReturnDay, true);
+});
+
 test('summarizeDailiesPeriodMode aplica meia diária e meio desconto de benefício no dia de retorno útil', () => {
     const rules = resolveDailiesDiscountRules({
         rates: {},

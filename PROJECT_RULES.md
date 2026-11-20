@@ -238,12 +238,12 @@ Cada rubrica manual deve suportar:
 ## 11. Regras de Diárias no Poder Judiciário da União (PJU)
 
 1. A referência máxima de valor é a diária de Ministro do Supremo Tribunal Federal (STF), conforme Resolução CNJ Nº 73/2009 e normas setoriais.
-2. Escalonamento na Justiça Federal (Resolução CJF Nº 340/2015, art. 10):
-   - Membro do CJF: 100% da diária de Ministro do STF (R$ 1.466,95).
-   - Membro de TRF (Desembargador Federal): 95% da diária de Ministro do STF (R$ 1.393,60).
-   - Juiz Federal ou Juiz Federal Substituto: 95% da diária do membro do TRF = 90,25% da diária de Ministro do STF (R$ 1.323,92).
-   - Analista Judiciário ou Cargo em Comissão (CJ-1 a CJ-4): 55% da diária de Ministro do STF (R$ 806,82).
-   - Técnico Judiciário ou Função Comissionada (FC-1 a FC-6): 45% da diária de Ministro do STF (R$ 660,13).
+2. Escalonamento na Justiça Federal (Resolução CJF nº 340/2015, art. 10). A calculadora usa os valores nacionais nominais da tabela ativa em `dailies_rules.tariff_versions`, independentemente da competência da folha. A Portaria CJF nº 315/2026 vigora desde 10/06/2026 e fixa o limite nacional de R$ 1.165,27.
+   - Membro do CJF: 100% da diária de Ministro do STF (R$ 1.545,53).
+   - Membro de TRF (Desembargador Federal): 95% da diária de Ministro do STF (R$ 1.468,25).
+   - Juiz Federal ou Juiz Federal Substituto: 95% da diária do membro do TRF (R$ 1.394,84).
+   - Analista Judiciário ou Cargo em Comissão (CJ-1 a CJ-4): 55% da diária de Ministro do STF (R$ 850,04).
+   - Técnico Judiciário ou Função Comissionada (FC-1 a FC-6): 45% da diária de Ministro do STF (R$ 695,49).
    - Auxiliar Judiciário: equipara-se ao Técnico Judiciário (45%, conforme art. 10, § 7º).
 3. Escalonamento no Superior Tribunal Militar (Ato Normativo STM Nº 799/2024):
    - Ministro do STM: 100% da diária de Ministro do STF (R$ 1.466,95).
@@ -259,9 +259,9 @@ Cada rubrica manual deve suportar:
        - Juiz Federal da JMU / Substituto (95% do STM) -> 80% de R$ 1.393,60 = **R$ 1.114,88**.
        - Não exibir opções da Justiça Federal (como Desembargador de TRF ou Membro do CJF).
      - **Na Justiça Federal (CJF e TRFs)**:
-       - Desembargador Federal / Membro de TRF (95% STF) -> 80% de R$ 1.393,60 = **R$ 1.114,88**.
-       - Juiz Federal / Substituto (95% do TRF = 90,25% STF) -> 80% de R$ 1.323,92 = **R$ 1.059,14**.
-       - Ministro / Membro do CJF (100% STF) -> 80% de R$ 1.466,95 = **R$ 1.173,56**.
+       - Desembargador Federal / Membro de TRF (95% STF) -> 80% de R$ 1.468,25 = **R$ 1.174,60**.
+       - Juiz Federal / Substituto (95% do TRF) -> 80% de R$ 1.394,84 = **R$ 1.115,87**.
+       - Ministro / Membro do CJF (100% STF) -> 80% de R$ 1.545,53 = **R$ 1.236,42**.
        - Não exibir opções da JMU (como Ministro do STM).
    - A opção não se aplica a magistrados em deslocamento institucional.
     - **Acompanhamento de autoridade em tempo integral e hospedagem no mesmo local** (art. 9º, § 1º do Ato Normativo STM Nº 799/2024 e art. 6º, § 5º da Resolução CNJ Nº 73/2009):
@@ -270,18 +270,18 @@ Cada rubrica manual deve suportar:
         - Ministro do STM (100% STF) -> 90% de R$ 1.466,95 = **R$ 1.320,26**.
         - Juiz Federal da JMU / Substituto (95% do STM) -> 90% de R$ 1.393,60 = **R$ 1.254,24**.
       - **Na Justiça Federal (CJF e TRFs)**:
-        - Desembargador Federal / Membro de TRF (95% STF) -> 90% de R$ 1.393,60 = **R$ 1.254,24**.
-        - Juiz Federal / Substituto (90,25% STF) -> 90% de R$ 1.323,92 = **R$ 1.191,53**.
-        - Ministro / Membro do CJF (100% STF) -> 90% de R$ 1.466,95 = **R$ 1.320,26**.
+        - Desembargador Federal / Membro de TRF (95% STF) -> 90% de R$ 1.468,25 = **R$ 1.321,43**.
+        - Juiz Federal / Substituto (95% do TRF) -> 90% de R$ 1.394,84 = **R$ 1.255,36**.
+        - Ministro / Membro do CJF (100% STF) -> 90% de R$ 1.545,53 = **R$ 1.390,98**.
 5. Adicional de Transporte / Embarque no PJU:
    - **Na Justiça Militar da União (JMU / STM - Ato Normativo STM Nº 799/2024, art. 8º):** Denominado "Adicional de embarque e desembarque", correspondente a 40% da diária de Ministro do STM para ida e volta (R$ 586,78) e 20% para ida ou volta (R$ 293,39).
-   - **Na Justiça Federal (CJF e TRFs - Resolução CJF Nº 340/2015, art. 17 e Anexo / Art. 19):** Denominado "Adicional de transporte" (para cobrir despesas de deslocamento até os locais de embarque e desembarque), correspondente a 80% sobre o valor básico da diária de Analista Judiciário (equivalente a 44% da diária de Ministro do STF para percurso completo).
+   - **Na Justiça Federal (CJF e TRFs, Resolução CJF nº 340/2015, art. 17 e Anexo / art. 19):** O “Adicional de transporte” cobre as despesas de deslocamento até os locais de embarque e desembarque. O valor do percurso integral é o nominal da Portaria CJF nº 315/2026, **R$ 680,00**.
      - Conforme o Anexo da Res. CJF 340/2015 ("Uso de Veículo Oficial") e art. 17, § 2º, a viagem padrão é dividida em **4 trechos autônomos de 25% cada**:
        1. Afastamento: residência ou trabalho até o local de embarque (25%);
        2. Afastamento: local de desembarque até o trabalho ou hospedagem (25%);
        3. Retorno: trabalho ou hospedagem até o local de embarque (25%);
        4. Retorno: local de desembarque até a residência ou trabalho (25%).
-     - O adicional não é devido nos trechos realizados com utilização de veículo oficial. A calculadora permite seleção granular via checkboxes de cada trecho realizado sem veículo oficial (0%, 25%, 50%, 75% ou 100%), calculados de forma 100% dinâmica sobre a base do percurso integral derivado da diária de Ministro do STF, sem valores nominais hardcoded.
+     - O adicional não é devido nos trechos realizados com utilização de veículo oficial. A calculadora permite selecionar cada trecho sem veículo oficial e aplica a proporção correspondente sobre o valor nominal configurado.
 
 6. Equipe de Trabalho no PJU (art. 8º do Ato Normativo STM Nº 799/2024, art. 10, § 1º da Resolução CJF Nº 340/2015 e art. 6º, § 2º da Resolução CNJ Nº 73/2009):
    - Os servidores que se afastarem em equipe de trabalho recebem diárias em valores equivalentes, correspondentes ao **maior valor da diária atribuído entre os servidores membros da equipe**.
@@ -291,9 +291,9 @@ Cada rubrica manual deve suportar:
      - Se um Analista Judiciário se deslocar com ocupante de CJ, recebe a diária de CJ (**R$ 880,17**).
      - O servidor nunca recebe valor inferior ao do seu próprio cargo/função (`Math.max(regularRate, teamRate)`).
    - **Na Justiça Federal (CJF e TRFs - art. 10, § 1º da Resolução CJF Nº 340/2015 c/c art. 6º, § 2º da Resolução CNJ Nº 73/2009)**:
-     - Se um Técnico Judiciário (45% STF = R$ 660,13) se deslocar em equipe com um Analista Judiciário ou com um ocupante de Cargo em Comissão (CJ-1 a CJ-4, ambos a 55% STF = R$ 806,82), recebe a diária correspondente (**R$ 806,82**).
-     - Se um Analista Judiciário se deslocar com ocupante de CJ, mantém a diária de 55% (**R$ 806,82**).
-     - Se um Auxiliar Judiciário se deslocar com Técnico, recebe a diária de Técnico (**R$ 660,13**).
+     - Se um Técnico Judiciário (R$ 695,49) se deslocar em equipe com um Analista Judiciário ou com um ocupante de Cargo em Comissão (CJ-1 a CJ-4), recebe a diária correspondente (**R$ 850,04**).
+     - Se um Analista Judiciário se deslocar com ocupante de CJ, mantém a diária de 55% (**R$ 850,04**).
+     - Se um Auxiliar Judiciário se deslocar com Técnico, recebe a diária de Técnico (**R$ 695,49**).
      - O servidor nunca recebe valor inferior ao do seu próprio cargo/função (`Math.max(regularRate, teamRate)`).
    - A opção não se aplica a magistrados em deslocamento institucional.
 

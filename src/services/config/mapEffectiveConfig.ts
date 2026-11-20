@@ -165,6 +165,8 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         pickCaseInsensitive(salarySource, 'funcoes') ??
         {};
 
+    const activeDailiesTariff = effective.dailies_rules?.tariff_versions?.find(tariff => tariff.valid_to === null);
+
     return {
         orgSlug: effective.org_slug,
         orgName: effective.org_name,
@@ -197,14 +199,15 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     effective.org_slug === 'jmu' || effective.org_slug === 'stm' ? 'jmu' : 'cjf'
                 ),
                 orgSlug: effective.org_slug,
-                rates: effective.dailies_rules.rates ?? {},
-                embarkationAdditional: {
+                rates: activeDailiesTariff?.rates ?? effective.dailies_rules.rates ?? {},
+                embarkationAdditional: activeDailiesTariff?.embarkation_additional ?? {
                     completo: effective.dailies_rules.embarkation_additional?.completo ?? 0,
                     metade: effective.dailies_rules.embarkation_additional?.metade ?? 0,
                 },
                 derivedFromMinister: {
-                    enabled: Boolean(effective.dailies_rules.derived_from_minister?.enabled),
-                    ministerPerDiem: Number(effective.dailies_rules.derived_from_minister?.minister_per_diem ?? 0),
+                    enabled: !activeDailiesTariff && Boolean(effective.dailies_rules.derived_from_minister?.enabled),
+                    ministerPerDiem: activeDailiesTariff?.minister_per_diem ??
+                        Number(effective.dailies_rules.derived_from_minister?.minister_per_diem ?? 0),
                     ratesPercentages: effective.dailies_rules.derived_from_minister?.rates_percentages ?? {},
                     embarkationPercentageFull: Number(effective.dailies_rules.derived_from_minister?.embarkation_percentage_full ?? 0),
                     embarkationPercentageHalf: effective.dailies_rules.derived_from_minister?.embarkation_percentage_half !== undefined
@@ -223,11 +226,12 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     transporte: effective.dailies_rules.external_gloss?.transporte ?? 0,
                 },
                 ldoCap: {
-                    enabled: Boolean(effective.dailies_rules.ldo_cap?.enabled),
-                    perDiemLimit: Number(effective.dailies_rules.ldo_cap?.per_diem_limit ?? 0),
+                    enabled: Boolean(activeDailiesTariff || effective.dailies_rules.ldo_cap?.enabled),
+                    perDiemLimit: activeDailiesTariff?.per_diem_limit ??
+                        Number(effective.dailies_rules.ldo_cap?.per_diem_limit ?? 0),
                 },
                 embarkationLabel: effective.dailies_rules.embarkation_label,
-                embarkationDescription: effective.dailies_rules.embarkation_description,
+                embarkationDescription: activeDailiesTariff?.embarkation_description ?? effective.dailies_rules.embarkation_description,
                 discountRules: {
                     foodDivisor: Number(effective.dailies_rules.discount_rules?.food_divisor ?? 0),
                     transportDivisor: Number(effective.dailies_rules.discount_rules?.transport_divisor ?? 0),
@@ -241,12 +245,12 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     holidayCalendarReference: effective.dailies_rules.discount_rules?.holiday_calendar_reference,
                     holidayCalendarVersion: effective.dailies_rules.discount_rules?.holiday_calendar_version,
                 },
-                normativeInfo: effective.dailies_rules.normative_info
+                normativeInfo: effective.dailies_rules.normative_info || activeDailiesTariff
                     ? {
-                        generalRuleLabel: effective.dailies_rules.normative_info.general_rule_label,
-                        branchRuleLabel: effective.dailies_rules.normative_info.branch_rule_label,
-                        localRuleLabel: effective.dailies_rules.normative_info.local_rule_label,
-                        notes: effective.dailies_rules.normative_info.notes,
+                        generalRuleLabel: effective.dailies_rules.normative_info?.general_rule_label,
+                        branchRuleLabel: effective.dailies_rules.normative_info?.branch_rule_label,
+                        localRuleLabel: activeDailiesTariff?.source ?? effective.dailies_rules.normative_info?.local_rule_label,
+                        notes: effective.dailies_rules.normative_info?.notes,
                     }
                     : undefined,
             }

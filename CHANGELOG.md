@@ -1,3 +1,7 @@
+## Tabela de diárias da Justiça Federal — 20/11/2026
+
+- A configuração da Justiça Federal recebe os valores nacionais, o teto e o adicional de deslocamento da Portaria CJF nº 315/2026, vigente desde 10/06/2026. A calculadora informa a norma no ícone de ajuda e usa a tabela nominal vigente.
+
 ## Desconto do auxílio-transporte nas diárias — 20/11/2026
 
 - JMU e Justiça Federal calculam o desconto nas diárias sobre o auxílio devido após a cota-parte, conforme o art. 10, § 3º, do Ato Normativo STM nº 799/2024 e o art. 9º da Resolução CJF nº 4/2008.

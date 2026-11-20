@@ -201,6 +201,16 @@ export interface DailiesNormativeInfoConfig {
 }
 
 export interface DailiesRulesConfig {
+    tariff_versions?: Array<{
+        valid_from: string;
+        valid_to: string | null;
+        source: string;
+        minister_per_diem: number;
+        rates: Record<string, number>;
+        embarkation_additional: { completo: number; metade: number };
+        per_diem_limit: number;
+        embarkation_description: string;
+    }>;
     rates: Record<string, number>;
     embarkation_additional: {
         completo: number;
