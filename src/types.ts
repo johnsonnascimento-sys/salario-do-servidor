@@ -159,6 +159,7 @@ export interface AdjustmentScheduleEntry {
   label?: string;
   date?: string;
   status?: 'promulgated' | 'vetoed' | 'projected';
+  status_source?: string;
   vetoed?: boolean;
   veto_reference?: string;
 }

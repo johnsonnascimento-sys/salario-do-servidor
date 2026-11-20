@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Calendar, Settings, Scale, AlertCircle, Info } from 'lucide-react';
-import { CalculatorState, CourtConfig } from '../../types';
+import { Calendar, Scale } from 'lucide-react';
+import { AdjustmentScheduleEntry, CalculatorState, CourtConfig } from '../../types';
+import { CalculatorCardHeading } from './CalculatorCardHeading';
 import {
     MONTH_TOKEN_TO_INDEX,
     compareReferencePoints,
@@ -28,6 +29,15 @@ const getMonthLabel = (monthIndex: number) =>
         .toUpperCase();
 
 const monthLabelByNumber = (monthNumber: number) => getMonthLabel(Math.max(0, Math.min(11, monthNumber - 1)));
+
+const PJU_CAREER_LAW = 'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11416.htm';
+const PJU_2026_ADJUSTMENT_LAW = 'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/l15293.htm';
+const PJU_VETO_SOURCE = 'https://www.congressonacional.leg.br/materias/vetos/-/veto/detalhe/17869';
+const isOfficialLink = (source?: string): source is string => Boolean(source && /^https:\/\//i.test(source));
+const formatScheduleDate = (date: string) => date.split('-').reverse().join('/');
+// The date identifies the legacy PJU entry for citation. The schedule still selects the table.
+const isLaw15293Entry = (entry: AdjustmentScheduleEntry) =>
+    entry.status_source === PJU_2026_ADJUSTMENT_LAW || (!entry.status_source && entry.date === '2026-07-01');
 
 const parseTransitionLabel = (label: string) => {
     const normalized = normalizeReferenceToken(label);
@@ -69,7 +79,6 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     styles,
     preserveRestoredGlobals = false,
 }) => {
-    const compactInput = `${styles.input} py-2 px-3 text-body`;
     const compactLabel = styles.label;
 
     const schedules = useMemo(
@@ -302,20 +311,58 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         update
     ]);
 
-    const isAnoComVeto = clampedReference.year >= 2027;
-
-    const currentScheduleEntry = useMemo(() => {
-        return schedules.find(s => s.period === state.periodo);
-    }, [schedules, state.periodo]);
-
-
+    const currentScheduleEntry = schedules.find(entry => entry.period === state.periodo);
+    const currentScheduleDate = currentScheduleEntry?.date;
+    const vetoedSchedules = schedules.filter(entry => entry.vetoed);
+    const firstVetoReference = pickMinReferencePoint(vetoedSchedules.flatMap(entry => {
+        const reference = parseReferencePointFromDate(entry.date || '');
+        return reference ? [reference] : [];
+    }));
+    const showProjectionControl = firstVetoReference !== null && clampedReference.year >= firstVetoReference.year;
+    const projectionApplied = Boolean(currentScheduleEntry?.vetoed || currentScheduleEntry?.status === 'projected');
+    const isPju = courtConfig.powerName === 'PJU';
+    const pjuAdjustment = isPju ? schedules.find(isLaw15293Entry) : undefined;
+    const pjuAdjustmentReference = parseReferencePointFromDate(pjuAdjustment?.date || '');
+    const beforePjuAdjustment = pjuAdjustmentReference && compareReferencePoints(clampedReference, pjuAdjustmentReference) < 0;
+    const scheduleSource = currentScheduleEntry?.status_source;
+    const normativeSource = isOfficialLink(scheduleSource) ? scheduleSource : undefined;
+    const vetoSource = normativeSource ?? (isPju ? PJU_VETO_SOURCE : undefined);
+    const selectedCompetence = `${String(clampedReference.month).padStart(2, '0')}/${clampedReference.year}`;
 
     return (
         <div className="space-y-3 border-b border-neutral-200 pb-5 dark:border-neutral-700">
-            <h3 className="flex items-center gap-2 text-h5 font-semibold text-neutral-800 dark:text-neutral-100">
-                <Calendar className="h-5 w-5 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
-                Mês e ano da folha
-            </h3>
+            <CalculatorCardHeading help={{ label: 'Enquadramento normativo da competência', content: (
+                <div className="space-y-2" aria-live="polite">
+                    <p><strong>Enquadramento normativo de {selectedCompetence}</strong></p>
+                    {projectionApplied ? (
+                        <p>
+                            A tabela salarial inclui uma <strong>projeção de reajuste</strong>{currentScheduleDate && ` com efeitos simulados a partir de ${formatScheduleDate(currentScheduleDate)}`}.
+                            {currentScheduleEntry?.vetoed && ' A parcela integra um cenário de eventual derrubada do veto.'}
+                            {currentScheduleEntry?.vetoed && vetoSource && <> <a className="underline" href={vetoSource} target="_blank" rel="noreferrer">{isPju ? 'Veto nº 45/2025' : 'Fonte do veto'}</a>.</>}
+                        </p>
+                    ) : pjuAdjustment && currentScheduleEntry === pjuAdjustment ? (
+                        <p>
+                            A simulação usa os valores de vencimento básico, cargos em comissão e funções comissionadas reajustados pela{' '}
+                            <a className="underline" href={PJU_2026_ADJUSTMENT_LAW} target="_blank" rel="noreferrer">Lei nº 15.293/2025</a>,
+                            que alterou a <a className="underline" href={PJU_CAREER_LAW} target="_blank" rel="noreferrer">Lei nº 11.416/2006</a>{' '}
+                            {currentScheduleDate && `com efeitos remuneratórios a partir de ${formatScheduleDate(currentScheduleDate)}`}.
+                        </p>
+                    ) : (
+                        <p>
+                            A simulação usa a tabela salarial do órgão para esta competência
+                            {currentScheduleDate && `, com referência em ${formatScheduleDate(currentScheduleDate)}`}.
+                            {isPju && <> As carreiras são regidas pela <a className="underline" href={PJU_CAREER_LAW} target="_blank" rel="noreferrer">Lei nº 11.416/2006</a>.</>}
+                            {normativeSource && <> <a className="underline" href={normativeSource} target="_blank" rel="noreferrer">Fonte da tabela aplicada</a>.</>}
+                            {beforePjuAdjustment && pjuAdjustment?.date && <> O reajuste da <a className="underline" href={PJU_2026_ADJUSTMENT_LAW} target="_blank" rel="noreferrer">Lei nº 15.293/2025</a> começa em {formatScheduleDate(pjuAdjustment.date)}.</>}
+                        </p>
+                    )}
+                </div>
+            ) }}>
+                <h3 className="flex items-center gap-2 text-h5 font-semibold text-neutral-800 dark:text-neutral-100">
+                    <Calendar className="h-5 w-5 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
+                    Mês e ano da folha
+                </h3>
+            </CalculatorCardHeading>
             <div className="space-y-2">
                 <div>
                     <label htmlFor="payroll-month" className={compactLabel}>Competência do holerite</label>
@@ -349,47 +396,26 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                     </p>
                 </div>
 
-                <details className="group w-fit max-w-full">
-                    <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-body-sm font-semibold text-neutral-800 dark:text-neutral-200">
-                        <Info className="h-4 w-4 shrink-0 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
-                        Enquadramento normativo
-                        <span className="ml-auto group-open:rotate-180" aria-hidden="true">⌄</span>
-                    </summary>
-                    <div className="pb-3 text-body-xs text-neutral-600 dark:text-neutral-300">
-                            {state.simularDerrubadaVeto && clampedReference.year >= 2027 ? (
-                                <span>
-                                    Cálculo condicional com simulação de derrubada do Veto nº 45/2025.
-                                </span>
-                            ) : clampedReference.year >= 2026 ? (
-                                <span>
-                                    Aplicação da <strong>Lei nº 15.293/2025</strong> com vigência da parcela de reajuste promulgada.
-                                </span>
-                            ) : (
-                                <span>
-                                    Aplicação das tabelas históricas da <strong>Lei nº 11.416/2006</strong> vigentes no período.
-                                </span>
-                            )}
-                    </div>
-                </details>
             </div>
 
-            {isAnoComVeto && (
+            {(showProjectionControl || projectionApplied) && (
                 <div className="relative z-10 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 p-4 space-y-3">
                     <div className="flex items-start gap-3">
                         <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div className="space-y-1">
                             <h4 className="text-body-sm font-bold text-amber-800 dark:text-amber-300">
-                                Veto Presidencial nº 45/2025 (Lei nº 15.293/2025)
+                                {isPju ? 'Veto nº 45/2025 (Lei nº 15.293/2025)' : 'Projeção de reajuste salarial'}
                             </h4>
                             <p className="text-body-xs text-amber-700/90 dark:text-amber-300/80 leading-relaxed">
-                                Os reajustes que constavam da proposta original para 2027 e 2028 foram objeto de <strong>Veto Presidencial</strong>.
-                                O cálculo oficial do simulador reflete estritamente a parcela promulgada vigente em 2026.
+                                {showProjectionControl
+                                    ? 'As parcelas vetadas entram na simulação somente no modo de projeção e a partir das datas previstas no projeto.'
+                                    : 'Os valores desta competência incluem uma projeção de reajuste salarial.'}
                             </p>
                         </div>
                     </div>
 
                     <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between flex-wrap gap-3">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                        {showProjectionControl && <label className="flex items-center gap-2 cursor-pointer select-none">
                             <input
                                 type="checkbox"
                                 checked={!!state.simularDerrubadaVeto}
@@ -397,13 +423,13 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
                                 className="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500/30"
                             />
                             <span className="text-body-xs font-semibold text-amber-800 dark:text-amber-200">
-                                Simular projeção com eventual derrubada do Veto nº 45/2025
+                                    Simular projeção com eventual derrubada do veto
                             </span>
-                        </label>
+                        </label>}
 
-                        {state.simularDerrubadaVeto && (
+                        {projectionApplied && (
                             <span className="text-body-xs font-mono font-bold text-amber-700 dark:text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
-                                Projeção Ativa (+8% vetado)
+                                Projeção ativa nesta competência
                             </span>
                         )}
                     </div>

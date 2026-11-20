@@ -95,6 +95,7 @@ const toAdjustmentSchedule = (schedule?: AdjustmentScheduleConfig) => {
                 label: entry.label,
                 date: entry.date,
                 status: entry.status ?? (isVetoed ? 'vetoed' : 'promulgated'),
+                status_source: entry.status_source,
                 vetoed: isVetoed,
                 veto_reference: entry.veto_reference ?? (isVetoed ? 'Veto nº 45/2025' : undefined)
             });

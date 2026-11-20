@@ -151,6 +151,7 @@ export interface AdjustmentScheduleConfig {
         percentage: number;
         label?: string;
         status?: 'promulgated' | 'vetoed' | 'projected';
+        status_source?: string;
         vetoed?: boolean;
         veto_reference?: string;
     };

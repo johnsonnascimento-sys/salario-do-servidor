@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import React, { useCallback, useState } from 'react';
-import { act, create } from 'react-test-renderer';
+import { act, create, type ReactTestInstance } from 'react-test-renderer';
 import { INITIAL_STATE, CalculatorState, CourtConfig } from '../src/types';
 import type { PayslipResultRow } from '../src/types/user';
 import {
@@ -233,6 +233,7 @@ test('GlobalSettings aplica parcela sancionada em 2027 e alterna com simularDerr
     ];
     const testConfig: CourtConfig = {
         ...config,
+        powerName: 'PJU',
         adjustment_schedule: scheduleWithVeto,
         menus: { food_allowance: [{ label: '2026', value: 1100 }], preschool_allowance: [] },
         historico_pss: { '2026': config.historico_pss.teste, '2027': config.historico_pss.teste },
@@ -242,8 +243,8 @@ test('GlobalSettings aplica parcela sancionada em 2027 e alterna com simularDerr
     function Harness() {
         const [state, setState] = useState({
             ...baseState(),
-            anoRef: 2027,
-            mesRef: 'AGOSTO',
+            anoRef: 2026,
+            mesRef: 'JUNHO',
             periodo: 0,
             simularDerrubadaVeto: false,
         });
@@ -264,6 +265,32 @@ test('GlobalSettings aplica parcela sancionada em 2027 e alterna com simularDerr
     let renderer: any;
     act(() => { renderer = create(React.createElement(Harness)); });
 
+    const help = renderer.root.findByProps({ 'aria-label': 'Enquadramento normativo da competÃªncia' });
+    act(() => help.props.onClick());
+    const textContent = (node: ReactTestInstance | string): string =>
+        typeof node === 'string' ? node : node.children.map(textContent).join('');
+    const visibleText = () => textContent(renderer.root);
+    assert.equal(current!.periodo, 1);
+    assert.match(visibleText(), /Enquadramento normativo de 06\/2026/);
+    assert.doesNotMatch(visibleText(), /com efeitos remuneratÃ³rios a partir/);
+
+    act(() => updateFn('mesRef', 'JULHO'));
+    assert.equal(current!.periodo, 2);
+    assert.match(visibleText(), /Enquadramento normativo de 07\/2026/);
+    assert.match(visibleText(), /com efeitos remuneratÃ³rios a partir de 01\/07\/2026/);
+
+    act(() => {
+        updateFn('anoRef', 2027);
+        updateFn('mesRef', 'JUNHO');
+        updateFn('simularDerrubadaVeto', true);
+    });
+    assert.equal(current!.periodo, 2);
+    assert.doesNotMatch(visibleText(), /ProjeÃ§Ã£o ativa nesta competÃªncia/);
+    act(() => {
+        updateFn('mesRef', 'JULHO');
+        updateFn('simularDerrubadaVeto', false);
+    });
+
     // Oficialmente em 2027, deve aplicar o período 2 (último sancionado), NÃO o período 3 vetado
     assert.equal(current!.periodo, 2);
 
@@ -272,6 +299,9 @@ test('GlobalSettings aplica parcela sancionada em 2027 e alterna com simularDerr
         updateFn('simularDerrubadaVeto', true);
     });
     assert.equal(current!.periodo, 3);
+    assert.match(visibleText(), /Enquadramento normativo de 07\/2027/);
+    assert.match(visibleText(), /com efeitos simulados a partir de 01\/07\/2027/);
+    assert.match(visibleText(), /ProjeÃ§Ã£o ativa nesta competÃªncia/);
 
     // Desativando simulação volta para período 2
     act(() => {
