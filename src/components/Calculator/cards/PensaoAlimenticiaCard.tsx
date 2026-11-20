@@ -334,6 +334,10 @@ export const PensaoAlimenticiaCard: React.FC<PensaoAlimenticiaCardProps> = ({
 
                     <fieldset className="min-w-0">
                         <legend className={sectionHeading}>Abatimentos</legend>
+                        <p className={hint}>
+                            Descontos avulsos adicionados na etapa Descontos, como Plano de Saúde, aparecem aqui.
+                            Marque os que devem ser abatidos da base da pensão.
+                        </p>
                         <div className={checkboxList}>
                             {incidenceRow('pensaoDeduzirIRRF', 'Imposto de Renda (IRRF Mensal)', valorIRRF, deduzirIRRF)}
                             {incidenceRow('pensaoDeduzirPSS', 'Previdência Oficial (PSS Mensal)', valorPSS, deduzirPSS)}
