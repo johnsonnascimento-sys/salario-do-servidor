@@ -111,12 +111,24 @@ export const SimplePresetFields: React.FC<SimplePresetFieldsProps> = ({
     }
 
     if (presetId === 'pre_escolar') {
+        const dependents = state.auxPreEscolarQtd;
+        const updateDependents = (quantity: number) => update('auxPreEscolarQtd', Math.max(0, Math.trunc(quantity)));
+        const stepButtonClass = 'h-11 w-11 shrink-0 rounded-lg border border-neutral-300 font-semibold focus-visible:outline focus-visible:outline-2 disabled:opacity-50 dark:border-neutral-700';
+
         return (
             <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor={`${fieldId}-field-9`} className={styles.label}>Quantidade de dependentes elegíveis</label>
-                        <input id={`${fieldId}-field-9`} type="number" min="0" className={styles.input} value={state.auxPreEscolarQtd} onChange={e => update('auxPreEscolarQtd', toPositiveNumber(e.target.value))} />
+                        <div className="flex items-center gap-2">
+                            <button type="button" aria-label="Diminuir quantidade de dependentes elegíveis" className={stepButtonClass}
+                                disabled={dependents <= 0} onClick={() => updateDependents(dependents - 1)}>−</button>
+                            <input id={`${fieldId}-field-9`} type="number" min="0" step="1" inputMode="numeric"
+                                className={`${styles.input} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                                value={dependents} onChange={e => updateDependents(toPositiveNumber(e.target.value))} />
+                            <button type="button" aria-label="Aumentar quantidade de dependentes elegíveis" className={stepButtonClass}
+                                onClick={() => updateDependents(dependents + 1)}>+</button>
+                        </div>
                     </div>
                     <div>
                         <label htmlFor={`${fieldId}-field-10`} className={styles.label}>Cota por dependente (R$)</label>
