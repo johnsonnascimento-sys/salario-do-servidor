@@ -1,6 +1,6 @@
 import { CalculatorCardHeading } from '../CalculatorCardHeading';
 import React, { useId, useLayoutEffect, useRef, useState } from 'react';
-import { AlertTriangle, SlidersHorizontal } from 'lucide-react';
+import { AlertTriangle, Minus, Plus, SlidersHorizontal } from 'lucide-react';
 import type { CalculatorState, CourtConfig } from '../../../types';
 import type { LicencaBaseComponent } from '../../../types/licenca';
 import { resolveGaactaRule } from '../../../services/agency/engine/modules/gaactaCalculations';
@@ -84,7 +84,8 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
             ? 'A GAACTA tem efeitos financeiros na JMU a partir de junho de 2026.'
             : 'Não há regra de GAACTA cadastrada e vigente para esta competência no órgão selecionado.';
     }
-    const isCJ = (state.funcao || '').toLowerCase().startsWith('cj');
+    const licenseDays = state.licencaDias || 0;
+    const setLicenseDays = (days: number) => updateMany({ licencaDias: Math.max(0, Math.floor(days)) });
     const hasOvertime = state.heTotal > 0 || state.heQtd50 > 0 || state.heQtd100 > 0 ||
         state.overtimeEntries.some(entry => entry.qtd50 > 0 || entry.qtd100 > 0 || Number(entry.valorBrutoManual) > 0);
 
@@ -185,12 +186,22 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
                     </div>
                 </fieldset>
                 {bothSelected && <p className={inputLabel}>Esta simulação salva contém as duas rubricas. Selecione a que deseja manter.</p>}
-                {mode === 'licenca' && <div>
+                {mode === 'licenca' && <div className="max-w-xs">
                     <label htmlFor={`${id}-dias`} className={styles.label}>Dias a indenizar</label>
-                    <input id={`${id}-dias`} type="number" min="0" step="1" value={state.licencaDias || ''} placeholder="0"
-                        className={styles.input} onChange={event => updateMany({ licencaDias: Math.floor(nonNegative(event.target.value)) })} />
+                    <div className="flex items-center gap-2">
+                        <button type="button" aria-label="Diminuir dias a indenizar" disabled={licenseDays <= 0}
+                            className={`${button} w-11 shrink-0 px-0 disabled:opacity-40`} onClick={() => setLicenseDays(licenseDays - 1)}>
+                            <Minus size={16} aria-hidden="true" />
+                        </button>
+                        <input id={`${id}-dias`} type="number" min="0" step="1" inputMode="numeric" value={licenseDays || ''} placeholder="0"
+                            className={`${styles.input} min-w-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                            onChange={event => setLicenseDays(nonNegative(event.target.value))} />
+                        <button type="button" aria-label="Aumentar dias a indenizar"
+                            className={`${button} w-11 shrink-0 px-0`} onClick={() => setLicenseDays(licenseDays + 1)}>
+                            <Plus size={16} aria-hidden="true" />
+                        </button>
+                    </div>
                 </div>}
-                {mode === 'gaacta' && !isCJ && <p className={inputLabel}>A GAACTA é destinada a ocupantes de cargo em comissão (CJ).</p>}
                 {mode === 'gaacta' && hasOvertime && !state.gaactaRecesso && <p role="status" className="text-body-xs font-semibold text-error-700 dark:text-error-300">
                     A GAACTA e as horas extras só podem ser acumuladas no recesso judiciário.
                 </p>}
