@@ -1,58 +1,46 @@
 import React from 'react';
-import { Baby } from 'lucide-react';
-import { CalculatorState } from '../../../types';
+import { formatCurrency } from '../../../utils/calculations';
 
 interface PreschoolCardProps {
-    state: CalculatorState;
-    update: (field: keyof CalculatorState, value: any) => void;
-    styles: any;
+    dependents: number;
+    onDependentsChange: (quantity: number) => void;
+    quota?: number;
+    total?: number;
+    styles: { label: string; input: string };
 }
 
-export const PreschoolCard: React.FC<PreschoolCardProps> = ({ state, update, styles }) => {
-    const fieldId = React.useId();
-    return (
-        <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-                <Baby className="w-4 h-4" /> Auxílios e Pré-Escolar
-            </h3>
+const stepButtonClass = 'h-11 w-11 shrink-0 rounded-lg border border-neutral-300 font-semibold focus-visible:outline focus-visible:outline-2 disabled:opacity-50 dark:border-neutral-700';
 
-            <div className={styles.innerBox}>
-                <h4 className={styles.innerBoxTitle}>Pré-Escolar e Transporte</h4>
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor={`${fieldId}-field-1`} className={styles.label}>Qtd. Dependentes (Pré-Escolar)</label>
-                            <input id={`${fieldId}-field-1`}
-                                type="number"
-                                min="0"
-                                className={styles.input}
-                                value={state.auxPreEscolarQtd}
-                                onChange={e => update('auxPreEscolarQtd', Math.max(0, Number(e.target.value) || 0))}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor={`${fieldId}-field-2`} className={styles.label}>Cota-Parte Pré-Escolar</label>
-                            <input id={`${fieldId}-field-2`}
-                                type="number"
-                                min="0"
-                                className={styles.input}
-                                value={state.cotaPreEscolar}
-                                onChange={e => update('cotaPreEscolar', Math.max(0, Number(e.target.value) || 0))}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label htmlFor={`${fieldId}-field-3`} className={styles.label}>Gasto Mensal com Transporte (R$)</label>
-                        <input id={`${fieldId}-field-3`}
-                            type="number"
-                                min="0"
-                            className={styles.input}
-                            value={state.auxTransporteGasto}
-                            onChange={e => update('auxTransporteGasto', Math.max(0, Number(e.target.value) || 0))}
-                        />
-                    </div>
+export function PreschoolCard({ dependents, onDependentsChange, quota, total, styles }: PreschoolCardProps) {
+    const fieldId = React.useId();
+    const updateDependents = (quantity: number) => {
+        onDependentsChange(Number.isFinite(quantity) ? Math.max(0, Math.trunc(quantity)) : 0);
+    };
+
+    return (
+        <>
+            <div className="w-full max-w-xs">
+                <label htmlFor={fieldId} className={styles.label}>Quantidade de dependentes elegíveis</label>
+                <div className="flex items-center gap-2">
+                    <button type="button" aria-label="Diminuir quantidade de dependentes elegíveis" className={stepButtonClass}
+                        disabled={dependents <= 0} onClick={() => updateDependents(dependents - 1)}>−</button>
+                    <input id={fieldId} type="number" min="0" step="1" inputMode="numeric"
+                        className={`${styles.input} text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                        value={dependents} onChange={e => updateDependents(e.currentTarget.valueAsNumber)} />
+                    <button type="button" aria-label="Aumentar quantidade de dependentes elegíveis" className={stepButtonClass}
+                        onClick={() => updateDependents(dependents + 1)}>+</button>
                 </div>
             </div>
-        </div>
+            <dl className="space-y-2 text-body-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <dt className="text-neutral-600 dark:text-neutral-300">Cota por dependente</dt>
+                    <dd className="font-mono font-semibold">{quota === undefined ? '—' : formatCurrency(quota)}</dd>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <dt className="text-neutral-600 dark:text-neutral-300">Valor na simulação</dt>
+                    <dd className="font-mono font-semibold">{total === undefined ? '—' : formatCurrency(total)}</dd>
+                </div>
+            </dl>
+        </>
     );
-};
+}

@@ -13,6 +13,7 @@ import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
 import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
 import { DynamicPayrollTaxSection } from './DynamicPayrollTaxSection';
 import { GaactaCompensatoryLeaveCard } from './cards/GaactaCompensatoryLeaveCard';
+import { PreschoolCard } from './cards/PreschoolCard';
 import { PensionRetroForm } from './PensionRetroForm';
 import { PresetCardContent } from './PresetCardContent';
 import { PresetGrossSummary } from './PresetGrossSummary';
@@ -526,8 +527,20 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                                 {instance.title}
                             </h3>
                         </CalculatorCardHeading>
-                        {renderPreset(instance)}
-                        <PresetGrossSummary compact lines={calculationReady ? getPresetGrossLines(instance) : []} />
+                        {instance.presetId === 'pre_escolar' ? (
+                            <PreschoolCard
+                                dependents={currentInputs.auxPreEscolarQtd}
+                                onDependentsChange={quantity => update('auxPreEscolarQtd', quantity)}
+                                quota={currentInputs.cotaPreEscolar > 0 ? currentInputs.cotaPreEscolar : courtConfig.values?.pre_school}
+                                total={calculationReady ? state.auxPreEscolarValor : undefined}
+                                styles={styles}
+                            />
+                        ) : (
+                            <>
+                                {renderPreset(instance)}
+                                <PresetGrossSummary compact lines={calculationReady ? getPresetGrossLines(instance) : []} />
+                            </>
+                        )}
                     </section>
                 ))}
                 <section id="aux-alimentacao-fixed" tabIndex={-1} aria-labelledby="aux-alimentacao-titulo"

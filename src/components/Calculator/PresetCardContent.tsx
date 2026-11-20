@@ -58,7 +58,6 @@ export const PresetCardContent: React.FC<PresetCardContentProps> = ({
         presetId === 'aq' ||
         presetId === 'vantagens' ||
         presetId === 'abono' ||
-        presetId === 'pre_escolar' ||
         presetId === 'aux_transporte'
     ) {
         return (

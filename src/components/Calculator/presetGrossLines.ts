@@ -248,13 +248,6 @@ export const buildPresetGrossLines = ({
                 0,
                 0
             );
-        case 'pre_escolar':
-            return buildCardTaxSummary(
-                [{ label: 'Auxílio pré-escolar', value: state.auxPreEscolarValor || 0 }],
-                'Auxílio pré-escolar',
-                0,
-                0
-            );
         case 'aux_transporte': {
             const transporteBruto = roundCurrency(state.auxTransporteValor || 0);
             const cotaParte = roundCurrency(state.auxTransporteDesc || 0);

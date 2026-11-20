@@ -1,3 +1,8 @@
+## Cota do auxílio pré-escolar — 20/11/2026
+
+- Apenas a quantidade de dependentes elegíveis pode ser editada. A cota por dependente e o total calculado aparecem no mesmo padrão visual do auxílio-alimentação.
+- A cota continua vindo da configuração da competência nas novas simulações. Ao reabrir um holerite salvo, a calculadora conserva a cota registrada.
+
 ## Incidência de PSS sobre FC/CJ em Dados principais — 20/11/2026
 
 - A opção de PSS fica abaixo da seleção de FC/CJ. A ajuda do card cita a Lei nº 11.416/2006 e indica onde configurar a inclusão separada na Funpresp-Jud.
