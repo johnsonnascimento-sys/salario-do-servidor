@@ -1,12 +1,15 @@
 import React from 'react';
 import { CalculatorState } from '../../types';
+import type { PayslipResultRow } from '../../types/user';
 import { formatCurrency } from '../../utils/calculations';
+import { getBasicPayTaxDetails } from '../../utils/payslipRows';
 import { PresetGrossSummary } from './PresetGrossSummary';
 import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
 interface DynamicPayrollBaseSectionProps {
     styles: Record<string, string>;
     state: CalculatorState;
+    resultRows: PayslipResultRow[];
     cargoOptions: string[];
     padroes: string[];
     salaryByCargo: Record<string, number>;
@@ -25,6 +28,7 @@ interface DynamicPayrollBaseSectionProps {
 export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps> = ({
     styles,
     state,
+    resultRows,
     cargoOptions,
     padroes,
     salaryByCargo,
@@ -40,6 +44,12 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
     update
 }) => {
     const fieldId = React.useId();
+    const discountLines = calculationReady
+        ? getBasicPayTaxDetails(resultRows, state).flatMap(({ label, ir, pss }) => [
+            { label: `Desconto IR (${label})`, value: ir, isDiscount: true },
+            { label: `Desconto PSS (${label})`, value: pss, isDiscount: true },
+        ])
+        : [];
     return (
         <section id="dados-principais" tabIndex={-1} aria-labelledby={`${fieldId}-titulo`} className={`${styles.formSection} ${calculatorTargetClass}`}>
             <h4 id={`${fieldId}-titulo`} className={styles.innerBoxTitle}>Dados principais</h4>
@@ -81,10 +91,7 @@ export const DynamicPayrollBaseSection: React.FC<DynamicPayrollBaseSectionProps>
                     { label: 'Gratificação de Atividade Judiciária (GAJ)', value: gaj },
                     { label: 'Função (FC/CJ)', value: calculationReady ? state.funcaoValor || 0 : 0 },
                     { label: 'Auxílio Alimentação', value: state.auxAlimentacao || 0 },
-                    ...(calculationReady ? [
-                        { label: 'Desconto IR (salário base, GAJ e FC/CJ)', value: state.dadosPrincipaisIr || 0, isDiscount: true },
-                        { label: 'Desconto PSS (salário base, GAJ e FC/CJ)', value: state.dadosPrincipaisPss || 0, isDiscount: true }
-                    ] : [])
+                    ...discountLines
                 ]} />
             </div>
         </section>

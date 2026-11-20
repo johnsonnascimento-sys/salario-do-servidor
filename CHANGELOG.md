@@ -1,6 +1,8 @@
-## ATS por percentual do vencimento básico — 18/11/2026
+## Descontos por rubrica em Dados principais — 20/11/2026
 
-- Corrige o detalhamento de Dados principais para apresentar IR e PSS proporcionais ao salário base, GAJ e função.
+- Dados principais exibe IR e PSS separadamente para Salário Base, GAJ e FC/CJ, com os valores do detalhamento do Resultado. O rateio de PSS considera a incidência selecionada para FC/CJ.
+
+## ATS por percentual do vencimento básico — 18/11/2026
 
 - O card de ATS aceita valor fixo ou percentual adquirido, com digitação direta e botões de ajuste. O motor resolve o valor em centavos pelo vencimento básico do cargo efetivo na competência selecionada.
 - A migração versiona o limite de 35% na configuração de folha do PJU. A opção percentual depende da configuração do órgão. Holerites anteriores continuam no modo de valor fixo.

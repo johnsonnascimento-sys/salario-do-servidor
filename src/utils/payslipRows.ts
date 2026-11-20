@@ -47,6 +47,12 @@ const PSS_TOTAL_LABEL = 'CONTRIBUIÇÃO RPPS (PSS)';
 const PSS_EA_TOTAL_LABEL = 'CONTRIBUIÇÃO RPPS-EA';
 const PSS_13_TOTAL_LABEL = 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC';
 
+const BASIC_PAY_LABELS = {
+  salary: 'VENCIMENTO-ATIVO EC',
+  gaj: 'GRAT. ATIV. JUD. (GAJ)',
+  role: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO',
+};
+
 const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
 const toRow = (label: string, value: number): { label: string; value: number; type: 'D' } | null => {
@@ -130,6 +136,7 @@ const buildPssDetails = (
     | 'vpni_decisao'
     | 'ats'
     | 'incidirPSSGrat'
+    | 'pssSobreFC'
     | 'rubricasExtras'
     | 'pssMensal'
   >
@@ -147,9 +154,9 @@ const buildPssDetails = (
   );
 
   const items = [
-    { label: 'VENCIMENTO-ATIVO EC', base: state.vencimento || 0 },
-    { label: 'GRAT. ATIV. JUD. (GAJ)', base: state.gaj || 0 },
-    { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
+    { label: BASIC_PAY_LABELS.salary, base: state.vencimento || 0 },
+    { label: BASIC_PAY_LABELS.gaj, base: state.gaj || 0 },
+    { label: BASIC_PAY_LABELS.role, base: state.pssSobreFC === false ? 0 : (functionRow?.value || 0) },
     {
       label: state.periodo >= 1 ? 'AQ TÍTULOS (LEI 15.292)' : 'AQ TÍTULOS',
       base: aqTitleRow?.value || 0,
@@ -228,9 +235,9 @@ const buildIrrfDetails = (
     (row) => normalizeLabel(row.label).includes('SUBSTITUICAODEFUNCAO') && !normalizeLabel(row.label).includes('IREA')
   );
   const items = [
-        { label: 'VENCIMENTO-ATIVO EC', base: state.vencimento || 0 },
-        { label: 'GRAT. ATIV. JUD. (GAJ)', base: state.gaj || 0 },
-        { label: 'FUNÇÃO COMISSIONADA / CARGO EM COMISSÃO', base: functionRow?.value || 0 },
+        { label: BASIC_PAY_LABELS.salary, base: state.vencimento || 0 },
+        { label: BASIC_PAY_LABELS.gaj, base: state.gaj || 0 },
+        { label: BASIC_PAY_LABELS.role, base: functionRow?.value || 0 },
         {
           label: state.periodo >= 1 ? 'AQ TÍTULOS (LEI 15.292)' : 'AQ TÍTULOS',
           base: aqTitleRow?.value || 0,
@@ -252,6 +259,20 @@ const buildIrrfDetails = (
       ];
 
   return allocateDetailRows(state.irMensal || 0, items);
+};
+
+export const getBasicPayTaxDetails = (rows: RowLike[], state: CalculatorState) => {
+  const irDetails = buildIrrfDetails(rows, state);
+  const pssDetails = buildPssDetails(rows, state);
+  return [
+    { label: 'Salário Base', payslipLabel: BASIC_PAY_LABELS.salary },
+    { label: 'GAJ', payslipLabel: BASIC_PAY_LABELS.gaj },
+    { label: 'FC/CJ', payslipLabel: BASIC_PAY_LABELS.role },
+  ].map(({ label, payslipLabel }) => ({
+    label,
+    ir: irDetails.find(row => row.label === payslipLabel)?.value ?? 0,
+    pss: pssDetails.find(row => row.label === payslipLabel)?.value ?? 0,
+  }));
 };
 
 const buildPssEaDetails = (
@@ -309,6 +330,7 @@ export const groupPayslipRowsForDisplay = <T extends RowLike>(
     | 'aqTreinoValor'
     | 'gratEspecificaValor'
     | 'incidirPSSGrat'
+    | 'pssSobreFC'
     | 'vpni_lei'
     | 'vpni_decisao'
     | 'ats'

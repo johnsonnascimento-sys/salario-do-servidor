@@ -504,8 +504,6 @@ export interface CalculatorState {
   pssEA: number;
   irMensal: number;
   irEA: number;
-  dadosPrincipaisIr: number;
-  dadosPrincipaisPss: number;
   aqIr: number;
   aqPss: number;
   gratIr: number;
@@ -588,8 +586,6 @@ export type CalculatedPayrollState = Pick<
   | 'substitutionCalculatedEntries'
   | 'irMensal'
   | 'irEA'
-  | 'dadosPrincipaisIr'
-  | 'dadosPrincipaisPss'
   | 'aqIr'
   | 'aqPss'
   | 'gratIr'
@@ -858,8 +854,6 @@ export const INITIAL_STATE: CalculatorState = {
   pssEA: 0,
   irMensal: 0,
   irEA: 0,
-  dadosPrincipaisIr: 0,
-  dadosPrincipaisPss: 0,
   aqIr: 0,
   aqPss: 0,
   gratIr: 0,

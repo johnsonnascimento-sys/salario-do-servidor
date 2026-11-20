@@ -407,6 +407,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 <DynamicPayrollBaseSection
                     styles={styles}
                     state={state}
+                    resultRows={resultRows}
                     cargoOptions={cargoOptions}
                     padroes={padroes}
                     salaryByCargo={salaryByCargo}
