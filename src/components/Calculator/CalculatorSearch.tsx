@@ -56,7 +56,7 @@ export const CalculatorSearch = ({ courtConfig, onSelect, className }: Calculato
     };
 
     return (
-        <div role="search" aria-label="Calculadora" className={className ?? 'mb-4 max-w-md min-[960px]:mb-5'} onBlur={dismiss}>
+        <div role="search" aria-label="Calculadora" className={`relative w-full ${className ?? 'mb-4 max-w-md min-[960px]:mb-5'}`} onBlur={dismiss}>
             <label htmlFor={id} className="flex min-h-11 items-center gap-3 rounded-xl border border-neutral-300 bg-white px-4 focus-within:ring-2 focus-within:ring-secondary-600 dark:border-neutral-600 dark:bg-neutral-900">
                 <Search className="h-5 w-5 shrink-0 text-secondary-700 dark:text-secondary-300" aria-hidden="true" />
                 <span className="sr-only">Buscar na calculadora</span>
@@ -75,9 +75,9 @@ export const CalculatorSearch = ({ courtConfig, onSelect, className }: Calculato
                 {showResults && (results.length === 0 ? 'Nenhuma opção encontrada.'
                     : results.length === 1 ? '1 opção encontrada.' : `${results.length} opções encontradas.`)}
             </p>
-            {showResults && !hasOptions && <p className="mt-2 text-body-sm text-neutral-600 dark:text-neutral-300">Nenhuma opção encontrada.</p>}
+            {showResults && !hasOptions && <p className="absolute left-0 top-full z-50 mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-body-sm text-neutral-600 shadow-lg dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">Nenhuma opção encontrada.</p>}
             {hasOptions && <ul id={listId} role="listbox" aria-label="Opções da calculadora"
-                className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1 dark:border-neutral-700 dark:bg-neutral-900">
+                className="absolute left-0 top-full z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
                 {results.map((entry, resultIndex) => {
                     const section = CALCULATOR_SECTIONS[entry.destination.step].label;
                     const active = resultIndex === activeIndex;
