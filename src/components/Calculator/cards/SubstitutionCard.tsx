@@ -4,14 +4,8 @@ import { Minus, Plus } from 'lucide-react';
 import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from '../TaxAdjustmentPanel';
 import type { SubstitutionEntry, SubstitutionPeriod } from '../../../types';
 import type { SubstitutionFunctionDetail } from '../../../types/irEa';
-import { getSubstitutionMonthBounds, resolveSubstitutionDates } from '../../../utils/substitutionPeriod';
-import { SubstitutionDateEditor } from './SubstitutionDateEditor';
-
-const INPUT_MODES = [
-    { value: 'dias', label: 'Por quantidade' },
-    { value: 'datas', label: 'Por períodos' },
-    { value: 'avulsos', label: 'Por dias avulsos' }
-] as const;
+import { getCalendarMonthBounds, resolveCalendarDays } from '../../../utils/calendarDaySelection';
+import { CalendarDayEditor, CalendarDayModes } from './CalendarDayEditor';
 
 const DAY_STEP_BUTTON = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300';
 
@@ -42,10 +36,10 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
     const availableFunctions = functionKeys.filter(key => !selectedFunctions.includes(key));
     const canAdd = calculationReady && availableFunctions.some(key => eligibleFunctionKeys.includes(key));
     const hasManualGross = entry.valorBrutoManual !== undefined;
-    const paymentMonth = getSubstitutionMonthBounds(competenciaReferencia);
+    const paymentMonth = getCalendarMonthBounds(competenciaReferencia);
     const selections = selectedFunctions.map(key => {
         const period = entry.periodosPorFuncao?.[key];
-        const selection = period && period.modo !== 'dias' ? resolveSubstitutionDates(period, competenciaReferencia) : null;
+        const selection = period && period.modo !== 'dias' ? resolveCalendarDays(period, competenciaReferencia) : null;
         return { key, period, selection };
     });
     const hasPendingPeriod = !hasManualGross && selections.some(({ selection }) => selection?.error !== undefined);
@@ -139,21 +133,11 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                 <button type="button" aria-label={`Remover ${key.toUpperCase()}`} onClick={() => removeFunction(key)}
                                     className="min-h-11 shrink-0 rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30">Remover</button>
                             </div>
-                            <fieldset className="min-w-0" disabled={!inCatalog}>
-                                <legend className={`${styles.label} mb-2`}>Como informar os dias <span className="sr-only">de {key.toUpperCase()}</span></legend>
-                                <div className="grid gap-2 sm:grid-cols-3">
-                                    {INPUT_MODES.map(({ value, label }) => <label key={value}
-                                        className={`flex min-h-11 min-w-0 items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-body-xs text-neutral-700 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200 has-[:checked]:border-secondary-600 has-[:checked]:bg-secondary-50 has-[:checked]:font-semibold dark:has-[:checked]:bg-secondary-950 ${inCatalog ? 'cursor-pointer' : 'opacity-50'}`}>
-                                        <input type="radio" name={`${fieldPrefix}-modo`} value={value} checked={(period?.modo ?? 'dias') === value}
-                                            className="h-4 w-4 shrink-0 accent-secondary-800 dark:accent-secondary-400"
-                                            onChange={() => updatePeriod(key, { modo: value })} />
-                                        {label}
-                                    </label>)}
-                                </div>
-                            </fieldset>
+                            <CalendarDayModes name={`${fieldPrefix}-modo`} mode={period?.modo ?? 'dias'} context={key.toUpperCase()}
+                                disabled={!inCatalog} onChange={modo => updatePeriod(key, { modo })} styles={styles} />
                             {period && selection && <div className="space-y-2">
-                                <SubstitutionDateEditor period={period} update={patch => updatePeriod(key, patch)} fieldPrefix={fieldPrefix}
-                                    paymentEnd={paymentMonth?.max} disabled={!inCatalog} styles={styles} />
+                                <CalendarDayEditor period={period} update={patch => updatePeriod(key, patch)} fieldPrefix={fieldPrefix}
+                                    monthEnd={paymentMonth?.max} disabled={!inCatalog} styles={styles} />
                                 <p id={`${fieldPrefix}-periodo-status`} role="status" className="text-body-xs text-neutral-600 dark:text-neutral-400">
                                     {selection.error ?? `${selection.dias} ${selection.dias === 1 ? 'dia selecionado' : 'dias selecionados'} no total`}
                                 </p>

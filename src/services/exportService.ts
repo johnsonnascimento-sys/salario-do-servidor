@@ -7,6 +7,7 @@ import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { CalculatorState, CourtConfig } from '../types';
 import { formatCurrency } from '../utils/calculations';
+import { formatCalendarRanges } from '../utils/calendarDaySelection';
 
 interface jsPDFWithAutoTable extends jsPDF {
     autoTable: (options: any) => void;
@@ -107,6 +108,7 @@ export const exportToPDF = (
             ['Valor integral de referência', formatCurrency(transportMemory.fullAmount)],
             ['Divisor aplicável', String(transportMemory.divisor || 20)],
             ['Dias de serviço externo informados', String(transportMemory.days || 0)],
+            ...(transportMemory.selectedRanges?.length ? [['Datas de serviço externo', formatCalendarRanges(transportMemory.selectedRanges)]] : []),
             ['Dias elegíveis computados', String(transportMemory.eligibleDays || 0)],
             ['Valor apurado a receber', formatCurrency(transportMemory.amount)],
             ...(transitionWarning ? [['Alerta de vigência / efeitos', transitionWarning]] : [])
@@ -207,6 +209,9 @@ export const exportToExcel = (
         }
         wsData.push(['Valor integral de referência:', transportMemory.fullAmount]);
         wsData.push(['Dias informados / Divisor:', `${transportMemory.days} / ${transportMemory.divisor || 20}`]);
+        if (transportMemory.selectedRanges?.length) {
+            wsData.push(['Datas de serviço externo:', formatCalendarRanges(transportMemory.selectedRanges)]);
+        }
         wsData.push(['Valor apurado a receber:', transportMemory.amount]);
         wsData.push(['']);
     }

@@ -2,6 +2,7 @@ import { unifiedThirteenthLines } from '../../utils/thirteenthPresentation';
 import { resolveSecondThirteenthMode } from '../../services/agency/engine/modules/thirteenthModes';
 import { CalculatorState, CourtConfig } from '../../types';
 import { mapStateToAgencyParams } from '../../services/agency/adapters/stateToParams';
+import { formatCalendarRanges } from '../../utils/calendarDaySelection';
 import {
     resolveDailiesDailyRate,
     resolveDailiesDiscountRules,
@@ -297,6 +298,9 @@ export const buildPresetGrossLines = ({
                 const parts = memory.serviceCompetence.split('-');
                 const display = parts.length === 2 ? `${parts[1]}/${parts[0]}` : memory.serviceCompetence;
                 lines.push({ label: 'Mês de execução do serviço', value: 0, displayValue: display });
+            }
+            if (memory.selectedRanges?.length) {
+                lines.push({ label: 'Datas de serviço externo', value: 0, displayValue: formatCalendarRanges(memory.selectedRanges) });
             }
             lines.push(
                 { label: 'Dias informados', value: memory.days, displayValue: String(memory.days) },

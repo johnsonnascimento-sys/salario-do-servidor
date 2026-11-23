@@ -1,5 +1,6 @@
 import type { TransportIndemnityConfig, TransportIndemnityMemory } from '../../../../types';
 import type { IAgencyCalculationParams } from '../types';
+import { resolveCalendarDays } from '../../../../utils/calendarDaySelection';
 
 const isCalendarDate = (value: unknown): value is string => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -16,6 +17,9 @@ export const getPreviousCompetence = (competence: string): string => {
   return `${year}-${String(month - 1).padStart(2, '0')}`;
 };
 
+export const getTransportServiceCompetence = (config: TransportIndemnityConfig | undefined, payment: string) =>
+  config?.competenceMode === 'previous_month' ? getPreviousCompetence(payment) : payment;
+
 /** Resolves configured validity only; no JMU amount or statutory divisor is assumed. */
 export function resolveTransportIndemnity(
   config: TransportIndemnityConfig | undefined,
@@ -31,7 +35,7 @@ export function resolveTransportIndemnity(
   }
 
   const isPreviousMonthMode = config.competenceMode === 'previous_month';
-  const serviceCompetence = isPreviousMonthMode ? getPreviousCompetence(competence) : competence;
+  const serviceCompetence = getTransportServiceCompetence(config, competence);
   memory.serviceCompetence = serviceCompetence;
   memory.paymentCompetence = competence;
 
@@ -148,7 +152,11 @@ export function calculateTransportIndemnity(params: IAgencyCalculationParams): T
   const memory = resolveTransportIndemnity(params.agencyConfig?.transportIndemnity, params.competencia ?? '');
   if (!params.transporteIndenizacaoAtivo) return { ...memory, status: 'inactive', amount: 0 };
   if (memory.status === 'unavailable') return memory;
-  const days = params.transporteIndenizacaoDias ?? 0;
+  const input = params.transporteIndenizacaoSelecao;
+  const selection = input && (input.modo === 'datas' || input.modo === 'avulsos')
+    ? resolveCalendarDays(input, memory.serviceCompetence, { serviceMonthOnly: true }) : null;
+  if (selection?.error) return { ...memory, status: 'invalid', reason: selection.error };
+  const days = selection ? selection.dias : params.transporteIndenizacaoDias ?? 0;
   if (typeof days !== 'number' || !Number.isFinite(days) || !Number.isInteger(days) || days < 0 || days > memory.maxDays) {
     return { ...memory, status: 'invalid', reason: `Informe dias inteiros entre 0 e ${memory.maxDays}.` };
   }
@@ -156,5 +164,6 @@ export function calculateTransportIndemnity(params: IAgencyCalculationParams): T
   // Keep the daily fraction unrounded. Round only the final payable amount.
   const amount = Math.round((memory.fullAmount * eligibleDays / memory.divisor + Number.EPSILON) * 100) / 100;
   return { ...memory, days, eligibleDays, amount,
+    ...(selection && { selectedRanges: selection.meses?.[0]?.intervalos }),
     status: days === 0 ? 'zero' : days >= memory.divisor ? 'full' : 'proportional' };
 }

@@ -401,6 +401,7 @@ export const useDynamicPresetInstances = ({
             case 'indenizacao_transporte':
                 update('transporteIndenizacaoAtivo', false);
                 update('transporteIndenizacaoDias', 0);
+                update('transporteIndenizacaoSelecao', undefined);
                 break;
             case 'diarias':
                 update('diariasQtd', 0);

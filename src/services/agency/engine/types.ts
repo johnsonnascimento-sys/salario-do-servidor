@@ -8,7 +8,7 @@ import type { LicencaComposicaoBase } from '../../../types/licenca';
  */
 
 import { ICalculationParams } from '../types';
-import { CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry, SecondThirteenthMode } from '../../../types';
+import { CalendarDaySelection, CourtConfig, OvertimeEntry, Rubrica, SubstitutionEntry, SecondThirteenthMode } from '../../../types';
 import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
@@ -140,6 +140,7 @@ export interface IAgencyCalculationParams extends ICalculationParams {
     licencaDias: number;
     transporteIndenizacaoAtivo?: boolean;
     transporteIndenizacaoDias?: number;
+    transporteIndenizacaoSelecao?: CalendarDaySelection;
     baseLicenca: 'auto' | string;
     incluirAbonoLicenca: boolean;
     licencaComposicaoBase?: LicencaComposicaoBase;

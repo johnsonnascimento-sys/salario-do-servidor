@@ -170,6 +170,7 @@ export function mapStateToAgencyParams(
         licencaDias: Math.max(0, Math.floor(Number(state.licencaDias) || 0)),
         transporteIndenizacaoAtivo: state.transporteIndenizacaoAtivo === true,
         transporteIndenizacaoDias: state.transporteIndenizacaoDias ?? 0,
+        transporteIndenizacaoSelecao: state.transporteIndenizacaoSelecao,
         baseLicenca: state.baseLicenca,
         incluirAbonoLicenca: state.incluirAbonoLicenca,
         licencaComposicaoBase: state.licencaComposicaoBase,

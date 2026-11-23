@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
 import { act, create } from 'react-test-renderer';
-import { INITIAL_STATE, type CalculatorState, type CourtConfig, type TransportIndemnityConfig } from '../src/types';
+import { INITIAL_STATE, type CalculatorState, type CalendarDaySelection, type CourtConfig, type TransportIndemnityConfig } from '../src/types';
 import { calculateTransportIndemnity, resolveTransportIndemnity } from '../src/services/agency/engine/modules/transportIndemnityCalculations';
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
 import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToParams';
@@ -10,6 +10,8 @@ import { useCalculatorResults } from '../src/hooks/calculator/useCalculatorResul
 import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
 import { exportToPDF, exportToExcel } from '../src/services/exportService';
 import { PresetInstanceCard } from '../src/components/Calculator/PresetInstanceCard';
+import { TransportIndemnityCard } from '../src/components/Calculator/cards/TransportIndemnityCard';
+import * as XLSX from 'xlsx';
 
 const transport: TransportIndemnityConfig = {
   enabled: true, divisor: 20, transitionPolicy: 'latest_in_month',
@@ -203,6 +205,23 @@ test('transporte: restauração nova/antiga conserva entrada, remove resultados 
   assert.equal(hydrateCalculatorState({ transporteIndenizacaoDias: 1.5 }).transporteIndenizacaoDias, 1.5);
 });
 
+test('transporte JMU: períodos sobrepostos contam uma vez e o limite mensal continua valendo', () => {
+  const intervalos = [
+    { dataInicio: '2026-11-01', dataFim: '2026-11-18' },
+    { dataInicio: '2026-11-12', dataFim: '2026-11-24' },
+  ];
+  const input = mapStateToAgencyParams({ ...initial(), transporteIndenizacaoDias: 3,
+    transporteIndenizacaoSelecao: { modo: 'datas', intervalos, diasAvulsos: ['2026-11-30'] } }, 'jmu', config);
+  const result = calculateTransportIndemnity(input);
+  assert.equal(result.days, 24);
+  assert.equal(result.eligibleDays, 20);
+  assert.equal(result.amount, 2168.46);
+  assert.deepEqual(result.selectedRanges, [{ dataInicio: '2026-11-01', dataFim: '2026-11-24' }]);
+  const manual = calculateTransportIndemnity({ ...input, transporteIndenizacaoSelecao: { modo: 'dias', intervalos } });
+  assert.equal(manual.days, 3);
+  assert.equal(manual.amount, 325.27);
+});
+
 test('transporte: hook inclui uma linha, recalcula dias e remove crédito ao desativar ou trocar para órgão sem regra', async () => {
   const engine = new AgencyCalculationEngine();
   const agency = { slug: 'jmu', name: 'JMU', type: 'judiciary' };
@@ -220,6 +239,14 @@ test('transporte: hook inclui uma linha, recalcula dias e remove crédito ao des
   current = { ...current, transporteIndenizacaoDias: 2 };
   await act(async () => { tree.update(React.createElement(Probe)); });
   assert.equal(rows()[0].value, 216.85);
+  current = { ...current, transporteIndenizacaoSelecao: { modo: 'avulsos', diasAvulsos: ['2026-11-03', '2026-11-11', '2026-11-20'] } };
+  await act(async () => { tree.update(React.createElement(Probe)); });
+  assert.equal(rows()[0].value, 325.27);
+  current = { ...current, transporteIndenizacaoSelecao: { modo: 'datas', intervalos: [{ dataInicio: '2026-10-30', dataFim: '2026-11-03' }] } };
+  await act(async () => { tree.update(React.createElement(Probe)); });
+  assert.equal(latest.calculationStatus, 'error');
+  assert.match(latest.calculationError ?? '', /dentro do mês de serviço/);
+  assert.equal(rows().length, 0);
   current = { ...current, transporteIndenizacaoAtivo: false };
   await act(async () => { tree.update(React.createElement(Probe)); });
   assert.equal(rows().length, 0);
@@ -281,6 +308,59 @@ const cjfConfig: CourtConfig = {
 
 const calculateCJF = (days: number, court = cjfConfig, competence = '2026-05') => calculateTransportIndemnity({
   ...mapStateToAgencyParams({ ...initial(), transporteIndenizacaoDias: days }, 'cjf', court), competencia: competence,
+});
+
+test('transporte CJF: calendário e apuração usam dezembro para a folha de janeiro e preservam os três modos', () => {
+  let current = hydrateCalculatorState({ ...initial(), anoRef: 2026, mesRef: 'JANEIRO', transporteIndenizacaoDias: 3 });
+  const render = () => React.createElement(TransportIndemnityCard, {
+    state: current, update: (key, value) => { current = { ...current, [key]: value }; },
+    styles: {}, competenciaReferencia: '01/2026', courtConfig: cjfConfig,
+  });
+  let tree!: ReturnType<typeof create>;
+  act(() => { tree = create(render()); });
+  const read = () => calculateTransportIndemnity(mapStateToAgencyParams(current, 'cjf', cjfConfig));
+  const changeMode = (mode: CalendarDaySelection['modo']) => act(() => {
+    tree.root.findAllByType('input').find(input => input.props.type === 'radio' && input.props.value === mode)!.props.onChange();
+    tree.update(render());
+  });
+  changeMode('datas');
+  assert.equal(tree.root.findAllByType('input').find(node => node.props.type === 'date')?.props.min, '2025-12-01');
+  assert.equal(tree.root.findAllByType('input').find(node => node.props.type === 'date')?.props.max, '2025-12-31');
+  for (const [index, date] of ['2025-12-29', '2025-12-31'].entries()) {
+    act(() => {
+      tree.root.findAllByType('input').filter(node => node.props.type === 'date')[index].props.onChange({ target: { value: date } });
+      tree.update(render());
+    });
+  }
+  assert.equal(read().days, 3);
+  assert.equal(read().amount, 343.38);
+  changeMode('avulsos');
+  assert.equal(tree.root.findAllByType('button').find(button => button.props['aria-label'] === '01/01/2026'), undefined);
+  for (const date of ['01/12/2025', '31/12/2025']) {
+    act(() => {
+      tree.root.findByProps({ 'aria-label': date }).props.onClick();
+      tree.update(render());
+    });
+  }
+  const memory = read();
+  assert.equal(memory.competence, '2026-01');
+  assert.equal(memory.serviceCompetence, '2025-12');
+  assert.equal(memory.days, 2);
+  assert.equal(memory.amount, 228.92);
+  const restored = hydrateCalculatorState(JSON.parse(JSON.stringify(stripCalculatedFieldsFromCalculatorState(current))));
+  assert.deepEqual(restored.transporteIndenizacaoSelecao, {
+    modo: 'avulsos', diasAvulsos: ['2025-12-01', '2025-12-31'],
+    intervalos: [{ dataInicio: '2025-12-29', dataFim: '2025-12-31' }],
+  });
+  assert.equal(restored.transporteIndenizacaoDias, 3);
+  current = restored;
+  act(() => tree.update(render()));
+  assert.equal(tree.root.findByProps({ 'aria-label': '31/12/2025' }).props['aria-pressed'], true);
+  changeMode('dias');
+  assert.equal(read().days, 3);
+  changeMode('datas');
+  assert.deepEqual(read().selectedRanges, [{ dataInicio: '2025-12-29', dataFim: '2025-12-31' }]);
+  act(() => tree.unmount());
 });
 
 test('transporte CJF: todos os valores com R$ 2.391,30 e arredondamento robusto em meio centavo', () => {
@@ -466,7 +546,10 @@ test('transporte CJF: exportação preserva mês de serviço, pagamento e alerta
     transporteIndenizacaoAtivo: true,
     transporteIndenizacaoDias: 20,
     transporteIndenizacaoValor: 2391.30,
-    transporteIndenizacaoMemory: calculateCJF(20, cjfConfig, '2026-02')
+    transporteIndenizacaoMemory: calculateTransportIndemnity({
+      ...mapStateToAgencyParams(initial(), 'cjf', cjfConfig), competencia: '2026-02',
+      transporteIndenizacaoSelecao: { modo: 'datas', intervalos: [{ dataInicio: '2026-01-01', dataFim: '2026-01-20' }] },
+    }),
   };
   const rows = [
     { type: 'C', label: 'VENCIMENTO', value: 8000 },
@@ -485,7 +568,11 @@ test('transporte CJF: exportação preserva mês de serviço, pagamento e alerta
 
   const pdfText = Buffer.from(await pdfFile.blob.arrayBuffer()).toString('latin1');
   assert(pdfText.includes('Indenização de Transporte'));
+  assert(pdfText.includes('01/01/2026 a 20/01/2026'));
   assert(pdfText.includes('01/2026') || pdfText.includes('Janeiro/2026') || pdfText.includes('2.391,30'));
+  const book = XLSX.read(await excelFile.blob.arrayBuffer());
+  const data = XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { header: 1 });
+  assert(data.some(row => Array.isArray(row) && row.includes('01/01/2026 a 20/01/2026')));
 });
 
 test('transporte: acessibilidade do botão Info com mouse, teclado e Escape', async () => {

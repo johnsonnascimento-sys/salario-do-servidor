@@ -1,3 +1,7 @@
+## Datas na indenização de transporte — 23/11/2026
+
+- O card oferece quantidade, períodos e dias avulsos no calendário. O motor conta as datas distintas no mês de serviço do órgão e mantém o divisor e o limite mensal. As datas aparecem no detalhamento e nas exportações.
+
 ## Calendário de substituição — 23/11/2026
 
 - Cada função aceita quantidade, períodos que atravessam meses ou dias avulsos selecionados no calendário. A seleção ativa é resumida por mês e datas repetidas não entram duas vezes.

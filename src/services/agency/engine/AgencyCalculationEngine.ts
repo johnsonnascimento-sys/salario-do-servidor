@@ -114,6 +114,10 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const substitution = await calculateSubstitution(params);
         const dailies = await calculateDailies(params);
         const transportIndemnity = calculateTransportIndemnity(params);
+        const transportMode = params.transporteIndenizacaoSelecao?.modo;
+        if (transportIndemnity.status === 'invalid' && (transportMode === 'datas' || transportMode === 'avulsos')) {
+            throw new Error(`Indenização de Transporte: ${transportIndemnity.reason}`);
+        }
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 

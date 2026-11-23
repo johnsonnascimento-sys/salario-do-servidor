@@ -6,9 +6,9 @@
  * - Total de substituicao
  */
 
-import type { AdjustmentScheduleEntry, CourtConfig, SubstitutionDateRange, SubstitutionEntry } from '../../../../types';
+import type { AdjustmentScheduleEntry, CalendarDayRange, CourtConfig, SubstitutionEntry } from '../../../../types';
 import type { CalculatedSubstitutionEntry, SubstitutionFunctionDetail } from '../../../../types/irEa';
-import { countSubstitutionDaysInMonth, isSubstitutionCalendarDate, resolveSubstitutionDates, shiftSubstitutionDate } from '../../../../utils/substitutionPeriod';
+import { countCalendarRangeDaysInMonth, isCalendarDate, resolveCalendarDays, shiftCalendarDate } from '../../../../utils/calendarDaySelection';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
@@ -38,7 +38,7 @@ const getHistoricalSchedule = (config: CourtConfig): DatedAdjustment[] => {
     const configured = getConfiguredSchedule(config);
     const actual = configured.filter(item => item && !item.vetoed &&
         (item.status === undefined || item.status === 'promulgated'));
-    if (!actual.every((item): item is DatedAdjustment => isSubstitutionCalendarDate(item.date) &&
+    if (!actual.every((item): item is DatedAdjustment => isCalendarDate(item.date) &&
         Number.isInteger(item.period) && item.period >= 0 && Number.isFinite(item.percentage))) return [];
 
     const ordered = actual.sort((a, b) => a.date.localeCompare(b.date));
@@ -49,15 +49,15 @@ const getHistoricalSchedule = (config: CourtConfig): DatedAdjustment[] => {
 
 type PeriodTables = Awaited<ReturnType<typeof getDataForPeriod>>;
 
-const splitByHistoricalTable = (ranges: SubstitutionDateRange[], schedule: DatedAdjustment[]) => {
-    const groups = new Map<DatedAdjustment | undefined, SubstitutionDateRange[]>();
+const splitByHistoricalTable = (ranges: CalendarDayRange[], schedule: DatedAdjustment[]) => {
+    const groups = new Map<DatedAdjustment | undefined, CalendarDayRange[]>();
     for (const range of ranges) {
         let start = range.dataInicio;
         while (true) {
             const nextIndex = schedule.findIndex(item => item.date > start);
             const active = schedule[nextIndex < 0 ? schedule.length - 1 : nextIndex - 1];
             const next = schedule[nextIndex];
-            const end = next && next.date <= range.dataFim ? shiftSubstitutionDate(next.date, -1) : range.dataFim;
+            const end = next && next.date <= range.dataFim ? shiftCalendarDate(next.date, -1) : range.dataFim;
             const group = groups.get(active) ?? [];
             group.push({ dataInicio: start, dataFim: end });
             groups.set(active, group);
@@ -134,14 +134,14 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                 pushDetail(funcKey, Math.max(0, Number(days || 0)), folha);
                 continue;
             }
-            const selection = resolveSubstitutionDates(input, params.competencia);
+            const selection = resolveCalendarDays(input, params.competencia);
             if (selection.error !== undefined) {
                 if (entry?.valorBrutoManual !== undefined) continue;
                 throw new Error(`Substituição (${funcKey.toUpperCase()}): ${selection.error}`);
             }
             for (const month of selection.meses) {
-                const pushMonthDetail = (ranges: SubstitutionDateRange[], tables: PeriodTables, table: NonNullable<SubstitutionFunctionDetail['tabelaRemuneratoria']>) => {
-                    pushDetail(funcKey, ranges.reduce((total, range) => total + countSubstitutionDaysInMonth(range), 0), tables, {
+                const pushMonthDetail = (ranges: CalendarDayRange[], tables: PeriodTables, table: NonNullable<SubstitutionFunctionDetail['tabelaRemuneratoria']>) => {
+                    pushDetail(funcKey, ranges.reduce((total, range) => total + countCalendarRangeDaysInMonth(range), 0), tables, {
                         competenciaExercicio: month.competencia,
                         ...(ranges.length === 1 ? { periodo: ranges[0] } : { intervalos: ranges }),
                         tabelaRemuneratoria: table

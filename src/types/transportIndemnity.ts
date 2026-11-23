@@ -1,3 +1,5 @@
+import type { CalendarDayRange } from '../types';
+
 export interface TransportIndemnityIncidences {
   ir: boolean;
   pss: boolean;
@@ -44,6 +46,7 @@ export interface TransportIndemnityMemory {
   status: 'inactive' | 'unavailable' | 'invalid' | 'zero' | 'proportional' | 'full';
   reason?: string;
   days: number;
+  selectedRanges?: CalendarDayRange[];
   eligibleDays: number;
   maxDays: number;
   divisor: number;

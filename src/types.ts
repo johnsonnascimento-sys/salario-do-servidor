@@ -246,18 +246,20 @@ export interface OvertimeEntry {
   emRecesso?: boolean;
 }
 
-export interface SubstitutionDateRange {
+export interface CalendarDayRange {
   dataInicio: string;
   dataFim: string;
 }
 
-export interface SubstitutionPeriod {
+export interface CalendarDaySelection {
   modo: 'dias' | 'datas' | 'avulsos';
   dataInicio?: string;
   dataFim?: string;
-  intervalos?: SubstitutionDateRange[];
+  intervalos?: CalendarDayRange[];
   diasAvulsos?: string[];
 }
+
+export type SubstitutionPeriod = CalendarDaySelection;
 
 export interface SubstitutionEntry {
   competenciasEA?: string[];
@@ -350,6 +352,7 @@ export interface CalculatorState {
   licencaValor: number;
   transporteIndenizacaoAtivo: boolean;
   transporteIndenizacaoDias: number;
+  transporteIndenizacaoSelecao?: CalendarDaySelection;
   transporteIndenizacaoValor: number;
   transporteIndenizacaoMemory?: TransportIndemnityMemory;
   // GAACTA (Resolução STM nº 397/2026)

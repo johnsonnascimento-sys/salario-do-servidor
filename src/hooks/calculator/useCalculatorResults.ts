@@ -75,7 +75,7 @@ export const useCalculatorResults = (
         state.diariasAssessoramentoMagistrado, state.diariasAcompanhamentoIntegral, state.diariasAutoridadeAssistida,
         state.diariasEquipeTrabalho, state.diariasEquipeTrabalhoMaiorCargo,
         state.licencaDias, state.baseLicenca, state.incluirAbonoLicenca, state.licencaComposicaoBase,
-        state.transporteIndenizacaoAtivo, state.transporteIndenizacaoDias,
+        state.transporteIndenizacaoAtivo, state.transporteIndenizacaoDias, state.transporteIndenizacaoSelecao,
         state.gaactaAtivo, state.gaactaValor, state.gaactaPercentual, state.gaactaRecesso,
         state.gaactaIncideVencimento, state.gaactaIncideGAJ, state.gaactaIncideFuncao,
         state.gaactaIncideAQTitulo, state.gaactaIncideAQTreino, state.gaactaIncideATS,
