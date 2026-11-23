@@ -182,7 +182,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             </> : instance.presetId === 'gratificacao' ? <>
                 <span className="mt-2 block">A GAE e a GAS correspondem a 35% do vencimento básico, conforme os arts. 16, § 1º, e 17, § 1º, da Lei nº 11.416/2006.</span>
                 <span className="mt-2 block">Use Personalizar cálculo para conferir a composição da base e os ajustes aplicados.</span>
-            </> : instance.presetId === 'substituicao' ? <span className="mt-2 block">Para cada função, informe a quantidade de dias ou selecione as datas dentro de um mesmo mês de exercício, até o mês do pagamento. A contagem inclui o primeiro e o último dia. Se a substituição atravessou meses, lance cada parte em um card separado. Consulte Ver detalhamento do cálculo para conferir os dias e a tabela aplicada.</span> : null}
+            </> : instance.presetId === 'substituicao' ? <span className="mt-2 block">Para cada função, informe a quantidade, adicione períodos ou marque dias avulsos no calendário. Períodos podem atravessar meses e incluem o primeiro e o último dia. Consulte Ver detalhamento do cálculo para conferir os dias e a tabela aplicada a cada mês.</span> : null}
             {transport && <>
                 <span className="mt-2 block">{headerInfo.normBadge || 'Não há norma cadastrada e vigente para esta competência.'}</span>
                 <span className="mt-2 block">{courtConfig.transportIndemnity?.info}</span>

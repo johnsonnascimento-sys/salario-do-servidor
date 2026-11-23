@@ -1,3 +1,8 @@
+## Calendário de substituição — 23/11/2026
+
+- Cada função aceita quantidade, períodos que atravessam meses ou dias avulsos selecionados no calendário. A seleção ativa é resumida por mês e datas repetidas não entram duas vezes.
+- O motor separa os dias por mês e vigência da tabela, preserva lançamentos salvos e discrimina os subtotais no detalhamento.
+
 ## Substituição paga em mês posterior — 23/11/2026
 
 - O card aceita datas de exercício de meses anteriores ao pagamento. Cada intervalo fica em um mês de exercício e o motor usa a tabela histórica cadastrada, identificada no detalhamento.

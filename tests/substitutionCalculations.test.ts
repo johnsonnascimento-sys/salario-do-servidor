@@ -184,7 +184,6 @@ test('substituição por datas: período inválido rejeita o cálculo sem recorr
         ['2026-02-01', '', /início e fim/],
         ['2026-02-03', '2026-02-02', /posterior/],
         ['2026-02-01', '2026-02-29', /datas válidas/],
-        ['2026-02-27', '2026-03-01', /mesmo mês de exercício/],
         ['2026-03-01', '2026-03-02', /mês do pagamento/],
     ] as const) {
         const source = entry({ dias: { cj1: 15 }, periodosPorFuncao: { cj1: { modo: 'datas', dataInicio, dataFim } } });
@@ -226,11 +225,10 @@ test('substituição retroativa: usa a base histórica e preserva a tabela selec
     assert.deepEqual(detail[1].tabelaRemuneratoria, { periodo: 2, vigencia: '2026-09-15', rotulo: 'Setembro', referencia: 'exercicio' });
 });
 
-test('substituição retroativa: falta de histórico, parâmetro ou mudança de vigência exige revisão ou bruto documentado', async () => {
+test('substituição retroativa: falta de histórico ou parâmetro exige revisão ou bruto documentado', async () => {
     const reference = { competencia: '2026-11', periodo: 2, agencyConfig: historicalConfig };
     for (const [input, message] of [
         [params({ ...reference, substitutionEntries: [datedEntry('2025-01-01', '2025-01-10')] }), /Tabela remuneratória indisponível/],
-        [params({ ...reference, substitutionEntries: [datedEntry('2026-09-14', '2026-09-15')] }), /tabela muda/],
         [params({ ...reference, funcao: 'ausente', substitutionEntries: [datedEntry('2026-08-01', '2026-08-10')] }), /Faltam valores/],
         [params({ ...reference, gratEspecificaTipo: 'gae', padrao: 'ausente', substitutionEntries: [datedEntry('2026-08-01', '2026-08-10')] }), /Faltam valores/],
     ] as const) {
@@ -240,4 +238,44 @@ test('substituição retroativa: falta de histórico, parâmetro ou mudança de 
         assert.equal(documented.entries[0].origemValor, 'manual');
         assert.deepEqual(documented.entries[0].detalhamentoPorFuncao, []);
     }
+});
+
+test('substituição por períodos: cruza meses e vigências, conta sobreposição só uma vez e concilia centavos', async () => {
+    const agencyConfig = { ...historicalConfig, payrollRules: { ...config.payrollRules!, monthDayDivisor: 28 } };
+    const source = entry({ dias: { cj1: 40 }, periodosPorFuncao: { cj1: {
+        modo: 'datas', diasAvulsos: ['2026-11-01'], intervalos: [
+            { dataInicio: '2026-08-28', dataFim: '2026-09-03' },
+            { dataInicio: '2026-09-01', dataFim: '2026-09-16' },
+        ]
+    } } });
+    const result = await calculateSubstitution(params({ competencia: '2026-11', periodo: 2, agencyConfig, substitutionEntries: [source] }));
+    const details = result.entries[0].detalhamentoPorFuncao!;
+    assert.deepEqual(details.map(item => [item.competenciaExercicio, item.dias, item.tabelaRemuneratoria?.periodo, item.subtotal]),
+        [['2026-08', 4, 0, 428.57], ['2026-09', 14, 0, 1500], ['2026-09', 2, 2, 267.86]]);
+    assert.equal(cents(result.total), 219643);
+    assert.equal(details.reduce((sum, item) => sum + cents(item.subtotal), 0), cents(result.total));
+});
+
+test('substituição por dias avulsos: alterna fontes, preserva datas esparsas e valida a folha', async () => {
+    const selection = {
+        modo: 'avulsos' as const,
+        intervalos: [{ dataInicio: '2026-10-01', dataFim: '2026-10-20' }],
+        diasAvulsos: ['2026-09-18', '2026-08-02', '2026-11-05', '2026-09-01', '2026-08-02', '2026-09-16']
+    };
+    const source = entry({ dias: { cj1: 7 }, periodosPorFuncao: { cj1: selection } });
+    const input = params({ competencia: '2026-11', periodo: 2, agencyConfig: historicalConfig, substitutionEntries: [source] });
+    const result = await calculateSubstitution(input);
+    const details = result.entries[0].detalhamentoPorFuncao!;
+    assert.deepEqual(details.map(item => [item.competenciaExercicio, item.dias]),
+        [['2026-08', 1], ['2026-09', 1], ['2026-09', 2], ['2026-11', 1]]);
+    assert.deepEqual(details[2].intervalos, [
+        { dataInicio: '2026-09-16', dataFim: '2026-09-16' }, { dataInicio: '2026-09-18', dataFim: '2026-09-18' }
+    ]);
+    assert.equal(result.total, 637.5);
+    await assert.rejects(calculateSubstitution({ ...input, competencia: '2026-10' }), /mês do pagamento/);
+    const empty = { ...source, periodosPorFuncao: { cj1: { ...selection, diasAvulsos: [] } } };
+    await assert.rejects(calculateSubstitution({ ...input, substitutionEntries: [empty] }), /Marque pelo menos um dia/);
+    const manual = await calculateSubstitution({ ...input, substitutionEntries: [{ ...empty, valorBrutoManual: 0 }] });
+    assert.equal(manual.total, 0);
+    assert.equal(manual.entries[0].origemValor, 'manual');
 });

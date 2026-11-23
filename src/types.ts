@@ -246,10 +246,17 @@ export interface OvertimeEntry {
   emRecesso?: boolean;
 }
 
-export interface SubstitutionPeriod {
-  modo: 'dias' | 'datas';
+export interface SubstitutionDateRange {
   dataInicio: string;
   dataFim: string;
+}
+
+export interface SubstitutionPeriod {
+  modo: 'dias' | 'datas' | 'avulsos';
+  dataInicio?: string;
+  dataFim?: string;
+  intervalos?: SubstitutionDateRange[];
+  diasAvulsos?: string[];
 }
 
 export interface SubstitutionEntry {

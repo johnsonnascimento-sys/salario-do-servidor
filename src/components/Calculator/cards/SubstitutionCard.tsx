@@ -3,7 +3,14 @@ import React from 'react';
 import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from '../TaxAdjustmentPanel';
 import type { SubstitutionEntry, SubstitutionPeriod } from '../../../types';
 import type { SubstitutionFunctionDetail } from '../../../types/irEa';
-import { getSubstitutionMonthBounds, resolveSubstitutionPeriod } from '../../../utils/substitutionPeriod';
+import { getSubstitutionMonthBounds, resolveSubstitutionDates } from '../../../utils/substitutionPeriod';
+import { SubstitutionDateEditor } from './SubstitutionDateEditor';
+
+const INPUT_MODES = [
+    { value: 'dias', label: 'Por quantidade' },
+    { value: 'datas', label: 'Por períodos' },
+    { value: 'avulsos', label: 'Por dias avulsos' }
+] as const;
 
 interface SubstitutionCardProps {
     entry: SubstitutionEntry;
@@ -33,10 +40,12 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
     const canAdd = calculationReady && availableFunctions.some(key => eligibleFunctionKeys.includes(key));
     const hasManualGross = entry.valorBrutoManual !== undefined;
     const paymentMonth = getSubstitutionMonthBounds(competenciaReferencia);
-    const hasPendingPeriod = !hasManualGross && selectedFunctions.some(key => {
+    const selections = selectedFunctions.map(key => {
         const period = entry.periodosPorFuncao?.[key];
-        return period?.modo === 'datas' && resolveSubstitutionPeriod(period, competenciaReferencia).error !== undefined;
+        const selection = period && period.modo !== 'dias' ? resolveSubstitutionDates(period, competenciaReferencia) : null;
+        return { key, period, selection };
     });
+    const hasPendingPeriod = !hasManualGross && selections.some(({ selection }) => selection?.error !== undefined);
     React.useLayoutEffect(() => {
         if (focusSelectRef.current && canAdd) {
             selectRef.current?.focus();
@@ -91,7 +100,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                         </button>
                     </div>
                     <p role="status" className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                        {hasPendingPeriod ? 'Revise os períodos informados para concluir o cálculo.'
+                        {hasPendingPeriod ? 'Revise as datas selecionadas para concluir o cálculo.'
                             : !calculationReady ? 'Atualizando cálculo e funções elegíveis…'
                             : functionKeys.length === 0 ? 'Catálogo de funções indisponível para esta simulação.'
                             : !eligibleFunctionKeys.length ? 'Nenhuma função gera diferença de substituição nesta simulação.'
@@ -103,13 +112,12 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                     </p>}
                 </div>
                 <div className="divide-y divide-neutral-200 dark:divide-neutral-700" aria-busy={!calculationReady && !hasPendingPeriod}>
-                    {selectedFunctions.map(key => {
+                    {selections.map(({ key, period, selection }) => {
                         const inCatalog = functionKeys.includes(key);
-                        const detail = functionDetails.find(item => item.funcao === key);
-                        const eligible = detail?.tabelaRemuneratoria?.referencia === 'exercicio'
-                            ? detail.elegivel : eligibleFunctionKeys.includes(key);
-                        const period = entry.periodosPorFuncao?.[key];
-                        const range = period?.modo === 'datas' ? resolveSubstitutionPeriod(period, competenciaReferencia) : null;
+                        const details = functionDetails.filter(item => item.funcao === key);
+                        const subtotal = details.reduce((sum, item) => sum + Math.round(item.subtotal * 100), 0) / 100;
+                        const eligible = selection && details.length
+                            ? details.some(detail => detail.elegivel) : eligibleFunctionKeys.includes(key);
                         const fieldPrefix = `${fieldId}-${key}`;
                         const disableDays = !inCatalog || (calculationReady && !eligible);
                         return <div key={key} className="border-b border-neutral-200 dark:border-neutral-700 py-3 space-y-3">
@@ -124,39 +132,32 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                             </div>
                             <fieldset className="flex flex-wrap gap-x-4 gap-y-2" disabled={!inCatalog}>
                                 <legend className="sr-only">Como informar os dias de substituição de {key.toUpperCase()}</legend>
-                                {(['dias', 'datas'] as const).map(mode => <label key={mode} className={styles.checkboxLabel}>
-                                    <input type="radio" name={`${fieldPrefix}-modo`} value={mode} checked={(period?.modo ?? 'dias') === mode}
-                                        onChange={() => updatePeriod(key, { modo: mode })} />
-                                    {mode === 'dias' ? 'Por dias' : 'Por datas'}
+                                {INPUT_MODES.map(({ value, label }) => <label key={value} className={styles.checkboxLabel}>
+                                    <input type="radio" name={`${fieldPrefix}-modo`} value={value} checked={(period?.modo ?? 'dias') === value}
+                                        onChange={() => updatePeriod(key, { modo: value })} />
+                                    {label}
                                 </label>)}
                             </fieldset>
-                            {period && range && <div className="space-y-2">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div className="min-w-0">
-                                        <label htmlFor={`${fieldPrefix}-inicio`} className={styles.label}>Data de início</label>
-                                        <input type="date" id={`${fieldPrefix}-inicio`} className={styles.input} value={period.dataInicio}
-                                            max={paymentMonth?.max} disabled={!inCatalog}
-                                            aria-describedby={`${fieldPrefix}-periodo-status`} aria-invalid={Boolean(range.error && period.dataInicio && period.dataFim)}
-                                            onChange={event => updatePeriod(key, { dataInicio: event.target.value })} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <label htmlFor={`${fieldPrefix}-fim`} className={styles.label}>Data de fim</label>
-                                        <input type="date" id={`${fieldPrefix}-fim`} className={styles.input} value={period.dataFim}
-                                            max={paymentMonth?.max} disabled={!inCatalog}
-                                            aria-describedby={`${fieldPrefix}-periodo-status`} aria-invalid={Boolean(range.error && period.dataInicio && period.dataFim)}
-                                            onChange={event => updatePeriod(key, { dataFim: event.target.value })} />
-                                    </div>
-                                </div>
+                            {period && selection && <div className="space-y-2">
+                                <SubstitutionDateEditor period={period} update={patch => updatePeriod(key, patch)} fieldPrefix={fieldPrefix}
+                                    paymentEnd={paymentMonth?.max} disabled={!inCatalog} styles={styles} />
                                 <p id={`${fieldPrefix}-periodo-status`} role="status" className="text-body-xs text-neutral-600 dark:text-neutral-400">
-                                    {range.error ?? `${range.dias} ${range.dias === 1 ? 'dia corrido' : 'dias corridos'}`}
+                                    {selection.error ?? `${selection.dias} ${selection.dias === 1 ? 'dia selecionado' : 'dias selecionados'} no total`}
                                 </p>
-                                {range.competenciaExercicio && paymentMonth && range.competenciaExercicio < paymentMonth.min.slice(0, 7) &&
+                                {selection.meses && <ul aria-label="Dias selecionados por mês" className="max-h-40 space-y-1 overflow-y-auto text-body-xs text-neutral-600 dark:text-neutral-400">
+                                    {selection.meses.map(month => <li key={month.competencia}>
+                                        {month.competencia.split('-').reverse().join('/')} · {month.dias} {month.dias === 1 ? 'dia' : 'dias'}
+                                        {period.modo === 'avulsos' && ` (${month.intervalos.map(({ dataInicio, dataFim }) => dataInicio === dataFim
+                                            ? dataInicio.slice(-2) : `${dataInicio.slice(-2)}–${dataFim.slice(-2)}`).join(', ')})`}
+                                    </li>)}
+                                </ul>}
+                                {selection.meses?.[0] && paymentMonth && selection.meses[0].competencia < paymentMonth.min.slice(0, 7) &&
                                     <p className="text-body-xs text-neutral-600 dark:text-neutral-400">
                                         O cálculo usa a tabela do mês de exercício e os dados funcionais do holerite. Se esses dados eram diferentes na época, informe o valor bruto documentado em Ajustar tributação.
                                     </p>}
                             </div>}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:items-end">
-                                {!range && <div className="min-w-0">
+                                {!selection && <div className="min-w-0">
                                     <label htmlFor={`${fieldPrefix}-dias`} className={styles.label}>Dias de substituição</label>
                                     <input id={`${fieldPrefix}-dias`} ref={node => { daysRefs.current[key] = node; }} type="number" min="0" step="any"
                                         className={styles.input} value={entry.dias[key] || ''} placeholder="0"
@@ -170,8 +171,8 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                 <div className="min-w-0 text-body-xs text-neutral-600 dark:text-neutral-400">
                                     <span className="block">{hasManualGross ? 'Subtotal por dias (referência)' : 'Subtotal bruto'}</span>
                                     <output aria-label={`${key.toUpperCase()} — Subtotal bruto`} className="block py-3 font-mono font-semibold text-neutral-800 dark:text-neutral-200 break-words">
-                                        {range?.error ? 'Período a revisar' : !calculationReady ? (hasPendingPeriod ? 'Aguardando revisão…' : 'Atualizando…') : detail
-                                            ? detail.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : hasManualGross ? 'Sem subtotal de referência' : 'Aguardando cálculo…'}
+                                        {selection?.error ? 'Datas a revisar' : !calculationReady ? (hasPendingPeriod ? 'Aguardando revisão…' : 'Atualizando…') : details.length
+                                            ? subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : hasManualGross ? 'Sem subtotal de referência' : 'Aguardando cálculo…'}
                                     </output>
                                 </div>
                             </div>
@@ -180,6 +181,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                 </div>
             </div>
             <TaxAdjustmentPanel open={taxOpen} onToggle={setTaxOpen} summary={IR_SUMMARY[irRegime]}>
+                <p className="text-body-xs text-neutral-600 dark:text-neutral-400">Use cards separados quando os lançamentos tiverem tratamentos tributários diferentes.</p>
                 <TaxChoices title="Imposto de Renda (IR)" name={`${fieldId}-tributacao`} value={irRegime}
                     options={IR_OPTIONS} onChange={value => updateEntry(entry.id, {
                         isEA: value === 'rra',

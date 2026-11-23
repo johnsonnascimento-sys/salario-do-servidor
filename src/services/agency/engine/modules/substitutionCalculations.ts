@@ -6,9 +6,9 @@
  * - Total de substituicao
  */
 
-import type { AdjustmentScheduleEntry, CourtConfig, SubstitutionEntry } from '../../../../types';
+import type { AdjustmentScheduleEntry, CourtConfig, SubstitutionDateRange, SubstitutionEntry } from '../../../../types';
 import type { CalculatedSubstitutionEntry, SubstitutionFunctionDetail } from '../../../../types/irEa';
-import { isSubstitutionCalendarDate, resolveSubstitutionPeriod } from '../../../../utils/substitutionPeriod';
+import { countSubstitutionDaysInMonth, isSubstitutionCalendarDate, resolveSubstitutionDates, shiftSubstitutionDate } from '../../../../utils/substitutionPeriod';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
@@ -49,6 +49,25 @@ const getHistoricalSchedule = (config: CourtConfig): DatedAdjustment[] => {
 
 type PeriodTables = Awaited<ReturnType<typeof getDataForPeriod>>;
 
+const splitByHistoricalTable = (ranges: SubstitutionDateRange[], schedule: DatedAdjustment[]) => {
+    const groups = new Map<DatedAdjustment | undefined, SubstitutionDateRange[]>();
+    for (const range of ranges) {
+        let start = range.dataInicio;
+        while (true) {
+            const nextIndex = schedule.findIndex(item => item.date > start);
+            const active = schedule[nextIndex < 0 ? schedule.length - 1 : nextIndex - 1];
+            const next = schedule[nextIndex];
+            const end = next && next.date <= range.dataFim ? shiftSubstitutionDate(next.date, -1) : range.dataFim;
+            const group = groups.get(active) ?? [];
+            group.push({ dataInicio: start, dataFim: end });
+            groups.set(active, group);
+            if (end === range.dataFim) break;
+            start = next.date;
+        }
+    }
+    return groups;
+};
+
 // Concilia a memória com o total já arredondado, sem mudar o valor da rubrica.
 const reconcileDetailCents = (details: SubstitutionFunctionDetail[], total: number) => {
     const allocations = details.map(detail => {
@@ -85,56 +104,18 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
     const funcoesSubstituicaoElegiveis = Object.keys(folha.funcoes).filter(key => Boolean(folha.funcoes[key]) && folha.funcoes[key] > baseFolha);
     const folhaSchedule = getConfiguredSchedule(config).find(item => item?.period === params.periodo);
     let historicalConfig: (CourtConfig & { adjustment_schedule: DatedAdjustment[] }) | undefined;
-    const getHistoricalTables = async (dataInicio: string, dataFim: string, funcKey: string) => {
-        historicalConfig ??= { ...config, adjustment_schedule: getHistoricalSchedule(config) };
-        const schedule = historicalConfig.adjustment_schedule;
-        const vigente = schedule.filter(item => item.date <= dataInicio).pop();
-        if (!vigente) return { error: 'Tabela remuneratória indisponível no mês de exercício. Informe o valor bruto documentado.' } as const;
-        if (schedule.some(item => item.date > dataInicio && item.date <= dataFim)) {
-            return { error: 'A tabela muda dentro do período. Separe os dias em cards distintos ou informe o valor bruto documentado.' } as const;
-        }
-        const tables = await getDataForPeriod(vigente.period, historicalConfig);
+    const hasHistoricalValues = (tables: PeriodTables, funcKey: string) => {
         const validValue = (value: number | undefined) => value !== undefined && Number.isFinite(value) && value >= 0;
-        if (!validValue(tables.funcoes[funcKey]) || (!noFunction && !validValue(tables.funcoes[params.funcao])) ||
-            (hasGratification && (!(tables.salario[params.cargo]?.[params.padrao] > 0) ||
-                !validValue(tables.salario[params.cargo]?.[params.padrao]) || !validValue(payrollRules.specificGratificationRate))) ||
-            !Number.isFinite(payrollRules.monthDayDivisor) || payrollRules.monthDayDivisor <= 0) {
-            return { error: 'Faltam valores ou parâmetros para calcular na tabela do mês de exercício. Informe o valor bruto documentado.' } as const;
-        }
-        return { tables, vigente } as const;
+        const salary = tables.salario[params.cargo]?.[params.padrao];
+        return validValue(tables.funcoes[funcKey]) && (noFunction || validValue(tables.funcoes[params.funcao])) &&
+            (!hasGratification || (validValue(salary) && salary > 0 && validValue(payrollRules.specificGratificationRate))) &&
+            Number.isFinite(payrollRules.monthDayDivisor) && payrollRules.monthDayDivisor > 0;
     };
     const calculateDaysMemory = async (dias: Record<string, number>, entry?: SubstitutionEntry) => {
         let rawTotal = 0;
         const detalhamentoPorFuncao: SubstitutionFunctionDetail[] = [];
-        for (const [funcKey, days] of Object.entries(dias)) {
-            const input = entry?.periodosPorFuncao?.[funcKey];
-            let safeDays = Math.max(0, Number(days || 0));
-            let period: SubstitutionFunctionDetail['periodo'];
-            let tabela: SubstitutionFunctionDetail['tabelaRemuneratoria'];
-            let tables = folha;
-            let baseAbatimento = baseFolha;
-            if (input?.modo === 'datas') {
-                const range = resolveSubstitutionPeriod(input, params.competencia);
-                if (range.error !== undefined) {
-                    if (entry?.valorBrutoManual !== undefined) continue;
-                    throw new Error(`Substituição (${funcKey.toUpperCase()}): ${range.error}`);
-                }
-                safeDays = range.dias;
-                period = { dataInicio: input.dataInicio, dataFim: input.dataFim };
-                if (range.competenciaExercicio !== params.competencia) {
-                    const historical = await getHistoricalTables(input.dataInicio, input.dataFim, funcKey);
-                    if (historical.error !== undefined) {
-                        if (entry?.valorBrutoManual !== undefined) continue;
-                        throw new Error(`Substituição (${funcKey.toUpperCase()}): ${historical.error}`);
-                    }
-                    tables = historical.tables;
-                    baseAbatimento = getBaseAbatimento(tables);
-                    tabela = { periodo: historical.vigente.period, vigencia: historical.vigente.date,
-                        rotulo: historical.vigente.label, referencia: 'exercicio' };
-                } else {
-                    tabela = { periodo: params.periodo, vigencia: folhaSchedule?.date, rotulo: folhaSchedule?.label, referencia: 'folha' };
-                }
-            }
+        const pushDetail = (funcKey: string, safeDays: number, tables: PeriodTables, extra?: Partial<SubstitutionFunctionDetail>) => {
+            const baseAbatimento = tables === folha ? baseFolha : getBaseAbatimento(tables);
             const valorDestino = tables.funcoes[funcKey] || 0;
             const elegivel = Boolean(valorDestino) && valorDestino > baseAbatimento;
             const diferencaMensal = elegivel ? valorDestino - baseAbatimento : 0;
@@ -144,9 +125,48 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
             detalhamentoPorFuncao.push({
                 funcao: funcKey, elegivel, dias: safeDays, valorDestino, baseAbatimento,
                 diferencaMensal, divisor: payrollRules.monthDayDivisor, subtotal,
-                ...(period && { periodo: period }),
-                ...(tabela && { tabelaRemuneratoria: tabela })
+                ...extra
             });
+        };
+        for (const [funcKey, days] of Object.entries(dias)) {
+            const input = entry?.periodosPorFuncao?.[funcKey];
+            if (input?.modo !== 'datas' && input?.modo !== 'avulsos') {
+                pushDetail(funcKey, Math.max(0, Number(days || 0)), folha);
+                continue;
+            }
+            const selection = resolveSubstitutionDates(input, params.competencia);
+            if (selection.error !== undefined) {
+                if (entry?.valorBrutoManual !== undefined) continue;
+                throw new Error(`Substituição (${funcKey.toUpperCase()}): ${selection.error}`);
+            }
+            for (const month of selection.meses) {
+                const pushMonthDetail = (ranges: SubstitutionDateRange[], tables: PeriodTables, table: NonNullable<SubstitutionFunctionDetail['tabelaRemuneratoria']>) => {
+                    pushDetail(funcKey, ranges.reduce((total, range) => total + countSubstitutionDaysInMonth(range), 0), tables, {
+                        competenciaExercicio: month.competencia,
+                        ...(ranges.length === 1 ? { periodo: ranges[0] } : { intervalos: ranges }),
+                        tabelaRemuneratoria: table
+                    });
+                };
+                if (month.competencia === params.competencia) {
+                    pushMonthDetail(month.intervalos, folha, { periodo: params.periodo,
+                        vigencia: folhaSchedule?.date, rotulo: folhaSchedule?.label, referencia: 'folha' });
+                    continue;
+                }
+                historicalConfig ??= { ...config, adjustment_schedule: getHistoricalSchedule(config) };
+                const groups = splitByHistoricalTable(month.intervalos, historicalConfig.adjustment_schedule);
+                for (const [active, ranges] of groups) {
+                    const tables = active && await getDataForPeriod(active.period, historicalConfig);
+                    if (!active || !tables || !hasHistoricalValues(tables, funcKey)) {
+                        if (entry?.valorBrutoManual !== undefined) continue;
+                        const problem = tables ? 'Faltam valores ou parâmetros para calcular na tabela do mês de exercício'
+                            : 'Tabela remuneratória indisponível no mês de exercício';
+                        const [year, monthNumber] = month.competencia.split('-');
+                        throw new Error(`Substituição (${funcKey.toUpperCase()}): ${problem} (${monthNumber}/${year}). Informe o valor bruto documentado.`);
+                    }
+                    pushMonthDetail(ranges, tables, { periodo: active.period, vigencia: active.date,
+                        rotulo: active.label, referencia: 'exercicio' });
+                }
+            }
         }
         const totalPorDias = roundCurrency(rawTotal);
         reconcileDetailCents(detalhamentoPorFuncao, totalPorDias);

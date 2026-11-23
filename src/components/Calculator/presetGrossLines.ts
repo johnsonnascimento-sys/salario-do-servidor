@@ -222,26 +222,41 @@ export const buildPresetGrossLines = ({
                     ? 'Desconto IR mensal (mesmo ano da folha — sem RRA)'
                     : 'Desconto IR (Substituição)';
             const formatDate = (value: string) => value.split('-').reverse().join('/');
-            const functionLines: PresetGrossLine[] = (entry.detalhamentoPorFuncao || []).flatMap(detail => [
-                ...(detail.periodo ? [{
-                    label: `${detail.funcao.toUpperCase()} — Período de substituição`, value: 0,
-                    displayValue: `${formatDate(detail.periodo.dataInicio)} a ${formatDate(detail.periodo.dataFim)}`
-                }] : []),
-                ...(detail.tabelaRemuneratoria ? [{
-                    label: `${detail.funcao.toUpperCase()} — Tabela remuneratória`, value: 0,
-                    displayValue: [
-                        detail.tabelaRemuneratoria.referencia === 'exercicio' ? 'Mês de exercício' : 'Mês do pagamento',
-                        detail.tabelaRemuneratoria.rotulo || `Tabela ${detail.tabelaRemuneratoria.periodo}`,
-                        detail.tabelaRemuneratoria.vigencia && `Vigência desde ${formatDate(detail.tabelaRemuneratoria.vigencia)}`
-                    ].filter(Boolean).join(' · ')
-                }] : []),
-                { label: `${detail.funcao.toUpperCase()} — Dias de substituição`, value: 0, displayValue: detail.dias.toLocaleString('pt-BR') },
-                { label: `${detail.funcao.toUpperCase()} — Valor da função substituída`, value: detail.valorDestino },
-                { label: `${detail.funcao.toUpperCase()} — Base de abatimento (função atual e gratificação específica)`, value: detail.baseAbatimento },
-                { label: `${detail.funcao.toUpperCase()} — Diferença mensal`, value: detail.diferencaMensal },
-                { label: `${detail.funcao.toUpperCase()} — Divisor aplicado`, value: 0, displayValue: detail.divisor.toLocaleString('pt-BR') },
-                { label: `${detail.funcao.toUpperCase()} — Subtotal por dias${entry.origemValor === 'manual' ? ' (referência)' : ''}`, value: detail.subtotal },
-            ]);
+            const details = entry.detalhamentoPorFuncao || [];
+            const functionLines: PresetGrossLine[] = details.flatMap(detail => {
+                const month = detail.competenciaExercicio?.split('-').reverse().join('/');
+                const multiple = details.some(other => other !== detail && other.funcao === detail.funcao);
+                const splitMonth = multiple && details.some(other => other !== detail && other.funcao === detail.funcao &&
+                    other.competenciaExercicio === detail.competenciaExercicio);
+                const title = [detail.funcao.toUpperCase(), multiple && month,
+                    splitMonth && detail.tabelaRemuneratoria && `Tabela ${detail.tabelaRemuneratoria.periodo}`].filter(Boolean).join(' · ');
+                return [
+                    ...(detail.periodo ? [{
+                        label: `${title} — Período de substituição`, value: 0,
+                        displayValue: detail.periodo.dataInicio === detail.periodo.dataFim ? formatDate(detail.periodo.dataInicio)
+                            : `${formatDate(detail.periodo.dataInicio)} a ${formatDate(detail.periodo.dataFim)}`
+                    }] : []),
+                    ...(detail.intervalos ? [{
+                        label: `${title} — Datas de substituição`, value: 0,
+                        displayValue: detail.intervalos.map(range => range.dataInicio === range.dataFim ? formatDate(range.dataInicio)
+                            : `${formatDate(range.dataInicio)} a ${formatDate(range.dataFim)}`).join(', ')
+                    }] : []),
+                    ...(detail.tabelaRemuneratoria ? [{
+                        label: `${title} — Tabela remuneratória`, value: 0,
+                        displayValue: [
+                            detail.tabelaRemuneratoria.referencia === 'exercicio' ? 'Mês de exercício' : 'Mês do pagamento',
+                            detail.tabelaRemuneratoria.rotulo || `Tabela ${detail.tabelaRemuneratoria.periodo}`,
+                            detail.tabelaRemuneratoria.vigencia && `Vigência desde ${formatDate(detail.tabelaRemuneratoria.vigencia)}`
+                        ].filter(Boolean).join(' · ')
+                    }] : []),
+                    { label: `${title} — Dias de substituição`, value: 0, displayValue: detail.dias.toLocaleString('pt-BR') },
+                    { label: `${title} — Valor da função substituída`, value: detail.valorDestino },
+                    { label: `${title} — Base de abatimento (função atual e gratificação específica)`, value: detail.baseAbatimento },
+                    { label: `${title} — Diferença mensal`, value: detail.diferencaMensal },
+                    { label: `${title} — Divisor aplicado`, value: 0, displayValue: detail.divisor.toLocaleString('pt-BR') },
+                    { label: `${title} — Subtotal por dias${entry.origemValor === 'manual' ? ' (referência)' : ''}`, value: detail.subtotal },
+                ];
+            });
             return [
                 ...functionLines,
                 ...(entry.origemValor === 'manual' ? [

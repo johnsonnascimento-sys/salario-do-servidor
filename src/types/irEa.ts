@@ -85,6 +85,8 @@ export interface SubstitutionFunctionDetail {
     elegivel: boolean;
     dias: number;
     periodo?: { dataInicio: string; dataFim: string };
+    intervalos?: { dataInicio: string; dataFim: string }[];
+    competenciaExercicio?: string;
     tabelaRemuneratoria?: { periodo: number; vigencia?: string; rotulo?: string; referencia: 'exercicio' | 'folha' };
     valorDestino: number;
     baseAbatimento: number;
