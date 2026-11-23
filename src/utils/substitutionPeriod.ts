@@ -11,16 +11,24 @@ export const getSubstitutionMonthBounds = (competencia = '') => {
     return { min: `${year}-${month}-01`, max: `${year}-${month}-${lastDay}` };
 };
 
+export const isSubstitutionCalendarDate = (value: unknown): value is string => {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const bounds = getSubstitutionMonthBounds(value.slice(0, 7));
+    return Boolean(bounds && value >= bounds.min && value <= bounds.max);
+};
+
 export const resolveSubstitutionPeriod = (
     { dataInicio, dataFim }: Pick<SubstitutionPeriod, 'dataInicio' | 'dataFim'>,
     competencia?: string
-): { dias: number; error?: never } | { dias?: never; error: string } => {
+): { dias: number; competenciaExercicio: string; error?: never } | { dias?: never; competenciaExercicio?: never; error: string } => {
     if (!dataInicio || !dataFim) return { error: 'Informe as datas de início e fim.' };
 
-    const bounds = getSubstitutionMonthBounds(competencia);
-    const inMonth = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date) && bounds && date >= bounds.min && date <= bounds.max;
-    if (!inMonth(dataInicio) || !inMonth(dataFim)) return { error: 'Informe datas válidas dentro do mês da competência.' };
+    if (!isSubstitutionCalendarDate(dataInicio) || !isSubstitutionCalendarDate(dataFim)) return { error: 'Informe datas válidas.' };
     if (dataFim < dataInicio) return { error: 'A data de fim deve ser igual ou posterior à data de início.' };
+    const competenciaExercicio = dataInicio.slice(0, 7);
+    if (!dataFim.startsWith(competenciaExercicio)) return { error: 'As datas devem estar no mesmo mês de exercício. Para meses diferentes, use cards separados.' };
+    const pagamento = getSubstitutionMonthBounds(competencia);
+    if (!pagamento || dataFim > pagamento.max) return { error: 'O período deve terminar até o fim do mês do pagamento.' };
 
-    return { dias: Number(dataFim.slice(-2)) - Number(dataInicio.slice(-2)) + 1 };
+    return { dias: Number(dataFim.slice(-2)) - Number(dataInicio.slice(-2)) + 1, competenciaExercicio };
 };

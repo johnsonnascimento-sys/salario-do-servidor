@@ -131,8 +131,9 @@ Cada rubrica manual deve suportar:
 
 ### 4.4.1 Substituição de função
 
-1. Cada função de cada card aceita quantidade de dias ou um período de início e fim dentro da competência da folha. As duas datas contam no total de dias corridos. Preservar os dados ao alternar entre os modos e ao reabrir a simulação. Registros sem modo por datas usam a quantidade de dias informada.
-2. O motor oficial valida o período, usa o divisor configurado e registra as datas e a quantidade de dias na memória. Período incompleto, inválido, invertido ou fora da competência impede resultado definitivo quando o valor depender do período. O valor bruto documentado prevalece, e, nesse caso, subtotais com períodos válidos são apenas referência.
+1. Cada função de cada card aceita quantidade de dias ou datas de início e fim no mesmo mês de exercício, inclusive em meses anteriores ao pagamento. As duas datas contam no total de dias corridos. Para intervalos que atravessam meses, lançar cada parte em card separado. Preservar os dados ao alternar entre os modos e ao reabrir a simulação.
+2. Para datas de exercício em mês anterior ao pagamento, o motor usa o cronograma remuneratório do órgão, pelas datas de vigência aplicáveis, para o valor da função substituída e a base de abatimento. Usa os dados funcionais informados no holerite, o divisor configurado e o arredondamento existente, com datas, dias e tabela na memória. Datas no próprio mês do pagamento e a entrada por quantidade de dias usam a tabela selecionada na folha.
+3. Intervalo inválido, incompleto, invertido, posterior ao mês do pagamento, sem tabela ou parâmetro necessário ou que atravesse uma mudança de tabela histórica impede resultado definitivo quando o bruto depender do intervalo. O valor bruto documentado prevalece em qualquer regime de IR, inclusive quando igual a zero. Usá-lo também se os dados funcionais da época eram diferentes dos informados na folha. Subtotais calculáveis são referência quando houver bruto documentado. Datas de exercício não alteram automaticamente as escolhas de IR, RRA ou PSS.
 
 ### 4.5 Detalhamento final
 

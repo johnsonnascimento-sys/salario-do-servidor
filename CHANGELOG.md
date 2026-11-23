@@ -1,3 +1,8 @@
+## Substituição paga em mês posterior — 23/11/2026
+
+- O card aceita datas de exercício de meses anteriores ao pagamento. Cada intervalo fica em um mês de exercício e o motor usa a tabela histórica cadastrada, identificada no detalhamento.
+- Se faltarem dados históricos ou os dados funcionais da época forem diferentes dos lançados na folha, o valor bruto documentado pode ser informado em qualquer regime de IR.
+
 ## Substituição de função por datas — 23/11/2026
 
 - Cada função substituída pode receber uma quantidade manual de dias ou datas de início e fim na competência. O motor conta os dias corridos, inclusive as duas datas, e aplica o divisor já configurado.

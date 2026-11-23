@@ -176,7 +176,7 @@ test('substituição por datas: período inclusivo por função e card, com o di
     } });
     const input = params({ competencia: '2026-01', substitutionEntries: [fullMonth] });
     assert.equal((await calculateSubstitution(input)).total, 3100);
-    await assert.rejects(calculateSubstitution({ ...input, competencia: '2026-02' }), /mês da competência/);
+    await assert.rejects(calculateSubstitution({ ...input, competencia: '2025-12' }), /mês do pagamento/);
 });
 
 test('substituição por datas: período inválido rejeita o cálculo sem recorrer aos dias manuais', async () => {
@@ -184,7 +184,8 @@ test('substituição por datas: período inválido rejeita o cálculo sem recorr
         ['2026-02-01', '', /início e fim/],
         ['2026-02-03', '2026-02-02', /posterior/],
         ['2026-02-01', '2026-02-29', /datas válidas/],
-        ['2026-02-27', '2026-03-01', /competência/],
+        ['2026-02-27', '2026-03-01', /mesmo mês de exercício/],
+        ['2026-03-01', '2026-03-02', /mês do pagamento/],
     ] as const) {
         const source = entry({ dias: { cj1: 15 }, periodosPorFuncao: { cj1: { modo: 'datas', dataInicio, dataFim } } });
         const input = params({ competencia: '2026-02', substitutionEntries: [source] });
@@ -192,6 +193,51 @@ test('substituição por datas: período inválido rejeita o cálculo sem recorr
         const documented = await calculateSubstitution({ ...input, substitutionEntries: [{ ...source, valorBrutoManual: 0 }] });
         assert.equal(documented.entries[0].origemValor, 'manual');
         assert.equal(documented.total, 0);
+        assert.deepEqual(documented.entries[0].detalhamentoPorFuncao, []);
+    }
+});
+
+const historicalConfig: CourtConfig = { ...config, adjustment_schedule: [
+    { period: 0, percentage: 0, date: '2025-02-01', label: 'Tabela inicial', status: 'promulgated' },
+    { period: 1, percentage: 0.5, date: '2026-07-01', status: 'vetoed' },
+    { period: 2, percentage: 0.25, date: '2026-09-15', label: 'Setembro', status: 'promulgated' },
+    { period: 3, percentage: 0.5, date: '2026-10-01', status: 'projected' },
+] };
+const datedEntry = (dataInicio: string, dataFim: string, patch: Partial<SubstitutionEntry> = {}) => entry({
+    dias: { cj1: 7 }, periodosPorFuncao: { cj1: { modo: 'datas', dataInicio, dataFim } }, ...patch
+});
+
+test('substituição retroativa: usa a base histórica e preserva a tabela selecionada na folha para outras entradas', async () => {
+    const result = await calculateSubstitution(params({
+        competencia: '2026-11', periodo: 2, agencyConfig: historicalConfig, gratEspecificaTipo: 'gae',
+        substitutionEntries: [
+            datedEntry('2026-08-10', '2026-08-14', { id: 'agosto' }),
+            datedEntry('2026-09-15', '2026-09-19', { id: 'setembro' }),
+            datedEntry('2026-10-10', '2026-10-14', { id: 'outubro' }),
+            datedEntry('2026-11-10', '2026-11-14', { id: 'novembro' }),
+            entry({ id: 'quantidade', dias: { cj1: 5 } }),
+        ]
+    }));
+    const detail = result.entries.map(item => item.detalhamentoPorFuncao![0]);
+    assert.deepEqual(result.entries.map(item => item.total), [150, 187.5, 187.5, 281.25, 281.25]);
+    assert.deepEqual(detail.map(item => item.valorDestino), [4000, 5000, 5000, 7500, 7500]);
+    assert.deepEqual(detail.map(item => item.baseAbatimento), [3100, 3875, 3875, 5812.5, 5812.5]);
+    assert.deepEqual(detail.map(item => item.tabelaRemuneratoria?.referencia), ['exercicio', 'exercicio', 'exercicio', 'folha', undefined]);
+    assert.deepEqual(detail[1].tabelaRemuneratoria, { periodo: 2, vigencia: '2026-09-15', rotulo: 'Setembro', referencia: 'exercicio' });
+});
+
+test('substituição retroativa: falta de histórico, parâmetro ou mudança de vigência exige revisão ou bruto documentado', async () => {
+    const reference = { competencia: '2026-11', periodo: 2, agencyConfig: historicalConfig };
+    for (const [input, message] of [
+        [params({ ...reference, substitutionEntries: [datedEntry('2025-01-01', '2025-01-10')] }), /Tabela remuneratória indisponível/],
+        [params({ ...reference, substitutionEntries: [datedEntry('2026-09-14', '2026-09-15')] }), /tabela muda/],
+        [params({ ...reference, funcao: 'ausente', substitutionEntries: [datedEntry('2026-08-01', '2026-08-10')] }), /Faltam valores/],
+        [params({ ...reference, gratEspecificaTipo: 'gae', padrao: 'ausente', substitutionEntries: [datedEntry('2026-08-01', '2026-08-10')] }), /Faltam valores/],
+    ] as const) {
+        await assert.rejects(calculateSubstitution(input), message);
+        const documented = await calculateSubstitution({ ...input, substitutionEntries: [{ ...input.substitutionEntries![0], valorBrutoManual: 0 }] });
+        assert.equal(documented.total, 0);
+        assert.equal(documented.entries[0].origemValor, 'manual');
         assert.deepEqual(documented.entries[0].detalhamentoPorFuncao, []);
     }
 });

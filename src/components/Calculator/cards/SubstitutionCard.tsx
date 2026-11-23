@@ -32,7 +32,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
     const availableFunctions = functionKeys.filter(key => !selectedFunctions.includes(key));
     const canAdd = calculationReady && availableFunctions.some(key => eligibleFunctionKeys.includes(key));
     const hasManualGross = entry.valorBrutoManual !== undefined;
-    const monthBounds = getSubstitutionMonthBounds(competenciaReferencia);
+    const paymentMonth = getSubstitutionMonthBounds(competenciaReferencia);
     const hasPendingPeriod = !hasManualGross && selectedFunctions.some(key => {
         const period = entry.periodosPorFuncao?.[key];
         return period?.modo === 'datas' && resolveSubstitutionPeriod(period, competenciaReferencia).error !== undefined;
@@ -105,8 +105,9 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                 <div className="divide-y divide-neutral-200 dark:divide-neutral-700" aria-busy={!calculationReady && !hasPendingPeriod}>
                     {selectedFunctions.map(key => {
                         const inCatalog = functionKeys.includes(key);
-                        const eligible = eligibleFunctionKeys.includes(key);
                         const detail = functionDetails.find(item => item.funcao === key);
+                        const eligible = detail?.tabelaRemuneratoria?.referencia === 'exercicio'
+                            ? detail.elegivel : eligibleFunctionKeys.includes(key);
                         const period = entry.periodosPorFuncao?.[key];
                         const range = period?.modo === 'datas' ? resolveSubstitutionPeriod(period, competenciaReferencia) : null;
                         const fieldPrefix = `${fieldId}-${key}`;
@@ -121,7 +122,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                 <button type="button" aria-label={`Remover ${key.toUpperCase()}`} onClick={() => removeFunction(key)}
                                     className="min-h-11 shrink-0 rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30">Remover</button>
                             </div>
-                            <fieldset className="flex flex-wrap gap-x-4 gap-y-2" disabled={disableDays}>
+                            <fieldset className="flex flex-wrap gap-x-4 gap-y-2" disabled={!inCatalog}>
                                 <legend className="sr-only">Como informar os dias de substituição de {key.toUpperCase()}</legend>
                                 {(['dias', 'datas'] as const).map(mode => <label key={mode} className={styles.checkboxLabel}>
                                     <input type="radio" name={`${fieldPrefix}-modo`} value={mode} checked={(period?.modo ?? 'dias') === mode}
@@ -134,14 +135,14 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                     <div className="min-w-0">
                                         <label htmlFor={`${fieldPrefix}-inicio`} className={styles.label}>Data de início</label>
                                         <input type="date" id={`${fieldPrefix}-inicio`} className={styles.input} value={period.dataInicio}
-                                            min={monthBounds?.min} max={monthBounds?.max} disabled={disableDays}
+                                            max={paymentMonth?.max} disabled={!inCatalog}
                                             aria-describedby={`${fieldPrefix}-periodo-status`} aria-invalid={Boolean(range.error && period.dataInicio && period.dataFim)}
                                             onChange={event => updatePeriod(key, { dataInicio: event.target.value })} />
                                     </div>
                                     <div className="min-w-0">
                                         <label htmlFor={`${fieldPrefix}-fim`} className={styles.label}>Data de fim</label>
                                         <input type="date" id={`${fieldPrefix}-fim`} className={styles.input} value={period.dataFim}
-                                            min={monthBounds?.min} max={monthBounds?.max} disabled={disableDays}
+                                            max={paymentMonth?.max} disabled={!inCatalog}
                                             aria-describedby={`${fieldPrefix}-periodo-status`} aria-invalid={Boolean(range.error && period.dataInicio && period.dataFim)}
                                             onChange={event => updatePeriod(key, { dataFim: event.target.value })} />
                                     </div>
@@ -149,6 +150,10 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                 <p id={`${fieldPrefix}-periodo-status`} role="status" className="text-body-xs text-neutral-600 dark:text-neutral-400">
                                     {range.error ?? `${range.dias} ${range.dias === 1 ? 'dia corrido' : 'dias corridos'}`}
                                 </p>
+                                {range.competenciaExercicio && paymentMonth && range.competenciaExercicio < paymentMonth.min.slice(0, 7) &&
+                                    <p className="text-body-xs text-neutral-600 dark:text-neutral-400">
+                                        O cálculo usa a tabela do mês de exercício e os dados funcionais do holerite. Se esses dados eram diferentes na época, informe o valor bruto documentado em Ajustar tributação.
+                                    </p>}
                             </div>}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:items-end">
                                 {!range && <div className="min-w-0">
@@ -166,7 +171,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                     <span className="block">{hasManualGross ? 'Subtotal por dias (referência)' : 'Subtotal bruto'}</span>
                                     <output aria-label={`${key.toUpperCase()} — Subtotal bruto`} className="block py-3 font-mono font-semibold text-neutral-800 dark:text-neutral-200 break-words">
                                         {range?.error ? 'Período a revisar' : !calculationReady ? (hasPendingPeriod ? 'Aguardando revisão…' : 'Atualizando…') : detail
-                                            ? detail.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Aguardando cálculo…'}
+                                            ? detail.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : hasManualGross ? 'Sem subtotal de referência' : 'Aguardando cálculo…'}
                                     </output>
                                 </div>
                             </div>
@@ -187,7 +192,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                         onChange={competenciasEA => updateEntry(entry.id, { competenciasEA })}
                         styles={styles} competenciaReferencia={competenciaReferencia} />
                 )}
-                {(entry.isEA || hasManualGross) && <div className="space-y-2">
+                <div className="space-y-2">
                     <label htmlFor={`${fieldId}-manual-gross`} className={styles.label}>Valor bruto documentado da substituição (R$, opcional)</label>
                     <input id={`${fieldId}-manual-gross`} type="number" min="0" step="0.01" className={styles.input}
                         value={entry.valorBrutoManual ?? ''} placeholder="0,00" onChange={event => updateEntry(entry.id, {
@@ -195,7 +200,7 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                         })} />
                     {hasManualGross && <button type="button" className="min-h-11 text-body-xs font-semibold text-secondary-800 hover:underline dark:text-secondary-300"
                         onClick={() => updateEntry(entry.id, { valorBrutoManual: undefined })}>Usar cálculo por dias</button>}
-                </div>}
+                </div>
             </TaxAdjustmentPanel>
         </div>
     );

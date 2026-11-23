@@ -221,10 +221,19 @@ export const buildPresetGrossLines = ({
                 : isCurrentYearEa
                     ? 'Desconto IR mensal (mesmo ano da folha — sem RRA)'
                     : 'Desconto IR (Substituição)';
+            const formatDate = (value: string) => value.split('-').reverse().join('/');
             const functionLines: PresetGrossLine[] = (entry.detalhamentoPorFuncao || []).flatMap(detail => [
                 ...(detail.periodo ? [{
                     label: `${detail.funcao.toUpperCase()} — Período de substituição`, value: 0,
-                    displayValue: `${detail.periodo.dataInicio.split('-').reverse().join('/')} a ${detail.periodo.dataFim.split('-').reverse().join('/')}`
+                    displayValue: `${formatDate(detail.periodo.dataInicio)} a ${formatDate(detail.periodo.dataFim)}`
+                }] : []),
+                ...(detail.tabelaRemuneratoria ? [{
+                    label: `${detail.funcao.toUpperCase()} — Tabela remuneratória`, value: 0,
+                    displayValue: [
+                        detail.tabelaRemuneratoria.referencia === 'exercicio' ? 'Mês de exercício' : 'Mês do pagamento',
+                        detail.tabelaRemuneratoria.rotulo || `Tabela ${detail.tabelaRemuneratoria.periodo}`,
+                        detail.tabelaRemuneratoria.vigencia && `Vigência desde ${formatDate(detail.tabelaRemuneratoria.vigencia)}`
+                    ].filter(Boolean).join(' · ')
                 }] : []),
                 { label: `${detail.funcao.toUpperCase()} — Dias de substituição`, value: 0, displayValue: detail.dias.toLocaleString('pt-BR') },
                 { label: `${detail.funcao.toUpperCase()} — Valor da função substituída`, value: detail.valorDestino },

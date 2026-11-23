@@ -35,7 +35,7 @@ const setup = (entries = [empty()]) => {
 
 test('substituição: seleção vazia, somente função adicionada, duplicação e destinos desabilitados', () => {
     const { tree, current } = setup();
-    assert.equal(tree.root.findAllByType('input').filter(node => node.props.type === 'number').length, 0);
+    assert.equal(tree.root.findAllByType('input').filter(node => node.props.id?.endsWith('-dias')).length, 0);
     assert.equal(button(tree.root, 'Adicionar função').props.disabled, true);
     assert.equal(tree.root.findAllByType('option').find(node => node.props.value === 'fc1')!.props.disabled, true);
     add(tree.root, 'cj1');
@@ -92,20 +92,24 @@ test('substituição por datas: alterna modos, mantém entradas e restaura calen
     mode('datas');
     assert.equal(days(tree.root, 'cj1'), undefined);
     assert.ok(days(tree.root, 'cj2'));
-    assert.equal(date('inicio').props.min, '2026-11-01');
+    assert.equal(date('inicio').props.min, undefined);
     assert.equal(date('fim').props.max, '2026-11-30');
-    changeDate('inicio', '2026-11-20');
+    changeDate('inicio', '2026-08-20');
     assert.match(text(tree.root), /Informe as datas de início e fim/);
-    changeDate('fim', '2026-11-19');
+    changeDate('fim', '2026-08-19');
     assert.match(text(tree.root), /igual ou posterior/);
-    changeDate('fim', '2026-11-23');
+    changeDate('fim', '2026-09-01');
+    assert.match(text(tree.root), /mesmo mês de exercício/);
+    changeDate('fim', '2026-08-23');
     assert.match(text(tree.root), /4 dias corridos/);
+    assert.match(text(tree.root), /tabela do mês de exercício/);
+    assert.equal(current()[0].isEA, false);
 
     mode('dias');
     assert.equal(days(tree.root, 'cj1').props.value, 2.5);
     assert.equal(date('inicio'), undefined);
     mode('datas');
-    assert.equal(date('inicio').props.value, '2026-11-20');
+    assert.equal(date('inicio').props.value, '2026-08-20');
 
     const snapshot = JSON.parse(JSON.stringify(stripCalculatedFieldsFromCalculatorState({ ...INITIAL_STATE, substitutionEntries: current() })));
     const restored = setup(hydrateCalculatorState(snapshot).substitutionEntries);
@@ -139,7 +143,11 @@ test('substituição: três regimes exclusivos, PSS e valor documentado independ
     act(() => button(card(), 'Usar cálculo por dias').props.onClick());
     assert.equal(current()[0].valorBrutoManual, undefined);
     assert.equal(current()[0].pssIsEA, true);
-    assert.equal(card().findAllByType('input').find(input => input.props.id?.endsWith('manual-gross')), undefined);
+    const manual = card().findAllByType('input').find(input => input.props.id?.endsWith('manual-gross'))!;
+    assert.equal(manual.props.value, '');
+    act(() => manual.props.onChange({ target: { value: '123.45' } }));
+    assert.equal(current()[0].valorBrutoManual, 123.45);
+    assert.equal(current()[0].isEA, false);
     act(() => tree.unmount());
 });
 
@@ -178,9 +186,12 @@ test('substituição: detalhamento usa memória e identifica total documentado s
     assert.equal(manual.find(line => line.label === 'Valor bruto documentado utilizado')!.value, 0);
     assert.equal(manual.find(line => line.label === 'CJ1 — Subtotal por dias (referência)')!.value, 123.45);
     assert.equal(manual.find(line => line.label === 'Total substituição Bruto')!.value, 0);
-    const periodDetail = { ...memory.detalhamentoPorFuncao![0], dias: 4, periodo: { dataInicio: '2026-11-20', dataFim: '2026-11-23' } };
+    const periodDetail = { ...memory.detalhamentoPorFuncao![0], dias: 4,
+        periodo: { dataInicio: '2026-08-20', dataFim: '2026-08-23' },
+        tabelaRemuneratoria: { periodo: 2, referencia: 'exercicio' as const, vigencia: '2026-07-01' } };
     const byPeriod = linesFor({ ...state, substitutionCalculatedEntries: [{ ...memory, detalhamentoPorFuncao: [periodDetail] }] });
-    assert.equal(byPeriod.find(line => line.label === 'CJ1 — Período de substituição')!.displayValue, '20/11/2026 a 23/11/2026');
+    assert.equal(byPeriod.find(line => line.label === 'CJ1 — Período de substituição')!.displayValue, '20/08/2026 a 23/08/2026');
+    assert.equal(byPeriod.find(line => line.label === 'CJ1 — Tabela remuneratória')!.displayValue, 'Mês de exercício · Tabela 2 · Vigência desde 01/07/2026');
     assert.equal(byPeriod.find(line => line.label === 'CJ1 — Dias de substituição')!.displayValue, '4');
 });
 
