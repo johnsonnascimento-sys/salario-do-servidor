@@ -1,3 +1,8 @@
+## Substituição de função por datas — 23/11/2026
+
+- Cada função substituída pode receber uma quantidade manual de dias ou datas de início e fim na competência. O motor conta os dias corridos, inclusive as duas datas, e aplica o divisor já configurado.
+- O detalhamento mostra o período usado. Simulações anteriores conservam seus dias manuais, e o valor bruto documentado mantém prioridade.
+
 ## Detalhamento do abono de permanência — 23/11/2026
 
 - O resumo do abono inicia recolhido e usa o padrão compacto “Ver detalhamento do cálculo”, em linha com o restante da calculadora.

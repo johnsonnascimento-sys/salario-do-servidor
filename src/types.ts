@@ -246,11 +246,18 @@ export interface OvertimeEntry {
   emRecesso?: boolean;
 }
 
+export interface SubstitutionPeriod {
+  modo: 'dias' | 'datas';
+  dataInicio: string;
+  dataFim: string;
+}
+
 export interface SubstitutionEntry {
   competenciasEA?: string[];
   valorBrutoManual?: number;
   id: string;
   dias: Record<string, number>;
+  periodosPorFuncao?: Record<string, SubstitutionPeriod>;
   isEA: boolean;
   excluirIR?: boolean;
   pssIsEA: boolean;

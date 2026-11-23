@@ -150,3 +150,48 @@ test('substituição: caminho legado e lançamentos vazios preservam total e met
     assert.deepEqual(empty.detalhamentoPorFuncao, []);
     assert.deepEqual(empty.funcoesSubstituicaoElegiveis, ['fc2', 'cj1', 'cj2']);
 });
+
+test('substituição por datas: período inclusivo por função e card, com o divisor da folha', async () => {
+    const entries = [
+        entry({ dias: { cj1: 5, fc2: 3 }, periodosPorFuncao: {
+            cj1: { modo: 'datas', dataInicio: '2024-02-01', dataFim: '2024-02-29' },
+            fc2: { modo: 'dias', dataInicio: '2024-02-20', dataFim: '2024-02-21' },
+        } }),
+        entry({ id: 's2', dias: { cj1: 10 }, periodosPorFuncao: {
+            cj1: { modo: 'datas', dataInicio: '2024-02-24', dataFim: '2024-02-24' },
+        } }),
+    ];
+    const result = await calculateSubstitution(params({ competencia: '2024-02', substitutionEntries: entries }));
+    const details = result.entries[0].detalhamentoPorFuncao!;
+    assert.deepEqual(details.map(detail => detail.dias), [29, 3]);
+    assert.deepEqual(details[0].periodo, { dataInicio: '2024-02-01', dataFim: '2024-02-29' });
+    assert.equal(details[1].periodo, undefined);
+    assert.equal(result.entries[1].detalhamentoPorFuncao![0].dias, 1);
+    assert.deepEqual(result.entries.map(item => item.total), [3000, 100]);
+    assert.equal(result.total, 3100);
+    assert.equal(entries[0].dias.cj1, 5);
+
+    const fullMonth = entry({ dias: { cj1: 0 }, periodosPorFuncao: {
+        cj1: { modo: 'datas', dataInicio: '2026-01-01', dataFim: '2026-01-31' },
+    } });
+    const input = params({ competencia: '2026-01', substitutionEntries: [fullMonth] });
+    assert.equal((await calculateSubstitution(input)).total, 3100);
+    await assert.rejects(calculateSubstitution({ ...input, competencia: '2026-02' }), /mês da competência/);
+});
+
+test('substituição por datas: período inválido rejeita o cálculo sem recorrer aos dias manuais', async () => {
+    for (const [dataInicio, dataFim, message] of [
+        ['2026-02-01', '', /início e fim/],
+        ['2026-02-03', '2026-02-02', /posterior/],
+        ['2026-02-01', '2026-02-29', /datas válidas/],
+        ['2026-02-27', '2026-03-01', /competência/],
+    ] as const) {
+        const source = entry({ dias: { cj1: 15 }, periodosPorFuncao: { cj1: { modo: 'datas', dataInicio, dataFim } } });
+        const input = params({ competencia: '2026-02', substitutionEntries: [source] });
+        await assert.rejects(calculateSubstitution(input), message);
+        const documented = await calculateSubstitution({ ...input, substitutionEntries: [{ ...source, valorBrutoManual: 0 }] });
+        assert.equal(documented.entries[0].origemValor, 'manual');
+        assert.equal(documented.total, 0);
+        assert.deepEqual(documented.entries[0].detalhamentoPorFuncao, []);
+    }
+});

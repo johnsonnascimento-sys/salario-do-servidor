@@ -129,6 +129,11 @@ Cada rubrica manual deve suportar:
 7. Para servidores do PJU, disponibilizar opcao de viagem em assessoramento direto a magistrado com diaria a 80% do Ministro do STF (art. 6º, § 1º, da Res. CNJ 73/2009 c/c Res. CNJ 564/2024), mantendo a diaria comum no percentual regular do cargo/funcao (como CJ-4 a 60%).
 8. Na JMU e na Justiça Federal, descontar das diárias o auxílio-transporte devido após a cota-parte, proporcionalmente aos dias de desconto e ao divisor configurado (art. 10, § 3º, do Ato Normativo STM nº 799/2024 e art. 9º da Resolução CJF nº 4/2008). Se o gasto informado for igual ou inferior à cota-parte em centavos, zerar o crédito e o débito do benefício. Quando configurado o meio desconto no retorno, o motor fornece seu valor ao detalhamento.
 
+### 4.4.1 Substituição de função
+
+1. Cada função de cada card aceita quantidade de dias ou um período de início e fim dentro da competência da folha. As duas datas contam no total de dias corridos. Preservar os dados ao alternar entre os modos e ao reabrir a simulação. Registros sem modo por datas usam a quantidade de dias informada.
+2. O motor oficial valida o período, usa o divisor configurado e registra as datas e a quantidade de dias na memória. Período incompleto, inválido, invertido ou fora da competência impede resultado definitivo quando o valor depender do período. O valor bruto documentado prevalece, e, nesse caso, subtotais com períodos válidos são apenas referência.
+
 ### 4.5 Detalhamento final
 
 1. Separar blocos: `Holerite` e `Diarias`.

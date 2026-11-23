@@ -84,6 +84,7 @@ export interface SubstitutionFunctionDetail {
     funcao: string;
     elegivel: boolean;
     dias: number;
+    periodo?: { dataInicio: string; dataFim: string };
     valorDestino: number;
     baseAbatimento: number;
     diferencaMensal: number;

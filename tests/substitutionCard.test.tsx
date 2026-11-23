@@ -26,7 +26,7 @@ const setup = (entries = [empty()]) => {
         current = state;
         return <>{state.map(entry => <SubstitutionCard key={entry.id} entry={entry}
             updateEntry={(id, patch) => setState(previous => previous.map(item => item.id === id ? { ...item, ...patch } : item))}
-            functionKeys={['fc1', 'cj1', 'cj2']} eligibleFunctionKeys={['cj1', 'cj2']} styles={styles} competenciaReferencia="2026-11" />)}</>;
+            functionKeys={['fc1', 'cj1', 'cj2']} eligibleFunctionKeys={['cj1', 'cj2']} styles={styles} competenciaReferencia="11/2026" />)}</>;
     };
     let tree: ReturnType<typeof create>;
     act(() => { tree = create(<Wrapper />); });
@@ -80,6 +80,40 @@ test('substituição: restaura zeros, inelegíveis e funções ausentes sem alte
     assert.equal(current()[0].dias.antiga, undefined);
     assert.deepEqual(snapshot.substitutionEntries[0].dias, entry.dias);
     act(() => tree.unmount());
+});
+
+test('substituição por datas: alterna modos, mantém entradas e restaura calendário no mês da folha', () => {
+    const { tree, current } = setup([{ ...empty(), dias: { cj1: 2.5, cj2: 0 } }]);
+    const mode = (value: 'dias' | 'datas') => act(() => tree.root.findAllByType('input').find(node =>
+        node.props.name?.endsWith('-cj1-modo') && node.props.value === value)!.props.onChange());
+    const date = (field: 'inicio' | 'fim') => tree.root.findAllByType('input').find(node => node.props.id?.endsWith(`-cj1-${field}`))!;
+    const changeDate = (field: 'inicio' | 'fim', value: string) => act(() => date(field).props.onChange({ target: { value } }));
+
+    mode('datas');
+    assert.equal(days(tree.root, 'cj1'), undefined);
+    assert.ok(days(tree.root, 'cj2'));
+    assert.equal(date('inicio').props.min, '2026-11-01');
+    assert.equal(date('fim').props.max, '2026-11-30');
+    changeDate('inicio', '2026-11-20');
+    assert.match(text(tree.root), /Informe as datas de início e fim/);
+    changeDate('fim', '2026-11-19');
+    assert.match(text(tree.root), /igual ou posterior/);
+    changeDate('fim', '2026-11-23');
+    assert.match(text(tree.root), /4 dias corridos/);
+
+    mode('dias');
+    assert.equal(days(tree.root, 'cj1').props.value, 2.5);
+    assert.equal(date('inicio'), undefined);
+    mode('datas');
+    assert.equal(date('inicio').props.value, '2026-11-20');
+
+    const snapshot = JSON.parse(JSON.stringify(stripCalculatedFieldsFromCalculatorState({ ...INITIAL_STATE, substitutionEntries: current() })));
+    const restored = setup(hydrateCalculatorState(snapshot).substitutionEntries);
+    assert.match(text(restored.tree.root), /4 dias corridos/);
+    act(() => button(tree.root, 'Remover CJ1').props.onClick());
+    assert.equal(current()[0].periodosPorFuncao, undefined);
+    act(() => tree.unmount());
+    act(() => restored.tree.unmount());
 });
 
 test('substituição: três regimes exclusivos, PSS e valor documentado independentes, radios por instância', () => {
@@ -144,6 +178,10 @@ test('substituição: detalhamento usa memória e identifica total documentado s
     assert.equal(manual.find(line => line.label === 'Valor bruto documentado utilizado')!.value, 0);
     assert.equal(manual.find(line => line.label === 'CJ1 — Subtotal por dias (referência)')!.value, 123.45);
     assert.equal(manual.find(line => line.label === 'Total substituição Bruto')!.value, 0);
+    const periodDetail = { ...memory.detalhamentoPorFuncao![0], dias: 4, periodo: { dataInicio: '2026-11-20', dataFim: '2026-11-23' } };
+    const byPeriod = linesFor({ ...state, substitutionCalculatedEntries: [{ ...memory, detalhamentoPorFuncao: [periodDetail] }] });
+    assert.equal(byPeriod.find(line => line.label === 'CJ1 — Período de substituição')!.displayValue, '20/11/2026 a 23/11/2026');
+    assert.equal(byPeriod.find(line => line.label === 'CJ1 — Dias de substituição')!.displayValue, '4');
 });
 
 test('substituição: ajuda normativa, resumo compacto recolhido e resultados antigos ocultos', () => {

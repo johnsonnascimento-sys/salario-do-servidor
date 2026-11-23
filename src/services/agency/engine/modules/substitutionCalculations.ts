@@ -6,8 +6,9 @@
  * - Total de substituicao
  */
 
-import { CourtConfig } from '../../../../types';
+import { CourtConfig, SubstitutionEntry } from '../../../../types';
 import type { CalculatedSubstitutionEntry, SubstitutionFunctionDetail } from '../../../../types/irEa';
+import { resolveSubstitutionPeriod } from '../../../../utils/substitutionPeriod';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
@@ -56,11 +57,22 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
     const baseAbatimento = (isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0)) + gratification;
     const substitutionEntries = params.substitutionEntries || [];
     const funcoesSubstituicaoElegiveis = Object.keys(funcoes).filter(key => Boolean(funcoes[key]) && funcoes[key] > baseAbatimento);
-    const calculateDaysMemory = (dias: Record<string, number>) => {
+    const calculateDaysMemory = (dias: Record<string, number>, entry?: SubstitutionEntry) => {
         let rawTotal = 0;
         const detalhamentoPorFuncao: SubstitutionFunctionDetail[] = [];
         for (const [funcKey, days] of Object.entries(dias)) {
-            const safeDays = Math.max(0, Number(days || 0));
+            const input = entry?.periodosPorFuncao?.[funcKey];
+            let safeDays = Math.max(0, Number(days || 0));
+            let period: SubstitutionFunctionDetail['periodo'];
+            if (input?.modo === 'datas') {
+                const range = resolveSubstitutionPeriod(input, params.competencia);
+                if (range.error !== undefined) {
+                    if (entry?.valorBrutoManual !== undefined) continue;
+                    throw new Error(`Substituição (${funcKey.toUpperCase()}): ${range.error}`);
+                }
+                safeDays = range.dias;
+                period = { dataInicio: input.dataInicio, dataFim: input.dataFim };
+            }
             const valorDestino = funcoes[funcKey] || 0;
             const elegivel = funcoesSubstituicaoElegiveis.includes(funcKey);
             const diferencaMensal = elegivel ? valorDestino - baseAbatimento : 0;
@@ -69,7 +81,8 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
             rawTotal += subtotal;
             detalhamentoPorFuncao.push({
                 funcao: funcKey, elegivel, dias: safeDays, valorDestino, baseAbatimento,
-                diferencaMensal, divisor: payrollRules.monthDayDivisor, subtotal
+                diferencaMensal, divisor: payrollRules.monthDayDivisor, subtotal,
+                ...(period && { periodo: period })
             });
         }
         const totalPorDias = roundCurrency(rawTotal);
@@ -79,7 +92,7 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
 
     if (substitutionEntries.length > 0) {
         const entries: CalculatedSubstitutionEntry[] = substitutionEntries.map((entry, index) => {
-            const memory = calculateDaysMemory(entry.dias || {});
+            const memory = calculateDaysMemory(entry.dias || {}, entry);
             let entryTotal = memory.totalPorDias;
 
             if (entry.valorBrutoManual !== undefined) {
