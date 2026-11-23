@@ -1,8 +1,8 @@
 import React from 'react';
 import type { CalculatorState, CalendarDaySelection, CourtConfig } from '../../../types';
 import { Minus, Plus } from 'lucide-react';
-import { getCalendarMonthBounds, resolveCalendarDays } from '../../../utils/calendarDaySelection';
-import { getTransportServiceCompetence } from '../../../services/agency/engine/modules/transportIndemnityCalculations';
+import { getCalendarMonthBounds } from '../../../utils/calendarDaySelection';
+import { getTransportServiceCompetence, resolveTransportDates } from '../../../services/agency/engine/modules/transportIndemnityCalculations';
 import { CalendarDayEditor, CalendarDayModes } from './CalendarDayEditor';
 
 interface Props {
@@ -22,7 +22,8 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, styles,
     const maxDays = Number(bounds?.max.slice(-2)) || memory?.maxDays || 31;
     const period: CalendarDaySelection = state.transporteIndenizacaoSelecao ?? { modo: 'dias', dataInicio: '', dataFim: '' };
     const updatePeriod = (patch: Partial<CalendarDaySelection>) => update('transporteIndenizacaoSelecao', { ...period, ...patch });
-    const selected = period.modo !== 'dias' ? resolveCalendarDays(period, service, { serviceMonthOnly: true }) : null;
+    const selected = period.modo !== 'dias' ? resolveTransportDates(period, service) : null;
+    const isCalendar = period.modo === 'avulsos';
 
     return (
         <div className="space-y-3">
@@ -31,6 +32,10 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, styles,
                     {memory.transitionWarning}
                 </p>
             )}
+            {memory?.months?.filter(month => month.transitionWarning).map(month => <p key={month.serviceCompetence} role="status"
+                className="rounded-lg border border-warning-200 bg-warning-50 p-3 text-body-sm text-warning-700 dark:border-warning-700 dark:bg-warning-950 dark:text-warning-200">
+                {(month.serviceCompetence ?? month.competence).split('-').reverse().join('/')} · {month.transitionWarning}
+            </p>)}
             {(memory?.status === 'unavailable' || (memory?.status === 'invalid' && !selected?.error)) && (
                 <p role="status" className="text-body-sm text-warning-700">
                     {memory?.reason || 'Não há configuração aplicável para esta competência.'}
@@ -40,13 +45,20 @@ export const TransportIndemnityCard: React.FC<Props> = ({ state, update, styles,
             <CalendarDayModes name={`${fieldId}-modo`} mode={period.modo} onChange={modo => updatePeriod({ modo })} styles={styles} />
             {selected ? <div className="space-y-2">
                 {service && <p className="text-body-xs font-semibold text-neutral-700 dark:text-neutral-200">
-                    Mês de serviço: {service.split('-').reverse().join('/')}
+                    {isCalendar ? 'Selecione datas até' : 'Mês de serviço:'} {service.split('-').reverse().join('/')}
                 </p>}
                 <CalendarDayEditor period={period} update={updatePeriod} fieldPrefix={fieldId} monthEnd={bounds?.max}
-                    restrictToMonth disabled={!bounds} styles={styles} />
+                    restrictToMonth={!isCalendar} disabled={!bounds} styles={styles} />
                 <p id={`${fieldId}-periodo-status`} role="status" className="text-body-xs text-neutral-600 dark:text-neutral-300">
                     {selected.error ?? `${selected.dias} ${selected.dias === 1 ? 'dia de serviço selecionado' : 'dias de serviço selecionados'}`}
                 </p>
+                {isCalendar && selected.meses && <ul aria-label="Dias selecionados por mês de serviço" className="max-h-40 space-y-1 overflow-y-auto text-body-xs text-neutral-600 dark:text-neutral-300">
+                    {selected.meses.map(month => <li key={month.competencia}>
+                        {month.competencia.split('-').reverse().join('/')} · {month.dias} {month.dias === 1 ? 'dia' : 'dias'}
+                        {' '}({month.intervalos.map(({ dataInicio, dataFim }) => dataInicio === dataFim
+                            ? dataInicio.slice(-2) : `${dataInicio.slice(-2)}–${dataFim.slice(-2)}`).join(', ')})
+                    </li>)}
+                </ul>}
             </div> : <div className="max-w-xs">
                 <label htmlFor="transporte-indenizacao-dias" className={styles.label}>
                     Dias de serviço externo no mês

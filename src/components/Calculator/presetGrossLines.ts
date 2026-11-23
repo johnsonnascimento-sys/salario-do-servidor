@@ -291,6 +291,19 @@ export const buildPresetGrossLines = ({
         case 'indenizacao_transporte': {
             const memory = state.transporteIndenizacaoMemory;
             if (!memory || memory.status === 'unavailable' || memory.status === 'invalid') return [{ label: 'Valor indisponível para esta competência', value: 0, displayValue: '—' }];
+            if (memory.months?.length) return [
+                ...memory.months.flatMap(month => {
+                    const label = (month.serviceCompetence ?? month.competence).split('-').reverse().join('/');
+                    return [
+                        { label: `${label} — Datas de serviço externo`, value: 0, displayValue: formatCalendarRanges(month.selectedRanges ?? []) },
+                        { label: `${label} — Dias informados / computados`, value: 0, displayValue: `${month.days} / ${month.eligibleDays}` },
+                        { label: `${label} — Valor integral de referência`, value: month.fullAmount },
+                        { label: `${label} — Divisor`, value: 0, displayValue: String(month.divisor) },
+                        { label: `${label} — Subtotal`, value: month.amount },
+                    ];
+                }),
+                { label: 'Valor a receber', value: memory.amount, cardAmount: 'net' }
+            ];
             const lines: PresetGrossLine[] = [
                 { label: 'Valor integral de referência', value: memory.fullAmount }
             ];

@@ -1,3 +1,7 @@
+## Indenização de transporte de vários meses — 23/11/2026
+
+- No modo por dias avulsos, o calendário permite navegação entre meses e preserva as datas marcadas. A apuração aplica as regras de cada mês de serviço e soma os subtotais no crédito da folha, com detalhamento no card, PDF e Excel.
+
 ## Datas na indenização de transporte — 23/11/2026
 
 - O card oferece quantidade, períodos e dias avulsos no calendário. O motor conta as datas distintas no mês de serviço do órgão e mantém o divisor e o limite mensal. As datas aparecem no detalhamento e nas exportações.

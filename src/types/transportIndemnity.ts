@@ -47,6 +47,8 @@ export interface TransportIndemnityMemory {
   reason?: string;
   days: number;
   selectedRanges?: CalendarDayRange[];
+  /** Multiple service months have separate values and divisors. */
+  months?: Omit<TransportIndemnityMemory, 'months'>[];
   eligibleDays: number;
   maxDays: number;
   divisor: number;

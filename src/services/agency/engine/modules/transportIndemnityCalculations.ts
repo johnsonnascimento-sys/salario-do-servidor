@@ -1,4 +1,4 @@
-import type { TransportIndemnityConfig, TransportIndemnityMemory } from '../../../../types';
+import type { CalendarDaySelection, TransportIndemnityConfig, TransportIndemnityMemory } from '../../../../types';
 import type { IAgencyCalculationParams } from '../types';
 import { resolveCalendarDays } from '../../../../utils/calendarDaySelection';
 
@@ -20,10 +20,21 @@ export const getPreviousCompetence = (competence: string): string => {
 export const getTransportServiceCompetence = (config: TransportIndemnityConfig | undefined, payment: string) =>
   config?.competenceMode === 'previous_month' ? getPreviousCompetence(payment) : payment;
 
+export const resolveTransportDates = (input: CalendarDaySelection, latestServiceMonth?: string) =>
+  resolveCalendarDays(input, latestServiceMonth, { serviceMonthOnly: input.modo === 'datas', latestMonthLabel: 'último mês de serviço da folha' });
+
 /** Resolves configured validity only; no JMU amount or statutory divisor is assumed. */
 export function resolveTransportIndemnity(
   config: TransportIndemnityConfig | undefined,
   competence: string
+): TransportIndemnityMemory {
+  return resolveTransportIndemnityMonth(config, competence);
+}
+
+function resolveTransportIndemnityMonth(
+  config: TransportIndemnityConfig | undefined,
+  competence: string,
+  selectedServiceMonth?: string
 ): TransportIndemnityMemory {
   const memory: TransportIndemnityMemory = {
     competence, status: 'unavailable', days: 0, eligibleDays: 0, maxDays: 0,
@@ -35,7 +46,7 @@ export function resolveTransportIndemnity(
   }
 
   const isPreviousMonthMode = config.competenceMode === 'previous_month';
-  const serviceCompetence = getTransportServiceCompetence(config, competence);
+  const serviceCompetence = selectedServiceMonth ?? getTransportServiceCompetence(config, competence);
   memory.serviceCompetence = serviceCompetence;
   memory.paymentCompetence = competence;
 
@@ -147,16 +158,7 @@ export function resolveTransportIndemnity(
   };
 }
 
-/** Counts days supplied by the user, independently of trips, meal benefits or the number of writs. */
-export function calculateTransportIndemnity(params: IAgencyCalculationParams): TransportIndemnityMemory {
-  const memory = resolveTransportIndemnity(params.agencyConfig?.transportIndemnity, params.competencia ?? '');
-  if (!params.transporteIndenizacaoAtivo) return { ...memory, status: 'inactive', amount: 0 };
-  if (memory.status === 'unavailable') return memory;
-  const input = params.transporteIndenizacaoSelecao;
-  const selection = input && (input.modo === 'datas' || input.modo === 'avulsos')
-    ? resolveCalendarDays(input, memory.serviceCompetence, { serviceMonthOnly: true }) : null;
-  if (selection?.error) return { ...memory, status: 'invalid', reason: selection.error };
-  const days = selection ? selection.dias : params.transporteIndenizacaoDias ?? 0;
+function calculateMonth(memory: TransportIndemnityMemory, days: number, ranges?: TransportIndemnityMemory['selectedRanges']): TransportIndemnityMemory {
   if (typeof days !== 'number' || !Number.isFinite(days) || !Number.isInteger(days) || days < 0 || days > memory.maxDays) {
     return { ...memory, status: 'invalid', reason: `Informe dias inteiros entre 0 e ${memory.maxDays}.` };
   }
@@ -164,6 +166,47 @@ export function calculateTransportIndemnity(params: IAgencyCalculationParams): T
   // Keep the daily fraction unrounded. Round only the final payable amount.
   const amount = Math.round((memory.fullAmount * eligibleDays / memory.divisor + Number.EPSILON) * 100) / 100;
   return { ...memory, days, eligibleDays, amount,
-    ...(selection && { selectedRanges: selection.meses?.[0]?.intervalos }),
+    ...(ranges && { selectedRanges: ranges }),
     status: days === 0 ? 'zero' : days >= memory.divisor ? 'full' : 'proportional' };
+}
+
+/** Counts days supplied by the user, independently of trips, meal benefits or the number of writs. */
+export function calculateTransportIndemnity(params: IAgencyCalculationParams): TransportIndemnityMemory {
+  const config = params.agencyConfig?.transportIndemnity;
+  const payment = params.competencia ?? '';
+  const memory = resolveTransportIndemnity(config, payment);
+  if (!params.transporteIndenizacaoAtivo) return { ...memory, status: 'inactive', amount: 0 };
+
+  const input = params.transporteIndenizacaoSelecao;
+  if (input?.modo === 'avulsos' && memory.serviceCompetence) {
+    const selected = resolveTransportDates(input, memory.serviceCompetence);
+    if (selected.error !== undefined) return { ...memory, status: 'invalid', reason: selected.error };
+
+    const months: TransportIndemnityMemory[] = [];
+    for (const month of selected.meses) {
+      const rule = month.competencia === memory.serviceCompetence ? memory : resolveTransportIndemnityMonth(config, payment, month.competencia);
+      if (rule.status === 'unavailable') {
+        const label = month.competencia.split('-').reverse().join('/');
+        return { ...memory, status: 'invalid', reason: `Mês de serviço ${label}. ${rule.reason}` };
+      }
+      months.push(calculateMonth(rule, month.dias, month.intervalos));
+    }
+    if (months.length === 1) return months[0];
+    return {
+      competence: payment, paymentCompetence: payment, months,
+      status: months.every(month => month.status === 'full') ? 'full' : 'proportional',
+      days: selected.dias, eligibleDays: months.reduce((sum, month) => sum + month.eligibleDays, 0),
+      maxDays: months.reduce((sum, month) => sum + month.maxDays, 0),
+      divisor: 0, fullAmount: 0,
+      amount: months.reduce((sum, month) => sum + Math.round(month.amount * 100), 0) / 100,
+    };
+  }
+
+  if (memory.status === 'unavailable') return memory;
+  if (input?.modo === 'datas') {
+    const selected = resolveTransportDates(input, memory.serviceCompetence);
+    if (selected.error !== undefined) return { ...memory, status: 'invalid', reason: selected.error };
+    return calculateMonth(memory, selected.dias, selected.meses[0].intervalos);
+  }
+  return calculateMonth(memory, params.transporteIndenizacaoDias ?? 0);
 }

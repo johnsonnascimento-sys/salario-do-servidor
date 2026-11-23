@@ -5,9 +5,23 @@ import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { CalculatorState, CourtConfig } from '../types';
+import { CalculatorState, CourtConfig, type TransportIndemnityMemory } from '../types';
 import { formatCurrency } from '../utils/calculations';
 import { formatCalendarRanges } from '../utils/calendarDaySelection';
+
+const transportMonthlyRows = (months: NonNullable<TransportIndemnityMemory['months']>) => months.flatMap(month => {
+    const label = (month.serviceCompetence ?? month.competence).split('-').reverse().join('/');
+    return [
+        ['Mês de execução do serviço', label],
+        ['Datas de serviço externo', formatCalendarRanges(month.selectedRanges ?? [])],
+        ['Dias informados / computados', `${month.days} / ${month.eligibleDays}`],
+        ['Valor integral de referência', formatCurrency(month.fullAmount)],
+        ['Divisor aplicável', String(month.divisor)],
+        ['Subtotal', formatCurrency(month.amount)],
+        ...(month.reference ? [['Referência', month.reference]] : []),
+        ...(month.transitionWarning ? [['Alerta de vigência / efeitos', month.transitionWarning]] : []),
+    ];
+});
 
 interface jsPDFWithAutoTable extends jsPDF {
     autoTable: (options: any) => void;
@@ -104,12 +118,14 @@ export const exportToPDF = (
         const isDual = transportMemory.serviceCompetence && transportMemory.serviceCompetence !== transportMemory.competence;
         const transportRows = [
             ['Competência da folha (pagamento)', compDisplay],
-            ...(isDual && transportMemory.serviceCompetence ? [['Mês de execução do serviço', transportMemory.serviceCompetence.split('-').reverse().join('/')]] : []),
-            ['Valor integral de referência', formatCurrency(transportMemory.fullAmount)],
-            ['Divisor aplicável', String(transportMemory.divisor || 20)],
-            ['Dias de serviço externo informados', String(transportMemory.days || 0)],
-            ...(transportMemory.selectedRanges?.length ? [['Datas de serviço externo', formatCalendarRanges(transportMemory.selectedRanges)]] : []),
-            ['Dias elegíveis computados', String(transportMemory.eligibleDays || 0)],
+            ...(transportMemory.months?.length ? transportMonthlyRows(transportMemory.months) : [
+                ...(isDual && transportMemory.serviceCompetence ? [['Mês de execução do serviço', transportMemory.serviceCompetence.split('-').reverse().join('/')]] : []),
+                ['Valor integral de referência', formatCurrency(transportMemory.fullAmount)],
+                ['Divisor aplicável', String(transportMemory.divisor || 20)],
+                ['Dias de serviço externo informados', String(transportMemory.days || 0)],
+                ...(transportMemory.selectedRanges?.length ? [['Datas de serviço externo', formatCalendarRanges(transportMemory.selectedRanges)]] : []),
+                ['Dias elegíveis computados', String(transportMemory.eligibleDays || 0)],
+            ]),
             ['Valor apurado a receber', formatCurrency(transportMemory.amount)],
             ...(transitionWarning ? [['Alerta de vigência / efeitos', transitionWarning]] : [])
         ];
@@ -204,13 +220,17 @@ export const exportToExcel = (
         const isDual = transportMemory.serviceCompetence && transportMemory.serviceCompetence !== transportMemory.competence;
         wsData.push(['INDENIZAÇÃO DE TRANSPORTE:']);
         wsData.push(['Competência da folha (pagamento):', compDisplay]);
-        if (isDual && transportMemory.serviceCompetence) {
-            wsData.push(['Mês de execução do serviço:', transportMemory.serviceCompetence.split('-').reverse().join('/')]);
-        }
-        wsData.push(['Valor integral de referência:', transportMemory.fullAmount]);
-        wsData.push(['Dias informados / Divisor:', `${transportMemory.days} / ${transportMemory.divisor || 20}`]);
-        if (transportMemory.selectedRanges?.length) {
-            wsData.push(['Datas de serviço externo:', formatCalendarRanges(transportMemory.selectedRanges)]);
+        if (transportMemory.months?.length) {
+            wsData.push(...transportMonthlyRows(transportMemory.months));
+        } else {
+            if (isDual && transportMemory.serviceCompetence) {
+                wsData.push(['Mês de execução do serviço:', transportMemory.serviceCompetence.split('-').reverse().join('/')]);
+            }
+            wsData.push(['Valor integral de referência:', transportMemory.fullAmount]);
+            wsData.push(['Dias informados / Divisor:', `${transportMemory.days} / ${transportMemory.divisor || 20}`]);
+            if (transportMemory.selectedRanges?.length) {
+                wsData.push(['Datas de serviço externo:', formatCalendarRanges(transportMemory.selectedRanges)]);
+            }
         }
         wsData.push(['Valor apurado a receber:', transportMemory.amount]);
         wsData.push(['']);

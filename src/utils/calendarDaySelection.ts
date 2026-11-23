@@ -43,7 +43,7 @@ interface CalendarMonthSelection {
 }
 
 export const resolveCalendarDays = (
-    period: CalendarDaySelection, competencia?: string, { serviceMonthOnly = false } = {}
+    period: CalendarDaySelection, competencia?: string, { serviceMonthOnly = false, latestMonthLabel = 'mês do pagamento' } = {}
 ): { meses: CalendarMonthSelection[]; dias: number; error?: never } | { meses?: never; dias?: never; error: string } => {
     if ((period.modo === 'avulsos' && period.diasAvulsos !== undefined && !Array.isArray(period.diasAvulsos)) ||
         (period.modo === 'datas' && period.intervalos !== undefined && !Array.isArray(period.intervalos))) {
@@ -63,7 +63,7 @@ export const resolveCalendarDays = (
         if (serviceMonthOnly && (!bounds || start < bounds.min || end > bounds.max)) {
             return { error: 'Selecione datas dentro do mês de serviço indicado.' };
         }
-        if (!bounds || end > bounds.max) return { error: 'As datas devem ficar até o fim do mês do pagamento.' };
+        if (!bounds || end > bounds.max) return { error: `As datas devem ficar até o fim do ${latestMonthLabel}.` };
     }
 
     const merged: CalendarDayRange[] = [];
