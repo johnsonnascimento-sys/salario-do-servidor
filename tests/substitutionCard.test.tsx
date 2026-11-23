@@ -53,9 +53,14 @@ test('substituição: fracionárias, remoção, reinclusão zerada e isolamento 
     add(card(), 'cj1');
     act(() => days(card(), 'cj1').props.onChange({ target: { value: '2.5' } }));
     assert.equal(current()[0].dias.cj1, 2.5);
+    act(() => button(card(), 'CJ1 — Aumentar dias de substituição').props.onClick());
+    assert.equal(current()[0].dias.cj1, 3.5);
+    act(() => button(card(), 'CJ1 — Diminuir dias de substituição').props.onClick());
+    assert.equal(current()[0].dias.cj1, 2.5);
     assert.deepEqual(current()[1].dias, {});
     act(() => days(card(), 'cj1').props.onChange({ target: { value: '-4' } }));
     assert.equal(current()[0].dias.cj1, 0);
+    assert.equal(button(card(), 'CJ1 — Diminuir dias de substituição').props.disabled, true);
     add(card(), 'cj2');
     assert.match(text(card()), /Todas as funções elegíveis já foram adicionadas/);
     act(() => button(card(), 'Remover CJ1').props.onClick());

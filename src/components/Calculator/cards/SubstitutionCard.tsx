@@ -1,5 +1,6 @@
 import { IrEaCompetencias, getDefaultEaCompetencia } from '../IrEaCompetencias';
 import React from 'react';
+import { Minus, Plus } from 'lucide-react';
 import { IR_OPTIONS, IR_SUMMARY, TaxAdjustmentPanel, TaxChoices } from '../TaxAdjustmentPanel';
 import type { SubstitutionEntry, SubstitutionPeriod } from '../../../types';
 import type { SubstitutionFunctionDetail } from '../../../types/irEa';
@@ -11,6 +12,8 @@ const INPUT_MODES = [
     { value: 'datas', label: 'Por períodos' },
     { value: 'avulsos', label: 'Por dias avulsos' }
 ] as const;
+
+const DAY_STEP_BUTTON = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-300 text-neutral-600 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300';
 
 interface SubstitutionCardProps {
     entry: SubstitutionEntry;
@@ -120,6 +123,12 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                             ? details.some(detail => detail.elegivel) : eligibleFunctionKeys.includes(key);
                         const fieldPrefix = `${fieldId}-${key}`;
                         const disableDays = !inCatalog || (calculationReady && !eligible);
+                        const daysReadOnly = !calculationReady && !hasPendingPeriod;
+                        const quantity = Number(entry.dias[key]) || 0;
+                        const updateQuantity = (value: number) => updateEntry(entry.id, {
+                            dias: { ...entry.dias, [key]: Number.isFinite(value) ? Math.max(0, value) : 0 }
+                        });
+                        const stepQuantity = (change: number) => updateQuantity(Number((quantity + change).toPrecision(15)));
                         return <div key={key} className="border-b border-neutral-200 dark:border-neutral-700 py-3 space-y-3">
                             <div className="flex items-center justify-between gap-2">
                                 <div className="min-w-0 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 break-words">
@@ -130,13 +139,17 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                 <button type="button" aria-label={`Remover ${key.toUpperCase()}`} onClick={() => removeFunction(key)}
                                     className="min-h-11 shrink-0 rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30">Remover</button>
                             </div>
-                            <fieldset className="flex flex-wrap gap-x-4 gap-y-2" disabled={!inCatalog}>
-                                <legend className="sr-only">Como informar os dias de substituição de {key.toUpperCase()}</legend>
-                                {INPUT_MODES.map(({ value, label }) => <label key={value} className={styles.checkboxLabel}>
-                                    <input type="radio" name={`${fieldPrefix}-modo`} value={value} checked={(period?.modo ?? 'dias') === value}
-                                        onChange={() => updatePeriod(key, { modo: value })} />
-                                    {label}
-                                </label>)}
+                            <fieldset className="min-w-0" disabled={!inCatalog}>
+                                <legend className={`${styles.label} mb-2`}>Como informar os dias <span className="sr-only">de {key.toUpperCase()}</span></legend>
+                                <div className="grid gap-2 sm:grid-cols-3">
+                                    {INPUT_MODES.map(({ value, label }) => <label key={value}
+                                        className={`flex min-h-11 min-w-0 items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-body-xs text-neutral-700 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200 has-[:checked]:border-secondary-600 has-[:checked]:bg-secondary-50 has-[:checked]:font-semibold dark:has-[:checked]:bg-secondary-950 ${inCatalog ? 'cursor-pointer' : 'opacity-50'}`}>
+                                        <input type="radio" name={`${fieldPrefix}-modo`} value={value} checked={(period?.modo ?? 'dias') === value}
+                                            className="h-4 w-4 shrink-0 accent-secondary-800 dark:accent-secondary-400"
+                                            onChange={() => updatePeriod(key, { modo: value })} />
+                                        {label}
+                                    </label>)}
+                                </div>
                             </fieldset>
                             {period && selection && <div className="space-y-2">
                                 <SubstitutionDateEditor period={period} update={patch => updatePeriod(key, patch)} fieldPrefix={fieldPrefix}
@@ -157,16 +170,22 @@ export const SubstitutionCard: React.FC<SubstitutionCardProps> = ({
                                     </p>}
                             </div>}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:items-end">
-                                {!selection && <div className="min-w-0">
+                                {!selection && <div className="min-w-0 max-w-xs">
                                     <label htmlFor={`${fieldPrefix}-dias`} className={styles.label}>Dias de substituição</label>
-                                    <input id={`${fieldPrefix}-dias`} ref={node => { daysRefs.current[key] = node; }} type="number" min="0" step="any"
-                                        className={styles.input} value={entry.dias[key] || ''} placeholder="0"
-                                        aria-label={`${key.toUpperCase()} — Dias de substituição`}
-                                        disabled={disableDays} readOnly={!calculationReady && !hasPendingPeriod}
-                                        onChange={event => {
-                                            const value = Number(event.target.value);
-                                            updateEntry(entry.id, { dias: { ...entry.dias, [key]: Number.isFinite(value) ? Math.max(0, value) : 0 } });
-                                        }} />
+                                    <div className="flex items-center gap-2">
+                                        <button type="button" className={DAY_STEP_BUTTON} aria-label={`${key.toUpperCase()} — Diminuir dias de substituição`}
+                                            disabled={disableDays || daysReadOnly || quantity <= 0} onClick={() => stepQuantity(-1)}>
+                                            <Minus className="h-4 w-4" aria-hidden="true" />
+                                        </button>
+                                        <input id={`${fieldPrefix}-dias`} ref={node => { daysRefs.current[key] = node; }} type="number" min="0" step="any"
+                                            inputMode="decimal" className={`${styles.input} text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                                            value={quantity || ''} placeholder="0" aria-label={`${key.toUpperCase()} — Dias de substituição`}
+                                            disabled={disableDays} readOnly={daysReadOnly} onChange={event => updateQuantity(Number(event.target.value))} />
+                                        <button type="button" className={DAY_STEP_BUTTON} aria-label={`${key.toUpperCase()} — Aumentar dias de substituição`}
+                                            disabled={disableDays || daysReadOnly} onClick={() => stepQuantity(1)}>
+                                            <Plus className="h-4 w-4" aria-hidden="true" />
+                                        </button>
+                                    </div>
                                 </div>}
                                 <div className="min-w-0 text-body-xs text-neutral-600 dark:text-neutral-400">
                                     <span className="block">{hasManualGross ? 'Subtotal por dias (referência)' : 'Subtotal bruto'}</span>
