@@ -130,7 +130,7 @@ export const DynamicPayrollTaxSection: React.FC<DynamicPayrollTaxSectionProps> =
                     }} />
                 <span>Recebo abono de permanência nesta competência</span>
             </label>
-            {state.recebeAbono && <PresetGrossSummary lines={abonoGrossLines} />}
+            {state.recebeAbono && <PresetGrossSummary compact lines={abonoGrossLines} />}
         </section>
         {!(showFunprespSection && config) && savedOptionsToReview}
         {showFunprespSection && config && <section id="funpresp-settings" tabIndex={-1} aria-labelledby={`${fieldId}-funpresp-title`} className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>

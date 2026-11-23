@@ -1,3 +1,7 @@
+## Detalhamento do abono de permanência — 23/11/2026
+
+- O resumo do abono inicia recolhido e usa o padrão compacto “Ver detalhamento do cálculo”, em linha com o restante da calculadora.
+
 ## Tabela de diárias da Justiça Federal — 20/11/2026
 
 - A configuração da Justiça Federal recebe os valores nacionais, o teto e o adicional de deslocamento da Portaria CJF nº 315/2026, vigente desde 10/06/2026. A calculadora informa a norma no ícone de ajuda e usa a tabela nominal vigente.
