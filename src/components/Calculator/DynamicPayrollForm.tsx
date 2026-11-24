@@ -527,6 +527,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     fixedTitles={fixedTitles}
                     addVpni={addVpni}
                     atsContext={getAtsCalculationContext(pensionParams)}
+                    atsHelpVariant={['jmu', 'cjf'].includes((courtConfig.orgSlug || '').toLowerCase()) ? 'jmu-cjf' : undefined}
                     updateRubrica={(id, field, value) => updateRubrica(
                         id, field, value, personalRubrics.find(rubrica => rubrica.id === id)
                     )}

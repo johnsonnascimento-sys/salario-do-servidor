@@ -59,6 +59,7 @@ interface ManualRubricasSectionProps {
     fixedTitles?: ReadonlyMap<string, string>;
     addVpni?: () => void;
     atsContext?: ReturnType<typeof getAtsCalculationContext>;
+    atsHelpVariant?: 'jmu-cjf';
     summaryRubrics?: Rubrica[];
     styles: any;
     rubricasTax?: Record<string, RubricaTaxDetail>;
@@ -84,6 +85,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
     fixedTitles,
     addVpni,
     atsContext,
+    atsHelpVariant,
     summaryRubrics = rubricas,
     styles,
     rubricasTax,
@@ -481,7 +483,12 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 <>
                                     <CalculatorCardHeading help={fixedTitle === 'ATS' ? {
                                         label: 'Explicação sobre Adicional por Tempo de Serviço',
-                                        content: <>
+                                        content: atsHelpVariant === 'jmu-cjf' ? <>
+                                            <p>O Adicional por Tempo de Serviço (ATS), originalmente previsto na Lei nº 1.711/1952, passou a ser concedido à razão de 5% por quinquênio pela Lei nº 4.345/1964. A Lei nº 8.112/1990 instituiu o anuênio de 1%, posteriormente substituído pelo quinquênio de 5% pela Lei nº 9.527/1997.</p>
+                                            <p>Com a extinção do benefício, foram preservadas as situações constituídas até 8 de março de 1999.</p>
+                                            <p>Informe o percentual adquirido conforme o registro funcional. O adicional incide sobre o vencimento básico do cargo efetivo na competência selecionada.</p>
+                                            <p>Base legal: Lei nº 1.711/1952, art. 146 · Lei nº 4.345/1964, art. 10 · Lei nº 5.998/1973, art. 4º (JMU) · Lei nº 8.112/1990, arts. 67 e 244 · Lei nº 9.527/1997 · MP nº 2.225-45/2001.</p>
+                                        </> : <>
                                             <p>O art. 67 da Lei nº 8.112/1990 previa 1% por ano de serviço público efetivo. A Lei nº 9.527/1997 passou a prever 5% a cada cinco anos de serviço público federal efetivo.</p>
                                             <p>A revogação preservou as situações constituídas até 8 de março de 1999. Informe o percentual adquirido conforme o registro funcional. O valor acompanha o vencimento básico do cargo efetivo na competência selecionada.</p>
                                             <p>
