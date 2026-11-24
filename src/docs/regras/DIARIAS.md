@@ -1,8 +1,10 @@
 # Diárias
 
-Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../../PROJECT_RULES.md) e os módulos relacionados quando a mudança os afetar.
+Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../PROJECT_RULES.md) para as regras comuns.
 
-### 4.4 Diarias
+Quando a mudança afetar os dias elegíveis de diligência externa, consulte [Indenização de transporte](INDENIZACAO_DE_TRANSPORTE.md).
+
+## Regras gerais
 
 1. Em modo por datas, `data_fim >= data_inicio`.
 2. Diarias devem aparecer separadas do bloco de holerite.
@@ -12,6 +14,11 @@ Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../.
 6. No modo por datas, fins de semana sao deduzidos automaticamente por calendario, e feriados/pontos facultativos locais podem ser marcados interativamente pelo usuario para a viagem, evitando acoplamento a calendarios fixos de orgaos especificos.
 7. Para servidores do PJU, disponibilizar opcao de viagem em assessoramento direto a magistrado com diaria a 80% do Ministro do STF (art. 6º, § 1º, da Res. CNJ 73/2009 c/c Res. CNJ 564/2024), mantendo a diaria comum no percentual regular do cargo/funcao (como CJ-4 a 60%).
 8. Na JMU e na Justiça Federal, descontar das diárias o auxílio-transporte devido após a cota-parte, proporcionalmente aos dias de desconto e ao divisor configurado (art. 10, § 3º, do Ato Normativo STM nº 799/2024 e art. 9º da Resolução CJF nº 4/2008). Se o gasto informado for igual ou inferior à cota-parte em centavos, zerar o crédito e o débito do benefício. Quando configurado o meio desconto no retorno, o motor fornece seu valor ao detalhamento.
+
+## Regras de Diárias no Poder Judiciário da União (PJU)
+
+> As regras gerais acima e o item de assessoramento abaixo preservam duas formulações existentes para a referência de 80%. A divergência está registrada para conferência normativa.
+
 1. A referência máxima de valor é a diária de Ministro do Supremo Tribunal Federal (STF), conforme Resolução CNJ Nº 73/2009 e normas setoriais.
 2. Escalonamento na Justiça Federal (Resolução CJF nº 340/2015, art. 10). A calculadora usa os valores nacionais nominais da tabela ativa em `dailies_rules.tariff_versions`, independentemente da competência da folha. A Portaria CJF nº 315/2026 vigora desde 10/06/2026 e fixa o limite nacional de R$ 1.165,27.
    - Membro do CJF: 100% da diária de Ministro do STF (R$ 1.545,53).

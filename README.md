@@ -53,13 +53,6 @@ npm run preview
   - RLS por `auth.uid()` nas tabelas de perfil/holerites.
   - Cadastro liberado apenas para registros da `signup_allowlist` enquanto o beta estiver fechado.
 
-## Regras importantes
-
-- Nao hardcodar aliquotas legais na UI.
-- Motor de calculo oficial centralizado no service da agencia.
-- Regras funcionais por módulo: consulte o índice no `PROJECT_RULES.md`.
-- Gatilho `Johnson*` e intencional.
-
 ## Documentacao
 
 - [Regras do projeto e índice de módulos](./PROJECT_RULES.md)

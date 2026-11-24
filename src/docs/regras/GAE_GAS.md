@@ -1,6 +1,6 @@
 # GAE / GAS
 
-Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../../PROJECT_RULES.md) e os módulos relacionados quando a mudança os afetar.
+Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../PROJECT_RULES.md) e os módulos relacionados quando a mudança os afetar.
 
 ### 4.3.2 Gratificação Específica (GAE / GAS - Lei nº 11.416/2006)
 

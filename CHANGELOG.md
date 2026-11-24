@@ -1,3 +1,7 @@
+## Organização das regras da calculadora — 24/11/2026
+
+- Concluída a migração das regras funcionais para os módulos, com restauração das regras de apresentação e PSS em horas extras, remoção de duplicações e revisão dos links. O cadastro de novos órgãos segue a configuração e a documentação dos módulos afetados.
+
 ## Catálogo administrativo de normas — 24/11/2026
 
 - Adicionada a consulta e edição de atos, aplicações por órgão, vigências e histórico de revisões. O piloto documenta o serviço extraordinário na JMU e a pendência de conferência sobre o limite de recesso.
@@ -647,7 +651,7 @@
   - Novo módulo de cálculo `gaactaCalculations.ts` integrado ao `AgencyCalculationEngine` e tipado em `src/types.ts`.
   - Componente de interface interativo `GaactaCard.tsx` com estilo moderno, responsivo e suporte a temas claro/escuro.
   - Suíte de 5 testes unitários e de integração em `tests/gaacta.test.ts` e runner `scripts/test-gaacta.mjs` (`npm run test:gaacta`).
-  - Atualização do `PROJECT_RULES.md` na Seção 12 e governança de regras.
+  - Atualização da governança e das [regras de GAACTA](src/docs/regras/GAACTA_E_LICENCA_COMPENSATORIA.md), antes na Seção 12.
 
 ## Regras de Equipe de Trabalho e Acompanhamento Integral de Diárias (JMU e JF) — 04/11/2026
 - Feat (Equipe de Trabalho - Ato STM 799/2024 art. 8º / Res. CJF 340/2015 art. 10, § 1º / Res. CNJ 73/2009 art. 6º, § 2º):
@@ -701,7 +705,7 @@
 - Fix (Achado 7 da Auditoria): páginas de administração (`AdminGlobal` e `AdminPower`) passam a acionar versionamento transacional (`versionGlobalConfig` e `versionPowerConfig`) com validação de vigência em vez de sobrescrever registros ativos em `upsert`, preservando o histórico integral de regras conforme Regra 2.3.3.
 - Fix (Achado 6 da Auditoria): resumo financeiro de diárias (`presetGrossLines.ts`) sincronizado com feriados manuais informados pelo usuário (`state.diariasFeriados`), evitando desconto indevido de benefício de meia diária em retornos ocorridos em feriados ou pontos facultativos.
 - Fix (Achado 5 da Auditoria): discriminação de substituições de função por incidência (IR Mensal, IR EA e Excluído de IR) em `useCalculatorResults.ts` passa a calcular cada instância isoladamente pelo valor de sua respectiva função destino e dias, eliminando distorção visual decorrente de rateio por valor médio diário global.
-- Fix (Achado 4 da Auditoria): detalhamento do desconto de PSS do 13º salário (`buildThirteenthPssDetails` em `payslipRows.ts`) passa a concentrar 100% da dedução na 2ª parcela sobre o vencimento/cargo efetivo, eliminando qualquer rateio indevido com FC/CJ ou com a 1ª parcela de adiantamento, em estrita conformidade com as Regras 4.3.1 e 4.3.2.
+- Fix (Achado 4 da Auditoria): detalhamento do desconto de PSS do 13º salário (`buildThirteenthPssDetails` em `payslipRows.ts`) passa a concentrar 100% da dedução na 2ª parcela sobre o vencimento/cargo efetivo, eliminando qualquer rateio indevido com FC/CJ ou com a 1ª parcela de adiantamento, conforme as [regras do 13º salário](src/docs/regras/DECIMO_TERCEIRO.md).
 - Fix (Achado 3 da Auditoria): ConfigService passa a distinguir ausência de cadastro de erro operacional de consulta (usando maybeSingle e classes de erro estruturadas ConfigLoadError e ConfigNotFoundError). Falhas operacionais de banco ou rede não são mais mascaradas como órgãos inexistentes. Para órgãos federais (cjf e trf1..trf6) pendentes de execução de migration no banco remoto, mantém-se fallback transitório com aviso explícito no console, priorizando imediatamente dados reais do banco quando cadastrados. useCalculatorConfig atualizado para propagar a mensagem de erro operacional em vez de falha genérica.
 - Fix (Achado 2 da Auditoria): resolução de assessoramento a magistrado na JMU/STM corrigida para usar identificação estrutural de ramo (branchId e orgSlug) e suporte a localRuleLabel e chaves de percentuais reais ('juiz'), garantindo diária de R$ 1.393,60 da autoridade e R$ 1.114,88 do servidor (80%) conforme as [regras de Diárias](src/docs/regras/DIARIAS.md), anteriormente na Seção 11.4 do `PROJECT_RULES.md`.
 - Fix (Achado 1 da Auditoria): isolamento estrito dos componentes de 13º salário (vencimento e FC/CJ). O abatimento da 1ª parcela e a recomposição da base tributável passam a ser vinculados exclusivamente à existência da 2ª parcela do respectivo componente, impedindo abatimento indevido de FC quando apenas o vencimento for selecionado e tributação indevida de PSS de vencimento quando apenas FC for selecionada.

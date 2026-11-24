@@ -1,6 +1,6 @@
 # Gratificação natalina (13º)
 
-Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../../PROJECT_RULES.md) e os módulos relacionados quando a mudança os afetar.
+Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../PROJECT_RULES.md) e os módulos relacionados quando a mudança os afetar.
 
 ### 4.3 Gratificacao natalina (13o)
 

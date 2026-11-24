@@ -1,6 +1,8 @@
 # Substituição de função
 
-Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../../PROJECT_RULES.md) e os módulos relacionados quando a mudança os afetar.
+Regras funcionais canônicas do módulo. Leia também [PROJECT_RULES.md](../../../PROJECT_RULES.md) para as regras comuns.
+
+Se a alteração afetar a remuneração de horas por função substituída, consulte [Horas extras](HORAS_EXTRAS.md).
 
 ### 4.4.1 Substituição de função
 
