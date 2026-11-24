@@ -1,9 +1,14 @@
 import React, { useId, useRef, useState } from 'react';
 import { Info, Trash2 } from 'lucide-react';
 
+export interface CalculatorCardHelp {
+    label: string;
+    content: React.ReactNode;
+}
+
 interface CalculatorCardHeadingProps {
     children: React.ReactNode;
-    help?: { label: string; content: React.ReactNode };
+    help?: CalculatorCardHelp;
     remove?: { label: string; onClick: () => void };
     statement?: { amount: React.ReactNode; edit: React.ReactNode };
 }

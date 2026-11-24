@@ -1,5 +1,6 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Info, X } from 'lucide-react';
+import type { CalculatorCardHelp } from './CalculatorCardHeading';
 import { useCalculatorTargetFocus } from './hooks/useCalculatorTargetFocus';
 
 const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -15,20 +16,31 @@ interface RubricEditorDialogProps {
     cardId: string;
     title: string;
     discount?: boolean;
+    help?: CalculatorCardHelp;
     open: boolean;
     onClose: () => void;
     children: React.ReactNode;
 }
 
-export function RubricEditorDialog({ id, cardId, title, discount, open, onClose, children }: RubricEditorDialogProps) {
+export function RubricEditorDialog({ id, cardId, title, discount, help, open, onClose, children }: RubricEditorDialogProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
     const headingRef = useRef<HTMLHeadingElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const helpButtonRef = useRef<HTMLButtonElement>(null);
+    const returnScroll = useRef<number | null>(null);
+    const [helpOpen, setHelpOpen] = useState(false);
     const focusCard = useCalculatorTargetFocus();
     const kind = discount ? 'Desconto' : 'Crédito';
+    const actionClass = 'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary-700 dark:text-neutral-200 dark:hover:bg-neutral-800';
 
     useBrowserLayoutEffect(() => {
         const dialog = dialogRef.current;
-        if (!open || !dialog) return;
+        if (!open) {
+            returnScroll.current = null;
+            setHelpOpen(false);
+            return;
+        }
+        if (!dialog) return;
 
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
@@ -41,6 +53,17 @@ export function RubricEditorDialog({ id, cardId, title, discount, open, onClose,
         };
     }, [open]);
 
+    useBrowserLayoutEffect(() => {
+        if (!open || returnScroll.current === null || !scrollRef.current) return;
+        scrollRef.current.scrollTop = helpOpen ? 0 : returnScroll.current;
+        if (!helpOpen) returnScroll.current = null;
+    }, [open, helpOpen]);
+
+    const toggleHelp = () => {
+        if (!helpOpen) returnScroll.current = scrollRef.current?.scrollTop ?? 0;
+        setHelpOpen(!helpOpen);
+    };
+
     const dismiss = () => {
         dialogRef.current?.close();
         onClose();
@@ -52,7 +75,15 @@ export function RubricEditorDialog({ id, cardId, title, discount, open, onClose,
             ref={dialogRef}
             id={id}
             aria-labelledby={`${id}-kind ${id}-title`}
-            onCancel={event => { event.preventDefault(); dismiss(); }}
+            onCancel={event => {
+                event.preventDefault();
+                if (helpOpen) {
+                    setHelpOpen(false);
+                    helpButtonRef.current?.focus({ preventScroll: true });
+                    return;
+                }
+                dismiss();
+            }}
             className="fixed inset-y-0 left-auto right-0 m-0 h-[100dvh] max-h-none w-full max-w-none overflow-hidden
                 bg-white text-neutral-900 backdrop:bg-neutral-950/55 dark:bg-neutral-900 dark:text-neutral-100
                 min-[960px]:max-w-3xl min-[960px]:border-l min-[960px]:border-neutral-200 min-[960px]:shadow-xl
@@ -68,14 +99,23 @@ export function RubricEditorDialog({ id, cardId, title, discount, open, onClose,
                         <h2 ref={headingRef} id={`${id}-title`} tabIndex={-1}
                             className="text-h5 font-semibold [overflow-wrap:anywhere]">{title}</h2>
                     </div>
-                    <button type="button" onClick={dismiss}
-                        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2 text-body-sm font-semibold
-                            text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800">
-                        <X size={18} aria-hidden="true" /> Fechar
-                    </button>
+                    <div className="flex shrink-0 items-center">
+                        {help && <button ref={helpButtonRef} type="button" onClick={toggleHelp}
+                            aria-expanded={helpOpen} aria-controls={`${id}-help`} className={actionClass}>
+                            <Info size={18} aria-hidden="true" /> Ajuda
+                        </button>}
+                        <button type="button" onClick={dismiss} className={actionClass}>
+                            <X size={18} aria-hidden="true" /> Fechar
+                        </button>
+                    </div>
                 </header>
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4
+                <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4
                     pb-[max(1rem,env(safe-area-inset-bottom))] min-[960px]:px-6">
+                    {help && <div id={`${id}-help`} role="note" hidden={!helpOpen} aria-label={help.label}
+                        className="mb-4 space-y-2 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-body-sm
+                            text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                        {helpOpen && help.content}
+                    </div>}
                     {children}
                 </div>
             </div>

@@ -252,7 +252,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             </div>}
             {editor ? (
                 <RubricEditorDialog id={panelId} cardId={`preset-card-${instance.key}`} title={listTitle}
-                    discount={alimony} open={editor.open} onClose={editor.onClose}>
+                    discount={alimony} help={help} open={editor.open} onClose={editor.onClose}>
                     {editorContent}
                 </RubricEditorDialog>
             ) : editorContent}
