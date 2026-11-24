@@ -1,3 +1,7 @@
+## Seleção de GAACTA — 24/11/2026
+
+- A seleção da GAACTA para ocupantes de CJ dispensa a confirmação adicional de enquadramento do vínculo.
+
 ## Simulação de CJ e FC fora das carreiras do PJU — 24/11/2026
 
 - O motor de folha aceita CJ sem vínculo efetivo e CJ/FC de pessoa com vínculo público externo. A simulação calcula as parcelas pagas pelo Judiciário e distingue CJ integral, opção remuneratória e FC conforme a Lei nº 11.416/2006.

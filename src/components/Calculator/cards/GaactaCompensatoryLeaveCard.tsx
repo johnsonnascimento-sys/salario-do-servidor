@@ -185,11 +185,6 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
                         ))}
                     </div>
                 </fieldset>
-                {mode === 'gaacta' && state.commissionProfile && <label className={styles.checkboxLabel}>
-                    <input type="checkbox" className={styles.checkbox} checked={state.commissionProfile.gaactaEligibleRole === true}
-                        onChange={event => updateMany({ commissionProfile: { ...state.commissionProfile!, gaactaEligibleRole: event.target.checked } })} />
-                    <span>Confirmo que o cargo e a unidade estão abrangidos pela norma aplicável e que não há exclusão para meu vínculo.{isCjf ? ' Na Resolução CJF nº 986/2026, confirme o exercício no Conselho da Justiça Federal.' : ''}</span>
-                </label>}
                 {mode === 'licenca' && state.commissionProfile && <label className={styles.checkboxLabel}>
                     <input type="checkbox" className={styles.checkbox} checked={state.commissionProfile.compensatoryLeaveEligible === true}
                         onChange={event => updateMany({ commissionProfile: { ...state.commissionProfile!, compensatoryLeaveEligible: event.target.checked } })} />

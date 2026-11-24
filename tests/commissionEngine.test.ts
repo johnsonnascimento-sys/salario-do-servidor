@@ -6,6 +6,7 @@ import { calculateBase, calculateBaseComponents } from '../src/services/agency/e
 import { calculateDeductions } from '../src/services/agency/engine/modules/deductionsCalculations';
 import { calculateCommissionIncomeTax, calculateCommissionInss, resolveCommissionPay } from '../src/services/agency/engine/modules/commissionCalculations';
 import { AgencyCalculationEngine } from '../src/services/agency/engine/AgencyCalculationEngine';
+import { calculateGaacta } from '../src/services/agency/engine/modules/gaactaCalculations';
 import { mapStateToAgencyParams } from '../src/services/agency/adapters/stateToParams';
 import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
 
@@ -228,4 +229,13 @@ test('historical CJF leave uses the documented amount and the applicable levels 
     assert.equal((await engine.calculateTotal(input)).breakdown.licencaCompensatoria, 1234.56);
     await assert.rejects(() => engine.calculateTotal({ ...input, licencaDias: 5 }), /até 4 dias/);
     await assert.rejects(() => engine.calculateTotal({ ...input, competencia: '2026-07' }), /vigência/);
+});
+
+test('GAACTA calcula para o perfil de CJ sem confirmação adicional e aceita snapshots anteriores', async () => {
+    const configured = { ...config, commission: { ...config.commission!, gaactaSource: { label: 'Ato do órgão', url: 'https://example.org/gaacta' } },
+        gaactaRules: { enabled: true, versions: [{ validFrom: '2026-06', percentage: 0.15, reference: 'Ato do órgão' }] } };
+    for (const profile of [{ kind: 'exclusive_cj' as const }, { kind: 'exclusive_cj' as const, gaactaEligibleRole: false }]) {
+        const result = await calculateGaacta(params({ agencyConfig: configured, commissionProfile: profile, gaactaAtivo: true }));
+        assert.equal(result.valor, 2499.77);
+    }
 });

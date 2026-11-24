@@ -67,9 +67,8 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     }
 
     const config = requireAgencyConfig(params);
-    if (params.commissionProfile &&
-        (!config.commission?.gaactaSource?.url || params.commissionProfile.gaactaEligibleRole !== true)) {
-        throw new Error('GAACTA pendente: confirme o enquadramento do cargo e da unidade no ato do órgão.');
+    if (params.commissionProfile && !config.commission?.gaactaSource?.url) {
+        throw new Error('GAACTA pendente: falta fonte normativa cadastrada para o órgão.');
     }
     const rule = resolveGaactaRule(config, params.competencia || '');
     if (!rule) {
