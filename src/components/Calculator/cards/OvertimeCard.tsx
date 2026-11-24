@@ -325,18 +325,11 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                     const detail = functionDetails.find(item => item.funcao === func);
                                     return (
                                         <div key={func} className="p-3 space-y-3">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div className="min-w-0 text-body-xs font-semibold text-neutral-700 dark:text-neutral-300 break-words">
-                                                    {func.toUpperCase()}
-                                                    {!inCatalog && <span className="block font-normal text-warning-700 dark:text-warning-300">Função indisponível no catálogo. Revise este lançamento.</span>}
-                                                    {inCatalog && calculationReady && !eligible && <span className="block font-normal text-neutral-500 dark:text-neutral-400">Sem diferença de substituição. Horas preservadas, sem valor neste modo.</span>}
+                                            <div className="grid grid-cols-2 gap-3 items-end sm:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+                                                <div className="min-w-0 text-body-xs text-neutral-600 dark:text-neutral-400">
+                                                    <span className="block">Função</span>
+                                                    <span className="block py-3 font-semibold text-neutral-700 dark:text-neutral-300 break-words">{func.toUpperCase()}</span>
                                                 </div>
-                                                <button type="button" aria-label={`Remover ${func.toUpperCase()}`} onClick={() => removeFunction(func)}
-                                                    className="min-h-11 shrink-0 rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30">
-                                                    Remover
-                                                </button>
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:items-end">
                                                 {(['qtd50', 'qtd100'] as const).map((kind, index) => (
                                                     <div key={kind} className="min-w-0">
                                                         <label htmlFor={`${fieldId}-${func}-${kind}`} className={styles.label}>Horas ({index === 0 ? '50%' : '100%'})</label>
@@ -362,7 +355,13 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                             : 'Aguardando cálculo…'}
                                                     </output>
                                                 </div>
+                                                <button type="button" aria-label={`Remover ${func.toUpperCase()}`} onClick={() => removeFunction(func)}
+                                                    className="min-h-11 justify-self-start rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30">
+                                                    Remover
+                                                </button>
                                             </div>
+                                            {!inCatalog && <p className="text-body-xs text-warning-700 dark:text-warning-300">Função indisponível no catálogo. Revise este lançamento.</p>}
+                                            {inCatalog && calculationReady && !eligible && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Sem diferença de substituição. Horas preservadas, sem valor neste modo.</p>}
                                         </div>
                                     );
                                 })}
