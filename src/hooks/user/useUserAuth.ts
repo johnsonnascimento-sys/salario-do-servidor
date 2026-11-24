@@ -4,44 +4,35 @@ import { getAdminAccessStatus } from '../../services/auth/adminAccessService';
 
 export const useUserAuth = () => {
   const auth = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminLoading, setAdminLoading] = useState(false);
+  const { user } = auth;
+  const [adminAccess, setAdminAccess] = useState<{ user: NonNullable<typeof user>; allowed: boolean } | null>(null);
 
   useEffect(() => {
-    let active = true;
-
-    if (!auth.user) {
-      setIsAdmin(false);
-      setAdminLoading(false);
-      return () => {
-        active = false;
-      };
+    if (!user) {
+      setAdminAccess(null);
+      return;
     }
 
-    setAdminLoading(true);
+    let active = true;
     getAdminAccessStatus()
-      .then((value) => {
-        if (!active) return;
-        setIsAdmin(value);
+      .then((allowed) => {
+        if (active) setAdminAccess({ user, allowed });
       })
       .catch(() => {
-        if (!active) return;
-        setIsAdmin(false);
-      })
-      .finally(() => {
-        if (!active) return;
-        setAdminLoading(false);
+        if (active) setAdminAccess({ user, allowed: false });
       });
 
     return () => {
       active = false;
     };
-  }, [auth.user]);
+  }, [user]);
+
+  const currentAccess = adminAccess?.user === user ? adminAccess : null;
 
   return {
     ...auth,
-    isAuthenticated: Boolean(auth.user),
-    isAdmin,
-    loading: auth.loading || adminLoading,
+    isAuthenticated: Boolean(user),
+    isAdmin: currentAccess?.allowed ?? false,
+    loading: auth.loading || (Boolean(user) && !currentAccess),
   };
 };
