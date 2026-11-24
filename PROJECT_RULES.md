@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 24/11/2026 17:36
+Atualizado em: 24/11/2026 18:30
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -52,131 +52,36 @@ Regra de precedencia: `org > power > global`.
 2. `power_config`: bases salariais, beneficios, regras de diaria, regras de folha e catalogos por poder.
 3. `org_config`: somente excecoes e overrides locais do orgao.
 4. Nao duplicar em `org_config` o que ja e comum ao poder, exceto quando houver diferenca real.
-
 ## 4. Regras funcionais da calculadora
 
-### 4.0 Navegação por páginas
+### 4.0 Índice de regras por módulo
+
+O documento principal é obrigatório em toda tarefa. Para alterações de cálculo, configuração, comportamento funcional ou documentação de regra, leia cada página dos módulos afetados. Alterações exclusivamente visuais ou textuais sem efeito funcional exigem apenas este documento. Se o escopo mudar, leia as páginas adicionais antes de editar. Páginas de módulo têm força normativa para seu escopo e cada regra detalhada possui um único local canônico.
+
+| Módulo | Leitura obrigatória quando a tarefa afetar |
+| --- | --- |
+| [Vantagens pessoais](src/docs/regras/VANTAGENS_PESSOAIS.md) | Cards VPNI/ATS e cálculo do ATS. |
+| [Rubricas manuais](src/docs/regras/RUBRICAS_MANUAIS.md) | Campos, incidências, resumos e créditos/descontos manuais. |
+| [Previdência](src/docs/regras/PREVIDENCIA.md) | PSS, Funpresp, catálogo previdenciário e competências originais. |
+| [13º salário](src/docs/regras/DECIMO_TERCEIRO.md) | Parcelas, referência, adiantamentos e fechamento do 13º. |
+| [Férias](src/docs/regras/FERIAS.md) | Terço constitucional e antecipações. |
+| [GAE/GAS](src/docs/regras/GAE_GAS.md) | Gratificação específica e incidências. |
+| [Diárias](src/docs/regras/DIARIAS.md) | Diárias, viagens, embarque e desconto de auxílio-transporte em viagem. |
+| [Substituição de função](src/docs/regras/SUBSTITUICAO_DE_FUNCAO.md) | Lançamentos e cálculo de substituição. |
+| [IR-EA/RRA](src/docs/regras/IR_RRA.md) | Imposto sobre rendimentos de exercícios anteriores. |
+| [Horas extras](src/docs/regras/HORAS_EXTRAS.md) | Serviço extraordinário e sua base remuneratória. |
+| [GAACTA e licença compensatória](src/docs/regras/GAACTA_E_LICENCA_COMPENSATORIA.md) | Elegibilidade, cálculo e seleção dessas verbas. |
+| [Indenização de transporte](src/docs/regras/INDENIZACAO_DE_TRANSPORTE.md) | Indenização por diligência externa. |
+
+### 4.1 Regras compartilhadas de apresentação
 
 1. A calculadora apresenta, nesta ordem, Competência (mês, ano e enquadramento normativo), Dados básicos, Adicional de Qualificação (AQ), Vantagens pessoais, Benefícios, Previdência e abono, Imposto de Renda, Créditos Eventuais, Descontos, Observações/Notas e Resultado.
 2. As páginas organizam a coleta dos dados; não duplicam nem alteram os valores e regras do motor oficial.
-3. A página Vantagens pessoais exibe cards fixos e independentes de VPNI e ATS, usando o fluxo de rubricas manuais e preservando os lançamentos existentes.
-4. O ATS aceita valor fixo ou percentual adquirido informado pelo usuário. O motor oficial aplica o percentual exclusivamente ao vencimento básico do cargo efetivo no período, arredonda em centavos e usa o resultado na própria rubrica. O limite vem da configuração de folha do poder, com fonte normativa. Percentual inválido ou ausência de parâmetro ou vencimento impede resultado definitivo no modo percentual. Snapshots sem percentual usam o valor fixo.
-
-### 4.1 Rubricas manuais
-
-Cada rubrica manual deve suportar:
-
-1. Tipo (`C` credito, `D` desconto)
-2. Descricao
-3. Valor
-4. Incidencia em IR
-5. Incidencia em IR (EA)
-6. Incidencia em PSS
-7. Incidencia em PSS (EA)
-8. Resumo calculado (`PresetGrossSummary`) com Bruto e detalhamento disponível de IR/PSS. A Funpresp deve ser apresentada em resumo compartilhado por folha mensal, 13º e competência histórica, usando a memória do motor, sem rateio individual. O PSS por competência original também deve aparecer no grupo histórico, sem estimativa individual pela taxa mensal. Quando a rubrica participar dessas apurações compartilhadas, não apresentar líquido individual definitivo.
-9. No resumo individual da rubrica de crédito com incidência em IR mensal, o desconto exibido reflete o rateio proporcional do imposto total; quando a inclusão da rubrica acarretar acréscimo marginal distinto por faixas/alíquotas efetivas, exibir informativamente o acréscimo efetivo na folha sem descontar ambos do valor líquido individual.
-10. Não exibir descontos ou líquidos provenientes de cálculo anterior enquanto a simulação atual não estiver concluída. Patrocínio e pagamentos externos são informativos e não reduzem o líquido da folha.
-11. Rubricas com valor positivo, inclusão na Funpresp e competência original exigem distribuição integral em vínculos históricos verificáveis. No novo fluxo, a distribuição também deve cobrir as rubricas com PSS por competência original; cada incidência permanece independente. Ajustes legados sem vínculo não resolvem essa pendência. A marcação de competência original sozinha não cria incidência complementar.
-12. Pendências preservam as entradas e impedem a apresentação, exportação e salvamento de um resultado definitivo. Snapshots já salvos permanecem preservados; não preencher automaticamente o regime ou a participação histórica dos novos lançamentos a partir da seleção mensal.
-13. A apuração vinculada consolida as rubricas por competência e espécie (mensal ou 13º), deriva as bases corrigidas das bases originais e dos valores distribuídos e calcula a contribuição devida menos a já recolhida. Distribuição incompleta, divergências, duplicações e restituições a tratar permanecem pendentes, sem omissão ou compensação automática.
-14. Novas apurações exigem regra histórica cadastrada com identificador, fonte, tabela PSS e vigência aplicáveis à competência original. Não substituir lacunas pela configuração complementar atual. Créditos positivos com PSS por competência original exigem vínculos mesmo sem participação complementar atual; ajustes legados isolados não liberam essas rubricas.
-15. A natureza previdenciária da rubrica manual vem de catálogo com fonte e vigência, distinguindo inclusão obrigatória, facultativa, exclusão e enquadramento pendente. Créditos positivos de participantes exigem classificação mesmo com o checkbox desmarcado. No histórico, aplicar o catálogo próprio da competência; PSS histórico não dispensa a validação da Funpresp mensal quando selecionada.
-16. Inclusão facultativa exige data real e referência da opção expressa. Se a opção começa após o primeiro dia da competência, exigir confirmação do valor elegível desde o protocolo, sem prorrata automática. Alterações em valor, natureza, data ou distribuição histórica invalidam essa confirmação. Memória e exportação registram classificação, fonte, competência e dados da opção, sem rateio previdenciário individual.
-17. Ausência de catálogo, regra, enquadramento ou parâmetro oficial impede resultado definitivo quando necessário à apuração. O candidato local da etapa 3 cobre catálogo de 2026 e regras históricas de abril a dezembro/2026; períodos e verbas não comprovados continuam pendentes. Cadastro preparado não significa aplicação em produção.
-
-### 4.2 Descontos e entradas
-
-1. Descontos devem ter estilo visual proprio (sem prefixo textual `(-)`).
-2. Campos numericos nao aceitam valor negativo.
-3. Em horas extras, nao exibir opcao de incidencia de PSS que nao se aplica.
-
-### 4.3 Gratificacao natalina (13o)
-
-1. Nao cobrar PSS sobre FC/CJ no 13o.
-2. Na 2a parcela, considerar base total aplicavel, aplicar abatimento da 1a parcela e concentrar desconto no resumo da 2a.
-3. Se marcar 2a parcela, marcar automaticamente a 1a correspondente para evitar base incompleta.
-4. Exibir totais brutos e liquidos por parcela.
-5. No modo de ajuste manual do adiantamento recebido anteriormente (1ª parcela), a 2ª parcela apura automaticamente o saldo complementar necessário para integralizar a remuneração de referência e assegurar a retenção tributária legal completa sem exigir cálculo manual do usuário, preservando a possibilidade de edição avulsa.
-6. A base de cálculo da remuneração de referência do 13º salário suporta composição dinâmica por checkboxes com valores em tempo real (similar ao GAACTA): as parcelas regulares (Vencimento, GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS e GAE/GAS) permanecem selecionadas por padrão, e parcelas complementares (Abono de Permanência, rubricas manuais de crédito criadas pelo usuário e ajustes avulsos) podem ser incluídas/excluídas interativamente, recalculando instantaneamente a base apurada e seus reflexos nas parcelas e retenções. O Abono de Permanência permanece selecionado por padrão (`decimoIncideAbono: true`), incidindo na composição do 13º quando o servidor tiver abono ativo (`recebeAbono`), e sendo marcado automaticamente no card do 13º salário sempre que o usuário adicionar o abono.
-
-7. O recebimento do 13º oferece seleção unificada da 1ª e da 2ª parcelas. No fluxo versionado (`thirteenthPayroll`), composição da referência, adiantamentos e fechamento manual são entradas distintas; listas de lançamentos vinculados não criam créditos mensais nem duplicam as verbas da referência. A segunda parcela considera a primeira e abate o adiantamento uma única vez no holerite.
-8. Adiantamentos e valores manuais podem ser individuais ou agrupados conforme o documento. A apuração mantém incidências por componente, distingue abono mensal de abono próprio do 13º e não inventa rateios para agrupamentos parciais de natureza desconhecida. Vínculos ausentes, sobreposição, divergências e adiantamentos acima da referência preservam entradas e impedem resultado definitivo até revisão.
-9. Snapshots sem o fluxo versionado preservam o caminho anterior. Abrir ou cancelar a personalização não converte dados; seleções parciais antigas são sinalizadas e somente uma confirmação explícita aplica o recebimento unificado. A memória e as exportações preservam as listas e seus vínculos sem somá-los novamente aos créditos.
-
-### 4.3.1 Férias (1/3 Constitucional)
-
-1. O adicional de 1/3 de férias (art. 7º, XVII, da CF/88 c/c art. 76 da Lei nº 8.112/1990) incide sobre a remuneração de referência apurada no período de usufruto.
-2. A base de cálculo da remuneração de referência das férias suporta composição dinâmica por checkboxes com valores em tempo real (mesmo comportamento da Gratificação Natalina e da GAACTA): parcelas regulares (Vencimento, GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS e GAE/GAS) permanecem selecionadas por padrão, e parcelas complementares (Abono de Permanência, rubricas manuais de crédito criadas pelo usuário e ajustes avulsos) podem ser incluídas/excluídas interativamente, recalculando instantaneamente o 1/3 apurado e suas retenções de IRRF.
-3. O Abono de Permanência permanece selecionado por padrão (`feriasIncideAbono: true`), incidindo na composição quando o servidor tiver abono ativo (`recebeAbono`), e sendo marcado automaticamente no card de Férias sempre que o usuário adicionar o abono.
-4. Suporte a férias antecipadas (`feriasAntecipadas` e `feriasDescManual`) para dedução integral ou personalizada no contracheque posterior.
-
-### 4.3.2 Gratificação Específica (GAE / GAS - Lei nº 11.416/2006)
-
-1. Conforme os arts. 16, § 1º (GAE) e 17, § 1º (GAS) da Lei nº 11.416/2006, as gratificações específicas de atividade externa e segurança correspondem a 35% do vencimento básico do servidor.
-2. A base de cálculo da GAE/GAS suporta composição dinâmica por checkboxes com valores em tempo real: por padrão legal estrito, apenas o Vencimento Básico permanece selecionado (`gratIncideVencimento: true`).
-3. Outros créditos (GAJ, FC/CJ, AQ Títulos, AQ Treinamento, VPNI, ATS, Abono de Permanência, rubricas manuais de crédito e ajustes avulsos) são exibidos para permitir seleção pelo usuário em caso de peculiaridades administrativas ou judiciais, mas **não devem ficar selecionados por padrão** (todos os demais permanecem `false` por padrão).
-4. Suporte a opção de inclusão ou exclusão da gratificação na base de cálculo da contribuição previdenciária (`incidirPSSGrat`).
-5. Na troca explícita de GAE/GAS, o padrão de PSS vem de `power_config.payroll_rules.specific_gratification_pss_defaults` (GAE incluída; GAS excluída por padrão, ressalvados opção e enquadramento aplicáveis). Manter ajustes manuais e snapshots ao abrir o card; não confundir estes padrões RPPS com regras de Funpresp. A migration preparada exige aplicação no banco para ativar os padrões.
-
-### 4.4 Diarias
-
-1. Em modo por datas, `data_fim >= data_inicio`.
-2. Diarias devem aparecer separadas do bloco de holerite.
-3. Adicional de embarque / deslocamento deve aparecer em linha propria com nomenclatura dinamica orientada pelo orgao (`embarkationLabel`).
-4. Exibir total de diarias liquidas.
-5. No PJU, os valores de diarias e adicionais sao data-driven e podem ser derivados percentualmente da diaria de Ministro do STF (Res. CNJ 73/2009) com regras e percentuais setoriais por ramo/orgao (Ato STM 799/2024, Res. CJF 340/2015, etc.).
-6. No modo por datas, fins de semana sao deduzidos automaticamente por calendario, e feriados/pontos facultativos locais podem ser marcados interativamente pelo usuario para a viagem, evitando acoplamento a calendarios fixos de orgaos especificos.
-7. Para servidores do PJU, disponibilizar opcao de viagem em assessoramento direto a magistrado com diaria a 80% do Ministro do STF (art. 6º, § 1º, da Res. CNJ 73/2009 c/c Res. CNJ 564/2024), mantendo a diaria comum no percentual regular do cargo/funcao (como CJ-4 a 60%).
-8. Na JMU e na Justiça Federal, descontar das diárias o auxílio-transporte devido após a cota-parte, proporcionalmente aos dias de desconto e ao divisor configurado (art. 10, § 3º, do Ato Normativo STM nº 799/2024 e art. 9º da Resolução CJF nº 4/2008). Se o gasto informado for igual ou inferior à cota-parte em centavos, zerar o crédito e o débito do benefício. Quando configurado o meio desconto no retorno, o motor fornece seu valor ao detalhamento.
-
-### 4.4.1 Substituição de função
-
-1. Cada função de cada card aceita três modos independentes: quantidade, períodos contínuos ou dias avulsos no calendário. Apenas o modo ativo entra no cálculo. Preservar as entradas ao alternar e reabrir a simulação. Registros antigos por data correspondem a um intervalo único. Períodos podem atravessar meses, incluem as duas extremidades e contam cada data uma só vez por função e card.
-2. Para datas de exercício em mês anterior ao pagamento, o motor agrupa os dias por mês e vigência da tabela remuneratória do órgão. Usa os dados funcionais do holerite, o divisor configurado e o arredondamento existente, com datas, dias, tabela e subtotal de cada segmento na memória. Datas no mês do pagamento e entradas por quantidade usam a tabela da folha.
-3. Seleção inválida, incompleta, invertida, posterior ao mês do pagamento ou sem tabela ou parâmetro necessário impede resultado definitivo quando o bruto depender das datas. O bruto documentado prevalece em qualquer regime de IR, inclusive zero. Usá-lo também se os dados funcionais da época eram diferentes dos informados na folha. Subtotais calculáveis são referência quando houver bruto documentado. Datas não alteram automaticamente IR, RRA ou PSS. Usar cards separados quando os lançamentos tiverem tratamentos tributários distintos.
-
-### 4.5 Detalhamento final
-
-1. Separar blocos: `Holerite` e `Diarias`.
-2. Ordem de exibicao em cada bloco: creditos antes, debitos depois.
-3. Totais de cada bloco devem refletir apenas o proprio bloco.
-
-### 4.6 Mobile
-
-1. No rodapé mobile (`MobileResultsBar`), o valor líquido permanece fixo e visível, com CTA `Exportar` e seta colapsável (accordion) para expandir as ações (Limpar, Holerites, PDF, Excel e Salvar), mantendo a tela compacta e sem transbordo horizontal.
-2. A versão (`VersionBadge`) pode aparecer no layout interno do rodapé, mas não no texto do CTA.
-
-### 4.7 Regra de compatibilidade
-
-1. Nao manter gatilhos fixos hardcoded (incluindo `Johnson*`) para alterar calculos automaticamente.
-
-### 4.8 Catálogo visual de verbas, adicionais e benefícios (cards pré-definidos)
-
-1. O seletor de verbas e adicionais apresenta as opções divididas visualmente por categorias conceituais (Trabalho Extraordinário & Funções, Direitos Periódicos, Indenizações & Viagens, Descontos), com campo de busca instantânea e botões de ação rápida em substituição a dropdowns fechados que ocultam as opções do usuário.
-2. Cada chip informa claramente o estado da verba: se não adicionada, inclusão em 1 clique; se já adicionada, rolagem suave (*scroll into view*) com destaque visual temporário até o card na tela.
-3. Cards que permitem repetição (como Hora Extra e Substituição de Função) informam a quantidade ativa no chip e oferecem botão rápido para inclusão de nova instância, mantendo configurações e cálculos estritamente isolados.
-4. No detalhamento final, rubricas repetidas devem ser apresentadas sem consolidar incidências distintas de forma ambígua.
-
-### 4.9 Imposto de Renda de Exercícios Anteriores (IR-EA / RRA)
-
-1. Apuração progressiva acumulada por competências distintas conforme o art. 12-A da Lei nº 7.713/1988 e Instrução Normativa RFB nº 1.500/2014.
-2. O número de meses ($NM$) corresponde à quantidade de competências distintas informadas entre todos os créditos em EA da folha; competências repetidas entre rubricas distintas decorrem do mesmo período e não duplicam $NM$. Informação documental explícita de $NM$ prevalece.
-3. A tabela progressiva mensal tem suas faixas e deduções escalonadas pela multiplicação direta por $NM$.
-4. A redução do imposto introduzida para o ano-calendário de 2026 (Lei nº 9.250/1995, art. 3º-A incluído pela Lei nº 15.270/2025 c/c Anexo X da IN RFB nº 1.500/2014) incide sobre o montante consolidado de rendimentos tributáveis recebidos no mês do pagamento, sem multiplicação das faixas nominais do redutor por $NM$ nem divisão por média mensal.
-5. O imposto apurado de RRA é rateado entre as entradas em EA pelo método dos maiores restos (Hare-Niemeyer), preservando a exatidão em centavos. Descontos dedutíveis abatem a base sem diminuir o denominador dos créditos no rateio.
-6. Quando o servidor informar dependentes de IR no cabeçalho da folha, a dedução legal correspondente é vinculada e aplicada por padrão na apuração do IR-EA (RRA), com controle reativo por checkbox para permitir desmarcar caso a fonte pagadora não tenha abatido dependentes na origem, eliminando a exigência de cálculo manual ou lançamento burocrático de ajustes documentados para dependentes já cadastrados.
-
-### 4.10 Serviço Extraordinário (Horas Extras - Resolução STM nº 374/2025 e Resolução CJF nº 4/2008)
-
-1. O valor da hora extraordinária é apurado dividindo-se a remuneração mensal pelo divisor correspondente à jornada de trabalho semanal do servidor, excluídos o adicional de 1/3 de férias e a gratificação natalina (art. 7º da Resolução STM nº 374/2025 e art. 46 da Resolução CJF nº 4/2008).
-2. Divisores padrão: 175 para a jornada ordinária da JMU de 35h semanais (art. 7º, § 1º, I) e 200 para a jornada ordinária da JF de 40h semanais (art. 46, § 1º).
-3. Jornadas especiais: 30h semanais aplicam divisor 150 (art. 7º, § 1º, II) e 20h semanais aplicam divisor 100 (art. 7º, § 1º, III). Para jornadas diversas, aplica-se a fórmula legal $(\text{Jornada Semanal} \div 6) \times 30$ (art. 7º, § 2º).
-4. O divisor mensal é parametrizado e editável por instância (`OvertimeEntry.divisor`), garantindo isolamento entre cards e permitindo override direto pelo usuário.
-5. Em conformidade com o art. 6º, § 1º da Resolução STM nº 374/2025 (redação da Resolução STM nº 399/2026), no período de recesso forense / plantão o teto informativo da JMU eleva-se de 30 para 50 horas mensais.
-6. A memória de cálculo unitária informa os valores da Hora Normal (com identificação do divisor aplicado), Hora Extra (+50%) e Hora Extra (+100%) integrada organicamente ao Resumo Calculado (`PresetGrossSummary`) do card de Serviço Extraordinário, preservando o padrão visual e a consistência arquitetural do sistema.
-7. No modo de cálculo por função substituída, as horas são remuneradas apenas quando o valor da função de destino supera a função atual acrescida da gratificação específica, seguindo o limite do card de Substituição. Destinos menores ou iguais não geram valor nesse modo e seus campos ficam desabilitados conforme a elegibilidade devolvida pelo motor. Entradas antigas inelegíveis, horas globais residuais e valores brutos manuais são ignorados nesse modo. Para HE pela função atual ou valor bruto documentado, usar o modo comum; servidor sem função pode usar a remuneração de função superior efetivamente substituída.
-
-8. Cada card de HE permite selecionar a composição da base remuneratória, persistida em `OvertimeEntry.composicaoBase`. O motor devolve parcelas, valores, seleções e subtotal; a UI apenas exibe e coleta escolhas. Vencimento, GAJ, FC/CJ, AQ, gratificação específica e abono iniciam selecionados; GAACTA e créditos dinâmicos por ID iniciam desmarcados. A VPNI e o ATS são oferecidos pelas rubricas dos cards fixos da página Vantagens pessoais; os campos legados VPNI — Lei, VPNI — Decisão e ATS não são oferecidos nem somados diretamente à base de HE. O abono utiliza o PSS mensal atual, inclusive rubricas contributivas, independentemente da seleção de HE e da função substituída. A seleção não altera as incidências das parcelas originais nem o critério de elegibilidade da substituição. Férias e gratificação natalina não são oferecidas na composição.
+3. Descontos devem ter estilo visual próprio, sem prefixo textual `(-)`. Campos numéricos não aceitam valor negativo.
+4. O detalhamento separa `Holerite` e `Diárias`, exibe créditos antes dos débitos em cada bloco e calcula totais apenas com os valores daquele bloco. A verba de indenização de transporte integra Holerite.
+5. No rodapé mobile (`MobileResultsBar`), o valor líquido permanece fixo e visível, com CTA `Exportar` e seta colapsável para ações Limpar, Holerites, PDF, Excel e Salvar. `VersionBadge` pode aparecer no layout interno, mas não no texto do CTA.
+6. Não manter gatilhos fixos hardcoded (incluindo `Johnson*`) para alterar cálculos automaticamente.
+7. O seletor apresenta categorias Trabalho Extraordinário & Funções, Direitos Periódicos, Indenizações & Viagens e Descontos, busca instantânea e ações rápidas. Chips permitem inclusão em um clique ou navegação ao card existente. Cards repetíveis indicam quantidade e preservam configurações isoladas. Rubricas repetidas não consolidam incidências distintas de forma ambígua.
 
 ## 5. Admin e seguranca operacional
 
@@ -223,7 +128,7 @@ Cada rubrica manual deve suportar:
 ## 10. Governanca de subagentes Codex
 
 1. A definicao versionada dos especialistas do Codex deve ficar em `src/docs/CODEX_SPECIALISTS.md`.
-2. O catalogo de especialistas e operacional; este `PROJECT_RULES.md` continua sendo a unica fonte canonica de regras do projeto.
+2. O catalogo de especialistas e operacional; o `PROJECT_RULES.md` concentra regras comuns e o índice de módulos; páginas indicadas são canônicas para regras detalhadas de seus módulos.
 3. Toda tarefa que altere calculo oficial, schema, seeds, RLS ou configuracao administrativa deve respeitar este documento antes de qualquer delegacao para subagente.
 4. Tarefas com impacto em calculo oficial devem, no minimo, passar pelo especialista de regras/calculo correspondente antes de conclusao ou merge.
 5. Os modelos e esforcos registrados no catalogo sao preferencias operacionais, sujeitos a disponibilidade, configuracao e capacidade do runtime.

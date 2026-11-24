@@ -57,13 +57,12 @@ npm run preview
 
 - Nao hardcodar aliquotas legais na UI.
 - Motor de calculo oficial centralizado no service da agencia.
-- Para diarias por data:
-  - `data fim >= data inicio` obrigatorio.
+- Regras funcionais por módulo: consulte o índice no `PROJECT_RULES.md`.
 - Gatilho `Johnson*` e intencional.
 
 ## Documentacao
 
-- [Regras do projeto (fonte canonica)](./PROJECT_RULES.md)
+- [Regras do projeto e índice de módulos](./PROJECT_RULES.md)
 - [Guia para agentes](./AGENTS.md)
 - [Catalogo de especialistas Codex](./src/docs/CODEX_SPECIALISTS.md)
 - [Historico de mudancas](./CHANGELOG.md)

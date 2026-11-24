@@ -1,12 +1,7 @@
 # AGENTS
 
-Este projeto usa um unico documento de regras: [PROJECT_RULES.md](./PROJECT_RULES.md).
+O [PROJECT_RULES.md](./PROJECT_RULES.md) é o ponto de entrada obrigatório antes de alterar código, schema, seeds ou documentação. Ele contém regras comuns e o índice das páginas de módulo aplicáveis.
 
-Leia e siga o `PROJECT_RULES.md` antes de qualquer alteracao em codigo, schema, seeds ou documentacao.
+Leia todas as páginas indicadas para os módulos afetados antes de editá-los. As páginas de módulo têm força de regra no respectivo escopo. Se o escopo mudar durante o trabalho, leia as regras do novo módulo antes de editá-lo. Consulte páginas relacionadas quando a mudança também afetar as regras nelas descritas.
 
-Para subagentes especializados do Codex, consulte o catalogo operacional em [src/docs/CODEX_SPECIALISTS.md](./src/docs/CODEX_SPECIALISTS.md) depois de ler o `PROJECT_RULES.md`.
-
-Ao concluir cada tarefa, siga o relatorio obrigatorio de agentes definido na secao 10.1 do `PROJECT_RULES.md`.
-
-Ao concluir qualquer tarefa com alteracoes em arquivos, o Antigravity deve obrigatoriamente executar a sincronizacao e o versionamento automatico (`git pull --rebase`, `git add`, `git commit` semantico e `git push origin main`), conforme detalhado na secao 15 do `PROJECT_RULES.md`.
-
+Para subagentes especializados, consulte [src/docs/CODEX_SPECIALISTS.md](./src/docs/CODEX_SPECIALISTS.md) após o documento principal. Ao concluir, siga o relatório da seção 10.1 e o versionamento da seção 15 do `PROJECT_RULES.md`.

@@ -1,6 +1,6 @@
 # Especialistas Codex
 
-Catalogo operacional de especialistas. Leia `PROJECT_RULES.md` antes de alterar codigo, schema, seeds ou documentacao. As regras do projeto prevalecem e os modelos e esforcos abaixo dependem da disponibilidade e do runtime.
+Catálogo operacional de especialistas. Leia `PROJECT_RULES.md` antes de alterar arquivos e as páginas de módulo indicadas para o escopo. Regras comuns ficam no documento principal; regras detalhadas têm como fonte canônica a página do módulo. Modelos e esforços dependem do runtime.
 
 O relatorio de agentes ao final de cada tarefa segue a secao 10.1 de `PROJECT_RULES.md`, inclusive quando nao houver delegacao.
 
