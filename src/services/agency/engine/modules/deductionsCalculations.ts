@@ -20,8 +20,15 @@ import { calculateComplementaryPension, calculatePensionRetroactives, hasPension
 import { assertPensionRubricsReady, PensionCalculationPendingError } from './pensionPending';
 import { validateMonthlyPensionRubrics } from './pensionCatalog';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
+import { calculateCommissionIncomeTax, calculateCommissionInss, emptyCommissionPensionMemory, resolveCommissionPay,
+    resolveCommissionWithholding, type CommissionIncomeTaxMemory, type CommissionInssMemory, type CommissionPayMemory } from './commissionCalculations';
 
 export interface DeductionsResult {
+    inss: number;
+    vacationInss: number;
+    commissionMemory?: CommissionPayMemory;
+    rgpsMemory?: CommissionInssMemory;
+    incomeTaxMemory?: CommissionIncomeTaxMemory;
     pss: number;
     pssEA: number;
     funpresp: number;
@@ -109,14 +116,17 @@ const getMarginalPssRate = (
  * Calcula Deducoes (PSS, IRRF, Funpresp)
  */
 export async function calculateDeductions(grossValue: number, params: IAgencyCalculationParams): Promise<DeductionsResult> {
-    assertPensionRubricsReady(params);
+    if (!params.commissionProfile) assertPensionRubricsReady(params);
     const config = requireAgencyConfig(params);
+    const commission = params.commissionProfile ? resolveCommissionPay(params) : undefined;
     const payrollRules = getPayrollRules(config);
     const rubricasAdjustments = calculateRubricasBaseAdjustments(params.rubricasExtras);
 
-    const pensionContext = await calculateMonthlyPensionContext(params);
+    const pensionContext = commission ? undefined : await calculateMonthlyPensionContext(params);
     const { vencimento: baseVencimento, gaj, aqTitulo: aqTituloVal, aqTreino: aqTreinoVal,
-        fc: funcaoValor, gratificacao: gratVal } = pensionContext.salaryComponents;
+        fc: funcaoValor, gratificacao: gratVal } = pensionContext?.salaryComponents || {
+            vencimento: 0, gaj: 0, aqTitulo: 0, aqTreino: 0, fc: commission!.funcaoValor, gratificacao: 0,
+        };
 
     const overtime = await calculateOvertime(params);
     const substitution = await calculateSubstitution(params);
@@ -162,7 +172,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         .filter((entry) => entry.pssIsEA)
         .reduce((acc, entry) => acc + entry.total, 0);
 
-    const linkedEntries = (params.pensionRetroEntries ?? []).filter(entry => entry.vinculos !== undefined);
+    const linkedEntries = (commission ? [] : params.pensionRetroEntries ?? []).filter(entry => entry.vinculos !== undefined);
     const linkedRubricIds = new Set(linkedEntries.flatMap(entry => entry.vinculos!.map(link => link.rubricaId)));
     if (linkedEntries.length > 0) {
         const unlinkedPss = (params.rubricasExtras ?? []).some(rubrica => rubrica.pssCompetenciaSeparada && Number(rubrica.valor) > 0 && !linkedRubricIds.has(rubrica.id));
@@ -173,7 +183,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
             'Apuração pendente: há parcelas de PSS por competência sem vínculo com a apuração histórica; confira todos os passivos antes de concluir.');
     }
 
-    const basePSS = pensionContext.baseRppsIntegral;
+    const basePSS = pensionContext?.baseRppsIntegral || 0;
 
     const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
@@ -183,8 +193,11 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     let pssEA = 0;
     let overtimePss = 0;
     let substitutionPss = 0;
+    let inss = 0;
+    let vacationInss = 0;
+    let rgpsMemory: CommissionInssMemory | undefined;
 
-    if (pssTable) {
+    if (!commission && pssTable) {
         if (usaTeto) {
             const baseLimitada = Math.min(basePSS, teto);
             pssMensal = roundPension(calculatePss(baseLimitada, pssTable));
@@ -209,16 +222,47 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         }
     }
 
-    // IRRF Base
-    const abonoPerm = params.recebeAbono ? pssMensal : 0;
+    if (commission && params.commissionProfile?.kind === 'exclusive_cj') {
+        const historicalContribution = (params.rubricasExtras || []).some(rubrica =>
+            rubrica.incideINSS && rubrica.isEA && Number(rubrica.valor) > 0) ||
+            overtime.entries.some(entry => entry.heTotal > 0 &&
+                (params.overtimeEntries?.find(input => input.id === entry.id)?.isEA ?? params.heIsEA)) ||
+            substitution.entries.some(entry => entry.total > 0 &&
+                (params.substitutionEntries?.find(input => input.id === entry.id)?.isEA ?? params.substIsEA));
+        if (historicalContribution) throw new Error('INSS: apuração por competência original necessária para créditos retroativos deste vínculo.');
+        const manualBase = (params.rubricasExtras || []).filter(rubrica => rubrica.incideINSS)
+            .reduce((sum, rubrica) => {
+                const value = Number(rubrica.valor);
+                if (!Number.isFinite(value) || value < 0) throw new Error('INSS: valor de rubrica inválido.');
+                return sum + (rubrica.tipo === 'D' ? -1 : 1) * value;
+            }, 0);
+        const monthlyBase = Math.max(0, commission.funcaoValor + commission.originRemuneration + manualBase +
+            overtime.entries.reduce((sum, entry) => sum + entry.heTotal, 0) +
+            substitution.entries.reduce((sum, entry) => sum + entry.total, 0));
+        const vacationBase = params.rgpsVacationBase ?? 0;
+        const vacationPrincipal = params.commissionVacationPayInMonthly ?? 0;
+        if (!Number.isFinite(vacationBase) || vacationBase < 0) throw new Error('INSS: base de férias inválida.');
+        if (!Number.isFinite(vacationPrincipal) || vacationPrincipal < 0) throw new Error('INSS: remuneração de férias inválida.');
+        rgpsMemory = calculateCommissionInss(params, monthlyBase + vacationBase);
+        inss = rgpsMemory.amount;
+        vacationInss = roundPension(inss - calculateCommissionInss(params, Math.max(0, monthlyBase - vacationPrincipal)).amount);
+    } else if (commission) {
+        const documented = resolveCommissionWithholding(params);
+        if (commission.regime === 'rgps') inss = documented;
+        else pssMensal = documented;
+    }
 
-    const pensionMemory = calculateComplementaryPension(params, basePSS, pensionContext.base, 'mensal', pensionContext.componentes);
-    pensionMemory.enquadramentos = validateMonthlyPensionRubrics(params);
+    // IRRF Base
+    const abonoPerm = !commission && params.recebeAbono ? pssMensal : 0;
+
+    const pensionMemory = commission ? emptyCommissionPensionMemory(params)
+        : calculateComplementaryPension(params, basePSS, pensionContext!.base, 'mensal', pensionContext!.componentes);
+    if (!commission) pensionMemory.enquadramentos = validateMonthlyPensionRubrics(params);
     if (!usaTeto && pssEA !== 0 && !params.pensionRetroEntries?.length) {
         pensionMemory.avisos = ['PSS de exercício anterior legado usa alíquota marginal atual; confira e informe apuração por competência antes de utilizá-lo como conferência oficial.'];
     }
     const valFunpresp = pensionMemory.descontoFolha;
-    const pensionRetroMemory = calculatePensionRetroactives(params);
+    const pensionRetroMemory = commission ? [] : calculatePensionRetroactives(params);
     pssEA += pensionRetroMemory.reduce((sum, entry) => sum + entry.rpps, 0);
     const funprespEA = roundPension(pensionRetroMemory.reduce((sum, entry) => sum + entry.complementar, 0));
     if (classifiedEa.prior.length && pensionRetroMemory.some(entry => entry.destinoIR === 'ea' &&
@@ -234,7 +278,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
 
     // Total Tributavel Construction
     let totalTrib = baseVencimento + gaj + aqTituloVal + aqTreinoVal + funcaoValor + gratVal +
-        (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0) + abonoPerm;
+        (commission ? commission.originRemuneration : (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0)) + abonoPerm;
 
     // Hora extra / substituicao: entram no mensal apenas quando NAO marcadas como EA.
     // Regra HE: se heExcluirIR estiver ativo, nao entra em nenhuma base de IR.
@@ -244,19 +288,31 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     const currentManualEa = classifiedEa.current.filter(source => source.key.startsWith('rubrica:'))
         .reduce((sum, source) => sum + source.value, 0);
     totalTrib = Math.max(0, totalTrib + rubricasAdjustments.irMensal + currentManualEa);
+    if (commission) {
+        const vacationPrincipal = params.commissionVacationPayInMonthly ?? 0;
+        if (!Number.isFinite(vacationPrincipal) || vacationPrincipal < 0 || vacationPrincipal > totalTrib) {
+            throw new Error('IR de férias: confira a remuneração de férias já incluída nos créditos mensais.');
+        }
+        totalTrib -= vacationPrincipal;
+    }
 
     const deducaoDep = config.values?.deducao_dep || 0;
     const retroMensalDedutivel = pensionRetroMemory.filter(entry => entry.destinoIR === 'mensal')
         .reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0);
-    const baseIR = Math.max(0, totalTrib - pssMensal - valFunpresp - retroMensalDedutivel - (params.dependents * deducaoDep));
+    const legalDeductions = pssMensal + (inss - vacationInss) + valFunpresp + retroMensalDedutivel + (params.dependents * deducaoDep);
+    const incomeTaxMemory = commission ? calculateCommissionIncomeTax(params, totalTrib, legalDeductions) : undefined;
+    const baseIR = incomeTaxMemory?.base ?? Math.max(0, totalTrib - legalDeductions);
 
     const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
-    const irMensal = calculateIrrf(baseIR, payrollRules.irrfTopRate, deductionVal);
+    const irMensal = incomeTaxMemory?.amount ?? calculateIrrf(baseIR, payrollRules.irrfTopRate, deductionVal);
+    const taxWithoutIncome = (value: number) => commission
+        ? calculateCommissionIncomeTax(params, Math.max(0, totalTrib - value), legalDeductions).amount
+        : calculateIrrf(Math.max(0, baseIR - value), payrollRules.irrfTopRate, deductionVal);
 
     const pssRateBase = Math.max(0, usaTeto ? Math.min(basePSS, teto) : basePSS);
     const pssEffectiveRate = pssRateBase > 0 ? pssMensal / pssRateBase : 0;
     const irEffectiveRate = baseIR > 0 ? irMensal / baseIR : 0;
-    const vantagensBase = (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
+    const vantagensBase = commission ? 0 : (params.vpni_lei || 0) + (params.vpni_decisao || 0) + (params.ats || 0);
 
     const aqIr = (aqTituloVal + aqTreinoVal) * irEffectiveRate;
     const aqPss = aqTituloVal * pssEffectiveRate;
@@ -275,14 +331,14 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
 
     const heMensalBase = overtimeMensalBase;
     if (heMensalBase > 0) {
-        const irSemHe = calculateIrrf(Math.max(0, baseIR - heMensalBase), payrollRules.irrfTopRate, deductionVal);
+        const irSemHe = taxWithoutIncome(heMensalBase);
         overtimeIrMensal = Math.max(0, irMensal - irSemHe);
         overtimeIr += overtimeIrMensal;
     }
 
     const substMensalBase = substitutionMensalBase;
     if (substMensalBase > 0) {
-        const irSemSubst = calculateIrrf(Math.max(0, baseIR - substMensalBase), payrollRules.irrfTopRate, deductionVal);
+        const irSemSubst = taxWithoutIncome(substMensalBase);
         substitutionIrMensal = Math.max(0, irMensal - irSemSubst);
         substitutionIr += substitutionIrMensal;
     }
@@ -312,8 +368,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
                 ir = eaResult.entryTax[`rubrica:${r.id}`] || 0;
             } else if (r.incideIR || currentEaKeys.has(`rubrica:${r.id}`)) {
                 ir = Math.round(valor * irEffectiveRate * 100) / 100;
-                const baseSemRubrica = Math.max(0, baseIR - valor);
-                const irSemRubrica = calculateIrrf(baseSemRubrica, payrollRules.irrfTopRate, deductionVal);
+                const irSemRubrica = taxWithoutIncome(valor);
                 irMarginal = Math.max(0, Math.round((irMensal - irSemRubrica) * 100) / 100);
             }
 
@@ -337,6 +392,11 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
     }
 
     return {
+        inss,
+        vacationInss,
+        commissionMemory: commission?.memory,
+        rgpsMemory,
+        incomeTaxMemory,
         pss: pssMensal,
         pssEA,
         funpresp: valFunpresp,
@@ -365,7 +425,7 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         substitutionIrMensal,
         substitutionIrEA,
         substitutionPss,
-        total: pssMensal + pssEA + valFunpresp + funprespEA + irMensal + irEA,
+        total: pssMensal + inss + pssEA + valFunpresp + funprespEA + irMensal + irEA,
         rubricasTax
     };
 }

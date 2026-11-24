@@ -16,6 +16,8 @@ import { calculatePss } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
+import { resolveCommissionPay } from './commissionCalculations';
+import { resolveCommissionAlternativePay } from './commissionContext';
 
 export interface OvertimeResult {
     heVal50: number;
@@ -78,7 +80,8 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
-    const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
+    const commission = resolveCommissionPay(params, { funcoes });
+    const baseVencimento = commission.allowCareer ? (salario[params.cargo]?.[params.padrao] || 0) : 0;
     const gaj = baseVencimento * payrollRules.gajRate;
 
     let aqTituloVal = 0;
@@ -98,10 +101,12 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
 
     // Mantém o mesmo limite do card de Substituição: o valor do destino
     // precisa superar a função atual acrescida da gratificação específica.
-    const baseAbatimentoSubstituicao =
-        (isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0)) + gratVal;
+    const functionPay = (key: string) => commission.allowCareer
+        ? (isNoFunction(key, config) ? 0 : (funcoes[key] || 0))
+        : (resolveCommissionAlternativePay(params, key)?.funcaoValor ?? 0);
+    const baseAbatimentoSubstituicao = commission.funcaoValor + gratVal;
     const funcoesSubstituicaoElegiveis = Object.keys(funcoes).filter(key =>
-        !isNoFunction(key, config) && funcoes[key] > baseAbatimentoSubstituicao
+        !isNoFunction(key, config) && functionPay(key) > baseAbatimentoSubstituicao
     );
 
     // Calculado pelas entradas atuais, sem consumir resultados de uma renderização anterior.
@@ -120,9 +125,10 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
             selecionado: entry?.composicaoBase?.[key] ?? padrao
         });
         const items = [
-            item('vencimento', 'Vencimento Básico', baseVencimento),
+            item('vencimento', commission.allowCareer ? 'Vencimento Básico' : 'Remuneração de origem paga pelo Judiciário',
+                baseVencimento + commission.originRemuneration),
             item('gaj', 'GAJ', gaj),
-            item('funcao', 'Função / Cargo em Comissão (FC/CJ)', isNoFunction(funcKey, config) ? 0 : (funcoes[funcKey] || 0)),
+            item('funcao', 'Função / Cargo em Comissão (FC/CJ)', functionPay(funcKey)),
             item('aqTitulo', 'AQ Títulos', aqTituloVal),
             item('aqTreino', 'AQ Treinamento', aqTreinoVal),
             item('grat', 'GAE / GAS', gratVal),
@@ -148,6 +154,11 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     const orgSlug = (config.orgSlug || '').toLowerCase();
     const isJMU = orgSlug === 'jmu' || orgSlug === 'stm';
     const fallbackDivisor = payrollRules.overtimeMonthHours > 0 ? payrollRules.overtimeMonthHours : (isJMU ? 175 : 200);
+    const checkGaactaIncompatibility = (heTotal: number) => {
+        if (params.commissionProfile && gaacta.valor > 0 && heTotal > 0 && !params.gaactaRecesso) {
+            throw new Error('Serviço extraordinário pendente: reveja a acumulação com a GAACTA fora do recesso.');
+        }
+    };
 
     if (overtimeEntries.length > 0) {
         const entries = overtimeEntries.map((entry, index) => {
@@ -173,6 +184,9 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
                     const elegivel = funcoesSubstituicaoElegiveis.includes(funcKey);
                     const h50 = Math.max(0, Number(horas.qtd50 || 0));
                     const h100 = Math.max(0, Number(horas.qtd100 || 0));
+                    if (!commission.allowCareer && (h50 > 0 || h100 > 0) && !functionPay(funcKey)) {
+                        throw new Error('Hora extra pendente: use o modo comum e informe o bruto documentado quando a substituição alterar a modalidade de CJ/FC.');
+                    }
                     const detail: OvertimeFunctionDetail = {
                         funcao: funcKey, elegivel, qtd50: h50, qtd100: h100,
                         heVal50: 0, heVal100: 0, heTotal: 0
@@ -233,6 +247,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
         const heVal50 = sumCurrency(entries.map(item => item.heVal50));
         const heVal100 = sumCurrency(entries.map(item => item.heVal100));
         const heTotal = sumCurrency(entries.map(item => item.heTotal));
+        checkGaactaIncompatibility(heTotal);
 
         return { heVal50, heVal100, heTotal, entries };
     }
@@ -243,6 +258,7 @@ export async function calculateOvertime(params: IAgencyCalculationParams): Promi
     const heVal50 = roundCurrency(legacyHE.v50);
     const heVal100 = roundCurrency(legacyHE.v100);
     const heTotal = sumCurrency([heVal50, heVal100]);
+    checkGaactaIncompatibility(heTotal);
     const valorHoraNormal = roundCurrency(legacyHE.valorHora);
 
     return {

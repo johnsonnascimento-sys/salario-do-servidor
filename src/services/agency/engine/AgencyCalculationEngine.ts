@@ -34,6 +34,7 @@ import { calculateCompensatoryLeave } from './modules/leaveCalculations';
 import { calculateGaacta } from './modules/gaactaCalculations';
 import { calculateDeductions } from './modules/deductionsCalculations';
 import { calculateTransportIndemnity } from './modules/transportIndemnityCalculations';
+import { applyCommissionProfile } from './modules/commissionContext';
 
 const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number }> = []) => {
     return rubricas.reduce(
@@ -62,6 +63,7 @@ const calculateRubricasTotals = (rubricas: Array<{ tipo?: string; valor?: number
  */
 export class AgencyCalculationEngine implements IAgencyCalculator {
     private withResolvedAts(params: IAgencyCalculationParams): IAgencyCalculationParams {
+        params = applyCommissionProfile(params);
         const { rubricas, error } = resolveAtsRubrics(params.rubricasExtras ?? [], params);
         if (error) throw new Error(error);
         return { ...params, rubricasExtras: rubricas };
@@ -85,7 +87,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
      * Calcula os benefÃ­cios (auxÃ­lios)
      */
     async calculateBenefits(params: ICalculationParams): Promise<any> {
-        return await calculateBenefits(params as IAgencyCalculationParams);
+        return await calculateBenefits(applyCommissionProfile(params as IAgencyCalculationParams));
     }
 
     /**
@@ -115,19 +117,26 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         const dailies = await calculateDailies(params);
         const transportIndemnity = calculateTransportIndemnity(params);
         const transportMode = params.transporteIndenizacaoSelecao?.modo;
-        if (transportIndemnity.status === 'invalid' && (transportMode === 'datas' || transportMode === 'avulsos')) {
+        if ((params.commissionProfile && params.transporteIndenizacaoAtivo && transportIndemnity.status === 'unavailable') ||
+            (transportIndemnity.status === 'invalid' && (params.commissionProfile || transportMode === 'datas' || transportMode === 'avulsos'))) {
             throw new Error(`Indenização de Transporte: ${transportIndemnity.reason}`);
         }
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
 
         // 4. Calcular Deduções (agora async)
-        const deductions = await calculateDeductions(base, params);
+        const vacationPreview = params.commissionProfile ? await calculateVacation(params, true) : undefined;
+        const deductions = await calculateDeductions(base, {
+            ...params,
+            rgpsVacationBase: vacationPreview && !params.feriasAntecipadas ? vacationPreview.value : undefined,
+            commissionVacationPayInMonthly: vacationPreview?.taxableRemunerationInMonthly,
+        });
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
         const vacation = await calculateVacation({
             ...params,
             abonoPermanencia: abonoPerm || params.abonoPermanencia || params.pssMensal,
-            calculatedPss: deductions.pss
+            calculatedPss: deductions.pss,
+            commissionVacationInss: deductions.vacationInss
         });
         const thirteenth = await calculateThirteenth({
             ...params,
@@ -147,7 +156,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
 
         const totalDeductions = deductions.total + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
-            vacation.irFerias + vacation.descontoAntecipacao + thirteenth.pss13 + thirteenth.funpresp13 +
+            vacation.irFerias + vacation.descontoAntecipacao + (vacation.originWithholding ?? 0) + thirteenth.pss13 + (thirteenth.inss13 ?? 0) + thirteenth.funpresp13 +
             thirteenth.ir13 + thirteenth.primeiraParcelaDesconto + rubricasTotals.debitos;
 
         // 6. Retornar Resultado Completo
@@ -156,13 +165,18 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
             totalDeductions: totalDeductions,
             totalBenefits: benefits.auxAlimentacao + benefits.auxPreEscolar +
                 benefits.auxTransporte + dailies.valor + compensatoryLeave + gaactaResult.valor + transportIndemnity.amount,
-            pensionMemory: { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,
+            pensionMemory: params.commissionProfile ? undefined : { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,
                 retroativos: deductions.pensionRetroMemory },
             breakdown: {
                 // Componentes Base Individuais
                 vencimento: baseComponents.vencimento,
                 gaj: baseComponents.gaj,
                 funcaoValor: baseComponents.funcaoValor,
+                originRemuneration: baseComponents.originRemuneration,
+                commissionMemory: deductions.commissionMemory,
+                rgpsMemory: deductions.rgpsMemory,
+                rgpsThirteenthMemory: thirteenth.rgpsMemory,
+                commissionIncomeTax: [deductions.incomeTaxMemory, vacation.incomeTaxMemory, thirteenth.incomeTaxMemory].filter(Boolean),
                 aqTitulo: baseComponents.aqTitulo,
                 aqTreino: baseComponents.aqTreino,
                 gratEspecifica: baseComponents.gratEspecifica,
@@ -176,6 +190,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
 
                 // DeduÃ§Ãµes
                 pss: deductions.pss,
+                inss: deductions.inss,
                 pssEA: deductions.pssEA,
                 irrf: deductions.irrf,
                 irEA: deductions.irEA,
@@ -205,6 +220,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 feriasConstitucional: vacation.value,
                 impostoFerias: vacation.irFerias,
                 feriasDesconto: vacation.descontoAntecipacao,
+                commissionVacationWithholding: vacation.originWithholding,
 
                 // 13Âº SalÃ¡rio
                 thirteenthMemory: thirteenth.thirteenthMemory,
@@ -212,6 +228,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
                 abono13: thirteenth.abono13,
                 imposto13: thirteenth.ir13,
                 pss13: thirteenth.pss13,
+                inss13: thirteenth.inss13,
                 debitoPrimeiraParcela13: thirteenth.primeiraParcelaDesconto,
                 adiant13Venc: thirteenth.adiant13Venc,
                 adiant13FC: thirteenth.adiant13FC,
@@ -234,6 +251,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
 
                 // DiÃ¡rias e LicenÃ§a
                 diariasValor: dailies.valor,
+                diariasValorUnitario: dailies.valorUnitario,
                 diariasBruto: dailies.bruto,
                 diariasGlosa: dailies.glosa,
                 diariasDeducoes: dailies.deducoes,

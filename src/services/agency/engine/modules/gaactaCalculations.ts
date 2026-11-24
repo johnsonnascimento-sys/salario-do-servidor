@@ -12,7 +12,8 @@
 import { CourtConfig } from '../../../../types';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent } from './baseCalculations';
-import { getPayrollRules, isNoFunction } from './configRules';
+import { getPayrollRules } from './configRules';
+import { resolveCommissionPay } from './commissionCalculations';
 
 export interface IGaactaResult {
     baseCalculo: number;
@@ -66,9 +67,21 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     }
 
     const config = requireAgencyConfig(params);
+    if (params.commissionProfile &&
+        (!config.commission?.gaactaSource?.url || params.commissionProfile.gaactaEligibleRole !== true)) {
+        throw new Error('GAACTA pendente: confirme o enquadramento do cargo e da unidade no ato do órgão.');
+    }
     const rule = resolveGaactaRule(config, params.competencia || '');
-    if (!rule) return { baseCalculo: 0, percentual: 0, valor: 0, isElegivel };
+    if (!rule) {
+        if (params.commissionProfile) throw new Error('GAACTA pendente: falta regra vigente cadastrada para o órgão.');
+        return { baseCalculo: 0, percentual: 0, valor: 0, isElegivel };
+    }
     const percentual = rule.percentage;
+
+    if (params.commissionProfile?.kind === 'external' && params.commissionProfile.cjOption === 'effective_plus_65' &&
+        params.commissionProfile.payment === 'origin' && (!params.gaactaManualBase || !(Number(params.gaactaBaseManualValor) > 0))) {
+        throw new Error('GAACTA pendente: informe a base documentada para a gratificação quando a remuneração de origem for paga em outra folha.');
+    }
 
     // Se o usuario travou uma base manual
     if (params.gaactaManualBase && Number(params.gaactaBaseManualValor) > 0) {
@@ -86,11 +99,12 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 
     // 1. Vencimento e GAJ
-    const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
+    const commission = resolveCommissionPay(params, { funcoes });
+    const baseVencimento = commission.allowCareer ? (salario[params.cargo]?.[params.padrao] || 0) : 0;
     const gaj = baseVencimento * payrollRules.gajRate;
 
     // 2. Parcela de Funcao / CJ
-    const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+    const funcaoValor = commission.funcaoValor;
 
     // 3. Adicional de Qualificacao (AQ)
     let aqTituloVal = 0;
@@ -113,7 +127,7 @@ export async function calculateGaacta(params: IAgencyCalculationParams): Promise
     let base = 0;
 
     if (params.gaactaIncideVencimento !== false) {
-        base += baseVencimento;
+        base += baseVencimento + commission.originRemuneration;
     }
     if (params.gaactaIncideGAJ !== false) {
         base += gaj;

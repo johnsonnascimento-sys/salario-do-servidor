@@ -1,6 +1,7 @@
 import type { ThirteenthPayrollInput } from '../../../types/thirteenth';
 import type { IrEaContext } from '../../../types/irEa';
 import type { LicencaComposicaoBase } from '../../../types/licenca';
+import type { ExternalCommissionProfile } from '../../../types/commissionProfile';
 /**
  * Interface de Parametros de Calculo da Agencia
  *
@@ -12,6 +13,10 @@ import { CalendarDaySelection, CourtConfig, OvertimeEntry, Rubrica, Substitution
 import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
+    commissionProfile?: ExternalCommissionProfile;
+    rgpsVacationBase?: number;
+    commissionVacationPayInMonthly?: number;
+    commissionVacationInss?: number;
     atsCalculationError?: string;
     irEaContext?: IrEaContext;
     heCompetenciasEA?: string[];

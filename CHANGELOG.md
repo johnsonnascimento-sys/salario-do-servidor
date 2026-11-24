@@ -1,3 +1,9 @@
+## Simulação de CJ e FC fora das carreiras do PJU — 24/11/2026
+
+- O motor de folha aceita CJ sem vínculo efetivo e CJ/FC de pessoa com vínculo público externo. A simulação calcula as parcelas pagas pelo Judiciário e distingue CJ integral, opção remuneratória e FC conforme a Lei nº 11.416/2006.
+- As tabelas de CJ/FC, RGPS e IRRF dos novos perfis usam fontes e vigências oficiais. Holerite, memória, PDF e Excel identificam a modalidade, as parcelas de origem e as bases apuradas.
+- A migration prepara a ativação na JMU e na Justiça Federal. O TRT-2 depende de configuração própria dos módulos que hoje herdam parâmetros da JMU. As migrations preservam as regras e os cálculos das simulações de carreira.
+
 ## Indenização de transporte de vários meses — 23/11/2026
 
 - No modo por dias avulsos, o calendário permite navegação entre meses e preserva as datas marcadas. A apuração aplica as regras de cada mês de serviço e soma os subtotais no crédito da folha, com detalhamento no card, PDF e Excel.

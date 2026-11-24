@@ -17,6 +17,39 @@ export interface GlobalConfig {
     ir_deduction: IRDeductionConfig;
     pss_tables: PSSTablesConfig;
     dependent_deduction: number;
+    rgps_tables?: RgpsTablesConfig;
+}
+
+export interface RgpsTablesConfig {
+    versions: Array<{
+        valid_from: string;
+        valid_to?: string | null;
+        teto: number;
+        faixas: Array<{ ate: number; aliq: number }>;
+        source: string;
+    }>;
+}
+
+export interface CommissionRulesConfig {
+    enabled?: boolean;
+    dailies_fc?: { valid_from: string; amount: number; source: string };
+    gaacta_source?: { label: string; url: string };
+    compensatory_leave?: {
+        valid_from: string;
+        valid_to: string;
+        source: string;
+        documented_gross?: boolean;
+        max_days?: number;
+        eligible_functions?: string[];
+    };
+    versions: Array<{
+        valid_from: string;
+        valid_to?: string | null;
+        cj_integral: Record<string, number>;
+        fc: Record<string, number>;
+        cj_option_rate: number;
+        source: string;
+    }>;
 }
 
 /**
@@ -31,6 +64,7 @@ export interface IRDeductionConfig {
         reference?: string;
         revision?: string;
         rra?: IrTableMetadata['rra'];
+        payroll?: IrTableMetadata['payroll'];
         brackets: Array<{
             min: number;
             max: number | null;
@@ -59,6 +93,7 @@ export interface PSSTablesConfig {
  * Regras compartilhadas por um poder (PJU, Executivo, etc.)
  */
 export interface PowerConfig {
+    commission_rules?: CommissionRulesConfig;
     cj1_integral_base?: number;
     salary_bases?: SalaryBasesConfig;
     adjustment_schedule?: AdjustmentScheduleConfig;

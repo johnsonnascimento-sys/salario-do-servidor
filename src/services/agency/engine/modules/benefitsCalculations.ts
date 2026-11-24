@@ -10,7 +10,8 @@
 import { CourtConfig } from '../../../../types';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
-import { getPayrollRules, isNoFunction } from './configRules';
+import { getPayrollRules } from './configRules';
+import { resolveCommissionPay } from './commissionCalculations';
 
 export interface BenefitsResult {
     auxAlimentacao: number;
@@ -33,9 +34,13 @@ export async function calculateBenefits(params: IAgencyCalculationParams): Promi
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
 
-    const auxAlimentacao = params.auxAlimentacao > 0
+    const foodAllowance = params.auxAlimentacao > 0
         ? params.auxAlimentacao
         : (config.values?.food_allowance ?? 0);
+    if (params.commissionProfile?.receivesFoodAllowance && !(foodAllowance > 0)) {
+        throw new Error('Auxílio-alimentação pendente: informe o valor devido na folha do Judiciário.');
+    }
+    const auxAlimentacao = !params.commissionProfile || params.commissionProfile.receivesFoodAllowance ? foodAllowance : 0;
 
     const configCotaPreEscolar = config.values?.pre_school ?? 0;
     const cotaPreEscolar = params.cotaPreEscolar && params.cotaPreEscolar > 0
@@ -52,10 +57,17 @@ export async function calculateBenefits(params: IAgencyCalculationParams): Promi
 
         // Debit logic depends on base salary
         const { salario, funcoes } = await getDataForPeriod(params.periodo, config);
-        const baseVenc = salario[params.cargo]?.[params.padrao] || 0;
-        const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+        const commission = resolveCommissionPay(params, { funcoes });
+        const baseVenc = commission.allowCareer ? (salario[params.cargo]?.[params.padrao] || 0) : 0;
+        let baseCalculoDesc = baseVenc > 0 ? baseVenc : commission.funcaoValor;
+        if (params.commissionProfile?.kind === 'external') {
+            const originSalary = params.commissionProfile.originBasicSalary;
+            if (typeof originSalary !== 'number' || !Number.isFinite(originSalary) || originSalary <= 0) {
+                throw new Error('Auxílio-transporte pendente: informe a base documentada do cargo ou emprego de origem para a cota-parte.');
+            }
+            baseCalculoDesc = originSalary;
+        }
 
-        const baseCalculoDesc = baseVenc > 0 ? baseVenc : funcaoValor;
         const desc =
             (baseCalculoDesc / payrollRules.monthDayDivisor * payrollRules.transportWorkdays) *
             payrollRules.transportDiscountRate;

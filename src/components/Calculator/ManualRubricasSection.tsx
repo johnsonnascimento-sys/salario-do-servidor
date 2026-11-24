@@ -53,6 +53,7 @@ const revisitHistoricalPension = () => {
 
 
 interface ManualRubricasSectionProps {
+    pensionMode?: 'rpps' | 'rgps' | 'external';
     mode?: 'C' | 'D';
     rubricas: Rubrica[];
     fixedTitles?: ReadonlyMap<string, string>;
@@ -77,6 +78,7 @@ interface ManualRubricasSectionProps {
 }
 
 export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
+    pensionMode = 'rpps',
     mode = 'C',
     rubricas,
     fixedTitles,
@@ -152,6 +154,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
             (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao')
         );
         const sharedHistoricalPss = Boolean(rubrica.pssCompetenciaSeparada);
+        const sharedInss = pensionMode === 'rgps' && rubrica.incideINSS === true;
         const lines: PresetGrossLine[] = [
             { label: `${label} Bruto`, value: valor }
         ];
@@ -169,10 +172,10 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
             if (tax.pss > 0 && !sharedHistoricalPss) {
                 lines.push({ label: `Desconto PSS (${label})`, value: tax.pss, isDiscount: true });
             }
-            if (!sharedPension && !sharedHistoricalPss && !(tax.funpresp > 0)) {
+            if (!sharedPension && !sharedHistoricalPss && !sharedInss && !(tax.funpresp > 0)) {
                 lines.push({ label: `${label} Líquido`, value: tax.liquido, cardAmount: 'net' });
             }
-        } else if (calculationReady) {
+        } else if (calculationReady && !sharedInss) {
             lines.push({ label: `${label} Líquido`, value: valor });
         }
 
@@ -337,7 +340,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                     (isCredito && rubrica.valor > 0 && (funprespParticipacao !== 'nao' || rubrica.pssCompetenciaSeparada))
                 );
                 const pssRegime = rubrica.pssCompetenciaSeparada ? 'original' : rubrica.incidePSS ? 'mensal' : 'excluir';
-                const pssSummary = pssRegime === 'original' ? 'PSS por competência original' : pssRegime === 'mensal' ? 'PSS mensal' : 'Sem PSS';
+                const pssSummary = pensionMode === 'rgps' ? (rubrica.incideINSS ? 'INSS mensal' : 'Sem INSS')
+                    : pensionMode === 'external' ? 'Previdência informada na folha'
+                    : pssRegime === 'original' ? 'PSS por competência original' : pssRegime === 'mensal' ? 'PSS mensal' : 'Sem PSS';
                 const taxOptions = (
                     <TaxAdjustmentPanel open={Boolean(taxOpen)} summary={`${IR_SUMMARY[irRegime]} · ${pssSummary}`}
                         onToggle={open => setExpandedTaxPanels(previous => previous[rubrica.id] === open
@@ -360,7 +365,13 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     onChange={event => updateRubrica(rubrica.id, 'fundamentoDeducaoEA', event.target.value)} />
                             </label>
                         )}
-                        <TaxChoices title={isCredito ? 'Previdência (PSS)' : 'Dedução na base da Previdência (PSS)'}
+                        {pensionMode === 'rgps' && <label className={styles.checkboxLabel}>
+                            <input type="checkbox" className={styles.checkbox} checked={Boolean(rubrica.incideINSS)}
+                                onChange={event => updateRubrica(rubrica.id, 'incideINSS', event.target.checked)} />
+                            <span>{isCredito ? 'Incluir na base do INSS mensal' : 'Deduzir da base do INSS mensal'}</span>
+                        </label>}
+                        {pensionMode === 'external' && <p className="text-body-xs">A contribuição previdenciária desta folha é informada na etapa Previdência.</p>}
+                        {pensionMode === 'rpps' && <><TaxChoices title={isCredito ? 'Previdência (PSS)' : 'Dedução na base da Previdência (PSS)'}
                             name={`manual-pss-${rubrica.id}`} value={pssRegime}
                             options={PSS_OPTIONS} onChange={value => {
                                 updateRubrica(rubrica.id, 'incidePSS', value === 'mensal');
@@ -390,12 +401,15 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                     </a>
                                 )}
                             </div>
-                        </details>
+                        </details></>}
                     </TaxAdjustmentPanel>
                 );
                 const calculationNotices = (
                     <>
-                        {(rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)) && (
+                        {pensionMode === 'rgps' && rubrica.tipo === 'C' && rubrica.incideINSS && <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
+                            A contribuição ao INSS é apurada em conjunto na folha. Confira o desconto total no resultado.
+                        </p>}
+                        {pensionMode === 'rpps' && (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada)) && (
                             <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
                                 <p>Apuração por competência: {formatCurrency(distributed[rubrica.id] ?? 0)} de {formatCurrency(Number(rubrica.valor) || 0)} distribuídos.</p>
                                 {!calculationReady && <p>A distribuição, por si só, não conclui a apuração previdenciária.</p>}
@@ -403,14 +417,14 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             </div>
                         )}
 
-                        {rubrica.incideFunpresp && !rubrica.funprespCompetenciaSeparada && funprespParticipacao !== 'nao' && (
+                        {pensionMode === 'rpps' && rubrica.incideFunpresp && !rubrica.funprespCompetenciaSeparada && funprespParticipacao !== 'nao' && (
                             <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
                                 {isCredito ? 'Esta rubrica integra a base compartilhada da Funpresp mensal.' : 'Esta rubrica reduz a base compartilhada da Funpresp mensal.'}
                                 {' '}Confira a contribuição no resumo previdenciário.
                             </p>
                         )}
 
-                        {rubrica.tipo === 'C' && (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
+                        {pensionMode === 'rpps' && rubrica.tipo === 'C' && (rubrica.pssCompetenciaSeparada || (rubrica.incideFunpresp &&
                             (rubrica.funprespCompetenciaSeparada || funprespParticipacao !== 'nao'))) && (
                             <p className="text-body-xs text-neutral-600 dark:text-neutral-300">
                                 Líquido individual não apurado: consulte as contribuições previdenciárias no resumo compartilhado.

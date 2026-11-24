@@ -11,6 +11,7 @@ import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { ManualRubricasSection } from './ManualRubricasSection';
 import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
 import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
+import { CommissionProfileFields } from './CommissionProfileFields';
 import { DynamicPayrollTaxSection } from './DynamicPayrollTaxSection';
 import { GaactaCompensatoryLeaveCard } from './cards/GaactaCompensatoryLeaveCard';
 import { PreschoolCard } from './cards/PreschoolCard';
@@ -116,7 +117,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     const cargoOptions = Object.keys(currentTables.salario || {});
     const salaryByCargo = currentTables.salario[state.cargo] || {};
     const padroes = Object.keys(salaryByCargo);
-    const baseVencimento = salaryByCargo[state.padrao] || 0;
+    const baseVencimento = state.commissionProfile ? 0 : salaryByCargo[state.padrao] || 0;
     const gaj = baseVencimento * (payrollRules?.gajRate ?? 0);
     const isNovoAQ = state.periodo >= 1;
     const functionKeys = Object.keys(currentTables.funcoes || {});
@@ -138,9 +139,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
 
     const pensionParams = mapStateToAgencyParams(inputState ?? state, '', courtConfig);
     const pensionSelection = usePensionSelection({ params: pensionParams, context: pensionContexts?.monthly ?? null,
-        onApply: patch => updateMany(patch as Partial<CalculatorState>), normalize: !pensionPending });
+        onApply: patch => updateMany(patch as Partial<CalculatorState>), normalize: !pensionPending && !state.commissionProfile });
 
-    const transportIndemnityEnabled = Boolean(courtConfig.transportIndemnity?.enabled);
+    const isJmu = ['jmu', 'stm'].includes((courtConfig.orgSlug || '').toLowerCase());
+    const transportIndemnityEnabled = Boolean(courtConfig.transportIndemnity?.enabled) &&
+        (!state.commissionProfile || (isJmu && state.commissionProfile.transportIndemnityAdHoc === true));
 
     const {
         enabledPresets,
@@ -234,8 +237,9 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
     };
     const closeRubricEditor = () => setRubricEditor(null);
 
-    const funcaoAtualValor =
-        state.funcao && state.funcao !== noFunctionCode
+    const funcaoAtualValor = state.commissionProfile
+        ? (calculationReady ? state.funcaoValor || 0 : 0)
+        : state.funcao && state.funcao !== noFunctionCode
             ? (currentTables.funcoes[state.funcao] || 0)
             : 0;
 
@@ -379,6 +383,8 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         addRubrica(personalAdvantageDefaults('VPNI'));
     };
     const manualRubricProps = {
+        pensionMode: state.commissionProfile?.kind === 'exclusive_cj' ? 'rgps' as const
+            : state.commissionProfile ? 'external' as const : 'rpps' as const,
         rubricasTax: state.rubricasTax,
         summaryRubrics: state.rubricasExtras,
         calculationReady: calculationReady && Boolean(state.pensionMemory),
@@ -424,18 +430,23 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     noFunctionCode={noFunctionCode}
                     noFunctionLabel={noFunctionLabel}
                     calculationReady={calculationReady}
+                    commissionProfilesEnabled={courtConfig.commission?.enabled === true}
                     baseVencimento={baseVencimento}
                     gaj={gaj}
                     handleCargoChange={handleCargoChange}
                     update={update}
+                    updateMany={updateMany}
                 />
+                <CommissionProfileFields section="basic" state={state} update={update} styles={styles} />
 
                 <section id="gaacta-licenca" tabIndex={-1} aria-label="GAACTA / Licença Compensatória" className={calculatorTargetClass}>
                     <GaactaCompensatoryLeaveCard state={state} updateMany={updateMany} courtConfig={courtConfig}
-                        calculationReady={calculationReady} functionValues={currentTables.funcoes ?? {}} styles={styles} />
+                        calculationReady={calculationReady} functionValues={state.commissionProfile
+                            ? { ...currentTables.funcoes, [state.funcao]: calculationReady ? state.funcaoValor || 0 : 0 }
+                            : currentTables.funcoes ?? {}} styles={styles} />
                 </section>
 
-                <section id="gratificacao-especifica" tabIndex={-1} aria-labelledby="gratificacao-especifica-titulo" className={`${styles.formSection} ${calculatorTargetClass}`}>
+                {!state.commissionProfile && <section id="gratificacao-especifica" tabIndex={-1} aria-labelledby="gratificacao-especifica-titulo" className={`${styles.formSection} ${calculatorTargetClass}`}>
                     <CalculatorCardHeading help={{ label: "Sobre GAE e GAS", content: <>
                         <p className="font-semibold">Quando escolher cada opção?</p>
                         <p className="mt-2"><strong>GAE:</strong> para atividade externa vinculada às atribuições do cargo.</p>
@@ -446,17 +457,18 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     </CalculatorCardHeading>
                     {renderPreset(GRATIFICATION_INSTANCE)}
                     <div className="mt-2"><PresetGrossSummary compact lines={getPresetGrossLines(GRATIFICATION_INSTANCE)} /></div>
-                </section>
+                </section>}
 
                 </div>
                 <div hidden={step !== CALCULATOR_STEP.qualification} className="space-y-5">
-                    <DynamicPayrollAQSection
+                    {state.commissionProfile ? <p className={styles.formSection}>O adicional de qualificação das carreiras do PJU não se aplica ao vínculo selecionado.</p> : <DynamicPayrollAQSection
                         styles={styles}
                         renderPreset={renderPreset}
                         getPresetGrossLines={getPresetGrossLines}
-                    />
+                    />}
                 </div>
                 <div hidden={step !== CALCULATOR_STEP.pension}>
+                {state.commissionProfile ? <CommissionProfileFields section="pension" state={state} update={update} styles={styles} /> : <>
                 <DynamicPayrollTaxSection
                     activeSection="pension"
                     resultRows={resultRows}
@@ -482,6 +494,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     invalidateOptionConfirmation={ids => update('rubricasExtras', (inputState ?? state).rubricasExtras.map(rubrica =>
                         ids.includes(rubrica.id) ? { ...rubrica, pensionOptionAmountConfirmed: false } : rubrica))}
                     allowNormalization={!pensionSelection.incompatible} />
+                </>}
                 </div>
                 <div hidden={step !== CALCULATOR_STEP.incomeTax}>
                 <DynamicPayrollTaxSection
@@ -521,6 +534,14 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </section>
 
             <section id="beneficios" tabIndex={-1} className="space-y-5 scroll-mt-24" hidden={step !== CALCULATOR_STEP.benefits}>
+                {state.commissionProfile?.kind === 'external' && <div className={styles.formSection}>
+                    <label htmlFor="commission-origin-basic-salary" className={styles.label}>Vencimento básico de origem para auxílio-transporte</label>
+                    <input id="commission-origin-basic-salary" className={styles.input} type="number" min="0" step="0.01" inputMode="decimal"
+                        value={state.commissionProfile.originBasicSalary ?? ''}
+                        onChange={event => update('commissionProfile', { ...state.commissionProfile,
+                            originBasicSalary: event.target.value === '' ? undefined : Number(event.target.value) })} />
+                    <p className="text-body-xs">Informe o valor documentado quando houver gasto com transporte.</p>
+                </div>}
                 {FIXED_BENEFITS.map(instance => (
                     <section key={instance.key} id={instance.key} tabIndex={-1} aria-labelledby={`${instance.key}-titulo`}
                         className={`${styles.formSection} ${calculatorTargetClass} space-y-3`}>
@@ -558,15 +579,25 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             Auxílio-alimentação
                         </h3>
                     </CalculatorCardHeading>
-                    <dl className="flex flex-wrap items-center justify-between gap-2 text-body-xs">
+                    {state.commissionProfile && <label className={styles.checkboxLabel}>
+                        <input type="checkbox" className={styles.checkbox} checked={Boolean(state.commissionProfile.receivesFoodAllowance)}
+                            onChange={event => update('commissionProfile', { ...state.commissionProfile, receivesFoodAllowance: event.target.checked })} />
+                        <span>Recebo auxílio-alimentação nesta folha</span>
+                    </label>}
+                    {(!state.commissionProfile || state.commissionProfile.receivesFoodAllowance) && <dl className="flex flex-wrap items-center justify-between gap-2 text-body-xs">
                         <dt className="text-neutral-600 dark:text-neutral-300">{calculationReady && state.auxAlimentacaoProporcional ? 'Valor proporcional na simulação' : 'Valor na simulação'}</dt>
-                        <dd className="font-mono font-semibold">{calculationReady ? formatCurrency(state.auxAlimentacao) : '—'}</dd>
-                    </dl>
+                        <dd className="font-mono font-semibold">{calculationReady ? formatCurrency(state.commissionProfile ? state.commissionFoodAllowance || 0 : state.auxAlimentacao) : '—'}</dd>
+                    </dl>}
                 </section>
             </section>
 
             <div id={rubricMode === 'C' ? 'creditos-eventuais' : rubricMode === 'D' ? 'descontos' : undefined}
                 hidden={rubricMode === null} className="space-y-5" tabIndex={-1}>
+            {rubricMode === 'C' && state.commissionProfile && isJmu && courtConfig.transportIndemnity?.enabled && <label className={`${styles.checkboxLabel} ${styles.formSection}`}>
+                <input type="checkbox" className={styles.checkbox} checked={state.commissionProfile.transportIndemnityAdHoc === true}
+                    onChange={event => update('commissionProfile', { ...state.commissionProfile, transportIndemnityAdHoc: event.target.checked })} />
+                <span>Fui designado para diligências externas como oficial de justiça ad hoc</span>
+            </label>}
             <PresetControlsSection
                 mode={rubricMode}
                 instanceCount={visiblePresets.length + otherRubrics.filter(rubrica => rubrica.tipo === rubricMode).length}

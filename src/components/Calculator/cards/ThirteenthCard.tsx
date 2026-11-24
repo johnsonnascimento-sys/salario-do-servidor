@@ -63,9 +63,11 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
         setDraft(current => current ? { ...current, [field]: value } : current);
     };
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
-    const funcaoValorBruta = !state.funcao || state.funcao === noFunctionCode || !courtConfig
+    const funcaoValorBruta = state.commissionProfile ? (state.funcaoValor || 0) : !state.funcao || state.funcao === noFunctionCode || !courtConfig
         ? 0 : (getTablesForPeriod(state.periodo, courtConfig).funcoes[state.funcao] || 0);
-    const temAbonoAtivo = Boolean(state.recebeAbono);
+    const origemNoDecimo = state.commissionProfile?.kind === 'external' && state.commissionProfile.thirteenthPaysOriginRemuneration
+        ? state.originRemuneration || 0 : 0;
+    const temAbonoAtivo = !state.commissionProfile && Boolean(state.recebeAbono);
     const valorAbono = temAbonoAtivo ? (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0) : 0;
     const creditRubricas = (state.rubricasExtras || []).filter(r => r.tipo === 'C');
     const incideVenc = state.decimoIncideVencimento !== false;
@@ -80,18 +82,18 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
     const funcaoValor = incideFuncao ? funcaoValorBruta : 0;
     // Preview of the editable composition, never a substitute for engine totals/taxes.
     const baseSemFC = roundCurrency(
-        (incideVenc ? state.vencimento || 0 : 0) +
-        (incideGAJ ? state.gaj || 0 : 0) +
-        (incideAQTitulo ? state.aqTituloValor || 0 : 0) +
-        (incideAQTreino ? state.aqTreinoValor || 0 : 0) +
-        (incideGrat ? state.gratEspecificaValor || 0 : 0) +
-        (incideVPNI ? (state.vpni_lei || 0) + (state.vpni_decisao || 0) : 0) +
-        (incideATS ? state.ats || 0 : 0) + (incideAbono ? valorAbono : 0) +
+        (incideVenc ? state.commissionProfile ? origemNoDecimo : state.vencimento || 0 : 0) +
+        (!state.commissionProfile && incideGAJ ? state.gaj || 0 : 0) +
+        (!state.commissionProfile && incideAQTitulo ? state.aqTituloValor || 0 : 0) +
+        (!state.commissionProfile && incideAQTreino ? state.aqTreinoValor || 0 : 0) +
+        (!state.commissionProfile && incideGrat ? state.gratEspecificaValor || 0 : 0) +
+        (!state.commissionProfile && incideVPNI ? (state.vpni_lei || 0) + (state.vpni_decisao || 0) : 0) +
+        (!state.commissionProfile && incideATS ? state.ats || 0 : 0) + (incideAbono ? valorAbono : 0) +
         creditRubricas.filter(r => state.decimoRubricasInclusas?.[r.id]).reduce((sum, r) => sum + (r.valor || 0), 0) +
         (state.decimoOutrasParcelas || 0)
     );
     const totalBaseApurada = preview.reference?.referenceTotal ?? roundCurrency(baseSemFC + funcaoValor);
-    const hasFunction = funcaoValorBruta > 0 && incideFuncao;
+    const hasFunction = (state.commissionProfile ? /^(fc|cj)/i.test(state.funcao) : funcaoValorBruta > 0) && incideFuncao;
     const selection = thirteenthSelection(inputs, hasFunction);
     const partial = selection.first === 'mixed' || selection.second === 'mixed';
     const openEditor = () => {
@@ -145,13 +147,13 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                             onChange={e => update('decimoIncideVencimento', e.target.checked)}
                         />
                         <span className="flex-1 flex items-center justify-between gap-2">
-                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Vencimento Básico</span>
-                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.vencimento)}</span>
+                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">{state.commissionProfile ? 'Remuneração de origem' : 'Vencimento Básico'}</span>
+                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.commissionProfile ? origemNoDecimo : state.vencimento)}</span>
                         </span>
                     </label>
 
                     {/* GAJ */}
-                    <label className={styles.checkboxLabel}>
+                    {!state.commissionProfile && <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
                             className={styles.checkbox}
@@ -162,7 +164,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAJ</span>
                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gaj)}</span>
                         </span>
-                    </label>
+                    </label>}
 
                     {/* FC / CJ */}
                     {funcaoValorBruta > 0 && (
@@ -181,7 +183,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                     )}
 
                     {/* AQ Títulos */}
-                    {(state.aqTituloValor || 0) > 0 && (
+                    {!state.commissionProfile && (state.aqTituloValor || 0) > 0 && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -197,7 +199,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                     )}
 
                     {/* AQ Treinamento */}
-                    {(state.aqTreinoValor || 0) > 0 && (
+                    {!state.commissionProfile && (state.aqTreinoValor || 0) > 0 && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -213,7 +215,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                     )}
 
                     {/* VPNI (Lei e Decisão Judicial) */}
-                    {((state.vpni_lei || 0) > 0 || (state.vpni_decisao || 0) > 0) && (
+                    {!state.commissionProfile && ((state.vpni_lei || 0) > 0 || (state.vpni_decisao || 0) > 0) && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -229,7 +231,7 @@ export const ThirteenthCard: React.FC<ThirteenthCardProps> = ({
                     )}
 
                     {/* ATS (Anuênios) */}
-                    {(state.ats || 0) > 0 && (
+                    {!state.commissionProfile && (state.ats || 0) > 0 && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"

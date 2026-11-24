@@ -81,6 +81,23 @@ try {
     const unifiedCells = XLSX.utils.sheet_to_json(auditWorkbook.Sheets.Holerite, { header: 1 });
     for (const row of unifiedRows) assert.equal(unifiedCells.filter(cell => cell[1] === row.label).length, 1);
     assert(unifiedCells.some(row => row[1] === 'TOTAL' && row[2] === 2000 && row[3] === 1000));
+    const commission = { ...INITIAL_STATE, totalBruto: 1776.07, totalDescontos: 0, liquido: 1776.07,
+        commissionMemory: { profile: 'external', functionCode: 'fc3', option: 'fc', tableAmount: 1776.07, paidAmount: 1776.07,
+            originRemuneration: 0, payment: 'origin', regime: 'rpps', competence: '2026-07', source: 'Lei 11.416/2006' },
+        commissionIncomeTax: [{ tipo: 'mensal', base: 1168.87, simplified: true, deduction: 607.20, reduction: 0,
+            amount: 0, source: 'Tabela oficial de IRRF 2026' }] };
+    const commissionRows = [{ type: 'C', label: 'FUNCAO COMISSIONADA - FC3', value: 1776.07 }];
+    exportToPDF(commission, commissionRows, null, { filename: 'commission' });
+    exportToExcel(commission, commissionRows, null, { filename: 'commission' });
+    const commissionPdf = Buffer.from(await downloads[4].blob.arrayBuffer()).toString('latin1');
+    assert(commissionPdf.includes('FUNCAO COMISSIONADA - FC3'));
+    assert(commissionPdf.includes('Lei 11.416/2006'));
+    const commissionWorkbook = XLSX.read(new Uint8Array(await downloads[5].blob.arrayBuffer()), { type: 'array' });
+    const commissionAudit = XLSX.utils.sheet_to_json(commissionWorkbook.Sheets['Memória de CJ-FC'], { header: 1 });
+    assert(commissionAudit.some(row => row[0] === 'Pagador da remuneração de origem' && row[1] === 'Órgão de origem'));
+    assert(commissionAudit.some(row => row[1] === 'Tabela oficial de IRRF 2026'));
+    const commissionPayroll = XLSX.utils.sheet_to_json(commissionWorkbook.Sheets.Holerite, { header: 1 });
+    assert(commissionPayroll.some(row => row[1] === 'LÍQUIDO' && row[3] === 1776.07));
     console.log('Unified thirteenth PDF/XLSX audit memory, unique entries, links and totals verified.');
     console.log(`Export generators passed: PDF ${pdfBytes.length} bytes; XLSX ${excelBytes.length} bytes; credits, debits and totals verified.`);
 } finally {

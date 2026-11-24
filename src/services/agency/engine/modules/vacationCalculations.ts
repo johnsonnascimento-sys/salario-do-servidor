@@ -10,12 +10,17 @@ import { CourtConfig } from '../../../../types';
 import { calculateIrrf } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent, resolveGratificationValue } from './baseCalculations';
-import { getPayrollRules, isNoFunction } from './configRules';
+import { getPayrollRules } from './configRules';
+import { calculateCommissionIncomeTax, resolveCommissionPay, type CommissionIncomeTaxMemory } from './commissionCalculations';
+import { requireCommissionOriginIncluded } from './commissionContext';
 
 export interface VacationResult {
     value: number;
     irFerias: number;
     descontoAntecipacao: number;
+    originWithholding?: number;
+    taxableRemunerationInMonthly?: number;
+    incomeTaxMemory?: CommissionIncomeTaxMemory;
 }
 
 const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
@@ -28,7 +33,7 @@ const requireAgencyConfig = (params: IAgencyCalculationParams): CourtConfig => {
 /**
  * Calcula Ferias (1/3 Constitucional)
  */
-export async function calculateVacation(params: IAgencyCalculationParams): Promise<VacationResult> {
+export async function calculateVacation(params: IAgencyCalculationParams, prepareOnly = false): Promise<VacationResult> {
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     let ferias1_3 = params.ferias1_3 || 0;
@@ -36,9 +41,10 @@ export async function calculateVacation(params: IAgencyCalculationParams): Promi
     if (!params.manualFerias) {
         if (params.tipoCalculo === 'jan' || ferias1_3 > 0) {
             const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
-            const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
+            const commission = resolveCommissionPay(params, { funcoes });
+            const baseVencimento = commission.allowCareer ? (salario[params.cargo]?.[params.padrao] || 0) : 0;
             const gaj = baseVencimento * payrollRules.gajRate;
-            const funcaoValor = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+            const funcaoValor = commission.funcaoValor;
 
             let aqTituloVal = 0;
             let aqTreinoVal = 0;
@@ -72,6 +78,9 @@ export async function calculateVacation(params: IAgencyCalculationParams): Promi
 
             let baseFerias = 0;
             if (incideVenc) baseFerias += baseVencimento;
+            if (incideVenc && !commission.allowCareer && requireCommissionOriginIncluded(params, 'vacation')) {
+                baseFerias += commission.originRemuneration;
+            }
             if (incideGAJ) baseFerias += gaj;
             if (incideFuncao) baseFerias += funcaoValor;
             if (incideAQTitulo) baseFerias += aqTituloVal;
@@ -106,12 +115,35 @@ export async function calculateVacation(params: IAgencyCalculationParams): Promi
 
     // IR sobre Ferias
     let irFerias = 0;
+    let originWithholding = 0;
+    let taxableRemunerationInMonthly = 0;
+    let incomeTaxMemory: CommissionIncomeTaxMemory | undefined;
     if (ferias1_3 > 0 && !params.feriasAntecipadas) {
-        const deducaoDep = config.values?.deducao_dep || 0;
-        const baseIRFerias = ferias1_3 - (params.dependents * deducaoDep);
-        const deductionVal = config.historico_ir?.[params.tabelaIR] || 0;
-        irFerias = calculateIrrf(baseIRFerias, payrollRules.irrfTopRate, deductionVal);
+        if (params.commissionProfile) {
+            const informed = params.commissionProfile.vacationTaxableRemuneration;
+            if (typeof informed !== 'number' || !Number.isFinite(informed) || informed < 0) {
+                throw new Error('Férias pendentes: informe a remuneração tributável das férias já incluída na folha do mês.');
+            }
+            taxableRemunerationInMonthly = informed;
+        }
+        if (params.commissionProfile?.kind === 'external') {
+            const informed = params.commissionProfile.withholdingVacation;
+            if (typeof informed !== 'number' || !Number.isFinite(informed) || informed < 0 || informed > ferias1_3 + taxableRemunerationInMonthly) {
+                throw new Error('Férias pendentes: informe a retenção previdenciária documentada nas férias, inclusive zero quando não houver retenção.');
+            }
+            originWithholding = informed;
+        }
+        if (!prepareOnly) {
+            const dependents = params.dependents * (config.values?.deducao_dep || 0);
+            if (params.commissionProfile) {
+                incomeTaxMemory = calculateCommissionIncomeTax(params, ferias1_3 + taxableRemunerationInMonthly,
+                    dependents + originWithholding + (params.commissionVacationInss ?? 0), 'ferias');
+                irFerias = incomeTaxMemory.amount;
+            } else {
+                irFerias = calculateIrrf(ferias1_3 - dependents, payrollRules.irrfTopRate, config.historico_ir?.[params.tabelaIR] || 0);
+            }
+        }
     }
 
-    return { value: ferias1_3, irFerias, descontoAntecipacao };
+    return { value: ferias1_3, irFerias, descontoAntecipacao, originWithholding, taxableRemunerationInMonthly, incomeTaxMemory };
 }

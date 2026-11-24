@@ -95,6 +95,22 @@ export const buildPresetGrossLines = ({
         }
         case 'decimo': {
             if (state.thirteenthMemory) return unifiedThirteenthLines(state);
+            if (state.commissionProfile) {
+                const first = roundCurrency((state.adiant13Venc || 0) + (state.adiant13FC || 0));
+                const second = roundCurrency((state.segunda13Venc || 0) + (state.segunda13FC || 0) + (state.abonoPerm13 || 0));
+                const ir = roundCurrency(state.ir13 || 0);
+                const inss = roundCurrency(state.inss13 || 0);
+                const pss = roundCurrency(state.pss13 || 0);
+                return [
+                    { label: '1ª parcela bruta', value: first },
+                    { label: '2ª parcela bruta', value: second },
+                    { label: 'Desconto IR (Total 13º salário)', value: ir, isDiscount: true },
+                    { label: 'Desconto INSS (Total 13º salário)', value: inss, isDiscount: true },
+                    { label: 'Desconto PSS (Total 13º salário)', value: pss, isDiscount: true },
+                    { label: 'Total 13º salário Bruto', value: roundCurrency(first + second), cardAmount: 'gross' },
+                    { label: 'Total 13º salário Líquido', value: roundCurrency(first + second - ir - inss - pss), cardAmount: 'net' }
+                ];
+            }
             const primeira13VencBruto = roundCurrency(state.adiant13Venc || 0);
             const primeira13FcBruto = roundCurrency(state.adiant13FC || 0);
             const segunda13VencBruto = roundCurrency(state.segunda13Venc || 0);

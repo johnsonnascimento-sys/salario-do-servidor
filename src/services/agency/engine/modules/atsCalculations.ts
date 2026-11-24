@@ -2,7 +2,7 @@ import type { Rubrica } from '../../../../types';
 import type { IAgencyCalculationParams } from '../types';
 import { getEffectiveBasicSalary } from './baseCalculations';
 
-type AtsContext = Pick<IAgencyCalculationParams, 'periodo' | 'cargo' | 'padrao' | 'agencyConfig'>;
+type AtsContext = Pick<IAgencyCalculationParams, 'periodo' | 'cargo' | 'padrao' | 'agencyConfig' | 'commissionProfile'>;
 
 const usesAtsPercentage = (rubrica: Rubrica) =>
     rubrica.tipo === 'C' && rubrica.vantagemPessoal === 'ATS' && rubrica.atsPercentual !== undefined;
@@ -29,6 +29,7 @@ export function calculateAtsPercentage(percentual: number, { limit, basicSalary 
 }
 
 export function resolveAtsRubrics(rubricas: Rubrica[], context: AtsContext) {
+    if (context.commissionProfile) return { rubricas: rubricas.filter(rubrica => !rubrica.vantagemPessoal) };
     if (!rubricas.some(usesAtsPercentage)) return { rubricas };
 
     const calculationContext = getAtsCalculationContext(context);

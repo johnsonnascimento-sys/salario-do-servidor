@@ -185,6 +185,36 @@ export function GaactaCompensatoryLeaveCard({ state, updateMany, courtConfig, ca
                         ))}
                     </div>
                 </fieldset>
+                {mode === 'gaacta' && state.commissionProfile && <label className={styles.checkboxLabel}>
+                    <input type="checkbox" className={styles.checkbox} checked={state.commissionProfile.gaactaEligibleRole === true}
+                        onChange={event => updateMany({ commissionProfile: { ...state.commissionProfile!, gaactaEligibleRole: event.target.checked } })} />
+                    <span>Confirmo que o cargo e a unidade estão abrangidos pela norma aplicável e que não há exclusão para meu vínculo.{isCjf ? ' Na Resolução CJF nº 986/2026, confirme o exercício no Conselho da Justiça Federal.' : ''}</span>
+                </label>}
+                {mode === 'licenca' && state.commissionProfile && <label className={styles.checkboxLabel}>
+                    <input type="checkbox" className={styles.checkbox} checked={state.commissionProfile.compensatoryLeaveEligible === true}
+                        onChange={event => updateMany({ commissionProfile: { ...state.commissionProfile!, compensatoryLeaveEligible: event.target.checked } })} />
+                    <span>Confirmo o direito à licença compensatória na competência indicada.</span>
+                </label>}
+                {mode === 'licenca' && state.commissionProfile && courtConfig.commission?.compensatoryLeave?.documentedGross && <div>
+                    <label htmlFor={`${id}-gross-license`} className={styles.label}>Valor bruto documentado da licença na folha do Judiciário</label>
+                    <input id={`${id}-gross-license`} type="number" min="0" step="0.01" inputMode="decimal" className={styles.input}
+                        value={state.commissionProfile.compensatoryLeaveDocumentedGross ?? ''}
+                        onChange={event => {
+                            if (state.commissionProfile) updateMany({ commissionProfile: { ...state.commissionProfile,
+                                compensatoryLeaveDocumentedGross: event.target.value === '' ? undefined : Number(event.target.value) } });
+                        }} />
+                </div>}
+                {mode === 'licenca' && !courtConfig.commission?.compensatoryLeave?.documentedGross && state.commissionProfile?.kind === 'external' &&
+                    (state.commissionProfile.payment !== 'judiciary' || state.commissionProfile.cjOption === 'full') && <div>
+                    <label htmlFor={`${id}-origin-license`} className={styles.label}>Remuneração permanente de origem para a base da licença</label>
+                    <input id={`${id}-origin-license`} type="number" min="0" step="0.01" inputMode="decimal" className={styles.input}
+                        value={state.commissionProfile.compensatoryLeaveOriginRemuneration ?? ''}
+                        onChange={event => {
+                            if (state.commissionProfile?.kind === 'external') updateMany({ commissionProfile: { ...state.commissionProfile,
+                                compensatoryLeaveOriginRemuneration: event.target.value === '' ? undefined : Number(event.target.value) } });
+                        }} />
+                    <p className={inputLabel}>Informe o valor documentado. A parcela será considerada somente na base desta licença.</p>
+                </div>}
                 {bothSelected && <p className={inputLabel}>Esta simulação salva contém as duas rubricas. Selecione a que deseja manter.</p>}
                 {mode === 'licenca' && <div className="max-w-xs">
                     <label htmlFor={`${id}-dias`} className={styles.label}>Dias a indenizar</label>

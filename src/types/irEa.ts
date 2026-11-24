@@ -17,6 +17,11 @@ export interface IrTableMetadata {
     validFrom: string;
     validTo?: string;
     reference: string;
+    payroll?: {
+        simplifiedDeduction: number;
+        reductionApplicable: boolean;
+        reduction?: IrTableMetadata['rra']['reduction'];
+    };
     rra: {
         reductionApplicable: boolean;
         deductDependents: boolean;

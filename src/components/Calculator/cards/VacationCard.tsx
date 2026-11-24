@@ -72,14 +72,17 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
         onEditingChange?.(false);
     };
     const noFunctionCode = courtConfig?.careerCatalog?.noFunctionCode;
+    const origemNasFerias = state.commissionProfile?.kind === 'external' && state.commissionProfile.vacationPaysOriginRemuneration
+        ? state.originRemuneration || 0 : 0;
     const funcaoValorBruta = useMemo(() => {
+        if (state.commissionProfile) return state.funcaoValor || 0;
         if (!state.funcao || state.funcao === noFunctionCode || !courtConfig?.bases?.funcoes) {
             return 0;
         }
         return getTablesForPeriod(state.periodo, courtConfig).funcoes[state.funcao] || 0;
-    }, [state.funcao, state.periodo, noFunctionCode, courtConfig]);
+    }, [state.commissionProfile, state.funcaoValor, state.funcao, state.periodo, noFunctionCode, courtConfig]);
 
-    const temAbonoAtivo = Boolean(state.recebeAbono);
+    const temAbonoAtivo = !state.commissionProfile && Boolean(state.recebeAbono);
     const valorAbono = temAbonoAtivo
         ? (Number(state.abonoPermanencia) || Number(state.pssMensal) || 0)
         : 0;
@@ -102,14 +105,14 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
     // Base apurada da remuneração de férias com as seleções dinâmicas
     const totalBaseApurada = useMemo(() => {
         let total = 0;
-        if (incideVenc) total += (state.vencimento || 0);
-        if (incideGAJ) total += (state.gaj || 0);
+        if (incideVenc) total += state.commissionProfile ? origemNasFerias : (state.vencimento || 0);
+        if (!state.commissionProfile && incideGAJ) total += (state.gaj || 0);
         if (incideFuncao) total += funcaoValorBruta;
-        if (incideAQTitulo) total += (state.aqTituloValor || 0);
-        if (incideAQTreino) total += (state.aqTreinoValor || 0);
-        if (incideGrat) total += (state.gratEspecificaValor || 0);
-        if (incideVPNI) total += (state.vpni_lei || 0) + (state.vpni_decisao || 0);
-        if (incideATS) total += (state.ats || 0);
+        if (!state.commissionProfile && incideAQTitulo) total += (state.aqTituloValor || 0);
+        if (!state.commissionProfile && incideAQTreino) total += (state.aqTreinoValor || 0);
+        if (!state.commissionProfile && incideGrat) total += (state.gratEspecificaValor || 0);
+        if (!state.commissionProfile && incideVPNI) total += (state.vpni_lei || 0) + (state.vpni_decisao || 0);
+        if (!state.commissionProfile && incideATS) total += (state.ats || 0);
         if (incideAbono && temAbonoAtivo) total += valorAbono;
 
         if (state.feriasRubricasInclusas && Array.isArray(state.rubricasExtras)) {
@@ -139,6 +142,8 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
         temAbonoAtivo,
         valorAbono,
         state.vencimento,
+        state.commissionProfile,
+        origemNasFerias,
         state.gaj,
         state.aqTituloValor,
         state.aqTreinoValor,
@@ -195,6 +200,14 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                 <p className="text-body-xs text-neutral-500 dark:text-neutral-400">
                     {inputs.manualFerias ? 'Valor manual' : 'Cálculo automático'}
                 </p>
+                {inputs.commissionProfile && (inputs.ferias1_3 > 0 || (!inputs.manualFerias && inputs.tipoCalculo === 'jan')) && <div>
+                    <label htmlFor={`${fieldId}-taxable-vacation`} className={styles.label}>Remuneração tributável das férias já incluída na folha do mês</label>
+                    <input id={`${fieldId}-taxable-vacation`} className={styles.input} type="number" min="0" step="0.01" inputMode="decimal"
+                        value={inputs.commissionProfile.vacationTaxableRemuneration ?? ''}
+                        onChange={event => saveField('commissionProfile', { ...inputs.commissionProfile,
+                            vacationTaxableRemuneration: event.target.value === '' ? undefined : Number(event.target.value) })} />
+                    <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Informe zero quando a folha pagar somente o adicional de férias.</p>
+                </div>}
                 {inputs.feriasAntecipadas && <p className="text-body-xs text-neutral-500 dark:text-neutral-400">Recebimento anterior informado · desconto {inputs.feriasDescManual ? 'personalizado' : 'automático'}.</p>}
                 {overview}
                 <div className="flex justify-end border-t border-neutral-200 pt-4 dark:border-neutral-700">
@@ -215,13 +228,13 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                             onChange={e => update('feriasIncideVencimento', e.target.checked)}
                         />
                         <span className="flex-1 flex items-center justify-between gap-2">
-                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">Vencimento Básico</span>
-                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.vencimento)}</span>
+                            <span className="text-body-xs text-neutral-700 dark:text-neutral-300">{state.commissionProfile ? 'Remuneração de origem' : 'Vencimento Básico'}</span>
+                            <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.commissionProfile ? origemNasFerias : state.vencimento)}</span>
                         </span>
                     </label>
 
                     {/* GAJ */}
-                    <label className={styles.checkboxLabel}>
+                    {!state.commissionProfile && <label className={styles.checkboxLabel}>
                         <input
                             type="checkbox"
                             className={styles.checkbox}
@@ -232,7 +245,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                             <span className="text-body-xs text-neutral-700 dark:text-neutral-300">GAJ</span>
                             <span className="font-mono text-body-xs text-neutral-600 dark:text-neutral-400 font-semibold">{formatCurrency(state.gaj)}</span>
                         </span>
-                    </label>
+                    </label>}
 
                     {/* FC / CJ */}
                     {funcaoValorBruta > 0 && (
@@ -251,7 +264,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                     )}
 
                     {/* AQ Títulos */}
-                    {(state.aqTituloValor || 0) > 0 && (
+                    {!state.commissionProfile && (state.aqTituloValor || 0) > 0 && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -267,7 +280,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                     )}
 
                     {/* AQ Treinamento */}
-                    {(state.aqTreinoValor || 0) > 0 && (
+                    {!state.commissionProfile && (state.aqTreinoValor || 0) > 0 && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -283,7 +296,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                     )}
 
                     {/* VPNI (Lei e Decisão Judicial) */}
-                    {((state.vpni_lei || 0) > 0 || (state.vpni_decisao || 0) > 0) && (
+                    {!state.commissionProfile && ((state.vpni_lei || 0) > 0 || (state.vpni_decisao || 0) > 0) && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -299,7 +312,7 @@ export const VacationCard: React.FC<VacationCardProps> = ({ state: savedState, i
                     )}
 
                     {/* ATS (Anuênios) */}
-                    {(state.ats || 0) > 0 && (
+                    {!state.commissionProfile && (state.ats || 0) > 0 && (
                         <label className={styles.checkboxLabel}>
                             <input
                                 type="checkbox"

@@ -141,13 +141,21 @@ export const DailiesCard: React.FC<DailiesCardProps> = ({ state: savedState, inp
     return <div className="space-y-4 text-neutral-700 dark:text-neutral-200">
         {!draft ? <>
             {travelFields}
+            {state.commissionProfile?.kind === 'external' && /^fc/i.test(state.funcao) && <div>
+                <label htmlFor={`${id}-daily-rate`} className={styles.label}>Valor diário documentado para a função</label>
+                <input id={`${id}-daily-rate`} className={styles.input} type="number" min="0" step="0.01" inputMode="decimal"
+                    value={state.commissionProfile.documentedDailyRate ?? ''}
+                    onChange={event => saveField('commissionProfile', { ...state.commissionProfile,
+                        documentedDailyRate: event.target.value === '' ? undefined : Number(event.target.value) })} />
+                <p className={hintClass}>Informe quando o valor da diária não estiver previsto na configuração do órgão.</p>
+            </div>}
             <div className="space-y-1 text-body-xs">
                 <p>{additionalLabel}: {isJmu ? ({ nenhum: 'nenhum', metade: 'ida ou volta', completo: 'ida e volta' }[state.diariasEmbarque]) : `${selectedLegs.length} de 4 trechos sem veículo oficial`}.</p>
                 {conditions.map((text, index) => <p key={index} className={hintClass}>{text}</p>)}
             </div>
             {calculationReady && validPeriod ? <>
                 <dl className="divide-y divide-neutral-200 dark:divide-neutral-700">
-                    <div className="flex flex-wrap justify-between gap-2 py-3 text-body-xs"><dt>Diária unitária</dt><dd className="font-mono font-semibold">{formatCurrency(info.dailyRate)}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-2 py-3 text-body-xs"><dt>Diária unitária</dt><dd className="font-mono font-semibold">{state.commissionProfile && savedState.diariasValorUnitario === undefined ? '—' : formatCurrency(state.commissionProfile ? savedState.diariasValorUnitario! : info.dailyRate)}</dd></div>
                     <div className="flex flex-wrap justify-between gap-2 py-3 text-body-xs"><dt>{additionalLabel}</dt><dd className="font-mono font-semibold">{formatCurrency(info.additional)}</dd></div>
                 </dl>
                 <Totals bruto={savedState.diariasBruto || 0} discounts={(savedState.diariasCorteLdo || 0) + (savedState.diariasGlosa || 0) + (savedState.diariasDescAlim || 0) + (savedState.diariasDescTransp || 0)} net={savedState.diariasValorTotal || 0} />

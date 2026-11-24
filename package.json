@@ -11,6 +11,7 @@
     "test:ats": "node scripts/test-ats.mjs",
     "test:sorting": "node scripts/test-payslip-sorting.cjs",
     "test:pension": "node scripts/test-pension.mjs && node scripts/test-pension-integration.mjs",
+    "test:commission": "node scripts/test-commission-engine.mjs && node scripts/test-commission-ui.mjs",
     "test:pension-form": "node scripts/test-pension-form.mjs",
     "test:pension-stage1": "node scripts/test-manual-rubricas-pension.mjs && node scripts/test-pension-pending.mjs",
     "test:pension-stage2": "node scripts/test-pension-retro-links.mjs && node scripts/test-pension-retro-workflow.mjs && node scripts/test-pension-pending.mjs",

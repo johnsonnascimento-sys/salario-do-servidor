@@ -1,6 +1,7 @@
 import { thirteenthAuditRows } from '../utils/thirteenthPresentation';
 import { buildIrEaAuditRows } from '../utils/irEaExport';
 import { buildPensionAuditRows } from '../utils/pensionExport';
+import { commissionAuditRows } from '../utils/commissionPresentation';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -165,6 +166,15 @@ export const exportToPDF = (
         doc.autoTable({ head: [['Referência / Campo', 'Valor']], body: pensionRows,
             startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
     }
+    const commissionRows = commissionAuditRows(state);
+    if (commissionRows.length > 0) {
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text('Memória de CJ/FC', 14, 18);
+        doc.autoTable({ head: [['Campo', 'Valor']], body: commissionRows,
+            startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
+    }
     const irEaRows = buildIrEaAuditRows(state.irEaMemory);
     if (irEaRows.length > 0) {
         doc.addPage();
@@ -255,6 +265,12 @@ export const exportToExcel = (
         XLSX.utils.book_append_sheet(wb, auditSheet, 'Memória previdenciária');
     }
 
+    const commissionRows = commissionAuditRows(state);
+    if (commissionRows.length > 0) {
+        const auditSheet = XLSX.utils.aoa_to_sheet([['Campo', 'Valor'], ...commissionRows]);
+        auditSheet['!cols'] = [{ wch: 58 }, { wch: 70 }];
+        XLSX.utils.book_append_sheet(wb, auditSheet, 'Memória de CJ-FC');
+    }
     const irEaRows = buildIrEaAuditRows(state.irEaMemory);
     if (irEaRows.length > 0) {
         const irEaSheet = XLSX.utils.aoa_to_sheet([['Campo', 'Valor'], ...irEaRows]);

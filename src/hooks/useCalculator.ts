@@ -148,6 +148,10 @@ export const useCalculator = () => {
                 ...stripCalculatedFieldsFromCalculatorState(state),
                 // Preserve the audit at save time; recalculation still uses the current engine.
                 pensionMemory: calculatedState.pensionMemory,
+                commissionMemory: calculatedState.commissionMemory,
+                rgpsMemory: calculatedState.rgpsMemory,
+                rgpsThirteenthMemory: calculatedState.rgpsThirteenthMemory,
+                commissionIncomeTax: calculatedState.commissionIncomeTax,
             };
             localStorage.setItem(USER_AREA_LAST_CALCULATOR_STATE_KEY, JSON.stringify(persistedState));
             localStorage.setItem(USER_AREA_LAST_RESULT_ROWS_KEY, JSON.stringify(resultRows));
@@ -155,7 +159,7 @@ export const useCalculator = () => {
         } catch (_error) {
             // Ignora falhas de localStorage em modo privado/restrito.
         }
-    }, [state, resultRows, calculatedState.pensionMemory]);
+    }, [state, resultRows, calculatedState]);
 
     const saveCurrentPayslip = useCallback(async () => {
         if (!calculationReady) {
@@ -173,6 +177,10 @@ export const useCalculator = () => {
                 ...stripCalculatedFieldsFromCalculatorState(state),
                 // Preserve the audit at save time; recalculation still uses the current engine.
                 pensionMemory: calculatedState.pensionMemory,
+                commissionMemory: calculatedState.commissionMemory,
+                rgpsMemory: calculatedState.rgpsMemory,
+                rgpsThirteenthMemory: calculatedState.rgpsThirteenthMemory,
+                commissionIncomeTax: calculatedState.commissionIncomeTax,
             };
 
             if (editPayslipId) {

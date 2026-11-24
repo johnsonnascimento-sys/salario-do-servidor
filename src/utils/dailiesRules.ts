@@ -62,6 +62,7 @@ export type DiariasAutoridadeAssistida =
     | 'juiz_militar';
 
 export interface ResolveDailyRateInput {
+    documentedRegularRate?: number;
     dailiesConfig: DailiesConfig | undefined;
     cargo: string;
     funcao?: string;
@@ -262,7 +263,8 @@ export const resolveDailiesDailyRate = ({
     acompanhamentoIntegral,
     autoridadeAssistida,
     equipeTrabalho,
-    equipeTrabalhoMaiorCargo
+    equipeTrabalhoMaiorCargo,
+    documentedRegularRate
 }: ResolveDailyRateInput): number => {
     const isCommission = hasCommissionRole ?? Boolean(funcao && normalizeKey(funcao).replace(/[\s\-_]/g, '').startsWith('cj'));
     const fallbackCandidates = resolveRateKeyCandidates(cargo, funcao, isCommission);
@@ -282,7 +284,7 @@ export const resolveDailiesDailyRate = ({
         return round2(ministerPerDiem * percentage);
     };
 
-    const regularRate = calculateRateForCandidates(fallbackCandidates);
+    const regularRate = documentedRegularRate ?? calculateRateForCandidates(fallbackCandidates);
 
     const isMagistrate = fallbackCandidates.some((c) =>
         ['desembargador', 'juiz_titular', 'juiz_substituto', 'juiz', 'magistrado'].includes(c)

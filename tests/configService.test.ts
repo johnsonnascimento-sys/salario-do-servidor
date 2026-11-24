@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import { ConfigService, ConfigLoadError, ConfigNotFoundError } from '../src/services/config/ConfigService';
+import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
 
 // Mock helper to control Supabase responses per table
 type QueryResult = { data: any; error: any };
@@ -54,6 +56,90 @@ const defaultPowerRecords = [
     { power_name: 'PJU', config_key: 'salary_bases', config_value: { analista: { A1: 6000 } } },
     { power_name: 'PJU', config_key: 'dailies_rules', config_value: { derived_from_minister: { enabled: true, minister_per_diem: 1466.95 } } }
 ];
+
+const commissionMigration = readFileSync(
+    new URL('../supabase/migrations/20261124_commission_profiles.sql', import.meta.url), 'utf8');
+const commissionRules = JSON.parse(commissionMigration.split('$commission$')[1]);
+const rgpsTables = JSON.parse(commissionMigration.split('$rgps$')[1]);
+const commissionOrgOverrides = JSON.parse(commissionMigration.split('$organs$')[1]);
+const commissionIrMigration = readFileSync(
+    new URL('../supabase/migrations/20261124_commission_payroll_ir.sql', import.meta.url), 'utf8');
+const commissionIrPayroll = JSON.parse(commissionIrMigration.split('$payroll$')[1]);
+const commissionIrBrackets = JSON.parse(commissionIrMigration.split('$brackets$')[1]);
+
+test('CJ/FC: catálogo oficial preserva os valores integrais e a transição de julho/2026', () => {
+    assert.equal(commissionRules.enabled, false);
+    const [january, july] = commissionRules.versions;
+    assert.equal(january.valid_from, '2026-01-01');
+    assert.equal(january.valid_to, '2026-06-30');
+    assert.equal(january.cj_integral.cj3, 15430.68);
+    assert.equal(january.fc.fc3, 1644.51);
+    assert.equal(july.valid_from, '2026-07-01');
+    assert.equal(july.cj_integral.cj3, 16665.13);
+    assert.equal(july.fc.fc3, 1776.07);
+    assert.equal(Math.round(july.cj_integral.cj3 * july.cj_option_rate * 100) / 100, 10832.33);
+    assert.equal(rgpsTables.versions[0].valid_to, '2026-12-31');
+    assert.equal(rgpsTables.versions[0].teto, 8475.55);
+    assert.equal(rgpsTables.versions[0].faixas[1].ate, 2902.84);
+});
+
+test('CJ/FC: ativação por órgão preserva o catálogo do poder e mapeia as tabelas globais', async () => {
+    tableMocks = {
+        global_config: () => ({ data: [
+            { config_key: 'ir_deduction', config_value: { '2026_jan': {
+                deduction: 908.73, valid_from: '2026-01-01', reference: 'RFB 2026',
+                brackets: commissionIrBrackets, payroll: commissionIrPayroll,
+                rra: { reductionApplicable: false, deductDependents: false, deductComplementaryPension: false },
+            } } },
+            { config_key: 'pss_tables', config_value: {} },
+            { config_key: 'rgps_tables', config_value: rgpsTables }], error: null }),
+        power_config: () => ({ data: [...defaultPowerRecords,
+            { power_name: 'PJU', config_key: 'commission_rules', config_value: commissionRules }], error: null }),
+        org_config: () => ({ data: { org_slug: 'trt2', org_name: 'TRT-2', power_name: 'PJU',
+            configuration: { commission_rules: { enabled: true } } }, error: null }),
+    };
+    const effective = await new ConfigService().getEffectiveConfig('trt2');
+    const court = mapEffectiveConfigToCourtConfig(effective);
+    assert.equal(court.commission?.enabled, true);
+    assert.equal(court.commission?.versions.length, 2);
+    assert.equal(court.commission?.versions[1].cjIntegral.cj3, 16665.13);
+    assert.equal(court.commission?.versions[0].validTo, '2026-06-30');
+    assert.equal(court.rgps?.versions[0].teto, 8475.55);
+    assert.equal(court.rgps?.versions[0].faixas[1].ate, 2902.84);
+    assert.match(court.rgps?.versions[0].source ?? '', /gov\.br\/inss/);
+    assert.equal(court.historico_ir_metadata?.['2026_jan'].payroll?.simplifiedDeduction, 607.20);
+    assert.equal(court.historico_ir_metadata?.['2026_jan'].payroll?.reduction?.exemptIncome, 5000);
+    assert.equal(court.historico_ir_metadata?.['2026_jan'].payroll?.reduction?.slope, 0.133145);
+    assert.equal(court.historico_ir_metadata?.['2026_jan'].rra.reductionApplicable, false);
+    assert.equal(commissionRules.enabled, false);
+});
+
+for (const org of ['jmu', 'cjf']) {
+    test(`CJ/FC: referências locais de ${org} preservam ativação desabilitada e tabelas comuns`, async () => {
+        tableMocks = {
+            global_config: () => ({ data: [{ config_key: 'pss_tables', config_value: {} }], error: null }),
+            power_config: () => ({ data: [...defaultPowerRecords,
+                { power_name: 'PJU', config_key: 'commission_rules', config_value: commissionRules }], error: null }),
+            org_config: () => ({ data: { org_slug: org, org_name: org, power_name: 'PJU', configuration: {
+                commission_rules: commissionOrgOverrides[org],
+            } }, error: null }),
+        };
+        const effective = await new ConfigService().getEffectiveConfig(org);
+        const commission = mapEffectiveConfigToCourtConfig(effective).commission;
+        assert.equal(commission?.enabled, false);
+        assert.equal(commission?.versions[1].cjIntegral.cj3, 16665.13);
+        assert.ok(commission?.gaactaSource?.url.startsWith('https://'));
+        if (org === 'cjf') {
+            assert.equal(commission?.dailiesFc?.amount, 695.49);
+            assert.equal(commission?.dailiesFc?.validFrom, '2026-06-10');
+            assert.equal(commission?.compensatoryLeave, undefined);
+        } else {
+            assert.equal(commission?.dailiesFc, undefined);
+            assert.equal(commission?.compensatoryLeave?.validFrom, '2025-07-01');
+            assert.equal(commission?.compensatoryLeave?.validTo, '2026-06-01');
+        }
+    });
+}
 
 test('ConfigService: erro operacional em org_config lança ConfigLoadError (não mascara erro)', async () => {
     tableMocks = {

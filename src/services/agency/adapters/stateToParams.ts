@@ -1,6 +1,7 @@
 import { CalculatorState, CourtConfig } from '../../../types';
 import { IAgencyCalculationParams } from '../engine/types';
 import { resolveAtsRubrics } from '../engine/modules/atsCalculations';
+import { applyCommissionProfile } from '../engine/modules/commissionContext';
 
 /**
  * Adaptador: Converte estado React para parâmetros do motor de cálculo da agência.
@@ -16,7 +17,7 @@ export function mapStateToAgencyParams(
 ): IAgencyCalculationParams {
     const ats = resolveAtsRubrics(state.rubricasExtras, { ...state, agencyConfig });
     const competencia = `${state.anoRef}-${String(['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'].indexOf(state.mesRef.toUpperCase()) + 1).padStart(2, '0')}`;
-    return {
+    return applyCommissionProfile({
         // Base (ICalculationParams)
         grossSalary: 0, // Ignorado pelo JMU (calcula de cargo/padrao)
         dependents: state.dependentes,
@@ -37,6 +38,7 @@ export function mapStateToAgencyParams(
 
         // Core Params
         periodo: state.periodo,
+        commissionProfile: state.commissionProfile,
         cargo: state.cargo,
         padrao: state.padrao,
         funcao: state.funcao,
@@ -193,7 +195,7 @@ export function mapStateToAgencyParams(
         gaactaBaseManualValor: state.gaactaBaseManualValor || 0,
         gaactaRubricasInclusas: state.gaactaRubricasInclusas || {},
         abonoPermanencia: state.abonoPermanencia || 0,
-    };
+    });
 }
 
 /**

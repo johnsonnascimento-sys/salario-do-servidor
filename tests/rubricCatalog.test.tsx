@@ -44,7 +44,7 @@ test('catálogo localiza a instância atual e abre a recém-incluída pelo ID', 
                 const key = 'overtime-new';
                 setInstances(previous => [{ presetId, key }, ...previous]);
                 return key;
-            }} addRubrica={() => {}} expandCard={expandCard}>
+            }} addRubrica={() => {}} onEditCard={expandCard}>
             <output>{expanded}</output>
         </PresetControlsSection>;
     }

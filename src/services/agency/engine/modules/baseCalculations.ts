@@ -15,6 +15,7 @@
 import { IAgencyCalculationParams } from '../types';
 import { CourtConfig } from '../../../../types';
 import { getPayrollRules, isNoFunction } from './configRules';
+import { resolveCommissionPay } from './commissionCalculations';
 
 interface AdjustmentEntry {
     period: number;
@@ -127,6 +128,7 @@ export function resolveGratificationValue(
     aqTreinoVal: number,
     rate: number
 ): number {
+    if (params.commissionProfile) return 0;
     if (params.gratEspecificaTipo !== 'gae' && params.gratEspecificaTipo !== 'gas') {
         return params.gratEspecificaValor || 0;
     }
@@ -172,6 +174,10 @@ export function resolveGratificationValue(
  */
 export async function calculateBase(params: IAgencyCalculationParams): Promise<number> {
     const config = requireAgencyConfig(params);
+    if (params.commissionProfile) {
+        const pay = resolveCommissionPay(params);
+        return pay.funcaoValor + pay.originRemuneration;
+    }
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 
@@ -220,6 +226,12 @@ export async function calculateBase(params: IAgencyCalculationParams): Promise<n
  */
 export async function calculateBaseComponents(params: IAgencyCalculationParams) {
     const config = requireAgencyConfig(params);
+    if (params.commissionProfile) {
+        const pay = resolveCommissionPay(params);
+        return { vencimento: 0, gaj: 0, funcaoValor: pay.funcaoValor,
+            aqTitulo: 0, aqTreino: 0, gratEspecifica: 0, vpniLei: 0, vpniDecisao: 0, ats: 0,
+            originRemuneration: pay.originRemuneration, commissionMemory: pay.memory };
+    }
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
 

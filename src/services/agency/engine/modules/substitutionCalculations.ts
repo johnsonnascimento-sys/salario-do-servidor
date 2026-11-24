@@ -12,6 +12,7 @@ import { countCalendarRangeDaysInMonth, isCalendarDate, resolveCalendarDays, shi
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod } from './baseCalculations';
 import { getPayrollRules, isNoFunction } from './configRules';
+import { resolveCommissionAlternativePay } from './commissionContext';
 
 export interface SubstitutionResult {
     total: number;
@@ -99,9 +100,12 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
         const gratification = hasGratification ? (salario[params.cargo]?.[params.padrao] || 0) * payrollRules.specificGratificationRate : 0;
         return (noFunction ? 0 : (funcoes[params.funcao] || 0)) + gratification;
     };
-    const baseFolha = getBaseAbatimento(folha);
+    const isCommissionProfile = Boolean(params.commissionProfile);
+    const baseFolha = isCommissionProfile ? resolveCommissionAlternativePay(params, params.funcao)?.funcaoValor ?? 0 : getBaseAbatimento(folha);
     const substitutionEntries = params.substitutionEntries || [];
-    const funcoesSubstituicaoElegiveis = Object.keys(folha.funcoes).filter(key => Boolean(folha.funcoes[key]) && folha.funcoes[key] > baseFolha);
+    const currentFunctionPay = (key: string) => isCommissionProfile
+        ? resolveCommissionAlternativePay(params, key)?.funcaoValor ?? 0 : folha.funcoes[key] || 0;
+    const funcoesSubstituicaoElegiveis = Object.keys(folha.funcoes).filter(key => currentFunctionPay(key) > baseFolha);
     const folhaSchedule = getConfiguredSchedule(config).find(item => item?.period === params.periodo);
     let historicalConfig: (CourtConfig & { adjustment_schedule: DatedAdjustment[] }) | undefined;
     const hasHistoricalValues = (tables: PeriodTables, funcKey: string) => {
@@ -115,8 +119,26 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
         let rawTotal = 0;
         const detalhamentoPorFuncao: SubstitutionFunctionDetail[] = [];
         const pushDetail = (funcKey: string, safeDays: number, tables: PeriodTables, extra?: Partial<SubstitutionFunctionDetail>) => {
-            const baseAbatimento = tables === folha ? baseFolha : getBaseAbatimento(tables);
-            const valorDestino = tables.funcoes[funcKey] || 0;
+            let baseAbatimento = tables === folha ? baseFolha : getBaseAbatimento(tables);
+            let valorDestino = tables.funcoes[funcKey] || 0;
+            if (isCommissionProfile && safeDays > 0) {
+                const competence = extra?.competenciaExercicio ?? params.competencia;
+                try {
+                    const destination = resolveCommissionAlternativePay(params, funcKey, competence);
+                    const current = resolveCommissionAlternativePay(params, params.funcao, competence);
+                    if (!destination || !current) throw new Error('a substituição muda a modalidade da retribuição.');
+                    baseAbatimento = current.funcaoValor;
+                    valorDestino = destination.funcaoValor;
+                    extra = { ...extra, tabelaRemuneratoria: { periodo: params.periodo,
+                        rotulo: destination.memory?.source, referencia: competence === params.competencia ? 'folha' : 'exercicio' } };
+                } catch (error) {
+                    if (entry?.valorBrutoManual !== undefined) return;
+                    const detail = error instanceof Error ? error.message : '';
+                    throw new Error(`Substituição (${funcKey.toUpperCase()}): informe o bruto documentado. ${detail}`);
+                }
+            } else if (isCommissionProfile) {
+                valorDestino = currentFunctionPay(funcKey);
+            }
             const elegivel = Boolean(valorDestino) && valorDestino > baseAbatimento;
             const diferencaMensal = elegivel ? valorDestino - baseAbatimento : 0;
             const subtotal = safeDays > 0 && elegivel
@@ -150,6 +172,10 @@ export async function calculateSubstitution(params: IAgencyCalculationParams): P
                 if (month.competencia === params.competencia) {
                     pushMonthDetail(month.intervalos, folha, { periodo: params.periodo,
                         vigencia: folhaSchedule?.date, rotulo: folhaSchedule?.label, referencia: 'folha' });
+                    continue;
+                }
+                if (isCommissionProfile) {
+                    pushMonthDetail(month.intervalos, folha, { periodo: params.periodo, referencia: 'exercicio' });
                     continue;
                 }
                 historicalConfig ??= { ...config, adjustment_schedule: getHistoricalSchedule(config) };

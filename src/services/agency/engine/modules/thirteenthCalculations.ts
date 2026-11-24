@@ -17,14 +17,20 @@ import { CourtConfig } from '../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
 import { IAgencyCalculationParams } from '../types';
 import { getDataForPeriod, normalizeAQPercent, resolveGratificationValue } from './baseCalculations';
-import { getPayrollRules, isNoFunction } from './configRules';
+import { getPayrollRules } from './configRules';
 import { buildComplementaryBase, calculateComplementaryPension } from './pensionCalculations';
 import type { PensionCalculationMemory, PensionRetroMemory } from '../../../../types/pension';
+import type { RgpsCalculationMemory } from '../../../../types/commissionProfile';
+import { calculateCommissionIncomeTax, calculateCommissionInss, resolveCommissionPay, resolveCommissionWithholding, type CommissionIncomeTaxMemory } from './commissionCalculations';
+import { requireCommissionOriginIncluded } from './commissionContext';
 
 export interface ThirteenthResult {
     thirteenthMemory?: ThirteenthCalculationMemory;
     gratNatalinaTotal: number;
     pss13: number;
+    inss13?: number;
+    rgpsMemory?: RgpsCalculationMemory;
+    incomeTaxMemory?: CommissionIncomeTaxMemory;
     funpresp13: number;
     pensionMemory?: PensionCalculationMemory;
     ir13: number;
@@ -53,9 +59,10 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     const config = requireAgencyConfig(params);
     const payrollRules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
-    const baseVencimento = salario[params.cargo]?.[params.padrao] || 0;
+    const commission = resolveCommissionPay(params, { funcoes });
+    const baseVencimento = commission.allowCareer ? (salario[params.cargo]?.[params.padrao] || 0) : 0;
     const gaj = baseVencimento * payrollRules.gajRate;
-    const funcaoValorBruta = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+    const funcaoValorBruta = commission.funcaoValor;
     const funcaoValor = params.decimoIncideFuncao !== false ? funcaoValorBruta : 0;
 
     let aqTituloVal = 0;
@@ -88,6 +95,9 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     const incideAbono = params.decimoIncideAbono !== false;
 
     let baseSemFC = 0;
+    const legacyThirteenthSelected = params.tipoCalculo !== 'comum' || [params.adiant13Venc, params.adiant13FC, params.segunda13Venc, params.segunda13FC].some(value => value > 0) ||
+        [params.segunda13ModoVenc, params.segunda13ModoFC].some(mode => mode !== undefined && mode !== 'excluir');
+    if (incideVenc && legacyThirteenthSelected && requireCommissionOriginIncluded(params, 'thirteenth')) baseSemFC += commission.originRemuneration;
     if (incideVenc) baseSemFC += baseVencimento;
     if (incideGAJ) baseSemFC += gaj;
     if (incideAQTitulo) baseSemFC += aqTituloVal;
@@ -172,6 +182,9 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
 
     let gratNatalinaTotal = primeiraParcelaRecebida + segundaParcelaRecebida;
     let pss13 = 0;
+    let inss13 = 0;
+    let rgpsMemory: RgpsCalculationMemory | undefined;
+    let incomeTaxMemory: CommissionIncomeTaxMemory | undefined;
     let funpresp13 = 0;
     let pensionMemory: PensionCalculationMemory | undefined;
     let ir13 = 0;
@@ -200,6 +213,20 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
         const baseVencTributavel13 = primeiraVencParaTributo + segunda13Venc;
         const baseFCTributavel13 = primeiraFCParaTributo + segunda13FC;
         const base13Tributavel = baseVencTributavel13 + baseFCTributavel13;
+
+        if (params.commissionProfile) {
+            if (params.commissionProfile.kind === 'exclusive_cj') {
+                rgpsMemory = calculateCommissionInss(params, base13Tributavel, '13');
+                inss13 = rgpsMemory.amount;
+            } else {
+                const withholding = resolveCommissionWithholding(params, '13');
+                if (commission.regime === 'rgps') inss13 = withholding;
+                else pss13 = withholding;
+            }
+            const deducaoDep = config.values?.deducao_dep || 0;
+            incomeTaxMemory = calculateCommissionIncomeTax(params, base13Tributavel, pss13 + inss13 + params.dependents * deducaoDep, '13');
+            ir13 = incomeTaxMemory.amount;
+        } else {
 
         const fatorVenc =
             baseSemFC > 0
@@ -248,6 +275,7 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
             retroativos.filter(entry => entry.destinoIR === '13').reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0)
         );
         ir13 = calculateIrrf(baseIR13, payrollRules.irrfTopRate, deductionVal);
+        }
     }
 
     adiant13Venc = roundCurrency(adiant13Venc);
@@ -258,6 +286,9 @@ export async function calculateThirteenth(params: IAgencyCalculationParams, retr
     return {
         gratNatalinaTotal: roundCurrency(gratNatalinaTotal),
         pss13: roundCurrency(pss13),
+        inss13: roundCurrency(inss13),
+        rgpsMemory,
+        incomeTaxMemory,
         funpresp13: roundCurrency(funpresp13),
         pensionMemory,
         ir13: roundCurrency(ir13),

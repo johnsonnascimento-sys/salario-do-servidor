@@ -17,7 +17,6 @@ import { resolveAtsRubrics } from '../../services/agency/engine/modules/atsCalcu
 import { resolvePensionSelectionContexts, type PensionSelectionContexts } from '../../services/agency/engine/modules/pensionSelectionContext';
 import { assertPensionRubricsReady, PensionCalculationPendingError } from '../../services/agency/engine/modules/pensionPending';
 import { calculateMonthlyPensionContext } from '../../services/agency/engine/modules/pensionContext';
-import { getTablesForPeriod } from '../../utils/calculations';
 import { resolveDailiesEmbarkationAdditional } from '../../utils/dailiesRules';
 import { getEmptyCalculatedPayrollState, PERSISTED_CALCULATED_INPUT_KEYS } from '../../utils/calculatorState';
 
@@ -36,7 +35,7 @@ export const useCalculatorResults = (
     const inputToken = useMemo(() => ({ state, agencyService, courtConfig, agency }), [
         agencyService,
         state.mesRef, state.anoRef,
-        state.periodo, state.cargo, state.padrao, state.funcao,
+        state.periodo, state.cargo, state.padrao, state.funcao, state.commissionProfile,
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
         state.gratIncideVencimento, state.gratIncideGAJ, state.gratIncideFuncao,
@@ -116,12 +115,14 @@ export const useCalculatorResults = (
                 const params = mapStateToAgencyParams(state, orgSlug, courtConfig);
                 if (params.atsCalculationError) throw new Error(params.atsCalculationError);
                 // Historical participation cannot be inferred from today's selection.
-                assertPensionRubricsReady(params);
-                pensionContexts = await resolvePensionSelectionContexts(params);
-                if (cancelled || currentTokenRef.current !== inputToken) return;
-                if (pensionContexts.requiresChoice) {
-                    setCompleted({ token: inputToken, state: getEmptyCalculatedPayrollState(), error: null, pensionContexts, selectionRequired: true });
-                    return;
+                if (!params.commissionProfile) {
+                    assertPensionRubricsReady(params);
+                    pensionContexts = await resolvePensionSelectionContexts(params);
+                    if (cancelled || currentTokenRef.current !== inputToken) return;
+                    if (pensionContexts.requiresChoice) {
+                        setCompleted({ token: inputToken, state: getEmptyCalculatedPayrollState(), error: null, pensionContexts, selectionRequired: true });
+                        return;
+                    }
                 }
                 const result = await agencyService.calculateTotal(params);
 
@@ -134,6 +135,15 @@ export const useCalculatorResults = (
                     vencimento: bd.vencimento || 0,
                     gaj: bd.gaj || 0,
                     funcaoValor: bd.funcaoValor || 0,
+                    commissionMemory: bd.commissionMemory,
+                    rgpsMemory: bd.rgpsMemory,
+                    rgpsThirteenthMemory: bd.rgpsThirteenthMemory,
+                    commissionIncomeTax: bd.commissionIncomeTax,
+                    originRemuneration: bd.originRemuneration || 0,
+                    inssMensal: bd.inss || 0,
+                    inss13: bd.inss13 || 0,
+                    commissionVacationWithholding: bd.commissionVacationWithholding || 0,
+                    commissionFoodAllowance: bd.auxAlimentacao || 0,
                     aqTituloValor: bd.aqTitulo || 0,
                     aqTreinoValor: bd.aqTreino || 0,
                     gratEspecificaValor: bd.gratEspecifica || 0,
@@ -189,6 +199,7 @@ export const useCalculatorResults = (
                     substIrEA: bd.substituicaoIrEA || 0,
                     substPss: bd.substituicaoPss || 0,
                     diariasValorTotal: bd.diariasValor || 0,
+                    diariasValorUnitario: bd.diariasValorUnitario || 0,
                     diariasBruto: bd.diariasBruto || 0,
                     diariasGlosa: bd.diariasGlosa || 0,
                     diariasCorteLdo: bd.diariasCorteLdo || 0,
@@ -233,13 +244,6 @@ export const useCalculatorResults = (
         };
     }, [inputToken]);
 
-    const currentTables = useMemo(() => {
-        if (!courtConfig || calculationStatus !== 'ready') {
-            return null;
-        }
-        return getTablesForPeriod(state.periodo, courtConfig);
-    }, [courtConfig, state.periodo, calculationStatus]);
-
     const effectiveState = useMemo(
         () => mergeEffectiveState({
             ...state,
@@ -275,12 +279,15 @@ export const useCalculatorResults = (
             rows.push({ label, value: effectiveState.aqTreinoValor, type: 'C' });
         }
 
-        const noFunctionCode = courtConfig.careerCatalog?.noFunctionCode;
-        if (effectiveState.funcao && effectiveState.funcao !== noFunctionCode && currentTables) {
-            const valorFC = currentTables.funcoes[effectiveState.funcao] || 0;
-            let labelTipo = 'FUNÇÃO COMISSIONADA (OPÇÃO)';
-            if (effectiveState.funcao.startsWith('cj')) labelTipo = 'CARGO EM COMISSÃO';
-            rows.push({ label: `${labelTipo} - ${effectiveState.funcao.toUpperCase()}`, value: valorFC, type: 'C' });
+        if ((effectiveState.originRemuneration ?? 0) > 0) {
+            rows.push({ label: 'REMUNERAÇÃO DE ORIGEM PAGA PELO JUDICIÁRIO', value: effectiveState.originRemuneration!, type: 'C' });
+        }
+        if ((effectiveState.funcaoValor ?? 0) > 0) {
+            const option = effectiveState.commissionMemory?.option;
+            const label = option === 'full' ? 'CARGO EM COMISSÃO INTEGRAL'
+                : option === 'effective_plus_65' ? 'CARGO EM COMISSÃO (OPÇÃO PELA REMUNERAÇÃO DE ORIGEM)'
+                    : effectiveState.funcao.startsWith('cj') ? 'CARGO EM COMISSÃO' : 'FUNÇÃO COMISSIONADA';
+            rows.push({ label: `${label} - ${effectiveState.funcao.toUpperCase()}`, value: effectiveState.funcaoValor!, type: 'C' });
         }
 
         for (const entry of effectiveState.substitutionCalculatedEntries ?? []) {
@@ -294,16 +301,19 @@ export const useCalculatorResults = (
             rows.push({ label: `SERVIÇO EXTRAORDINÁRIO (${label})`, value: entry.heTotal, type: 'C' });
         }
 
-        if (effectiveState.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: effectiveState.vpni_lei, type: 'C' });
-        if (effectiveState.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: effectiveState.vpni_decisao, type: 'C' });
-        if (effectiveState.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: effectiveState.ats, type: 'C' });
+        if (!effectiveState.commissionProfile) {
+            if (effectiveState.vpni_lei > 0) rows.push({ label: 'VPNI - LEI 9.527/97', value: effectiveState.vpni_lei, type: 'C' });
+            if (effectiveState.vpni_decisao > 0) rows.push({ label: 'VPNI - DECISÃO JUDICIAL', value: effectiveState.vpni_decisao, type: 'C' });
+            if (effectiveState.ats > 0) rows.push({ label: 'ADICIONAL TEMPO DE SERVIÇO', value: effectiveState.ats, type: 'C' });
+        }
 
-        if (effectiveState.auxAlimentacao > 0) {
+        const foodAllowance = effectiveState.commissionProfile ? effectiveState.commissionFoodAllowance ?? 0 : effectiveState.auxAlimentacao;
+        if (foodAllowance > 0) {
             rows.push({
                 label: effectiveState.auxAlimentacaoProporcional && effectiveState.auxAlimentacaoDetalhe
                     ? effectiveState.auxAlimentacaoDetalhe
                     : 'AUXILIO-ALIMENTACAO',
-                value: effectiveState.auxAlimentacao,
+                value: foodAllowance,
                 type: 'C'
             });
         }
@@ -328,6 +338,7 @@ export const useCalculatorResults = (
         }
 
         if (effectiveState.pssMensal > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS (PSS)', value: effectiveState.pssMensal, type: 'D' });
+        if ((effectiveState.inssMensal ?? 0) > 0) rows.push({ label: 'CONTRIBUIÇÃO RGPS (INSS)', value: effectiveState.inssMensal!, type: 'D' });
         if (effectiveState.pssEA > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-EA', value: effectiveState.pssEA, type: 'D' });
         if (effectiveState.valFunprespNormal > 0) rows.push({ label: effectiveState.funprespParticipacao === 'vinculado' ? 'FUNPRESP-JUD CONTRIBUIÇÃO VINCULADA' : 'FUNPRESP-JUD CONTRIBUIÇÃO NORMAL', value: effectiveState.valFunprespNormal, type: 'D' });
         if (effectiveState.valFunprespFacultativa > 0) rows.push({ label: 'FUNPRESP-JUD CONTRIBUIÇÃO FACULTATIVA / APORTE EM FOLHA', value: effectiveState.valFunprespFacultativa, type: 'D' });
@@ -351,8 +362,13 @@ export const useCalculatorResults = (
         });
 
         if (effectiveState.irFerias > 0) rows.push({ label: 'IMPOSTO DE RENDA (FÉRIAS)', value: effectiveState.irFerias, type: 'D' });
+        if ((effectiveState.commissionVacationWithholding ?? 0) > 0) {
+            const regime = effectiveState.commissionMemory?.regime === 'rgps' ? 'RGPS (INSS)' : 'RPPS (PSS)';
+            rows.push({ label: `CONTRIBUIÇÃO ${regime} — FÉRIAS`, value: effectiveState.commissionVacationWithholding!, type: 'D' });
+        }
         if (effectiveState.feriasDesc && effectiveState.feriasDesc > 0) rows.push({ label: 'ADICIONAL 1/3 DE FÉRIAS (ANTECIPADO)', value: effectiveState.feriasDesc, type: 'D' });
         if (effectiveState.pss13 && effectiveState.pss13 > 0) rows.push({ label: 'CONTRIBUIÇÃO RPPS-GN(13º) ATIVO EC', value: effectiveState.pss13, type: 'D' });
+        if ((effectiveState.inss13 ?? 0) > 0) rows.push({ label: 'CONTRIBUIÇÃO RGPS (INSS) — 13º', value: effectiveState.inss13!, type: 'D' });
         if (effectiveState.ir13 && effectiveState.ir13 > 0) rows.push({ label: 'IMPOSTO DE RENDA-GN(13º) EC', value: effectiveState.ir13, type: 'D' });
         if (!effectiveState.thirteenthMemory && effectiveState.debitoPrimeiraParcela13 > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA (ABATIMENTO)', value: effectiveState.debitoPrimeiraParcela13, type: 'D', displayGroup: 'thirteenth-advance' });
         if (effectiveState.auxTransporteDesc > 0) rows.push({ label: 'COTA-PARTE AUXÍLIO-TRANSPORTE', value: effectiveState.auxTransporteDesc, type: 'D' });
@@ -397,10 +413,13 @@ export const useCalculatorResults = (
             const bases: string[] = [];
             if (r.incideIR) bases.push('BASE IR');
             if (r.isEA) bases.push(effectiveState.irEaCurrentYearKeys?.includes(`rubrica:${r.id}`) ? 'BASE IR' : 'BASE IR (EA)');
-            if (r.incidePSS) bases.push('BASE PSS');
-            if (r.pssCompetenciaSeparada) bases.push('BASE PSS (EA)');
-            if (r.incideFunpresp) bases.push('BASE FUNPRESP');
-            if (r.funprespCompetenciaSeparada) bases.push('FUNPRESP POR COMPETÊNCIA');
+            if (effectiveState.commissionProfile?.kind === 'exclusive_cj' && r.incideINSS) bases.push('BASE INSS');
+            if (!effectiveState.commissionProfile) {
+                if (r.incidePSS) bases.push('BASE PSS');
+                if (r.pssCompetenciaSeparada) bases.push('BASE PSS (EA)');
+                if (r.incideFunpresp) bases.push('BASE FUNPRESP');
+                if (r.funprespCompetenciaSeparada) bases.push('FUNPRESP POR COMPETÊNCIA');
+            }
             const sufixoBase = bases.length > 0 ? ` (${bases.join(' | ')})` : '';
 
             rows.push({
@@ -413,7 +432,7 @@ export const useCalculatorResults = (
         const creditRows = rows.filter(row => row.type === 'C');
         const debitRows = rows.filter(row => row.type === 'D');
         return { resultRows: [...creditRows, ...debitRows], dailiesResultRows };
-    }, [effectiveState, courtConfig, currentTables, calculationStatus, agency?.slug]);
+    }, [effectiveState, courtConfig, calculationStatus, agency?.slug]);
 
     const { resultRows, dailiesResultRows } = resultGroups;
     return { effectiveState, calculatedState, resultRows, dailiesResultRows, calculationStatus, calculationError, calculationPending,

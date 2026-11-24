@@ -1,4 +1,5 @@
 import { getPensionErrorFeedback } from '../utils/pensionFeedback';
+import { commissionAuditRows } from '../utils/commissionPresentation';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ChevronDown, AlertCircle, List } from 'lucide-react';
@@ -306,9 +307,14 @@ export default function Calculator() {
 
     const pensionFeedback = getPensionErrorFeedback(calculationError);
     const displayCalculationError = pensionFeedback?.message || calculationError;
+    const commissionStatus = state.commissionProfile && calculationError
+        ? /ainda não habilitada para o órgão/i.test(calculationError) ? 'Vínculo ainda não habilitado neste órgão'
+            : /(?:sem regra e fonte|vigência e fonte).*competência/i.test(calculationError) ? 'Regra indisponível para a competência'
+                : undefined
+        : undefined;
     const resultMessage = calculationStatus === 'pension_pending' ? 'Apuração pendente'
         : calculationStatus === 'selection_required' ? 'Revise a participação previdenciária'
-            : calculationStatus === 'error' ? (pensionFeedback?.configuration ? 'Funpresp em atualização' : pensionFeedback?.title || 'Cálculo indisponível') : 'Calculando...';
+            : calculationStatus === 'error' ? (commissionStatus || (pensionFeedback?.configuration ? 'Funpresp em atualização' : pensionFeedback?.title || 'Cálculo indisponível')) : 'Calculando...';
 
     const loading = loadingConfig || loadingAgency;
     const unavailable = agencyError || configError || !courtConfig;
@@ -464,6 +470,14 @@ export default function Calculator() {
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
                         {(pensionFeedback?.configuration ? 'Aguardando a atualização da Funpresp para concluir o holerite.' : displayCalculationError) || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
                     </p>}
+                    {calculationReady && effectiveState.commissionMemory && <details className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
+                        <summary className="cursor-pointer font-semibold">Memória do vínculo, CJ/FC e tributos</summary>
+                        <dl className="mt-3 divide-y divide-neutral-200 text-body-sm dark:divide-neutral-700">
+                            {commissionAuditRows(effectiveState).map(([label, value], index) => <div key={`${label}-${index}`} className="flex flex-wrap justify-between gap-2 py-2">
+                                <dt>{label}</dt><dd className="break-all text-right">{value.startsWith('https://') ? <a href={value} className="underline" target="_blank" rel="noreferrer">Consultar fonte</a> : value}</dd>
+                            </div>)}
+                        </dl>
+                    </details>}
                     {!calculationReady && calculationError?.includes('IR-EA') && (
                         <div id="apuracao-ir-ea" className="scroll-mt-20">
                             <IrEaContextSection

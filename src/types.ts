@@ -5,6 +5,9 @@ import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './t
 import type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 import type { GaactaRulesConfig } from './types/gaacta';
 import type { LicencaComposicaoBase } from './types/licenca';
+import type { CommissionConfig, RgpsConfig } from './types/commissionConfig';
+import type { CommissionPayMemory, ExternalCommissionProfile, RgpsCalculationMemory } from './types/commissionProfile';
+import type { CommissionIncomeTaxMemory } from './services/agency/engine/modules/commissionCalculations';
 export type { GaactaRulesConfig } from './types/gaacta';
 export type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 export interface SalaryTable {
@@ -165,6 +168,8 @@ export interface AdjustmentScheduleEntry {
 }
 
 export interface CourtConfig {
+  commission?: CommissionConfig;
+  rgps?: RgpsConfig;
   orgSlug?: string;
   orgName?: string;
   powerName?: string;
@@ -207,6 +212,7 @@ export interface RubricaTaxDetail {
 }
 
 export interface Rubrica {
+  incideINSS?: boolean;
   vantagemPessoal?: 'VPNI' | 'ATS' | null;
   atsPercentual?: number;
   pensionOptionConfirmedValue?: number;
@@ -273,6 +279,17 @@ export interface SubstitutionEntry {
 }
 
 export interface CalculatorState {
+  commissionProfile?: ExternalCommissionProfile;
+  commissionMemory?: CommissionPayMemory;
+  rgpsMemory?: RgpsCalculationMemory;
+  rgpsThirteenthMemory?: RgpsCalculationMemory;
+  commissionIncomeTax?: CommissionIncomeTaxMemory[];
+  originRemuneration?: number;
+  inssMensal?: number;
+  inss13?: number;
+  commissionVacationWithholding?: number;
+  commissionFoodAllowance?: number;
+  diariasValorUnitario?: number;
   irEaContext?: IrEaContext;
   irEaMemory?: IrEaMemory;
   irEaEntryTax?: Record<string, number>;
@@ -586,6 +603,16 @@ export type CalculatedPayrollState = Pick<
   | 'vencimento'
   | 'gaj'
   | 'funcaoValor'
+  | 'commissionMemory'
+  | 'rgpsMemory'
+  | 'rgpsThirteenthMemory'
+  | 'commissionIncomeTax'
+  | 'originRemuneration'
+  | 'inssMensal'
+  | 'inss13'
+  | 'commissionVacationWithholding'
+  | 'commissionFoodAllowance'
+  | 'diariasValorUnitario'
   | 'aqTituloValor'
   | 'aqTreinoValor'
   | 'gratEspecificaValor'

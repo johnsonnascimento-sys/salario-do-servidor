@@ -176,6 +176,12 @@ export function calculateTransportIndemnity(params: IAgencyCalculationParams): T
   const payment = params.competencia ?? '';
   const memory = resolveTransportIndemnity(config, payment);
   if (!params.transporteIndenizacaoAtivo) return { ...memory, status: 'inactive', amount: 0 };
+  if (params.commissionProfile && !['jmu', 'stm'].includes(params.agencyConfig?.orgSlug ?? params.orgSlug)) {
+    return { ...memory, status: 'inactive', amount: 0 };
+  }
+  if (params.commissionProfile && params.commissionProfile.transportIndemnityAdHoc !== true) {
+    return { ...memory, status: 'invalid', amount: 0, reason: 'Confirme a designação ad hoc e a atestação da diligência na JMU.' };
+  }
 
   const input = params.transporteIndenizacaoSelecao;
   if (input?.modo === 'avulsos' && memory.serviceCompetence) {

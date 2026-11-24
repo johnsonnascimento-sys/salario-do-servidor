@@ -136,6 +136,7 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
                     ...(table.valid_to ? { validTo: table.valid_to } : {}),
                     reference: table.reference,
                     rra: table.rra,
+                    ...(table.payroll ? { payroll: table.payroll } : {}),
                 };
             }
             historico_ir_brackets[key] = (table.brackets || []).map((bracket) => ({
@@ -171,6 +172,40 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         orgSlug: effective.org_slug,
         orgName: effective.org_name,
         powerName: effective.power_name,
+        commission: effective.commission_rules ? {
+            enabled: effective.commission_rules.enabled === true,
+            dailiesFc: effective.commission_rules.dailies_fc ? {
+                validFrom: effective.commission_rules.dailies_fc.valid_from,
+                amount: effective.commission_rules.dailies_fc.amount,
+                source: effective.commission_rules.dailies_fc.source,
+            } : undefined,
+            gaactaSource: effective.commission_rules.gaacta_source,
+            compensatoryLeave: effective.commission_rules.compensatory_leave ? {
+                validFrom: effective.commission_rules.compensatory_leave.valid_from,
+                validTo: effective.commission_rules.compensatory_leave.valid_to,
+                source: effective.commission_rules.compensatory_leave.source,
+                documentedGross: effective.commission_rules.compensatory_leave.documented_gross,
+                maxDays: effective.commission_rules.compensatory_leave.max_days,
+                eligibleFunctions: effective.commission_rules.compensatory_leave.eligible_functions,
+            } : undefined,
+            versions: effective.commission_rules.versions?.map(version => ({
+                validFrom: version.valid_from,
+                validTo: version.valid_to,
+                cjIntegral: { ...version.cj_integral },
+                fc: { ...version.fc },
+                cjOptionRate: version.cj_option_rate,
+                source: version.source,
+            })) ?? [],
+        } : undefined,
+        rgps: effective.rgps_tables ? {
+            versions: effective.rgps_tables.versions?.map(version => ({
+                validFrom: version.valid_from,
+                validTo: version.valid_to,
+                teto: version.teto,
+                faixas: version.faixas?.map(bracket => ({ ...bracket })) ?? [],
+                source: version.source,
+            })) ?? [],
+        } : undefined,
         // No fallback: an organ without a registered rule cannot offer this credit.
         transportIndemnity: effective.transport_indemnity,
         gaactaRules: effective.gaacta_rules,

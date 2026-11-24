@@ -24,6 +24,7 @@ import { calculateBenefits } from './benefitsCalculations';
 import { getPayrollRules } from './configRules';
 
 export interface DailiesResult {
+    valorUnitario: number;
     valor: number;
     bruto: number;
     glosa: number;
@@ -72,17 +73,30 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
         : manualDailiesQty;
 
     // 1. Determinar valor da diaria por cargo/funcao
+    const externalFc = params.commissionProfile?.kind === 'external' && params.funcao.toLowerCase().startsWith('fc');
+    const fcRule = externalFc ? params.agencyConfig?.commission?.dailiesFc : undefined;
+    const serviceStart = params.diariasModoDesconto === 'periodo' && params.diariasDataInicio
+        ? params.diariasDataInicio : `${params.competencia}-01`;
+    const declaredRate = externalFc && params.commissionProfile?.kind === 'external'
+        ? params.commissionProfile.documentedDailyRate ?? (fcRule?.source && serviceStart >= fcRule.validFrom ? fcRule.amount : undefined)
+        : undefined;
+    const documentedRegularRate = typeof declaredRate === 'number' && Number.isFinite(declaredRate) && declaredRate > 0
+        ? declaredRate : undefined;
     const valorDiaria = resolveDailiesDailyRate({
         dailiesConfig,
         cargo: params.cargo,
         funcao: params.funcao,
         hasCommissionRole: Boolean(params.funcao && params.funcao.toLowerCase().startsWith('cj')),
+        documentedRegularRate,
         assessoramentoMagistrado: Boolean(params.diariasAssessoramentoMagistrado),
         acompanhamentoIntegral: Boolean(params.diariasAcompanhamentoIntegral),
         autoridadeAssistida: params.diariasAutoridadeAssistida,
         equipeTrabalho: Boolean(params.diariasEquipeTrabalho),
         equipeTrabalhoMaiorCargo: params.diariasEquipeTrabalhoMaiorCargo
     });
+    if (params.commissionProfile && dailiesQty > 0 && valorDiaria <= 0) {
+        throw new Error('Diárias pendentes: indique o valor unitário documentado ou use uma regra de diária configurada para este vínculo.');
+    }
 
     // 2. Adicional de embarque
     const adicionalEmbarque = resolveDailiesEmbarkationAdditional({
@@ -152,6 +166,7 @@ export async function calculateDailies(params: IAgencyCalculationParams): Promis
     const valor = Math.max(0, diariasAposCorte - glosaExterno - totalDeducoes);
 
     return {
+        valorUnitario: round2(valorDiaria),
         valor: round2(valor),
         bruto: round2(diariasBruto),
         glosa: round2(glosaExterno),

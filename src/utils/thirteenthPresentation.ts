@@ -18,7 +18,7 @@ export const unifiedThirteenthLines = (state: CalculatorState): PresetGrossLine[
     if (!memory) return [];
     const round = (value: number) => Math.round(value * 100) / 100;
     const abono = state.abonoPerm13 || 0;
-    const deductions = (state.ir13 || 0) + (state.pss13 || 0) + (state.valFunpresp13 || 0);
+    const deductions = (state.ir13 || 0) + (state.pss13 || 0) + (state.inss13 || 0) + (state.valFunpresp13 || 0);
     const secondGross = round(memory.secondTotal + abono);
     return [
         ...memory.components.map(item => ({ label: `Referência — ${item.label}`, value: item.amount })),
@@ -29,6 +29,7 @@ export const unifiedThirteenthLines = (state: CalculatorState): PresetGrossLine[
         { label: 'Adiantamento considerado no fechamento (abatido uma vez no holerite)', value: memory.secondSelected ? memory.firstTotal : 0 },
         { label: 'Desconto IR (Total 13º salário)', value: state.ir13 || 0, isDiscount: true },
         { label: 'Desconto PSS (Total 13º salário)', value: state.pss13 || 0, isDiscount: true },
+        ...(state.commissionProfile ? [{ label: 'Desconto INSS (Total 13º salário)', value: state.inss13 || 0, isDiscount: true }] : []),
         { label: 'Desconto Funpresp (Total 13º salário)', value: state.valFunpresp13 || 0, isDiscount: true },
         { label: 'Total 13º salário Bruto', value: round(memory.firstTotal + secondGross), cardAmount: 'gross' },
         { label: 'Total 13º salário Líquido', value: round(memory.firstTotal + secondGross - deductions), cardAmount: 'net' },
@@ -57,7 +58,7 @@ export const thirteenthAuditRows = (state: CalculatorState): Array<[string, stri
     rows.push(['Total da primeira parcela', memory.firstTotal], ['Total do saldo bruto da segunda parcela', memory.secondTotal],
         ['Adiantamento abatido no fechamento', memory.secondSelected ? memory.firstTotal : 0],
         ['Abono próprio do 13º (separado da referência)', state.abonoPerm13 || 0],
-        ['IR do 13º', state.ir13 || 0], ['PSS do 13º', state.pss13 || 0], ['Funpresp do 13º', state.valFunpresp13 || 0],
+        ['IR do 13º', state.ir13 || 0], ['PSS do 13º', state.pss13 || 0], ['INSS do 13º', state.inss13 || 0], ['Funpresp do 13º', state.valFunpresp13 || 0],
         ['Observação', 'A composição e os vínculos são informativos nesta memória. Adiantamentos são abatidos uma única vez no holerite.']);
     return rows;
 };

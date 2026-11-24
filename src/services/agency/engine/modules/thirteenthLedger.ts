@@ -5,9 +5,11 @@ import type { PensionRetroMemory, PensionRubricAssessment } from '../../../../ty
 import type { ThirteenthEntry, ThirteenthPayrollInput, ThirteenthReference, ThirteenthReferenceItem } from '../../../../types/thirteenth';
 import { calculateIrrf, calculatePss } from '../../../../core/calculations/taxUtils';
 import { getDataForPeriod, normalizeAQPercent, resolveGratificationValue } from './baseCalculations';
-import { getPayrollRules, isNoFunction } from './configRules';
+import { getPayrollRules } from './configRules';
 import { buildComplementaryBase, calculateComplementaryPension, hasPensionCeiling, requirePensionTable } from './pensionCalculations';
 import { assessPensionRubric } from './pensionCatalog';
+import { calculateCommissionIncomeTax, calculateCommissionInss, resolveCommissionPay, resolveCommissionWithholding } from './commissionCalculations';
+import { requireCommissionOriginIncluded } from './commissionContext';
 
 export class ThirteenthPendingError extends Error {
     constructor(message: string) { super(`13º salário pendente: ${message}`); this.name = 'ThirteenthPendingError'; }
@@ -25,14 +27,15 @@ interface Component extends ThirteenthReferenceItem {
     rubric?: Rubrica;
 }
 
-const buildComponents = async (params: IAgencyCalculationParams): Promise<Component[]> => {
+const buildComponents = async (params: IAgencyCalculationParams, paymentSelected = false): Promise<Component[]> => {
     const config = params.agencyConfig;
     if (!config) return pending('configuração do órgão indisponível.');
     const rules = getPayrollRules(config);
     const { salario, funcoes, valorVR } = await getDataForPeriod(params.periodo, config);
-    const vencimento = salario[params.cargo]?.[params.padrao] || 0;
+    const commission = resolveCommissionPay(params, { funcoes });
+    const vencimento = commission.allowCareer ? (salario[params.cargo]?.[params.padrao] || 0) : 0;
     const gaj = vencimento * rules.gajRate;
-    const funcao = isNoFunction(params.funcao, config) ? 0 : (funcoes[params.funcao] || 0);
+    const funcao = commission.funcaoValor;
     const aqTitulo = params.periodo >= 1 ? valorVR * params.aqTituloVR : vencimento * normalizeAQPercent(params.aqTituloPerc);
     const aqTreino = params.periodo >= 1 ? valorVR * params.aqTreinoVR : vencimento * normalizeAQPercent(params.aqTreinoPerc);
     const gratificacao = resolveGratificationValue(params, vencimento, gaj, funcao, aqTitulo, aqTreino, rules.specificGratificationRate);
@@ -41,8 +44,13 @@ const buildComponents = async (params: IAgencyCalculationParams): Promise<Compon
         if (selected && amount > 0) output.push({ id, label, amount, pss, ir });
     };
     add('vencimento', 'Vencimento básico', vencimento, params.decimoIncideVencimento !== false);
+    const external = params.commissionProfile?.kind === 'external' ? params.commissionProfile : undefined;
+    if (params.decimoIncideVencimento !== false && commission.originRemuneration > 0 && (paymentSelected
+        ? requireCommissionOriginIncluded(params, 'thirteenth') : external?.thirteenthPaysOriginRemuneration === true)) {
+        add('origem', 'Remuneração de origem paga pelo Judiciário', commission.originRemuneration, true);
+    }
     add('gaj', 'GAJ', gaj, params.decimoIncideGAJ !== false);
-    add('funcao', 'FC/CJ', funcao, params.decimoIncideFuncao !== false, false);
+    add('funcao', 'FC/CJ', funcao, params.decimoIncideFuncao !== false, params.commissionProfile?.kind === 'exclusive_cj');
     add('aqTitulo', 'AQ títulos', aqTitulo, params.decimoIncideAQTitulo !== false);
     add('aqTreino', 'AQ treinamento', aqTreino, params.decimoIncideAQTreino !== false, false);
     add('vpniLei', 'VPNI — Lei', params.vpni_lei || 0, params.decimoIncideVPNI !== false);
@@ -57,7 +65,7 @@ const buildComponents = async (params: IAgencyCalculationParams): Promise<Compon
             if (output.some(item => item.id === `rubrica:${rubric.id}`)) pending('há rubrica de crédito com identificador duplicado.');
             output.push({ id: `rubrica:${rubric.id}`, label: rubric.descricao.trim() || 'Crédito adicional', amount: rubric.valor,
                 ir: typeof rubric.incideIR === 'boolean' ? rubric.incideIR : null,
-                pss: typeof rubric.incidePSS === 'boolean' ? rubric.incidePSS : null, rubric });
+                pss: params.commissionProfile ? rubric.incideINSS === true : typeof rubric.incidePSS === 'boolean' ? rubric.incidePSS : null, rubric });
         }
     }
     if ((params.decimoOutrasParcelas || 0) > 0) output.push({ id: 'outras', label: 'Outras parcelas / ajustes',
@@ -118,10 +126,10 @@ export const calculateThirteenthLedger = async (params: IAgencyCalculationParams
         !['automatico', 'informado'].includes(input.firstMode) || !['automatico', 'manual'].includes(input.secondMode)) {
         return pending('configuração de recebimento inválida.');
     }
-    const parts = await buildComponents(params);
-    const reference = referenceFrom(parts);
     const secondSelected = params.tipoCalculo === 'nov' || input.secondSelected;
     const firstSelected = ['jan', 'jun', 'nov'].includes(params.tipoCalculo) || input.firstSelected || secondSelected;
+    const parts = await buildComponents(params, firstSelected);
+    const reference = referenceFrom(parts);
     const advances = !firstSelected ? [] : input.firstMode === 'automatico'
         ? groupedEntries(reference.cargoTotal / 2, reference.functionTotal / 2, 'automatic-first')
         : validateEntries(input.advances, reference, 'Adiantamento');
@@ -200,7 +208,6 @@ export const calculateThirteenthLedger = async (params: IAgencyCalculationParams
 
     const config = params.agencyConfig!;
     const rules = getPayrollRules(config);
-    const table = requirePensionTable(params);
     let irIncome = 0;
     let pssBase = 0;
     let dynamicComplementary = 0;
@@ -209,12 +216,12 @@ export const calculateThirteenthLedger = async (params: IAgencyCalculationParams
     const assess = (part: Component, amount: number) => {
         if (amount <= 0) return;
         if (part.ir === null || part.pss === null) pending(`identifique as incidências de ${part.label} antes de concluir o 13º.`);
-        if (part.rubric?.isEA || part.rubric?.pssCompetenciaSeparada || part.rubric?.funprespCompetenciaSeparada) {
+        if (part.rubric?.isEA || (!params.commissionProfile && (part.rubric?.pssCompetenciaSeparada || part.rubric?.funprespCompetenciaSeparada))) {
             pending(`confira o enquadramento temporal de ${part.label}; a incidência histórica não define automaticamente a do 13º.`);
         }
         if (part.ir) irIncome += amount;
         if (part.pss) pssBase += amount;
-        if (part.rubric) {
+        if (part.rubric && !params.commissionProfile) {
             const assessment = assessPensionRubric(config.previdenciaComplementar, { ...part.rubric, valor: amount }, params.competencia || '', params.funprespParticipacao);
             if (assessment) assessments.push(assessment);
             if (part.rubric.incideFunpresp) dynamicComplementary += amount;
@@ -233,6 +240,21 @@ export const calculateThirteenthLedger = async (params: IAgencyCalculationParams
         for (const part of cargoParts.filter(part => !part.rubric)) regularPaid[part.id] = (regularPaid[part.id] || 0) + part.amount * factor;
     }
     pssBase = Math.max(0, pssBase);
+    if (params.commissionProfile) {
+        if (params.commissionProfile.kind === 'exclusive_cj') {
+            result.rgpsMemory = calculateCommissionInss(params, pssBase, '13');
+            result.inss13 = result.rgpsMemory.amount;
+        } else {
+            const withholding = resolveCommissionWithholding(params, '13');
+            if (params.commissionProfile.pensionRegime === 'rgps') result.inss13 = withholding;
+            else result.pss13 = withholding;
+        }
+        const legalDeductions = result.pss13 + (result.inss13 ?? 0) + params.dependents * (config.values?.deducao_dep || 0);
+        result.incomeTaxMemory = calculateCommissionIncomeTax(params, irIncome, legalDeductions, '13');
+        result.ir13 = result.incomeTaxMemory.amount;
+        return result;
+    }
+    const table = requirePensionTable(params);
     const actualPssBase = hasPensionCeiling(params.regimePrev) ? Math.min(pssBase, table.teto_rgps) : pssBase;
     result.pss13 = round(calculatePss(actualPssBase, table));
     if (params.recebeAbono) result.abono13 = result.pss13;
