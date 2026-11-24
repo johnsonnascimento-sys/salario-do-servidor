@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 19/11/2026 20:20
+Atualizado em: 24/11/2026 17:36
 
 Este e o documento canonico de regras do projeto `salario-do-servidor`.
 
@@ -194,6 +194,12 @@ Cada rubrica manual deve suportar:
 3. Nova regra global: adicionar em `global_config`.
 4. Antes de codar regra nova, verificar se ela ja pode ser resolvida por configuracao.
 5. Evitar duplicacao de documentacao: este arquivo e a referencia principal de regras.
+
+### 6.1 Consulta obrigatória ao catálogo de normas
+
+1. Antes de alterar valores, fórmulas, critérios de elegibilidade ou períodos de aplicação de regras de cálculo regidas por norma específica de órgão ou ramo, consultar **Normas e vigências** no Painel Administrativo (`/admin/normas`). Identificar o ato, o dispositivo e o período de efeitos para os órgãos e competências afetados e conferir esses dados na fonte oficial. Ajustes visuais e correções técnicas sem impacto nessas regras ficam fora desta exigência.
+2. Cadastrar ou atualizar a ficha se estiver ausente ou desatualizada. Distinguir a vigência formal do ato dos efeitos no cálculo, vincular atos alteradores ou revogadores quando aplicável e registrar como **A conferir** os dados ainda não confirmados. Marcar como **Requer atualização** os vínculos já conferidos que precisem de mudança no simulador.
+3. Marcar o vínculo como **Implementado** após validar o comportamento do simulador e registrar no catálogo a evidência correspondente, como a configuração versionada ou o trecho do motor. Citar no `CHANGELOG.md` o ato, os dispositivos aplicáveis e as competências afetadas pela mudança de cálculo.
 
 ## 7. Wiki descontinuada
 
