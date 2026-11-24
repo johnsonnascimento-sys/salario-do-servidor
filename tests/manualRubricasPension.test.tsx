@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { DynamicPayrollForm } from '../src/components/Calculator/DynamicPayrollForm';
 import { CALCULATOR_STEP } from '../src/components/Calculator/calculatorSections';
 import { ManualRubricasSection } from '../src/components/Calculator/ManualRubricasSection';
+import { RubricEditorDialog } from '../src/components/Calculator/RubricEditorDialog';
 import { useCalculatorState } from '../src/hooks/calculator/useCalculatorState';
 import { INITIAL_STATE, type CourtConfig, type Rubrica } from '../src/types';
 import { hydrateCalculatorState, stripCalculatedFieldsFromCalculatorState } from '../src/utils/calculatorState';
@@ -109,13 +110,13 @@ test('desconto avulso separa ajustes de base do total e permite revisar a deduç
         const [current, setCurrent] = useState(desconto);
         return <ManualRubricasSection mode="D" rubricas={[current]} calculationReady={ready}
             funprespParticipacao="nao" competenciaReferencia="11/2026" styles={{}}
-            editor={{ expandedIds: new Set(['manual-rubrica-desconto']), toggle() {} }}
+            editor={{ activeId: 'manual-rubrica-desconto', open() {}, close() {} }}
             removeRubrica={() => {}} toPositiveNumber={Number}
             updateRubrica={(_id, field, value) => setCurrent(previous => ({ ...previous, [field]: value }))} />;
     };
     let tree!: ReturnType<typeof create>;
     act(() => { tree = create(<Form />); });
-    const editor = () => tree.root.findByProps({ id: 'manual-editor-desconto' });
+    const editor = () => tree.root.findByType('dialog');
     const details = () => editor().findAllByType('details', { deep: false });
     const radio = (tax: string, value: string) => editor().findByProps({ type: 'radio', name: `manual-${tax}-desconto`, value });
     const current = (): Rubrica => tree.root.findByType(ManualRubricasSection).props.rubricas[0];
@@ -156,6 +157,41 @@ test('desconto avulso separa ajustes de base do total e permite revisar a deduç
     act(() => calculation.findByType('summary').props.onClick({ preventDefault() {} }));
     assert.equal(calculation.props.open, true);
     assert.equal(details()[0].props.open, false);
+    act(() => tree.unmount());
+});
+
+test('as etapas de créditos e descontos mantêm apenas o editor selecionado aberto', () => {
+    const config: CourtConfig = {
+        orgSlug: 'jmu', bases: { salario: {}, funcoes: {} }, values: {}, historico_ir: {}, historico_pss: {},
+        payrollRules: { gajRate: 0.5, specificGratificationRate: 0, vrRateOnCj1: 0, monthDayDivisor: 30,
+            overtimeMonthHours: 200, transportWorkdays: 20, transportDiscountRate: 0.06, irrfTopRate: 0.1 }
+    };
+    const credit = { ...rubric, id: 'credit', tipo: 'C' as const, descricao: 'Crédito em teste', valor: 100 };
+    const debit = { ...rubric, id: 'debit', tipo: 'D' as const, descricao: 'Desconto em teste', valor: 50 };
+    let calculator!: ReturnType<typeof useCalculatorState>;
+    function Form({ step }: { step: number }) {
+        calculator = useCalculatorState();
+        return <DynamicPayrollForm {...calculator} step={step} styles={{}} courtConfig={config} resultRows={[]} />;
+    }
+    const render = (step: number) => <MemoryRouter><Form step={step} /></MemoryRouter>;
+    let tree!: ReturnType<typeof create>;
+    act(() => { tree = create(render(CALCULATOR_STEP.credits)); });
+    act(() => calculator.setState({ ...INITIAL_STATE, rubricasExtras: [credit, debit] }));
+    const openEditors = () => tree.root.findAllByType(RubricEditorDialog).filter(editor => editor.props.open);
+    const edit = (title: string) => tree.root.findByProps({ 'aria-label': `Editar ${title}` }).props.onClick();
+
+    assert.equal(openEditors().length, 0);
+    act(() => edit(credit.descricao));
+    assert.deepEqual(openEditors().map(editor => editor.props.title), [credit.descricao]);
+    act(() => tree.update(render(CALCULATOR_STEP.discounts)));
+    assert.equal(openEditors().length, 0);
+    act(() => edit(debit.descricao));
+    assert.deepEqual(openEditors().map(editor => editor.props.title), [debit.descricao]);
+    act(() => calculator.setState({ ...INITIAL_STATE, rubricasExtras: [credit] }));
+    assert.equal(openEditors().length, 0);
+    act(() => tree.update(render(CALCULATOR_STEP.credits)));
+    assert.equal(openEditors().length, 0);
+    assert.equal(tree.root.findByProps({ id: 'manual-value-credit' }).props.value, credit.valor);
     act(() => tree.unmount());
 });
 
@@ -219,7 +255,7 @@ const render = ({ current = rubric, ready = true, participation = 'patrocinado',
         taxes?: Record<string, { ir: number; pss: number; funpresp: number; totalDescontos: number; liquido: number }>;
     } = {}) => renderToStaticMarkup(<ManualRubricasSection rubricas={[current]} styles={{}} totalCreditos={1000}
         totalDescontos={0} rubricasTax={taxes} calculationReady={ready} funprespParticipacao={participation}
-        pensionMemory={withMemory ? dataMemory : undefined} editor={compact ? { expandedIds: new Set(), toggle() {} } : undefined}
+        pensionMemory={withMemory ? dataMemory : undefined} editor={compact ? { activeId: null, open() {}, close() {} } : undefined}
         addRubrica={() => {}} removeRubrica={() => {}}
         updateRubrica={() => {}} toPositiveNumber={Number} />).replace(/\s|&nbsp;/g, ' ');
 

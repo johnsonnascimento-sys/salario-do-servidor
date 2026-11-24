@@ -228,13 +228,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         (instance.presetId === 'pensao') === (step === CALCULATOR_STEP.discounts)
     );
     const rubricMode = step === CALCULATOR_STEP.credits ? 'C' : step === CALCULATOR_STEP.discounts ? 'D' : null;
-    const [expandedRubricIds, setExpandedRubricIds] = useState<ReadonlySet<string>>(() => new Set());
-    const toggleRubric = (id: string) => setExpandedRubricIds(previous => {
-        const next = new Set(previous);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-    });
+    const [rubricEditor, setRubricEditor] = useState<{ mode: Rubrica['tipo']; cardId: string } | null>(null);
+    const openRubricEditor = (cardId: string) => {
+        if (rubricMode) setRubricEditor({ mode: rubricMode, cardId });
+    };
+    const closeRubricEditor = () => setRubricEditor(null);
 
     const funcaoAtualValor =
         state.funcao && state.funcao !== noFunctionCode
@@ -366,6 +364,13 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
         return cards.map(rubrica => ({ ...rubrica, vantagemPessoal: name }));
     });
     const otherRubrics = state.rubricasExtras.filter(rubrica => !getPersonalAdvantage(rubrica));
+    const activeRubricId = rubricEditor && rubricEditor.mode === rubricMode && (
+        visiblePresets.some(instance => `preset-card-${instance.key}` === rubricEditor.cardId) ||
+        otherRubrics.some(rubrica => rubrica.tipo === rubricMode && `manual-rubrica-${rubrica.id}` === rubricEditor.cardId)
+    ) ? rubricEditor.cardId : null;
+    useEffect(() => {
+        if (rubricEditor && !activeRubricId) setRubricEditor(null);
+    }, [rubricEditor, activeRubricId]);
     const addVpni = () => {
         const first = personalRubrics.find(rubrica => rubrica.vantagemPessoal === 'VPNI');
         if (first && !state.rubricasExtras.some(saved => saved.id === first.id)) {
@@ -575,7 +580,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 }}
                 transportIndemnityEnabled={transportIndemnityEnabled}
                 addRubrica={addRubrica}
-                expandCard={id => setExpandedRubricIds(previous => new Set(previous).add(id))}
+                onEditCard={openRubricEditor}
             >
 
             {(visiblePresets.length >= 2 || reorderMode) && <div className="mb-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -616,10 +621,11 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                             canMoveDown={visibleIndex >= 0 && visibleIndex < visiblePresets.length - 1}
                             movePreset={movePreset}
                             presetLabel={PRESET_CATALOG.find(item => item.id === instance.presetId)?.label ?? preset.label}
-                            editor={rubricMode ? {
-                                expanded: expandedRubricIds.has(cardId),
-                                toggle: () => toggleRubric(cardId)
-                            } : undefined}
+                            editor={{
+                                open: activeRubricId === cardId,
+                                onOpen: () => openRubricEditor(cardId),
+                                onClose: closeRubricEditor
+                            }}
                             reorderMode={reorderMode}
                             draggingPreset={draggingPreset}
                             handlePresetDragStart={handlePresetDragStart}
@@ -650,7 +656,7 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                     mode={rubricMode ?? 'C'}
                     rubricas={otherRubrics}
                     updateRubrica={updateRubrica}
-                    editor={rubricMode ? { expandedIds: expandedRubricIds, toggle: toggleRubric } : undefined}
+                    editor={{ activeId: activeRubricId, open: openRubricEditor, close: closeRubricEditor }}
                 />
             </div>
             </div>

@@ -32,12 +32,11 @@ interface RubricCardHeadingProps {
     help?: React.ComponentProps<typeof CalculatorCardHeading>['help'];
     remove?: React.ComponentProps<typeof CalculatorCardHeading>['remove'];
     panelId: string;
-    expanded: boolean;
-    onToggle: () => void;
+    onEdit: () => void;
 }
 
 export function RubricCardHeading({
-    title, presetId, discount, amount, net, notice, help, remove, panelId, expanded, onToggle
+    title, presetId, discount, amount, net, notice, help, remove, panelId, onEdit
 }: RubricCardHeadingProps) {
     const Icon = rubricIcon(presetId);
     const label = (
@@ -59,18 +58,18 @@ export function RubricCardHeading({
                 <dt className="text-body-xs">{amountLabels[amount.kind]}</dt>
                 <dd className="break-words font-semibold">{formatCurrency(amount.value)}</dd>
             </div>
-            {!expanded && amount.kind !== 'net' && net !== undefined && <div className="text-body-xs">
+            {amount.kind !== 'net' && net !== undefined && <div className="text-body-xs">
                 <dt className="text-body-xs">{amountLabels.net}</dt>
                 <dd className="font-bold">{formatCurrency(net)}</dd>
             </div>}
         </dl>
     );
     const edit = (
-        <button type="button" data-rubric-edit aria-expanded={expanded} aria-controls={panelId}
-            aria-label={`${expanded ? 'Recolher' : 'Editar'} ${title}`} onClick={onToggle}
+        <button type="button" data-rubric-edit aria-haspopup="dialog" aria-controls={panelId}
+            aria-label={`Editar ${title}`} onClick={onEdit}
             className="ml-auto inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2 text-body-sm font-semibold text-secondary-800 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:bg-secondary-950">
-            {!expanded && <Pencil className="hidden h-4 w-4 sm:block" aria-hidden="true" />}
-            {expanded ? 'Recolher' : 'Editar'}
+            <Pencil className="hidden h-4 w-4 sm:block" aria-hidden="true" />
+            Editar
         </button>
     );
     return (

@@ -14,7 +14,7 @@ export const useCalculatorTargetFocus = () => {
 
     useEffect(() => clearHighlight, [clearHighlight]);
 
-    return useCallback((target: HTMLElement | null) => {
+    return useCallback((target: HTMLElement | null, { scroll = true } = {}) => {
         if (!target || target.closest('[hidden]')) return false;
 
         clearHighlight();
@@ -22,7 +22,7 @@ export const useCalculatorTargetFocus = () => {
         highlighted.current = target;
         const focus = target.querySelector<HTMLElement>('[data-rubric-edit]') ?? target;
         focus.focus({ preventScroll: true });
-        target.scrollIntoView({
+        if (scroll) target.scrollIntoView({
             block: 'start',
             behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
         });

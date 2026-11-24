@@ -9,6 +9,7 @@ import { SharedPensionSummary } from './SharedPensionSummary';
 import { PresetCardContent } from './PresetCardContent';
 import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { RubricCardHeading } from './RubricCardHeading';
+import { RubricEditorDialog, type RubricEditorControls } from './RubricEditorDialog';
 import { PresetGrossLine, PresetInstance, PredefinedRubricId, MULTI_INSTANCE_PRESETS, roundCurrency } from './dynamicPayrollForm.helpers';
 import { CalculatorState, CourtConfig, OvertimeEntry, SubstitutionEntry } from '../../types';
 
@@ -39,7 +40,7 @@ interface PresetInstanceCardProps {
     courtConfig: CourtConfig;
     lines: PresetGrossLine[];
     calculationReady?: boolean;
-    editor?: { expanded: boolean; toggle: () => void };
+    editor?: RubricEditorControls;
 }
 
 const getPresetHeaderInfo = (
@@ -149,7 +150,6 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const [dailiesEditing, setDailiesEditing] = useState(false);
     const dailiesPeriodReady = instance.presetId !== 'diarias' || (inputState ?? state).diariasModoDesconto !== 'periodo'
         || Boolean(getDailiesPresentation(inputState ?? state, courtConfig).period);
-    const showEditor = !editor || editor.expanded;
     const panelId = `preset-editor-${instance.key}`;
     const cardLines = calculationReady && dailiesPeriodReady ? lines : [];
     const cardAmount = cardLines.find(line => line.cardAmount && line.cardAmount !== 'net')
@@ -162,6 +162,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
     const amountForPayroll = (value: number) => advanceDebit ? roundCurrency(value - advanceDebit) : value;
     const repeatable = MULTI_INSTANCE_PRESETS.has(instance.presetId);
     const instanceTitle = repeatable ? `${headerInfo.title} · Instância ${instanceNumber}` : headerInfo.title;
+    const listTitle = repeatable ? `${presetLabel} · Instância ${instanceNumber}` : presetLabel;
     const remove = {
         label: `Remover ${headerInfo.title}${repeatable ? `, instância ${instanceNumber}` : ''}`,
         onClick: () => removePreset(instance)
@@ -192,10 +193,39 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
         </>
     } : undefined;
 
+    const editorContent = (
+        <div className="space-y-4">
+            <PresetCardContent
+                instance={instance}
+                calculationReady={calculationReady}
+                inputState={inputState}
+                onVacationEditingChange={setVacationEditing}
+                onThirteenthEditingChange={setThirteenthEditing}
+                onDailiesEditingChange={setDailiesEditing}
+                vacationOverview={instance.presetId === 'ferias' ? <VacationOverview lines={lines} calculationReady={calculationReady} /> : undefined}
+                thirteenthOverview={instance.presetId === 'decimo' ? <ThirteenthOverview lines={lines} calculationReady={calculationReady} /> : undefined}
+                state={state}
+                update={update}
+                styles={styles}
+                isNovoAQ={isNovoAQ}
+                competenciaReferencia={competenciaReferencia}
+                functionKeys={functionKeys}
+                updateOvertimeEntry={updateOvertimeEntry}
+                updateSubstitutionEntry={updateSubstitutionEntry}
+                courtConfig={courtConfig}
+            />
+
+            {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={Boolean(editor) || ['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={((editor || ['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)) && !calculationReady) || !dailiesPeriodReady ? [] : detailLines}>
+                {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
+                {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
+            </PresetGrossSummary>}
+        </div>
+    );
+
     return (
         <div
             key={instance.key}
-            draggable={reorderMode}
+            draggable={reorderMode && !editor?.open}
             onDragStart={() => handlePresetDragStart(instance.key)}
             onDragOver={handlePresetDragOver}
             onDrop={() => handlePresetDrop(instance.key)}
@@ -203,7 +233,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
             className={`${editor ? styles.statementRow : `${styles.card} space-y-4`} transition-shadow ${draggingPreset === instance.key ? 'border-secondary/60 shadow-lg' : ''} ${reorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
         >
             {editor && <RubricCardHeading
-                title={`${presetLabel}${MULTI_INSTANCE_PRESETS.has(instance.presetId) ? ` · Instância ${instanceNumber}` : ''}`}
+                title={listTitle}
                 presetId={instance.presetId}
                 discount={alimony}
                 amount={cardAmount?.cardAmount ? { kind: cardAmount.cardAmount, value: amountForPayroll(cardAmount.value) } : undefined}
@@ -211,7 +241,7 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 notice={instance.presetId === 'indenizacao_transporte' && state.transporteIndenizacaoMemory?.status === 'unavailable'
                     ? 'Valor indisponível nesta competência' : undefined}
                 help={help} remove={remove}
-                panelId={panelId} expanded={editor.expanded} onToggle={editor.toggle}
+                panelId={panelId} onEdit={editor.onOpen}
             />}
             {!editor && <CalculatorCardHeading help={help} remove={remove}>
                 <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">{instanceTitle}</h3>
@@ -220,32 +250,12 @@ export const PresetInstanceCard: React.FC<PresetInstanceCardProps> = ({
                 <button type="button" disabled={!canMoveUp} onClick={() => movePreset(instance.key, -1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para cima`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowUp className="h-5 w-5" /></button>
                 <button type="button" disabled={!canMoveDown} onClick={() => movePreset(instance.key, 1)} aria-label={`Mover ${headerInfo.title}, posição ${position + 1}, para baixo`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-30 dark:text-neutral-300 dark:hover:bg-neutral-700"><ArrowDown className="h-5 w-5" /></button>
             </div>}
-            <div id={panelId} hidden={!showEditor} className={showEditor ? `space-y-4 ${editor ? styles.statementEditor : ''}` : 'hidden'}>
-                <PresetCardContent
-                    instance={instance}
-                    calculationReady={calculationReady}
-                    inputState={inputState}
-                    onVacationEditingChange={setVacationEditing}
-                    onThirteenthEditingChange={setThirteenthEditing}
-                    onDailiesEditingChange={setDailiesEditing}
-                    vacationOverview={instance.presetId === 'ferias' ? <VacationOverview lines={lines} calculationReady={calculationReady} /> : undefined}
-                    thirteenthOverview={instance.presetId === 'decimo' ? <ThirteenthOverview lines={lines} calculationReady={calculationReady} /> : undefined}
-                    state={state}
-                    update={update}
-                    styles={styles}
-                    isNovoAQ={isNovoAQ}
-                    competenciaReferencia={competenciaReferencia}
-                    functionKeys={functionKeys}
-                    updateOvertimeEntry={updateOvertimeEntry}
-                    updateSubstitutionEntry={updateSubstitutionEntry}
-                    courtConfig={courtConfig}
-                />
-
-                {!thirteenthEditing && !vacationEditing && !dailiesEditing && <PresetGrossSummary compact={Boolean(editor) || ['hora_extra', 'indenizacao_transporte', 'decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)} lines={((editor || ['decimo', 'substituicao', 'ferias', 'diarias'].includes(instance.presetId)) && !calculationReady) || !dailiesPeriodReady ? [] : detailLines}>
-                    {calculationReady && dailiesPeriodReady && instance.presetId === 'diarias' && <DailiesCalculationNotes state={state} config={courtConfig} />}
-                    {calculationReady && instance.presetId === 'decimo' && state.pensionMemory?.thirteenth && <SharedPensionSummary memory={state.pensionMemory} rubricas={state.rubricasExtras} scope="thirteenth" embedded />}
-                </PresetGrossSummary>}
-            </div>
+            {editor ? (
+                <RubricEditorDialog id={panelId} cardId={`preset-card-${instance.key}`} title={listTitle}
+                    discount={alimony} open={editor.open} onClose={editor.onClose}>
+                    {editorContent}
+                </RubricEditorDialog>
+            ) : editorContent}
         </div>
     );
 };

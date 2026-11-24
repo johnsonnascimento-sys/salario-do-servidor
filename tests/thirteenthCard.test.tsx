@@ -184,12 +184,12 @@ test('detalhamento e resultados ficam ocultos durante edição e quando cálculo
     act(() => tree.update(<PresetInstanceCard {...props} calculationReady={false} />));
     assert.equal(tree.root.findAllByType('dd').length, 0);
     assert.equal(tree.root.findAllByType('details').length, 0);
-    const editor = { expanded: false, toggle() {} };
+    const editor = { open: false, onOpen() {}, onClose() {} };
     const labels = () => tree.root.findByType(RubricCardHeading).findAllByType('dt').map(node => node.children.join(''));
     act(() => tree.update(<PresetInstanceCard {...props} editor={editor} />));
     assert.deepEqual(labels(), ['Bruto', 'Líquido']);
-    act(() => tree.update(<PresetInstanceCard {...props} editor={{ ...editor, expanded: true }} />));
-    assert.deepEqual(labels(), ['Bruto']);
+    act(() => tree.update(<PresetInstanceCard {...props} editor={{ ...editor, open: true }} />));
+    assert.deepEqual(labels(), ['Bruto', 'Líquido']);
     act(() => tree.update(<PresetInstanceCard {...props} editor={editor} calculationReady={false} />));
     assert.deepEqual(labels(), []);
     act(() => tree.unmount());
@@ -199,7 +199,7 @@ test('card recolhido mostra o saldo do 13º nesta folha após o abatimento do ad
     const november = { ...calculated, tipoCalculo: 'nov', adiant13Venc: 3000.27, adiant13FC: 0,
         segunda13Venc: 5000.30, segunda13FC: 0, abonoPerm13: 0, ir13: 1200, pss13: 767.43,
         valFunpresp13: 0, debitoPrimeiraParcela13: 3000.27 } satisfies CalculatorState;
-    const editor = { expanded: false, toggle() {} };
+    const editor = { open: false, onOpen() {}, onClose() {} };
     const tree = create(<PresetInstanceCard {...presetProps(november)} editor={editor} />);
     const amounts = () => tree.root.findByType(RubricCardHeading).findAllByType('dd')
         .map(node => textOf(node).replace(/\s/g, ' '));

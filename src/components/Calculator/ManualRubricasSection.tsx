@@ -15,6 +15,7 @@ import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { AtsValueFields } from './AtsValueFields';
 import type { getAtsCalculationContext } from '../../services/agency/engine/modules/atsCalculations';
 import { RubricCardHeading } from './RubricCardHeading';
+import { RubricEditorDialog } from './RubricEditorDialog';
 import { calculatorTargetClass } from './hooks/useCalculatorTargetFocus';
 
 const VPNI_DESCRIPTIONS = ['VPNI — Lei nº 9.527/1997', 'VPNI — decisão judicial'];
@@ -72,7 +73,7 @@ interface ManualRubricasSectionProps {
     removeRubrica: (id: string) => void;
     updateRubrica: (id: string, field: keyof Rubrica, value: any) => void;
     toPositiveNumber: (value: string) => number;
-    editor?: { expandedIds: ReadonlySet<string>; toggle: (id: string) => void };
+    editor?: { activeId: string | null; open: (id: string) => void; close: () => void };
 }
 
 export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
@@ -100,6 +101,10 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
 }) => {
     const vpniId = useId();
     const [expandedTaxPanels, setExpandedTaxPanels] = useState<Record<string, boolean>>({});
+    const goToHistoricalPension = () => {
+        editor?.close();
+        revisitHistoricalPension();
+    };
 
     const distributed = getPensionRubricDistribution({ pensionRetroEntries });
     const classifications = Object.fromEntries(rubricas.map(rubrica => {
@@ -365,7 +370,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             }} />
                         {pssRegime === 'original' && (
                             <a className="inline-flex min-h-11 items-center text-body-xs font-semibold underline"
-                                href="#pension-retro-form" onClick={revisitHistoricalPension}>
+                                href="#pension-retro-form" onClick={goToHistoricalPension}>
                                 Distribuir PSS por competência original
                             </a>
                         )}
@@ -380,7 +385,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 {(rubrica.incideFunpresp || rubrica.funprespCompetenciaSeparada) && funprespHistory}
                                 {rubrica.incideFunpresp && rubrica.funprespCompetenciaSeparada && pssRegime !== 'original' && (
                                     <a className="inline-flex min-h-11 items-center text-body-xs font-semibold underline"
-                                        href="#pension-retro-form" onClick={revisitHistoricalPension}>
+                                        href="#pension-retro-form" onClick={goToHistoricalPension}>
                                         Distribuir Funpresp por competência original
                                     </a>
                                 )}
@@ -394,7 +399,7 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                             <div className="text-body-xs text-neutral-600 dark:text-neutral-300">
                                 <p>Apuração por competência: {formatCurrency(distributed[rubrica.id] ?? 0)} de {formatCurrency(Number(rubrica.valor) || 0)} distribuídos.</p>
                                 {!calculationReady && <p>A distribuição, por si só, não conclui a apuração previdenciária.</p>}
-                                {!fixedTitle && <a className="font-semibold underline" href="#pension-retro-form">Apurar por competência</a>}
+                                {!fixedTitle && <a className="font-semibold underline" href="#pension-retro-form" onClick={goToHistoricalPension}>Apurar por competência</a>}
                             </div>
                         )}
 
@@ -495,26 +500,9 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                 const remove = { label: `Remover ${title}`, onClick: () => removeRubrica(rubrica.id) };
                 const cardId = `manual-rubrica-${rubrica.id}`;
                 const editorId = `manual-editor-${rubrica.id}`;
-                const expanded = !editor || editor.expandedIds.has(cardId);
                 const lines = calculationReady ? getRubricaLines(rubrica, index) : [];
-                return (
-                    <div
-                        key={rubrica.id}
-                        id={cardId}
-                        tabIndex={-1}
-                        className={`${editor ? styles.statementRow : `${styles.card} space-y-3.5`} transition-shadow data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2`}
-                    >
-                        {editor ? <RubricCardHeading
-                            title={title} remove={remove}
-                            discount={!isCredito}
-                            amount={rubrica.valor > 0 ? { kind: isCredito ? 'gross' : 'discount', value: rubrica.valor } : undefined}
-                            net={lines.find(line => line.cardAmount === 'net')?.value}
-                            notice={pendingIds.has(rubrica.id) ? 'Há dados a revisar' : undefined}
-                            panelId={editorId} expanded={expanded} onToggle={() => editor.toggle(cardId)}
-                        /> : <CalculatorCardHeading remove={remove}>
-                            <h4 className="font-semibold">{title}</h4>
-                        </CalculatorCardHeading>}
-                        <div id={editorId} hidden={!expanded} className={expanded ? `space-y-3.5 ${editor ? styles.statementEditor : ''}` : 'hidden'}>
+                const editorContent = (
+                    <div id={editor ? undefined : editorId} className="space-y-3.5">
                         {/* Indicadores de incidência do lançamento */}
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-center gap-2 flex-wrap">
@@ -555,7 +543,31 @@ export const ManualRubricasSection: React.FC<ManualRubricasSectionProps> = ({
                                 {calculationNotices}
                             </PresetGrossSummary>
                         ) : calculationNotices}
-                        </div>
+                    </div>
+                );
+                return (
+                    <div
+                        key={rubrica.id}
+                        id={cardId}
+                        tabIndex={-1}
+                        className={`${editor ? styles.statementRow : `${styles.card} space-y-3.5`} transition-shadow data-[rubric-highlight]:ring-2 data-[rubric-highlight]:ring-secondary-600 data-[rubric-highlight]:ring-offset-2`}
+                    >
+                        {editor ? <RubricCardHeading
+                            title={title} remove={remove}
+                            discount={!isCredito}
+                            amount={rubrica.valor > 0 ? { kind: isCredito ? 'gross' : 'discount', value: rubrica.valor } : undefined}
+                            net={lines.find(line => line.cardAmount === 'net')?.value}
+                            notice={pendingIds.has(rubrica.id) ? 'Há dados a revisar' : undefined}
+                            panelId={editorId} onEdit={() => editor.open(cardId)}
+                        /> : <CalculatorCardHeading remove={remove}>
+                            <h4 className="font-semibold">{title}</h4>
+                        </CalculatorCardHeading>}
+                        {editor ? (
+                            <RubricEditorDialog id={editorId} cardId={cardId} title={title} discount={!isCredito}
+                                open={editor.activeId === cardId} onClose={editor.close}>
+                                {editorContent}
+                            </RubricEditorDialog>
+                        ) : editorContent}
                     </div>
                 );
             })}

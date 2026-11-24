@@ -18,7 +18,7 @@ interface PresetControlsSectionProps {
     onSearchFallback?: () => void;
     includePreset: (presetId: PredefinedRubricId) => string | undefined;
     addRubrica: (payload: Partial<Rubrica>) => string | void;
-    expandCard: (id: string) => void;
+    onEditCard: (id: string) => void;
     children: React.ReactNode;
 }
 
@@ -27,7 +27,7 @@ const actionClass = 'inline-flex items-center justify-center gap-2 rounded-lg bo
 
 export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     mode, instanceCount, enabledPresets, transportIndemnityEnabled, searchDestination, onSearchFallback,
-    includePreset, addRubrica, expandCard, children
+    includePreset, addRubrica, onEditCard, children
 }) => {
     const id = useId();
     const [openMode, setOpenMode] = useState<Rubrica['tipo'] | null>(null);
@@ -39,7 +39,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
     const searchRef = useRef<HTMLInputElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const addResultRef = useRef<HTMLButtonElement>(null);
-    const focusTarget = useRef<string | null>(null);
+    const focusTarget = useRef<{ id: string; edit: boolean } | null>(null);
     const handledSearch = useRef<PresetSearchDestination | null>(null);
     const focusCard = useCalculatorTargetFocus();
     const credit = mode === 'C';
@@ -76,16 +76,17 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         if (open || !focusTarget.current) return;
         const target = focusTarget.current;
         focusTarget.current = null;
-        if (target === 'trigger') {
+        if (target.id === 'trigger') {
             triggerRef.current?.focus();
             return;
         }
 
-        if (target === 'heading' || !focusCard(document.getElementById(target))) onSearchFallback?.();
-    }, [open, focusCard, onSearchFallback]);
+        if (target.id === 'heading' || !focusCard(document.getElementById(target.id))) onSearchFallback?.();
+        else if (target.edit) onEditCard(target.id);
+    }, [open, focusCard, onSearchFallback, onEditCard]);
 
-    const close = useCallback((target = 'trigger') => {
-        focusTarget.current = target;
+    const close = useCallback((id = 'trigger', edit = false) => {
+        focusTarget.current = { id, edit };
         setOpenMode(null);
     }, []);
 
@@ -114,19 +115,14 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
         if (open && exactSearch) addResultRef.current?.focus();
     }, [open, exactSearch]);
 
-    const reveal = (cardId: string, edit = false) => {
-        if (edit) expandCard(cardId);
-        close(cardId);
-    };
-
     const addPreset = (presetId: PredefinedRubricId) => {
         const key = includePreset(presetId);
-        if (key) reveal(`preset-card-${key}`, true);
+        if (key) close(`preset-card-${key}`, true);
     };
 
     const addManual = () => {
         const rubricId = addRubrica(credit ? { tipo: 'C', incideIR: true, incidePSS: true } : { tipo: 'D' });
-        if (rubricId) reveal(`manual-rubrica-${rubricId}`, true);
+        if (rubricId) close(`manual-rubrica-${rubricId}`, true);
     };
 
     return (
@@ -222,7 +218,7 @@ export const PresetControlsSection: React.FC<PresetControlsSectionProps> = ({
                                     <div className="ml-auto flex flex-wrap justify-end gap-2">
                                         {first && <button type="button" className={actionClass}
                                             aria-label={`Ver lançamento de ${item.label}`}
-                                            onClick={() => reveal(`preset-card-${first.key}`)}>
+                                            onClick={() => close(`preset-card-${first.key}`)}>
                                             {repeatable ? <ArrowDownRight aria-hidden="true" className="h-4 w-4" /> : 'Ver lançamento'}
                                         </button>}
                                         {(!first || repeatable) && <button ref={exactSearch ? addResultRef : undefined} type="button" className={actionClass}
