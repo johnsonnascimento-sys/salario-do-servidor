@@ -331,7 +331,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                     <span className="block py-3 font-semibold text-neutral-700 dark:text-neutral-300 break-words">{func.toUpperCase()}</span>
                                                 </div>
                                                 {(['qtd50', 'qtd100'] as const).map((kind, index) => (
-                                                    <div key={kind} className="min-w-0">
+                                                    <div key={kind} className="order-3 min-w-0 sm:order-none">
                                                         <label htmlFor={`${fieldId}-${func}-${kind}`} className={styles.label}>Horas ({index === 0 ? '50%' : '100%'})</label>
                                                         <input id={`${fieldId}-${func}-${kind}`} ref={index === 0 ? node => { firstHoursRefs.current[func] = node; } : undefined}
                                                             type="number" min="0" step="any" value={hours[kind] || ''}
@@ -347,7 +347,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                             className={`${styles.input} min-h-11 disabled:opacity-40 disabled:cursor-not-allowed`} placeholder="0" />
                                                     </div>
                                                 ))}
-                                                <div className="min-w-0 text-body-xs text-neutral-600 dark:text-neutral-400">
+                                                <div className="order-4 col-span-2 min-w-0 text-body-xs text-neutral-600 dark:text-neutral-400 sm:order-none sm:col-span-1">
                                                     <span className="block">Subtotal bruto</span>
                                                     <output aria-label={`${func.toUpperCase()} — Subtotal bruto`} className="block py-3 font-mono font-semibold text-neutral-800 dark:text-neutral-200 break-words">
                                                         {!calculationReady ? 'Atualizando…' : detail
@@ -356,7 +356,7 @@ export const OvertimeCard: React.FC<OvertimeCardProps> = ({
                                                     </output>
                                                 </div>
                                                 <button type="button" aria-label={`Remover ${func.toUpperCase()}`} onClick={() => removeFunction(func)}
-                                                    className="min-h-11 justify-self-start rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30">
+                                                    className="order-2 min-h-11 justify-self-end rounded-lg px-3 text-body-xs font-semibold text-error-700 hover:bg-error-50 dark:text-error-300 dark:hover:bg-error-950/30 sm:order-none sm:justify-self-start">
                                                     Remover
                                                 </button>
                                             </div>
