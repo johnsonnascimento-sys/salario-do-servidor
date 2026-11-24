@@ -41,7 +41,6 @@ export const useCalculatorConfig = (slug: string | undefined) => {
                 const ALLOWED_ORGS: Record<string, { name: string; type: string }> = {
                     jmu: { name: 'Justiça Militar da União', type: 'JUDICIARY' },
                     pju: { name: 'Poder Judiciário da União', type: 'JUDICIARY' },
-                    trt2: { name: 'TRT da 2ª Região', type: 'JUDICIARY' },
                     cjf: { name: 'Justiça Federal (CJF e TRFs)', type: 'JUDICIARY' },
                     trf1: { name: 'Tribunal Regional Federal da 1ª Região', type: 'JUDICIARY' },
                     trf2: { name: 'Tribunal Regional Federal da 2ª Região', type: 'JUDICIARY' },

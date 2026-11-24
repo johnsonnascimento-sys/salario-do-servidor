@@ -1,3 +1,7 @@
+## Remoção da calculadora TRT-2 — 24/11/2026
+
+- Removida a calculadora TRT-2 da navegação e do cadastro de órgãos, preservando as configurações compartilhadas do PJU.
+
 ## Seleção de GAACTA — 24/11/2026
 
 - A seleção da GAACTA para ocupantes de CJ dispensa a confirmação adicional de enquadramento do vínculo.
