@@ -1,3 +1,7 @@
+## Teto federal de referência — 24/11/2026
+
+- O passo Competência exibe o subsídio do STF vigente no mês selecionado e sua fonte. A série global registra os efeitos de abril/2023, fevereiro/2024 e fevereiro/2025 do art. 1º, I a III, da Lei nº 14.520/2023. A migration prepara a ficha do PJU em Normas e vigências.
+
 ## Organização das regras da calculadora — 24/11/2026
 
 - Concluída a migração das regras funcionais para os módulos, com restauração das regras de apresentação e PSS em horas extras, remoção de duplicações e revisão dos links. O cadastro de novos órgãos segue a configuração e a documentação dos módulos afetados.

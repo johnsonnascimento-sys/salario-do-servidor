@@ -4,6 +4,7 @@ import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry,
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 import type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 import type { GaactaRulesConfig } from './types/gaacta';
+import type { ConstitutionalCeilingReference } from './types/constitutionalCeiling';
 import type { LicencaComposicaoBase } from './types/licenca';
 import type { CommissionConfig, RgpsConfig } from './types/commissionConfig';
 import type { CommissionPayMemory, ExternalCommissionProfile, RgpsCalculationMemory } from './types/commissionProfile';
@@ -170,6 +171,7 @@ export interface AdjustmentScheduleEntry {
 export interface CourtConfig {
   commission?: CommissionConfig;
   rgps?: RgpsConfig;
+  constitutionalCeilingReference?: ConstitutionalCeilingReference;
   orgSlug?: string;
   orgName?: string;
   powerName?: string;

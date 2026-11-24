@@ -1,6 +1,7 @@
 import type { IrTableMetadata } from '../../types/irEa';
 import type { TransportIndemnityConfig } from '../../types/transportIndemnity';
 import type { GaactaRulesConfig } from '../../types/gaacta';
+import type { ConstitutionalCeilingReference } from '../../types/constitutionalCeiling';
 
 /**
  * Tipos para o Sistema de Configuração Hierárquica
@@ -18,6 +19,7 @@ export interface GlobalConfig {
     pss_tables: PSSTablesConfig;
     dependent_deduction: number;
     rgps_tables?: RgpsTablesConfig;
+    constitutional_ceiling_reference?: ConstitutionalCeilingReference;
 }
 
 export interface RgpsTablesConfig {

@@ -3,6 +3,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { ConfigService, ConfigLoadError, ConfigNotFoundError } from '../src/services/config/ConfigService';
 import { mapEffectiveConfigToCourtConfig } from '../src/services/config/mapEffectiveConfig';
+import { resolveConstitutionalCeiling } from '../src/services/config/constitutionalCeiling';
 
 // Mock helper to control Supabase responses per table
 type QueryResult = { data: any; error: any };
@@ -348,4 +349,36 @@ test('ConfigService: provê gaacta_rules para JMU e CJF preservando vigência e 
     assert.ok(cjfEffective.gaacta_rules?.enabled, 'CJF deve ter gaacta_rules habilitado');
     assert.equal(cjfEffective.gaacta_rules?.versions?.[0]?.percentage, 0.15);
     assert.equal(cjfEffective.gaacta_rules?.versions?.[0]?.validFrom, '2026-06');
+});
+
+test('teto federal: JMU e CJF herdam a mesma série global da migration', async () => {
+    const migration = readFileSync(new URL(
+        '../supabase/migrations/20261125000000_constitutional_ceiling_reference.sql', import.meta.url,
+    ), 'utf8');
+    const reference = JSON.parse(migration.split('$ceiling$')[1]);
+    tableMocks = {
+        global_config: ({ isFilter }) => {
+            assert.deepEqual(isFilter, { column: 'valid_to', value: null });
+            return { data: [
+                { config_key: 'pss_tables', config_value: {} },
+                { config_key: 'constitutional_ceiling_reference', config_value: reference },
+            ], error: null };
+        },
+        power_config: () => ({ data: defaultPowerRecords, error: null }),
+        org_config: ({ eqFilters }) => ({ data: {
+            org_slug: eqFilters[0].value, org_name: eqFilters[0].value.toUpperCase(),
+            power_name: 'PJU', configuration: {},
+        }, error: null }),
+    };
+    const service = new ConfigService();
+    for (const slug of ['jmu', 'cjf']) {
+        const court = mapEffectiveConfigToCourtConfig(await service.getEffectiveConfig(slug));
+        assert.equal(court.orgSlug, slug);
+        assert.deepEqual(court.constitutionalCeilingReference, reference);
+        for (const [year, month, amount] of [[2023, 3, undefined], [2023, 4, 41650.92],
+            [2024, 1, 41650.92], [2024, 2, 44008.52], [2025, 1, 44008.52],
+            [2025, 2, 46366.19], [2026, 11, 46366.19]] as const) {
+            assert.equal(resolveConstitutionalCeiling(court.constitutionalCeilingReference, year, month)?.amount, amount);
+        }
+    }
 });

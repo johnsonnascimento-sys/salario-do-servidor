@@ -1,6 +1,6 @@
 # PROJECT_RULES
 
-Atualizado em: 24/11/2026 18:23
+Atualizado em: 24/11/2026 18:42
 
 Este documento é o ponto de entrada para as regras do projeto. As páginas do índice são a fonte canônica das regras detalhadas de cada módulo.
 
@@ -73,6 +73,7 @@ O documento principal é obrigatório em toda tarefa. Para alterações de cálc
 | [Horas extras](src/docs/regras/HORAS_EXTRAS.md) | Serviço extraordinário e sua base remuneratória. |
 | [GAACTA e licença compensatória](src/docs/regras/GAACTA_E_LICENCA_COMPENSATORIA.md) | Elegibilidade, cálculo e seleção dessas verbas. |
 | [Indenização de transporte](src/docs/regras/INDENIZACAO_DE_TRANSPORTE.md) | Indenização por diligência externa. |
+| [Teto remuneratório](src/docs/regras/TETO_REMUNERATORIO.md) | Referência federal, vigências, subtetos e apuração de abate-teto. |
 
 ### 4.0 Navegação por páginas
 

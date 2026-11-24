@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Scale } from 'lucide-react';
 import { AdjustmentScheduleEntry, CalculatorState, CourtConfig } from '../../types';
 import { CalculatorCardHeading } from './CalculatorCardHeading';
+import { resolveConstitutionalCeiling } from '../../services/config/constitutionalCeiling';
+import { formatCurrency } from '../../utils/calculations';
 import {
     MONTH_TOKEN_TO_INDEX,
     compareReferencePoints,
@@ -328,6 +330,12 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     const vetoSource = normativeSource ?? (isPju ? PJU_VETO_SOURCE : undefined);
     const selectedCompetence = `${String(clampedReference.month).padStart(2, '0')}/${clampedReference.year}`;
 
+    const ceiling = resolveConstitutionalCeiling(
+        courtConfig.constitutionalCeilingReference,
+        clampedReference.year,
+        clampedReference.month,
+    );
+
     return (
         <div className={styles.formSection}>
             <CalculatorCardHeading help={{ label: 'Enquadramento normativo da competência', content: (
@@ -386,6 +394,16 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({
             </div>
             <p className="mt-1.5 text-body-xs text-neutral-500 dark:text-neutral-400">
                 Seleciona automaticamente as tabelas salariais, faixas de IR, PSS e auxílios da época.
+            </p>
+
+            <p className="mt-2 text-body-sm text-neutral-600 dark:text-neutral-300" aria-live="polite">
+                {ceiling ? (
+                    <>
+                        Teto federal de referência <strong>{formatCurrency(ceiling.amount)}</strong>
+                        {' · '}
+                        <a className="underline" href={ceiling.source} target="_blank" rel="noreferrer">Fonte oficial</a>
+                    </>
+                ) : 'Referência indisponível para esta competência'}
             </p>
 
             {(showProjectionControl || projectionApplied) && (

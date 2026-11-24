@@ -16,6 +16,8 @@ import { hasPresetValue } from '../src/components/Calculator/dynamicPayrollForm.
 import { useDynamicPresetInstances } from '../src/components/Calculator/hooks/useDynamicPresetInstances';
 import { usePayrollFormNormalization } from '../src/components/Calculator/hooks/usePayrollFormNormalization';
 import { GlobalSettings } from '../src/components/Calculator/GlobalSettings';
+import { readFileSync } from 'node:fs';
+import type { ConstitutionalCeilingReference } from '../src/types/constitutionalCeiling';
 import { pickPeriodFromScheduleByReference } from '../src/components/Calculator/referenceDateUtils';
 
 // Synthetic configuration: these numbers are test data, not official rates.
@@ -393,4 +395,70 @@ test('unified thirteenth lists and memory round trip without changing the legacy
     assert.equal(state.thirteenthPayroll!.advances[0].amount, 3000);
     assert.equal(hasPresetValue('decimo', { ...state, thirteenthPayroll: { ...state.thirteenthPayroll!, firstSelected: false, secondSelected: false } }), false);
     assert.equal(mapStateToAgencyParams(state, 'jmu', config).thirteenthPayroll, state.thirteenthPayroll);
+});
+
+const ceilingMigration = readFileSync(new URL(
+    '../supabase/migrations/20261125000000_constitutional_ceiling_reference.sql', import.meta.url,
+), 'utf8');
+const constitutionalCeilingReference: ConstitutionalCeilingReference = JSON.parse(ceilingMigration.split('$ceiling$')[1]);
+const ceilingLine = (root: ReactTestInstance) => root.findAllByType('p').find(
+    node => node.props['aria-live'] === 'polite',
+)!;
+
+for (const slug of ['jmu', 'cjf']) {
+    test('Competência (' + slug + ') atualiza o teto federal e preserva o cálculo da folha', async () => {
+        const courtConfig: CourtConfig = { ...config, orgSlug: slug, constitutionalCeilingReference };
+        const january: CalculatorState = { ...baseState(), mesRef: 'JANEIRO', anoRef: 2025 };
+
+        function Harness() {
+            const [state, setState] = useState(january);
+            const update = useCallback((field, value) => setState(previous => ({ ...previous, [field]: value })), []);
+            return React.createElement(GlobalSettings, { state, update, courtConfig, styles: {} });
+        }
+
+        let renderer!: ReturnType<typeof create>;
+        act(() => { renderer = create(React.createElement(Harness)); });
+        try {
+            const assertCeiling = (amount: RegExp) => {
+                const line = ceilingLine(renderer.root);
+                assert.match(line.findByType('strong').props.children, amount);
+                assert.equal(line.findByType('a').props.href, constitutionalCeilingReference.versions[0].source);
+            };
+            assertCeiling(/44\.008,52/);
+            act(() => renderer.root.findByProps({ id: 'payroll-month' }).props.onChange({ target: { value: 'FEVEREIRO' } }));
+            assertCeiling(/46\.366,19/);
+            act(() => renderer.root.findByProps({ id: 'payroll-year' }).props.onChange({ target: { value: '2026' } }));
+            assertCeiling(/46\.366,19/);
+        } finally {
+            act(() => renderer.unmount());
+        }
+
+        const state = baseState();
+        const before = await engine.calculateTotal(mapStateToAgencyParams(state, slug, { ...config, orgSlug: slug }));
+        const after = await engine.calculateTotal(mapStateToAgencyParams(state, slug, courtConfig));
+        assert.deepEqual(after, before);
+    });
+}
+
+test('Competência informa indisponibilidade do teto para série ausente, inválida ou sem cobertura', () => {
+    const invalidSource = { versions: [{ ...constitutionalCeilingReference.versions[0], source: 'javascript:bad' }] };
+    for (const [reference, year, month] of [
+        [undefined, 2025, 'JANEIRO'],
+        [invalidSource, 2023, 'ABRIL'],
+        [constitutionalCeilingReference, 2023, 'MARÇO'],
+    ] as const) {
+        let renderer!: ReturnType<typeof create>;
+        act(() => {
+            renderer = create(React.createElement(GlobalSettings, {
+                state: { ...baseState(), anoRef: year, mesRef: month }, update: () => {},
+                courtConfig: { ...config, constitutionalCeilingReference: reference }, styles: {},
+            }));
+        });
+        try {
+            assert.equal(ceilingLine(renderer.root).props.children, 'Referência indisponível para esta competência');
+            assert.equal(ceilingLine(renderer.root).findAllByType('a').length, 0);
+        } finally {
+            act(() => renderer.unmount());
+        }
+    }
 });
