@@ -16,6 +16,7 @@ const sections: Array<{ title: string; items: string[] }> = [
       'Regras Globais: IR, PSS, deduções e tabelas universais.',
       'Regras por Poder: bases e parâmetros por carreira/poder.',
       'Órgãos: overrides locais por órgão.',
+      'Normas e vigências: catálogo de atos e aplicações por órgão e assunto.',
       'Usuários: contas, allowlist de cadastro e allowlist admin.',
     ],
   },
@@ -53,7 +54,16 @@ const sections: Array<{ title: string; items: string[] }> = [
     ],
   },
   {
-    title: '7. Boas práticas',
+    title: '7. Normas e vigências',
+    items: [
+      'Abra /admin/normas e selecione o órgão. Use a busca por assunto ou número do ato.',
+      'Ao cadastrar, informe a fonte oficial e separe a vigência do ato das datas de efeito de cada aplicação.',
+      'Vincule atos posteriores ao dispositivo anterior. Use a aplicação afetada para delimitar alterações parciais.',
+      'Consulte o histórico no detalhe do ato. Edições no catálogo não alteram os cálculos do simulador.',
+    ],
+  },
+  {
+    title: '8. Boas práticas',
     items: [
       'Faça mudanças pequenas e rastreáveis.',
       'Valide no simulador após alterações críticas.',

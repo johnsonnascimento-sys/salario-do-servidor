@@ -1,3 +1,7 @@
+## Catálogo administrativo de normas — 24/11/2026
+
+- Adicionada a consulta e edição de atos, aplicações por órgão, vigências e histórico de revisões. O piloto documenta o serviço extraordinário na JMU e a pendência de conferência sobre o limite de recesso.
+
 ## Remoção da calculadora TRT-2 — 24/11/2026
 
 - Removida a calculadora TRT-2 da navegação e do cadastro de órgãos, preservando as configurações compartilhadas do PJU.
