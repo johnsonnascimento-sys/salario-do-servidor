@@ -1,6 +1,7 @@
 import React from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { CalculatorCardHeading } from '../CalculatorCardHeading';
+import { RubricCardHeading } from '../RubricCardHeading';
 import type { AbateTetoMemory } from '../../../types/constitutionalCeiling';
 
 interface AbateTetoCardProps {
@@ -20,12 +21,45 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
     styles,
     calculationReady,
 }) => {
+    const [expanded, setExpanded] = React.useState(false);
     const [draft, setDraft] = React.useState<Record<string, boolean> | null>(null);
 
     if (!memory) return null;
 
     const items = memory.composicaoBase ?? [];
     const canCustomize = items.length > 0 && memory.status !== 'out_of_scope';
+    const help = {
+        label: 'Informações legais e constitucionais sobre o abate-teto',
+        content: (
+            <div className="space-y-2">
+                <p>
+                    <strong>Fundamento constitucional:</strong> O{' '}
+                    <a className="underline" href="https://www4.planalto.gov.br/legislacao/legis-federal/constituicao" target="_blank" rel="noreferrer">
+                        art. 37, XI, da Constituição Federal
+                    </a>{' '}
+                    usa o subsídio mensal dos Ministros do STF como teto remuneratório, com as exclusões indenizatórias do § 11 (
+                    <a className="underline" href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc135.htm" target="_blank" rel="noreferrer">
+                        EC nº 135/2024
+                    </a>
+                    ).
+                </p>
+                <p>
+                    <strong>Enquadramento das parcelas:</strong> Segue os arts. 1º a 4º da{' '}
+                    <a className="underline" href="https://atos.cnj.jus.br/atos/detalhar/178" target="_blank" rel="noreferrer">
+                        Resolução CNJ nº 14/2006
+                    </a>{' '}
+                    (base mensal, parcelas excluídas e verbas de apuração separada).
+                </p>
+                <p>
+                    <strong>Ordem das retenções:</strong> Conforme o{' '}
+                    <a className="underline" href="https://portal.stf.jus.br/jurisprudenciaRepercussao/tema.asp?num=639" target="_blank" rel="noreferrer">
+                        Tema 639 do STF
+                    </a>
+                    , o excesso acima do teto é deduzido das bases de RPPS e IRRF antes da apuração dos tributos quando todas as parcelas atingidas integram essas duas bases.
+                </p>
+            </div>
+        ),
+    };
 
     const openDraft = () => {
         const initial: Record<string, boolean> = {};
@@ -56,47 +90,35 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
         setDraft(null);
     };
 
+    if (!expanded) {
+        return (
+            <div
+                id="abate-teto-card"
+                tabIndex={-1}
+                className="scroll-mt-24 border-b border-neutral-200 py-3 dark:border-neutral-700"
+            >
+                <RubricCardHeading
+                    title="Abate-teto constitucional"
+                    presetId="pensao"
+                    discount
+                    amount={{ value: memory.amount, kind: 'discount' }}
+                    notice={memory.status === 'pending' ? 'Apuração pendente' : memory.isCustomized ? 'Personalizado' : undefined}
+                    help={help}
+                    panelId="abate-teto-panel"
+                    onEdit={() => setExpanded(true)}
+                />
+            </div>
+        );
+    }
+
     return (
         <div
             id="abate-teto-card"
             tabIndex={-1}
-            className="mb-5 scroll-mt-24 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 sm:p-5"
+            className="mb-4 scroll-mt-24 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 sm:p-5"
         >
             <div className="mb-3">
-                <CalculatorCardHeading
-                    help={{
-                        label: 'Informações legais e constitucionais sobre o abate-teto',
-                        content: (
-                            <div className="space-y-2">
-                                <p>
-                                    <strong>Fundamento constitucional:</strong> O{' '}
-                                    <a className="underline" href="https://www4.planalto.gov.br/legislacao/legis-federal/constituicao" target="_blank" rel="noreferrer">
-                                        art. 37, XI, da Constituição Federal
-                                    </a>{' '}
-                                    usa o subsídio mensal dos Ministros do STF como teto remuneratório, com as exclusões indenizatórias do § 11 (
-                                    <a className="underline" href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc135.htm" target="_blank" rel="noreferrer">
-                                        EC nº 135/2024
-                                    </a>
-                                    ).
-                                </p>
-                                <p>
-                                    <strong>Enquadramento das parcelas:</strong> Segue os arts. 1º a 4º da{' '}
-                                    <a className="underline" href="https://atos.cnj.jus.br/atos/detalhar/178" target="_blank" rel="noreferrer">
-                                        Resolução CNJ nº 14/2006
-                                    </a>{' '}
-                                    (base mensal, parcelas excluídas e verbas de apuração separada).
-                                </p>
-                                <p>
-                                    <strong>Ordem das retenções:</strong> Conforme o{' '}
-                                    <a className="underline" href="https://portal.stf.jus.br/jurisprudenciaRepercussao/tema.asp?num=639" target="_blank" rel="noreferrer">
-                                        Tema 639 do STF
-                                    </a>
-                                    , o excesso acima do teto é deduzido das bases de RPPS e IRRF antes da apuração dos tributos quando todas as parcelas atingidas integram essas duas bases.
-                                </p>
-                            </div>
-                        ),
-                    }}
-                >
+                <CalculatorCardHeading help={help}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
                             <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
@@ -164,8 +186,15 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
                         </div>
                     )}
 
-                    {canCustomize && (
-                        <div className="flex justify-end border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                    <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                        <button
+                            type="button"
+                            onClick={() => setExpanded(false)}
+                            className="min-h-11 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600"
+                        >
+                            Recolher
+                        </button>
+                        {canCustomize && (
                             <button
                                 type="button"
                                 disabled={!calculationReady && memory.status !== 'pending'}
@@ -175,8 +204,8 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
                                 <SlidersHorizontal size={16} aria-hidden="true" />
                                 Personalizar cálculo
                             </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             )}
 

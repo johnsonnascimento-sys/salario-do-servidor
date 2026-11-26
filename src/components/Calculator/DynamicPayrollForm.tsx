@@ -628,8 +628,17 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
             </div>}
 
             <p role="status" aria-live="polite" className="sr-only">{reorderAnnouncement}</p>
-            <div className={visiblePresets.length || otherRubrics.some(rubrica => rubrica.tipo === rubricMode)
+            <div className={visiblePresets.length || otherRubrics.some(rubrica => rubrica.tipo === rubricMode) || (step === CALCULATOR_STEP.discounts && state.abateTetoVersion === 1 && state.abateTetoMemory)
                 ? 'border-t border-neutral-200 dark:border-neutral-700' : undefined}>
+            {step === CALCULATOR_STEP.discounts && state.abateTetoVersion === 1 && (
+                <AbateTetoCard
+                    memory={state.abateTetoMemory}
+                    composicao={inputState.abateTetoComposicao}
+                    onChangeComposicao={next => update('abateTetoComposicao', next)}
+                    styles={styles}
+                    calculationReady={calculationReady}
+                />
+            )}
             {enabledPresets.map((instance, index) => {
                 if (instance.presetId === 'gratificacao' || instance.presetId === 'abono') return null;
                 const preset = PREDEFINED_OPTIONS.find(option => option.id === instance.presetId);
@@ -683,15 +692,6 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             })}
 
-            {step === CALCULATOR_STEP.discounts && state.abateTetoVersion === 1 && (
-                <AbateTetoCard
-                    memory={state.abateTetoMemory}
-                    composicao={inputState.abateTetoComposicao}
-                    onChangeComposicao={next => update('abateTetoComposicao', next)}
-                    styles={styles}
-                    calculationReady={calculationReady}
-                />
-            )}
             <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300">
                 <ManualRubricasSection
                     {...manualRubricProps}

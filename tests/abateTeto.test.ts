@@ -237,6 +237,10 @@ test('personalização da base do abate-teto altera cálculo, resolve pendência
         }));
     });
     try {
+        const editBtn = cardTree.root.findAllByType('button').find(b => b.children.join('').includes('Editar'));
+        assert.ok(editBtn);
+        await act(async () => { editBtn.props.onClick(); });
+
         const customizeBtn = cardTree.root.findAllByType('button').find(b => b.children.join('').includes('Personalizar cálculo'));
         assert.ok(customizeBtn);
         await act(async () => { customizeBtn.props.onClick(); });
