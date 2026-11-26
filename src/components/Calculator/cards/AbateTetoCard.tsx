@@ -1,5 +1,5 @@
 import React from 'react';
-import { SlidersHorizontal } from 'lucide-react';
+import { Gauge, SlidersHorizontal } from 'lucide-react';
 import { RubricCardHeading } from '../RubricCardHeading';
 import { RubricEditorDialog } from '../RubricEditorDialog';
 import type { AbateTetoMemory } from '../../../types/constitutionalCeiling';
@@ -98,7 +98,7 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
         >
             <RubricCardHeading
                 title="Abate-teto constitucional"
-                presetId="pensao"
+                icon={Gauge}
                 discount
                 amount={{ value: memory.amount, kind: 'discount' }}
                 notice={memory.status === 'pending' ? 'Apuração pendente' : memory.isCustomized ? 'Personalizado' : undefined}

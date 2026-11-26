@@ -25,6 +25,7 @@ const amountLabels = {
 interface RubricCardHeadingProps {
     title: string;
     presetId?: PredefinedRubricId;
+    icon?: typeof Clock;
     discount?: boolean;
     amount?: { value: number; kind: NonNullable<PresetGrossLine['cardAmount']> };
     net?: number;
@@ -36,9 +37,9 @@ interface RubricCardHeadingProps {
 }
 
 export function RubricCardHeading({
-    title, presetId, discount, amount, net, notice, help, remove, panelId, onEdit
+    title, presetId, icon, discount, amount, net, notice, help, remove, panelId, onEdit
 }: RubricCardHeadingProps) {
-    const Icon = rubricIcon(presetId);
+    const Icon = icon ?? rubricIcon(presetId);
     const label = (
         <div className="flex min-w-0 items-center gap-2">
             <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${discount
