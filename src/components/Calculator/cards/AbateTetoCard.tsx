@@ -1,7 +1,7 @@
 import React from 'react';
 import { SlidersHorizontal } from 'lucide-react';
-import { CalculatorCardHeading } from '../CalculatorCardHeading';
 import { RubricCardHeading } from '../RubricCardHeading';
+import { RubricEditorDialog } from '../RubricEditorDialog';
 import type { AbateTetoMemory } from '../../../types/constitutionalCeiling';
 
 interface AbateTetoCardProps {
@@ -90,59 +90,34 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
         setDraft(null);
     };
 
-    if (!expanded) {
-        return (
-            <div
-                id="abate-teto-card"
-                tabIndex={-1}
-                className="scroll-mt-24 border-b border-neutral-200 py-3 dark:border-neutral-700"
-            >
-                <RubricCardHeading
-                    title="Abate-teto constitucional"
-                    presetId="pensao"
-                    discount
-                    amount={{ value: memory.amount, kind: 'discount' }}
-                    notice={memory.status === 'pending' ? 'Apuração pendente' : memory.isCustomized ? 'Personalizado' : undefined}
-                    help={help}
-                    panelId="abate-teto-panel"
-                    onEdit={() => setExpanded(true)}
-                />
-            </div>
-        );
-    }
-
     return (
         <div
             id="abate-teto-card"
             tabIndex={-1}
-            className="mb-4 scroll-mt-24 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 sm:p-5"
+            className="scroll-mt-24 border-b border-neutral-200 py-3 dark:border-neutral-700"
         >
-            <div className="mb-3">
-                <CalculatorCardHeading help={help}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
-                                Abate-teto constitucional
-                            </h3>
-                            {memory.isCustomized && (
-                                <span className="rounded-full bg-secondary-100 px-2.5 py-0.5 text-label font-semibold text-secondary-800 dark:bg-secondary-900/40 dark:text-secondary-200">
-                                    Personalizado
-                                </span>
-                            )}
-                            {memory.status === 'pending' && (
-                                <span className="rounded-full bg-warning-100 px-2.5 py-0.5 text-label font-semibold text-warning-800 dark:bg-warning-900/40 dark:text-warning-200">
-                                    Pendente
-                                </span>
-                            )}
-                        </div>
-                        {memory.limit !== undefined && (
-                            <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                                Teto: <strong className="font-mono text-neutral-800 dark:text-neutral-200">{formatBRL(memory.limit)}</strong>
-                            </span>
-                        )}
-                    </div>
-                </CalculatorCardHeading>
-            </div>
+            <RubricCardHeading
+                title="Abate-teto constitucional"
+                presetId="pensao"
+                discount
+                amount={{ value: memory.amount, kind: 'discount' }}
+                notice={memory.status === 'pending' ? 'Apuração pendente' : memory.isCustomized ? 'Personalizado' : undefined}
+                help={help}
+                panelId="abate-teto-panel"
+                onEdit={() => setExpanded(true)}
+            />
+            <RubricEditorDialog
+                id="abate-teto-panel"
+                cardId="abate-teto-card"
+                title="Abate-teto constitucional"
+                discount
+                help={help}
+                open={expanded}
+                onClose={() => {
+                    setDraft(null);
+                    setExpanded(false);
+                }}
+            >
 
             {!draft && (
                 <div className="space-y-4">
@@ -186,15 +161,8 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
                         </div>
                     )}
 
-                    <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-700">
-                        <button
-                            type="button"
-                            onClick={() => setExpanded(false)}
-                            className="min-h-11 rounded-lg border border-neutral-300 px-4 py-2 text-body font-semibold dark:border-neutral-600"
-                        >
-                            Recolher
-                        </button>
-                        {canCustomize && (
+                    {canCustomize && (
+                        <div className="flex justify-end border-t border-neutral-200 pt-3 dark:border-neutral-700">
                             <button
                                 type="button"
                                 disabled={!calculationReady && memory.status !== 'pending'}
@@ -204,8 +172,8 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
                                 <SlidersHorizontal size={16} aria-hidden="true" />
                                 Personalizar cálculo
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -277,6 +245,7 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
                     </div>
                 </section>
             )}
+            </RubricEditorDialog>
         </div>
     );
 };
