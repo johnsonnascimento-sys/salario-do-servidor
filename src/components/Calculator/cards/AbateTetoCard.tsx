@@ -93,9 +93,14 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
                     )}
 
                     {memory.status === 'pending' && (
-                        <p role="status" className="rounded-lg bg-warning-50 p-3 text-body-xs text-warning-800 dark:bg-warning-900/30 dark:text-warning-200">
-                            <strong>Apuração pendente.</strong> {memory.reason}
-                        </p>
+                        <div role="status" className="space-y-1.5 rounded-lg bg-warning-50 p-3 text-body-xs text-warning-800 dark:bg-warning-900/30 dark:text-warning-200">
+                            <p><strong>Apuração pendente.</strong> {memory.reason}</p>
+                            {canCustomize && (
+                                <p>
+                                    Parcelas sem incidência de RPPS (como <em>AQ de treinamento</em> ou <em>Substituição de função</em>) impedem a conclusão quando há excesso acima do teto. Clique em <strong>Personalizar cálculo</strong> abaixo para ajustar quais verbas entram na base do teto.
+                                </p>
+                            )}
+                        </div>
                     )}
 
                     {memory.status === 'ready' && (

@@ -342,6 +342,10 @@ export default function Calculator() {
     const reviewPendingAssessment = () => selectSearchResult({
         kind: 'element', step: CALCULATOR_STEP.pension, elementId: 'pension-retro-form'
     });
+    const reviewCeilingAssessment = () => selectSearchResult({
+        kind: 'element', step: CALCULATOR_STEP.discounts, elementId: 'abate-teto-card'
+    });
+    const isCeilingPending = calculationStatus === 'ceiling_pending';
     const pendingActionClass = step === CALCULATOR_STEP.result
         ? 'min-h-11 rounded-lg bg-secondary-800 px-4 font-semibold text-white hover:bg-secondary-900'
         : 'min-h-11 font-semibold underline underline-offset-4';
@@ -412,6 +416,15 @@ export default function Calculator() {
                         </p>
                         {pendingAction}
                     </div>}
+                    {isCeilingPending && step !== CALCULATOR_STEP.result && step !== CALCULATOR_STEP.discounts && <div id="calculator-ceiling-pending" className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-warning-300 bg-warning-50 px-3 py-2 text-body-sm text-warning-800 dark:border-warning-800 dark:bg-warning-900/20 dark:text-warning-200">
+                        <p className="flex items-center gap-2" role="status">
+                            <AlertCircle size={16} className="shrink-0" aria-hidden="true" />
+                            <span>{displayCalculationError || 'Abate-teto pendente: revise as parcelas incluídas na base do teto.'}</span>
+                        </p>
+                        <button type="button" className="min-h-11 font-semibold underline underline-offset-4" onClick={reviewCeilingAssessment}>
+                            Personalizar abate-teto
+                        </button>
+                    </div>}
                     <DynamicPayrollForm
                         step={step}
                         presetSearchDestination={searchDestination?.kind === 'preset' && searchDestination.step === step ? searchDestination : null}
@@ -467,7 +480,23 @@ export default function Calculator() {
                         calculationError={calculationError}
                         courtConfig={courtConfig}
                         styles={styles}
-                    /> : !calculationPending && <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
+                    /> : isCeilingPending ? <div id="calculator-ceiling-pending" className="divide-y divide-warning-200 overflow-hidden rounded-xl border border-warning-300 dark:divide-warning-800 dark:border-warning-800">
+                        <div role="status" className="flex items-center gap-3 bg-warning-50 px-4 py-4 text-warning-800 dark:bg-warning-900/30 dark:text-warning-200">
+                            <AlertCircle size={22} className="shrink-0" aria-hidden="true" />
+                            <h3 className="text-h5 font-bold">Apuração pendente no abate-teto</h3>
+                        </div>
+                        <div className="space-y-3 bg-white px-4 py-4 text-body dark:bg-neutral-800 sm:px-6">
+                            <p>{displayCalculationError}</p>
+                            <p className="text-body-sm text-neutral-600 dark:text-neutral-300">
+                                Para concluir a simulação, acesse a etapa <strong>Descontos</strong> e clique em <strong>Personalizar cálculo</strong> no card de Abate-teto constitucional para escolher quais parcelas entram na base do teto.
+                            </p>
+                            <div>
+                                <button type="button" onClick={reviewCeilingAssessment} className="min-h-11 rounded-lg bg-secondary-800 px-4 font-semibold text-white hover:bg-secondary-900">
+                                    Personalizar abate-teto
+                                </button>
+                            </div>
+                        </div>
+                    </div> : !calculationPending && <p role={calculationStatus === 'error' ? 'alert' : 'status'} aria-live="polite"
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
                         {(pensionFeedback?.configuration ? 'Aguardando a atualização da Funpresp para concluir o holerite.' : displayCalculationError) || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
                     </p>}
