@@ -1,5 +1,6 @@
 import React from 'react';
 import { SlidersHorizontal } from 'lucide-react';
+import { CalculatorCardHeading } from '../CalculatorCardHeading';
 import type { AbateTetoMemory } from '../../../types/constitutionalCeiling';
 
 interface AbateTetoCardProps {
@@ -61,27 +62,64 @@ export const AbateTetoCard: React.FC<AbateTetoCardProps> = ({
             tabIndex={-1}
             className="mb-5 scroll-mt-24 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-800 sm:p-5"
         >
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
-                        Abate-teto constitucional
-                    </h3>
-                    {memory.isCustomized && (
-                        <span className="rounded-full bg-secondary-100 px-2.5 py-0.5 text-label font-semibold text-secondary-800 dark:bg-secondary-900/40 dark:text-secondary-200">
-                            Personalizado
-                        </span>
-                    )}
-                    {memory.status === 'pending' && (
-                        <span className="rounded-full bg-warning-100 px-2.5 py-0.5 text-label font-semibold text-warning-800 dark:bg-warning-900/40 dark:text-warning-200">
-                            Pendente
-                        </span>
-                    )}
-                </div>
-                {memory.limit !== undefined && (
-                    <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
-                        Teto: <strong className="font-mono text-neutral-800 dark:text-neutral-200">{formatBRL(memory.limit)}</strong>
-                    </span>
-                )}
+            <div className="mb-3">
+                <CalculatorCardHeading
+                    help={{
+                        label: 'Informações legais e constitucionais sobre o abate-teto',
+                        content: (
+                            <div className="space-y-2">
+                                <p>
+                                    <strong>Fundamento constitucional:</strong> O{' '}
+                                    <a className="underline" href="https://www4.planalto.gov.br/legislacao/legis-federal/constituicao" target="_blank" rel="noreferrer">
+                                        art. 37, XI, da Constituição Federal
+                                    </a>{' '}
+                                    usa o subsídio mensal dos Ministros do STF como teto remuneratório, com as exclusões indenizatórias do § 11 (
+                                    <a className="underline" href="https://www.planalto.gov.br/ccivil_03/constituicao/emendas/emc/emc135.htm" target="_blank" rel="noreferrer">
+                                        EC nº 135/2024
+                                    </a>
+                                    ).
+                                </p>
+                                <p>
+                                    <strong>Enquadramento das parcelas:</strong> Segue os arts. 1º a 4º da{' '}
+                                    <a className="underline" href="https://atos.cnj.jus.br/atos/detalhar/178" target="_blank" rel="noreferrer">
+                                        Resolução CNJ nº 14/2006
+                                    </a>{' '}
+                                    (base mensal, parcelas excluídas e verbas de apuração separada).
+                                </p>
+                                <p>
+                                    <strong>Ordem das retenções:</strong> Conforme o{' '}
+                                    <a className="underline" href="https://portal.stf.jus.br/jurisprudenciaRepercussao/tema.asp?num=639" target="_blank" rel="noreferrer">
+                                        Tema 639 do STF
+                                    </a>
+                                    , o excesso acima do teto é deduzido das bases de RPPS e IRRF antes da apuração dos tributos quando todas as parcelas atingidas integram essas duas bases.
+                                </p>
+                            </div>
+                        ),
+                    }}
+                >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-h5 font-semibold text-neutral-900 dark:text-neutral-100">
+                                Abate-teto constitucional
+                            </h3>
+                            {memory.isCustomized && (
+                                <span className="rounded-full bg-secondary-100 px-2.5 py-0.5 text-label font-semibold text-secondary-800 dark:bg-secondary-900/40 dark:text-secondary-200">
+                                    Personalizado
+                                </span>
+                            )}
+                            {memory.status === 'pending' && (
+                                <span className="rounded-full bg-warning-100 px-2.5 py-0.5 text-label font-semibold text-warning-800 dark:bg-warning-900/40 dark:text-warning-200">
+                                    Pendente
+                                </span>
+                            )}
+                        </div>
+                        {memory.limit !== undefined && (
+                            <span className="text-body-xs text-neutral-500 dark:text-neutral-400">
+                                Teto: <strong className="font-mono text-neutral-800 dark:text-neutral-200">{formatBRL(memory.limit)}</strong>
+                            </span>
+                        )}
+                    </div>
+                </CalculatorCardHeading>
             </div>
 
             {!draft && (
