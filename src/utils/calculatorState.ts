@@ -47,6 +47,7 @@ export const CALCULATED_STATE_KEYS: Array<keyof CalculatedPayrollState> = [
     'valFunprespNormal',
     'valFunprespFacultativa',
     'pensionMemory',
+    'abateTetoMemory',
     'thirteenthMemory',
     'irMensal',
     'irEA',
@@ -189,6 +190,7 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
     const merged = {
         ...INITIAL_STATE,
         ...safeSnapshot,
+        abateTetoVersion: safeSnapshot.abateTetoVersion === 1 ? 1 as const : undefined,
         // Legacy manual deduction fields are reset to 0; custom discounts belong in Rubricas Manuais.
         emprestimos: 0,
         planoSaude: 0,

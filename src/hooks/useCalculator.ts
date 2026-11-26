@@ -148,6 +148,7 @@ export const useCalculator = () => {
                 ...stripCalculatedFieldsFromCalculatorState(state),
                 // Preserve the audit at save time; recalculation still uses the current engine.
                 pensionMemory: calculatedState.pensionMemory,
+                abateTetoMemory: calculatedState.abateTetoMemory,
                 commissionMemory: calculatedState.commissionMemory,
                 rgpsMemory: calculatedState.rgpsMemory,
                 rgpsThirteenthMemory: calculatedState.rgpsThirteenthMemory,
@@ -177,6 +178,7 @@ export const useCalculator = () => {
                 ...stripCalculatedFieldsFromCalculatorState(state),
                 // Preserve the audit at save time; recalculation still uses the current engine.
                 pensionMemory: calculatedState.pensionMemory,
+                abateTetoMemory: calculatedState.abateTetoMemory,
                 commissionMemory: calculatedState.commissionMemory,
                 rgpsMemory: calculatedState.rgpsMemory,
                 rgpsThirteenthMemory: calculatedState.rgpsThirteenthMemory,

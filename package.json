@@ -27,6 +27,7 @@
     "test:vacation": "node scripts/test-vacation-isolation.mjs",
     "test:gratification": "node scripts/test-gratification-isolation.mjs",
     "test:config": "node scripts/test-config-service.mjs",
+    "test:abate-teto": "node scripts/test-abate-teto.mjs",
     "test:normative-catalog": "node scripts/test-normative-catalog.mjs",
     "test:audit": "node scripts/test-audit-findings-remaining.mjs",
     "test:gaacta": "node scripts/test-gaacta.mjs",

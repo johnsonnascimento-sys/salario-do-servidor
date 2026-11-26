@@ -13,6 +13,7 @@ import { CalendarDaySelection, CourtConfig, OvertimeEntry, Rubrica, Substitution
 import type { PensionParticipation, PensionRetroEntry } from '../../../types/pension';
 
 export interface IAgencyCalculationParams extends ICalculationParams {
+    abateTetoVersion?: 1;
     commissionProfile?: ExternalCommissionProfile;
     rgpsVacationBase?: number;
     commissionVacationPayInMonthly?: number;

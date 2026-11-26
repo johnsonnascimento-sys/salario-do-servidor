@@ -1,6 +1,7 @@
 import { thirteenthAuditRows } from '../utils/thirteenthPresentation';
 import { buildIrEaAuditRows } from '../utils/irEaExport';
 import { buildPensionAuditRows } from '../utils/pensionExport';
+import { abateTetoAuditRows } from '../utils/abateTetoPresentation';
 import { commissionAuditRows } from '../utils/commissionPresentation';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
@@ -184,6 +185,15 @@ export const exportToPDF = (
         doc.autoTable({ head: [['Campo', 'Valor']], body: irEaRows,
             startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
     }
+    const ceilingRows = abateTetoAuditRows(state.abateTetoMemory);
+    if (ceilingRows.length) {
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text('Memória do abate-teto', 14, 18);
+        doc.autoTable({ head: [['Campo', 'Valor']], body: ceilingRows,
+            startY: 24, theme: 'grid', styles: { fontSize: 8 }, margin: { bottom: 20 } });
+    }
     const pdfBlob = doc.output('blob');
     const filename = options?.filename?.trim() || `Holerite_${state.mesRef}_${state.anoRef}`;
     saveAs(pdfBlob, `${filename}.pdf`);
@@ -276,6 +286,12 @@ export const exportToExcel = (
         const irEaSheet = XLSX.utils.aoa_to_sheet([['Campo', 'Valor'], ...irEaRows]);
         irEaSheet['!cols'] = [{ wch: 40 }, { wch: 70 }];
         XLSX.utils.book_append_sheet(wb, irEaSheet, 'Memória IR-EA');
+    }
+    const ceilingRows = abateTetoAuditRows(state.abateTetoMemory);
+    if (ceilingRows.length) {
+        const sheet = XLSX.utils.aoa_to_sheet([['Campo', 'Valor'], ...ceilingRows]);
+        sheet['!cols'] = [{ wch: 50 }, { wch: 76 }];
+        XLSX.utils.book_append_sheet(wb, sheet, 'Memória do abate-teto');
     }
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

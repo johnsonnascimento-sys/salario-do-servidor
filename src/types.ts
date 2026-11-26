@@ -4,7 +4,7 @@ import type { IrEaContext, IrEaMemory, IrTableMetadata, CalculatedOvertimeEntry,
 import type { PensionParticipation, PensionRetroEntry, PensionMemory } from './types/pension';
 import type { TransportIndemnityConfig, TransportIndemnityMemory } from './types/transportIndemnity';
 import type { GaactaRulesConfig } from './types/gaacta';
-import type { ConstitutionalCeilingReference } from './types/constitutionalCeiling';
+import type { AbateTetoActivation, AbateTetoMemory, AbateTetoRules, ConstitutionalCeilingReference } from './types/constitutionalCeiling';
 import type { LicencaComposicaoBase } from './types/licenca';
 import type { CommissionConfig, RgpsConfig } from './types/commissionConfig';
 import type { CommissionPayMemory, ExternalCommissionProfile, RgpsCalculationMemory } from './types/commissionProfile';
@@ -172,6 +172,8 @@ export interface CourtConfig {
   commission?: CommissionConfig;
   rgps?: RgpsConfig;
   constitutionalCeilingReference?: ConstitutionalCeilingReference;
+  abateTetoRules?: AbateTetoRules;
+  abateTetoActivation?: AbateTetoActivation;
   orgSlug?: string;
   orgName?: string;
   powerName?: string;
@@ -281,6 +283,8 @@ export interface SubstitutionEntry {
 }
 
 export interface CalculatorState {
+  abateTetoVersion?: 1;
+  abateTetoMemory?: AbateTetoMemory;
   commissionProfile?: ExternalCommissionProfile;
   commissionMemory?: CommissionPayMemory;
   rgpsMemory?: RgpsCalculationMemory;
@@ -626,6 +630,7 @@ export type CalculatedPayrollState = Pick<
   | 'valFunprespNormal'
   | 'valFunprespFacultativa'
   | 'pensionMemory'
+  | 'abateTetoMemory'
   | 'thirteenthMemory'
   | 'irEaMemory'
   | 'irEaEntryTax'
@@ -690,6 +695,7 @@ export type CalculatedPayrollState = Pick<
 >;
 
 export const INITIAL_STATE: CalculatorState = {
+  abateTetoVersion: 1,
   irEaContext: {},
   irEaMemory: undefined,
   irEaEntryTax: {},

@@ -6,6 +6,7 @@ import { ChevronDown, AlertCircle, List } from 'lucide-react';
 import { useCalculator } from '../hooks/useCalculator';
 import { styles } from '../components/Calculator/styles';
 import { GlobalSettings } from '../components/Calculator/GlobalSettings';
+import { AbateTetoDetails } from '../components/Calculator/AbateTetoDetails';
 import { CalculatorHeader } from '../components/Calculator/CalculatorHeader';
 import { CalculatorStepHeader } from '../components/Calculator/CalculatorStepHeader';
 import { DynamicPayrollForm } from '../components/Calculator/DynamicPayrollForm';
@@ -312,7 +313,7 @@ export default function Calculator() {
             : /(?:sem regra e fonte|vigência e fonte).*competência/i.test(calculationError) ? 'Regra indisponível para a competência'
                 : undefined
         : undefined;
-    const resultMessage = calculationStatus === 'pension_pending' ? 'Apuração pendente'
+    const resultMessage = (calculationStatus === 'pension_pending' || calculationStatus === 'ceiling_pending') ? 'Apuração pendente'
         : calculationStatus === 'selection_required' ? 'Revise a participação previdenciária'
             : calculationStatus === 'error' ? (commissionStatus || (pensionFeedback?.configuration ? 'Funpresp em atualização' : pensionFeedback?.title || 'Cálculo indisponível')) : 'Calculando...';
 
@@ -470,6 +471,7 @@ export default function Calculator() {
                         className="p-6 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
                         {(pensionFeedback?.configuration ? 'Aguardando a atualização da Funpresp para concluir o holerite.' : displayCalculationError) || (calculationStatus === 'selection_required' ? resultMessage : 'Calculando os valores do holerite...')}
                     </p>}
+                    {calculationReady && <AbateTetoDetails memory={effectiveState.abateTetoMemory} />}
                     {calculationReady && effectiveState.commissionMemory && <details className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
                         <summary className="cursor-pointer font-semibold">Memória do vínculo, CJ/FC e tributos</summary>
                         <dl className="mt-3 divide-y divide-neutral-200 text-body-sm dark:divide-neutral-700">

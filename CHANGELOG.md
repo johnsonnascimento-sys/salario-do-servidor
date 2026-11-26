@@ -1,3 +1,9 @@
+## Abate-teto mensal no PJU — 26/11/2026
+
+- O piloto da JMU e do CJF calcula o abate-teto em novas folhas mensais de servidores efetivos ativos, para um vínculo, a partir de novembro de 2026, com ativação por órgão.
+- O abate reduz as bases de RPPS e IRRF antes das retenções. Holerite, memória, PDF e Excel registram o desconto e sua apuração. Incidências mistas com excesso bloqueiam a conclusão.
+- A migration versiona a matriz do PJU, prepara os órgãos com ativação desabilitada e inclui os fundamentos em Normas e vigências. Veja o [recorte e a homologação](src/docs/regras/TETO_REMUNERATORIO.md#homologação-sintética).
+
 ## Teto federal de referência — 24/11/2026
 
 - O passo Competência exibe o subsídio do STF vigente no mês selecionado e sua fonte. A série global registra os efeitos de abril/2023, fevereiro/2024 e fevereiro/2025 do art. 1º, I a III, da Lei nº 14.520/2023. A migration prepara a ficha do PJU em Normas e vigências.

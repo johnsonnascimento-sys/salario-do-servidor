@@ -1,4 +1,5 @@
 import type { PayslipResultRow } from '../../types/user';
+import type { AbateTetoMemory } from '../../types/constitutionalCeiling';
 import { thirteenthPaymentRows } from '../../utils/thirteenthPresentation';
 /**
  * Hook de Resultados - Calculadora
@@ -34,7 +35,7 @@ export const useCalculatorResults = (
 ) => {
     const inputToken = useMemo(() => ({ state, agencyService, courtConfig, agency }), [
         agencyService,
-        state.mesRef, state.anoRef,
+        state.mesRef, state.anoRef, state.abateTetoVersion,
         state.periodo, state.cargo, state.padrao, state.funcao, state.commissionProfile,
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
@@ -89,12 +90,14 @@ export const useCalculatorResults = (
         token: typeof inputToken; state: CalculatedPayrollState; error: string | null;
         pensionContexts?: PensionSelectionContexts | null; selectionRequired?: boolean;
         pensionPending?: { message: string; rubricaIds: string[] };
+        ceilingPending?: boolean;
     } | null>(null);
     const canCalculate = Boolean(agencyService && courtConfig && agency?.slug);
     const isCurrent = completed?.token === inputToken;
-    const calculationStatus: 'idle' | 'calculating' | 'ready' | 'error' | 'selection_required' | 'pension_pending' = !canCalculate
+    const calculationStatus: 'idle' | 'calculating' | 'ready' | 'error' | 'selection_required' | 'pension_pending' | 'ceiling_pending' = !canCalculate
         ? 'idle' : !isCurrent ? 'calculating' : completed.pensionPending ? 'pension_pending'
-            : completed.selectionRequired ? 'selection_required' : completed.error ? 'error' : 'ready';
+            : completed.ceilingPending ? 'ceiling_pending'
+                : completed.selectionRequired ? 'selection_required' : completed.error ? 'error' : 'ready';
     const calculationError = isCurrent ? completed.error : null;
     const calculationPending = isCurrent ? completed.pensionPending ?? null : null;
     const calculatedState = useMemo(() => {
@@ -131,6 +134,12 @@ export const useCalculatorResults = (
                 }
 
                 const bd = result.breakdown;
+                const abateTetoMemory = bd.abateTeto as AbateTetoMemory | undefined;
+                if (abateTetoMemory?.status === 'pending') {
+                    setCompleted({ token: inputToken, pensionContexts, ceilingPending: true,
+                        state: getEmptyCalculatedPayrollState(), error: abateTetoMemory.reason || 'Revise a base do abate-teto.' });
+                    return;
+                }
                 setCompleted({ token: inputToken, pensionContexts, error: null, state: {
                     vencimento: bd.vencimento || 0,
                     gaj: bd.gaj || 0,
@@ -155,6 +164,7 @@ export const useCalculatorResults = (
                     valFunprespNormal: bd.funprespNormal || 0,
                     valFunprespFacultativa: bd.funprespFacultativa || 0,
                     pensionMemory: result.pensionMemory,
+                    abateTetoMemory,
                     irMensal: bd.irrf || 0,
                     irEA: bd.irEA || 0,
                     irEaMemory: bd.irEaMemory,
@@ -371,6 +381,9 @@ export const useCalculatorResults = (
         if ((effectiveState.inss13 ?? 0) > 0) rows.push({ label: 'CONTRIBUIÇÃO RGPS (INSS) — 13º', value: effectiveState.inss13!, type: 'D' });
         if (effectiveState.ir13 && effectiveState.ir13 > 0) rows.push({ label: 'IMPOSTO DE RENDA-GN(13º) EC', value: effectiveState.ir13, type: 'D' });
         if (!effectiveState.thirteenthMemory && effectiveState.debitoPrimeiraParcela13 > 0) rows.push({ label: 'GRATIFICACAO NATALINA-ADIANT. 1a PARCELA (ABATIMENTO)', value: effectiveState.debitoPrimeiraParcela13, type: 'D', displayGroup: 'thirteenth-advance' });
+        if (effectiveState.abateTetoMemory?.status === 'ready' && effectiveState.abateTetoMemory.amount > 0) {
+            rows.push({ label: 'Abate-teto constitucional', type: 'D', value: effectiveState.abateTetoMemory.amount });
+        }
         if (effectiveState.auxTransporteDesc > 0) rows.push({ label: 'COTA-PARTE AUXÍLIO-TRANSPORTE', value: effectiveState.auxTransporteDesc, type: 'D' });
         if (effectiveState.emprestimos > 0) rows.push({ label: 'CONSIGNAÇÕES / EMPRÉSTIMOS', value: effectiveState.emprestimos, type: 'D' });
         if (effectiveState.planoSaude > 0) rows.push({ label: 'PLANO DE SAÚDE', value: effectiveState.planoSaude, type: 'D' });

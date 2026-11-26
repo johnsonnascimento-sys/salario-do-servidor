@@ -33,6 +33,7 @@ import { calculateDailies } from './modules/dailiesCalculations';
 import { calculateCompensatoryLeave } from './modules/leaveCalculations';
 import { calculateGaacta } from './modules/gaactaCalculations';
 import { calculateDeductions } from './modules/deductionsCalculations';
+import { calculateAbateTeto, appendExcludedCeilingComponents } from './modules/abateTetoCalculations';
 import { calculateTransportIndemnity } from './modules/transportIndemnityCalculations';
 import { applyCommissionProfile } from './modules/commissionContext';
 
@@ -123,6 +124,10 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
         }
         const compensatoryLeave = await calculateCompensatoryLeave(params);
         const rubricasTotals = calculateRubricasTotals(params.rubricasExtras || []);
+        let abateTeto = await calculateAbateTeto(params, substitution, overtime.heTotal);
+        if (abateTeto?.status === 'pending') {
+            return { netSalary: 0, totalDeductions: 0, totalBenefits: 0, breakdown: { abateTeto } };
+        }
 
         // 4. Calcular Deduções (agora async)
         const vacationPreview = params.commissionProfile ? await calculateVacation(params, true) : undefined;
@@ -130,7 +135,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
             ...params,
             rgpsVacationBase: vacationPreview && !params.feriasAntecipadas ? vacationPreview.value : undefined,
             commissionVacationPayInMonthly: vacationPreview?.taxableRemunerationInMonthly,
-        });
+        }, abateTeto);
         const abonoPerm = params.recebeAbono ? deductions.pss : 0;
         const vacation = await calculateVacation({
             ...params,
@@ -149,12 +154,19 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
             calculatedPss: deductions.pss
         });
 
+        abateTeto = appendExcludedCeilingComponents(abateTeto, params, {
+            abono: abonoPerm, auxAlimentacao: benefits.auxAlimentacao, auxPreEscolar: benefits.auxPreEscolar,
+            auxTransporte: benefits.auxTransporte, diarias: dailies.valor, indenizacaoTransporte: transportIndemnity.amount,
+        });
+        if (abateTeto?.status === 'pending') {
+            return { netSalary: 0, totalDeductions: 0, totalBenefits: 0, breakdown: { abateTeto } };
+        }
         // 5. Calcular Totais
         const totalGross = base + abonoPerm + benefits.auxAlimentacao + benefits.auxPreEscolar +
             benefits.auxTransporte + vacation.value + thirteenth.gratNatalinaTotal + overtime.heTotal +
             substitution.total + dailies.valor + compensatoryLeave + gaactaResult.valor + rubricasTotals.creditos + transportIndemnity.amount;
 
-        const totalDeductions = deductions.total + benefits.auxTransporteDebito +
+        const totalDeductions = deductions.total + (abateTeto?.amount || 0) + benefits.auxTransporteDebito +
             (params.discounts || 0) + (params.otherDeductions || 0) +
             vacation.irFerias + vacation.descontoAntecipacao + (vacation.originWithholding ?? 0) + thirteenth.pss13 + (thirteenth.inss13 ?? 0) + thirteenth.funpresp13 +
             thirteenth.ir13 + thirteenth.primeiraParcelaDesconto + rubricasTotals.debitos;
@@ -168,6 +180,7 @@ export class AgencyCalculationEngine implements IAgencyCalculator {
             pensionMemory: params.commissionProfile ? undefined : { mensal: deductions.pensionMemory, thirteenth: thirteenth.pensionMemory,
                 retroativos: deductions.pensionRetroMemory },
             breakdown: {
+                abateTeto,
                 // Componentes Base Individuais
                 vencimento: baseComponents.vencimento,
                 gaj: baseComponents.gaj,

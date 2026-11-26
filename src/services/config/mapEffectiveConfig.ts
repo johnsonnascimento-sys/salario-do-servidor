@@ -173,6 +173,8 @@ export const mapEffectiveConfigToCourtConfig = (effective: EffectiveConfig): Cou
         orgName: effective.org_name,
         powerName: effective.power_name,
         constitutionalCeilingReference: effective.constitutional_ceiling_reference,
+        abateTetoRules: effective.abate_teto_rules,
+        abateTetoActivation: effective.abate_teto_activation,
         commission: effective.commission_rules ? {
             enabled: effective.commission_rules.enabled === true,
             dailiesFc: effective.commission_rules.dailies_fc ? {

@@ -7,6 +7,7 @@
  * - Funpresp (Fundacao de Previdencia Complementar)
  */
 
+import type { AbateTetoMemory } from '../../../../types/constitutionalCeiling';
 import { CourtConfig, Rubrica, RubricaTaxDetail } from '../../../../types';
 import { calculatePss, calculateIrrf } from '../../../../core/calculations/taxUtils';
 import type { IrEaMemory, CalculatedOvertimeEntry, CalculatedSubstitutionEntry } from '../../../../types/irEa';
@@ -115,7 +116,9 @@ const getMarginalPssRate = (
 /**
  * Calcula Deducoes (PSS, IRRF, Funpresp)
  */
-export async function calculateDeductions(grossValue: number, params: IAgencyCalculationParams): Promise<DeductionsResult> {
+export async function calculateDeductions(
+    grossValue: number, params: IAgencyCalculationParams, abateTeto?: AbateTetoMemory,
+): Promise<DeductionsResult> {
     if (!params.commissionProfile) assertPensionRubricsReady(params);
     const config = requireAgencyConfig(params);
     const commission = params.commissionProfile ? resolveCommissionPay(params) : undefined;
@@ -183,7 +186,13 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
             'Apuração pendente: há parcelas de PSS por competência sem vínculo com a apuração histórica; confira todos os passivos antes de concluir.');
     }
 
-    const basePSS = pensionContext?.baseRppsIntegral || 0;
+    const reduction = abateTeto?.status === 'ready' ? abateTeto.amount : 0;
+    const basePssBefore = pensionContext?.baseRppsIntegral || 0;
+    const basePSS = Math.max(0, basePssBefore - reduction);
+    if (abateTeto?.status === 'ready') {
+        abateTeto.rppsBefore = basePssBefore;
+        abateTeto.rppsAfter = basePSS;
+    }
 
     const pssTable = config.historico_pss?.[params.tabelaPSS];
     const teto = pssTable?.teto_rgps || 0;
@@ -296,6 +305,11 @@ export async function calculateDeductions(grossValue: number, params: IAgencyCal
         totalTrib -= vacationPrincipal;
     }
 
+    if (abateTeto?.status === 'ready') {
+        abateTeto.irBefore = totalTrib;
+        totalTrib = Math.max(0, totalTrib - reduction);
+        abateTeto.irAfter = totalTrib;
+    }
     const deducaoDep = config.values?.deducao_dep || 0;
     const retroMensalDedutivel = pensionRetroMemory.filter(entry => entry.destinoIR === 'mensal')
         .reduce((sum, entry) => sum + entry.rpps + entry.complementar, 0);

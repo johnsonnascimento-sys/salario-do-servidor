@@ -1,7 +1,7 @@
 import type { IrTableMetadata } from '../../types/irEa';
 import type { TransportIndemnityConfig } from '../../types/transportIndemnity';
 import type { GaactaRulesConfig } from '../../types/gaacta';
-import type { ConstitutionalCeilingReference } from '../../types/constitutionalCeiling';
+import type { AbateTetoActivation, AbateTetoRules, ConstitutionalCeilingReference } from '../../types/constitutionalCeiling';
 
 /**
  * Tipos para o Sistema de Configuração Hierárquica
@@ -95,6 +95,8 @@ export interface PSSTablesConfig {
  * Regras compartilhadas por um poder (PJU, Executivo, etc.)
  */
 export interface PowerConfig {
+    abate_teto_rules?: AbateTetoRules;
+    abate_teto_activation?: AbateTetoActivation;
     commission_rules?: CommissionRulesConfig;
     cj1_integral_base?: number;
     salary_bases?: SalaryBasesConfig;
