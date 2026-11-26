@@ -35,7 +35,7 @@ export const useCalculatorResults = (
 ) => {
     const inputToken = useMemo(() => ({ state, agencyService, courtConfig, agency }), [
         agencyService,
-        state.mesRef, state.anoRef, state.abateTetoVersion,
+        state.mesRef, state.anoRef, state.abateTetoVersion, state.abateTetoComposicao,
         state.periodo, state.cargo, state.padrao, state.funcao, state.commissionProfile,
         state.aqTituloPerc, state.aqTreinoPerc, state.aqTituloVR, state.aqTreinoVR,
         state.recebeAbono, state.gratEspecificaTipo, state.gratEspecificaValor,
@@ -103,6 +103,9 @@ export const useCalculatorResults = (
     const calculatedState = useMemo(() => {
         if (calculationStatus === 'ready' && completed) return completed.state;
         const empty = getEmptyCalculatedPayrollState();
+        if (calculationStatus === 'ceiling_pending' && completed) {
+            empty.abateTetoMemory = completed.state.abateTetoMemory;
+        }
         // These outputs are also form inputs; retain manual amounts/enabled flags.
         for (const key of PERSISTED_CALCULATED_INPUT_KEYS) empty[key] = state[key];
         return empty;
@@ -137,7 +140,7 @@ export const useCalculatorResults = (
                 const abateTetoMemory = bd.abateTeto as AbateTetoMemory | undefined;
                 if (abateTetoMemory?.status === 'pending') {
                     setCompleted({ token: inputToken, pensionContexts, ceilingPending: true,
-                        state: getEmptyCalculatedPayrollState(), error: abateTetoMemory.reason || 'Revise a base do abate-teto.' });
+                        state: { ...getEmptyCalculatedPayrollState(), abateTetoMemory }, error: abateTetoMemory.reason || 'Revise a base do abate-teto.' });
                     return;
                 }
                 setCompleted({ token: inputToken, pensionContexts, error: null, state: {

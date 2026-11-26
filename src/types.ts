@@ -284,6 +284,7 @@ export interface SubstitutionEntry {
 
 export interface CalculatorState {
   abateTetoVersion?: 1;
+  abateTetoComposicao?: Record<string, boolean>;
   abateTetoMemory?: AbateTetoMemory;
   commissionProfile?: ExternalCommissionProfile;
   commissionMemory?: CommissionPayMemory;

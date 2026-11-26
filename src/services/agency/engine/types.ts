@@ -14,6 +14,7 @@ import type { PensionParticipation, PensionRetroEntry } from '../../../types/pen
 
 export interface IAgencyCalculationParams extends ICalculationParams {
     abateTetoVersion?: 1;
+    abateTetoComposicao?: Record<string, boolean>;
     commissionProfile?: ExternalCommissionProfile;
     rgpsVacationBase?: number;
     commissionVacationPayInMonthly?: number;

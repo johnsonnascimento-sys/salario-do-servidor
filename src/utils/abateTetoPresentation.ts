@@ -30,6 +30,9 @@ export function abateTetoAuditRows(memory?: AbateTetoMemory): [string, string][]
         rows.push([component.label, formatCurrency(component.amount) + ' · ' +
             classificationLabels[component.kind] + ' · ' + component.provision]);
     }
+    if (memory.isCustomized) {
+        rows.push(['Composição da base', 'Personalizada na simulação']);
+    }
     if (memory.source) rows.push(['Fonte da classificação', memory.source]);
     return rows;
 }

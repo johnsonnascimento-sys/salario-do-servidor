@@ -12,6 +12,7 @@ import { useCalculatorResults } from '../src/hooks/calculator/useCalculatorResul
 import { hydrateCalculatorState } from '../src/utils/calculatorState';
 import { exportToExcel, exportToPDF } from '../src/services/exportService';
 import { AbateTetoDetails } from '../src/components/Calculator/AbateTetoDetails';
+import { AbateTetoCard } from '../src/components/Calculator/cards/AbateTetoCard';
 import type { AbateTetoMemory } from '../src/types/constitutionalCeiling';
 
 const engine = new AgencyCalculationEngine();
@@ -187,7 +188,69 @@ test('holerite e exportações registram o abate uma vez, com memória e bloquei
         assert.equal(latest.resultRows.length, 0);
         assert.equal(latest.calculatedState.liquido, 0);
         assert.equal(latest.effectiveState.funcao, 'fc1');
+        assert.ok(latest.effectiveState.abateTetoMemory?.composicaoBase?.some(item => item.code === 'fc'));
     } finally {
         act(() => tree.unmount());
+    }
+});
+
+test('personalização da base do abate-teto altera cálculo, resolve pendência e persiste no estado e card', async () => {
+    const config = court('jmu', 20000);
+    // Desmarcar GAJ reduz a base mensal abaixo do teto
+    const withoutGaj = await calculate(config, input({ abateTetoComposicao: { gaj: false } }));
+    assert.equal(memory(withoutGaj).status, 'ready');
+    assert.equal(memory(withoutGaj).monthlyGross, 20000);
+    assert.equal(memory(withoutGaj).amount, 0);
+    assert.equal(memory(withoutGaj).isCustomized, true);
+
+    // Desmarcar parcela não contributiva (aqTreino) destrava pendência de incidência mista
+    const withAqTreino = input({ periodo: 0, aqTreinoPerc: 0.01 });
+    assert.equal(memory(await calculate(config, withAqTreino)).status, 'pending');
+    const resolvedAqTreino = await calculate(config, { ...withAqTreino, abateTetoComposicao: { aqTreino: false } });
+    assert.equal(memory(resolvedAqTreino).status, 'ready');
+    assert.equal(memory(resolvedAqTreino).amount, 1633.81);
+
+    // Marcar parcela excluída (auxAlimentacao) inclui na base quando abaixo do teto
+    const withFoodInBase = await calculate(court('jmu', 10000), input({
+        auxAlimentacao: 500,
+        abateTetoComposicao: { auxAlimentacao: true },
+    }));
+    assert.equal(memory(withFoodInBase).status, 'ready');
+    assert.equal(memory(withFoodInBase).monthlyGross, 24500);
+    assert.equal(memory(withFoodInBase).isCustomized, true);
+
+    // Hidratação preserva abateTetoComposicao
+    const hydrated = hydrateCalculatorState(JSON.parse(JSON.stringify(input({ abateTetoComposicao: { gaj: false } }))));
+    assert.deepEqual(hydrated.abateTetoComposicao, { gaj: false });
+
+    // Interação no AbateTetoCard (Personalizar cálculo -> checkbox -> Aplicar ajustes)
+    let saved: Record<string, boolean> | undefined;
+    const baseMemory = memory(await calculate(config, input()));
+    let cardTree!: ReturnType<typeof create>;
+    await act(async () => {
+        cardTree = create(React.createElement(AbateTetoCard, {
+            memory: baseMemory,
+            composicao: undefined,
+            onChangeComposicao: next => { saved = next; },
+            styles: { checkboxLabel: 'lbl', checkbox: 'chk' },
+            calculationReady: true,
+        }));
+    });
+    try {
+        const customizeBtn = cardTree.root.findAllByType('button').find(b => b.children.join('').includes('Personalizar cálculo'));
+        assert.ok(customizeBtn);
+        await act(async () => { customizeBtn.props.onClick(); });
+
+        const gajCheckbox = cardTree.root.findAllByType('input').find(i => i.props['aria-label'] === 'Incluir GAJ na base do abate-teto');
+        assert.ok(gajCheckbox);
+        assert.equal(gajCheckbox.props.checked, true);
+        await act(async () => { gajCheckbox.props.onChange({ target: { checked: false } }); });
+
+        const applyBtn = cardTree.root.findAllByType('button').find(b => b.children.join('') === 'Aplicar ajustes');
+        assert.ok(applyBtn);
+        await act(async () => { applyBtn.props.onClick(); });
+        assert.deepEqual(saved, { gaj: false });
+    } finally {
+        act(() => cardTree.unmount());
     }
 });

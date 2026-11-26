@@ -1,5 +1,6 @@
 ## Abate-teto mensal no PJU — 26/11/2026
 
+- Adicionada opção **Personalizar cálculo** no card **Abate-teto constitucional** (etapa **Descontos**), permitindo marcar ou desmarcar parcelas da base do teto na simulação (`abateTetoComposicao`), seguindo o padrão do card de Hora Extra.
 - O piloto da JMU e do CJF calcula o abate-teto em novas folhas mensais de servidores efetivos ativos, para um vínculo, a partir de novembro de 2026, com ativação por órgão.
 - O abate reduz as bases de RPPS e IRRF antes das retenções. Holerite, memória, PDF e Excel registram o desconto e sua apuração. Incidências mistas com excesso bloqueiam a conclusão.
 - A migration versiona a matriz do PJU, prepara os órgãos com ativação desabilitada e inclui os fundamentos em Normas e vigências. Veja o [recorte e a homologação](src/docs/regras/TETO_REMUNERATORIO.md#homologação-sintética).

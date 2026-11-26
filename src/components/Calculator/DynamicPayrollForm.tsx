@@ -9,6 +9,7 @@ import { formatCurrency, getTablesForPeriod } from '../../utils/calculations';
 import { BenefitHelp, type BenefitHelpKind } from './BenefitHelp';
 import { CalculatorCardHeading } from './CalculatorCardHeading';
 import { ManualRubricasSection } from './ManualRubricasSection';
+import { AbateTetoCard } from './cards/AbateTetoCard';
 import { DynamicPayrollAQSection } from './DynamicPayrollAQSection';
 import { DynamicPayrollBaseSection } from './DynamicPayrollBaseSection';
 import { CommissionProfileFields } from './CommissionProfileFields';
@@ -682,6 +683,15 @@ export const DynamicPayrollForm: React.FC<DynamicPayrollFormProps> = ({
                 );
             })}
 
+            {step === CALCULATOR_STEP.discounts && state.abateTetoVersion === 1 && (
+                <AbateTetoCard
+                    memory={state.abateTetoMemory}
+                    composicao={inputState.abateTetoComposicao}
+                    onChangeComposicao={next => update('abateTetoComposicao', next)}
+                    styles={styles}
+                    calculationReady={calculationReady}
+                />
+            )}
             <div id="manual-rubricas-section" className="scroll-mt-20 transition-all duration-300">
                 <ManualRubricasSection
                     {...manualRubricProps}

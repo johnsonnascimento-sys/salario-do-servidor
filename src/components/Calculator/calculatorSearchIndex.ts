@@ -46,7 +46,8 @@ const fixedEntries = [
     element(CALCULATOR_STEP.pension, 'regime-previdenciario', 'Regime previdenciário', ['RPPS', 'PSS', 'previdência']),
     element(CALCULATOR_STEP.pension, 'abono-permanencia', 'Abono de permanência', ['abono']),
     element(CALCULATOR_STEP.pension, 'funpresp-settings', 'Funpresp-Jud', ['Funpresp', 'previdência complementar']),
-    element(CALCULATOR_STEP.incomeTax, 'dependentes-ir', 'Dependentes para IR', ['dependentes', 'dedução por dependente'])
+    element(CALCULATOR_STEP.incomeTax, 'dependentes-ir', 'Dependentes para IR', ['dependentes', 'dedução por dependente']),
+    element(CALCULATOR_STEP.discounts, 'abate-teto-card', 'Abate-teto constitucional', ['abate teto', 'teto remuneratório', 'personalizar abate-teto'])
 ];
 
 export const buildCalculatorSearchIndex = (config: Pick<CourtConfig, 'previdenciaComplementar' | 'transportIndemnity'>): SearchEntry[] => {

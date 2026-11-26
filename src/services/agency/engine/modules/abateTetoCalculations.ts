@@ -1,4 +1,4 @@
-import type { AbateTetoMemory, AbateTetoRuleVersion } from '../../../../types/constitutionalCeiling';
+import type { AbateTetoCompositionItem, AbateTetoMemory, AbateTetoRuleVersion } from '../../../../types/constitutionalCeiling';
 import { resolveConstitutionalCeiling } from '../../../config/constitutionalCeiling';
 import type { IAgencyCalculationParams } from '../types';
 import { calculateBaseComponents } from './baseCalculations';
@@ -98,21 +98,39 @@ export async function calculateAbateTeto(
         { code: 'substituicao', label: 'Substituição de função', amount: substitution.total, contributes: false },
     ];
     const components: NonNullable<AbateTetoMemory['components']> = [];
+    const composicaoBase: AbateTetoCompositionItem[] = [];
+    const selectedCandidates: typeof candidates = [];
     for (const candidate of candidates) {
         if (!Number.isFinite(candidate.amount) || candidate.amount < 0) return pending('Componente inválido na base do abate-teto.');
         if (candidate.amount === 0) continue;
         const classification = rule.rubrics[candidate.code];
         if (classification?.kind !== 'monthly' || !classification.provision) return pending('Classificação mensal ausente para ' + candidate.label + '.');
-        components.push({ code: candidate.code, label: candidate.label, amount: cents(candidate.amount) / 100,
-            kind: classification.kind, provision: classification.provision });
+        const defaultSelected = true;
+        const selected = params.abateTetoComposicao?.[candidate.code] ?? defaultSelected;
+        const roundedAmount = cents(candidate.amount) / 100;
+        composicaoBase.push({
+            code: candidate.code,
+            label: candidate.label,
+            amount: roundedAmount,
+            kind: classification.kind,
+            provision: classification.provision,
+            selected,
+            defaultSelected,
+        });
+        if (selected) {
+            selectedCandidates.push(candidate);
+            components.push({ code: candidate.code, label: candidate.label, amount: roundedAmount,
+                kind: classification.kind, provision: classification.provision });
+        }
     }
-    const monthlyCents = cents(candidates.reduce((sum, component) => sum + component.amount, 0));
+    const monthlyCents = cents(selectedCandidates.reduce((sum, component) => sum + component.amount, 0));
     const excess = Math.max(0, monthlyCents - cents(reference.amount));
+    const isCustomized = composicaoBase.some(item => item.selected !== item.defaultSelected);
     const memory: AbateTetoMemory = { ...baseMemory, status: 'ready', amount: excess / 100, limit: reference.amount,
-        monthlyGross: monthlyCents / 100, components, source: rule.source,
-        rppsBefore: pension.baseRppsIntegral, rppsAfter: pension.baseRppsIntegral - excess / 100 };
-    if (excess > 0 && (candidates.some(component => component.amount > 0 && !component.contributes) ||
-        cents(pension.baseRppsIntegral) !== monthlyCents)) {
+        monthlyGross: monthlyCents / 100, components, composicaoBase, isCustomized, source: rule.source,
+        rppsBefore: pension.baseRppsIntegral, rppsAfter: Math.max(0, pension.baseRppsIntegral - excess / 100) };
+    if (excess > 0 && (selectedCandidates.some(component => !component.contributes) ||
+        (!isCustomized && cents(pension.baseRppsIntegral) !== monthlyCents))) {
         return { ...memory, status: 'pending', amount: 0, rppsAfter: pension.baseRppsIntegral,
             reason: 'Apuração pendente: parcelas sujeitas ao teto têm incidências distintas de IRRF e RPPS.' };
     }
@@ -128,6 +146,8 @@ export function appendExcludedCeilingComponents(
     const labels: Record<string, string> = { abono: 'Abono de permanência', auxAlimentacao: 'Auxílio-alimentação',
         auxPreEscolar: 'Auxílio pré-escolar', auxTransporte: 'Auxílio-transporte', diarias: 'Diárias',
         indenizacaoTransporte: 'Indenização de transporte' };
+    let monthlyCents = cents(memory.monthlyGross ?? 0);
+    let includedNonContributory = false;
     for (const [code, value] of Object.entries(amounts)) {
         if (value === 0) continue;
         const classification = rule?.rubrics[code];
@@ -137,8 +157,41 @@ export function appendExcludedCeilingComponents(
             memory.reason = 'Apuração pendente: exclusão sem classificação homologada para ' + (labels[code] || code) + '.';
             return memory;
         }
-        memory.components!.push({ code, label: labels[code] || code, amount: cents(value) / 100,
-            kind: classification.kind, provision: classification.provision });
+        const defaultSelected = false;
+        const selected = params.abateTetoComposicao?.[code] ?? defaultSelected;
+        const roundedAmount = cents(value) / 100;
+        memory.composicaoBase = memory.composicaoBase ?? [];
+        memory.composicaoBase.push({
+            code,
+            label: labels[code] || code,
+            amount: roundedAmount,
+            kind: classification.kind,
+            provision: classification.provision,
+            selected,
+            defaultSelected,
+        });
+        if (selected) {
+            monthlyCents += cents(value);
+            includedNonContributory = true;
+            memory.isCustomized = true;
+            memory.components!.push({ code, label: labels[code] || code, amount: roundedAmount,
+                kind: 'monthly', provision: classification.provision });
+        } else {
+            memory.components!.push({ code, label: labels[code] || code, amount: roundedAmount,
+                kind: classification.kind, provision: classification.provision });
+        }
+    }
+    if (includedNonContributory && memory.limit !== undefined) {
+        const excess = Math.max(0, monthlyCents - cents(memory.limit));
+        memory.monthlyGross = monthlyCents / 100;
+        memory.amount = excess / 100;
+        memory.rppsAfter = Math.max(0, (memory.rppsBefore ?? 0) - excess / 100);
+        if (excess > 0) {
+            memory.status = 'pending';
+            memory.amount = 0;
+            memory.rppsAfter = memory.rppsBefore;
+            memory.reason = 'Apuração pendente: parcelas sujeitas ao teto têm incidências distintas de IRRF e RPPS.';
+        }
     }
     return memory;
 }

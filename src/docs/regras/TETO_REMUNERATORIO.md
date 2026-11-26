@@ -30,6 +30,8 @@ Rubricas manuais avulsas, retroativos, parcelas com apuração própria, partici
 
 O holerite mostra o desconto **Abate-teto constitucional** uma única vez. Memória, PDF e Excel registram competência, fonte, teto, componentes, excesso e bases antes e depois da redução. Holerites anteriores preservam o fluxo de cálculo identificado pelo marcador de versão.
 
+Na etapa **Descontos**, o card **Abate-teto constitucional** oferece a opção **Personalizar cálculo** (no mesmo padrão de Horas Extras), permitindo incluir ou excluir parcelas da base mensal na simulação (`abateTetoComposicao`). Parcelas da base mensal iniciam marcadas e parcelas excluídas iniciam desmarcadas; caso a seleção personalizada resulte em excesso com incidências distintas de IRRF e RPPS, a apuração permanece pendente.
+
 ## Conferência normativa por órgão
 
 A Resolução CNJ nº 14/2006 tem publicação indicada no DJ nº 62/2006, de 30/03/2006, páginas 145–146. Suas alterações relevantes devem ser examinadas no texto compilado. A Resolução nº 607/2024 trata da aferição por vínculo na acumulação constitucionalmente admitida. O piloto cobre um vínculo, com extensão futura condicionada à modelagem própria das acumulações. [CNJ nº 14/2006](https://atos.cnj.jus.br/atos/detalhar/178) · [CNJ nº 607/2024](https://atos.cnj.jus.br/atos/detalhar/5926)

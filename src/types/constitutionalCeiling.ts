@@ -29,6 +29,16 @@ export interface AbateTetoActivation {
     versions: Array<AbateTetoPeriod & { enabled: boolean }>;
 }
 
+export interface AbateTetoCompositionItem {
+    code: string;
+    label: string;
+    amount: number;
+    kind: AbateTetoRubricKind;
+    provision: string;
+    selected: boolean;
+    defaultSelected: boolean;
+}
+
 export interface AbateTetoMemory {
     status: 'ready' | 'pending' | 'out_of_scope';
     competence: string;
@@ -36,6 +46,8 @@ export interface AbateTetoMemory {
     limit?: number;
     amount: number;
     components?: Array<{ code: string; label: string; amount: number; kind: AbateTetoRubricKind; provision: string }>;
+    composicaoBase?: AbateTetoCompositionItem[];
+    isCustomized?: boolean;
     monthlyGross?: number;
     irBefore?: number;
     irAfter?: number;

@@ -39,6 +39,7 @@ export function mapStateToAgencyParams(
         // Core Params
         periodo: state.periodo,
         abateTetoVersion: state.abateTetoVersion,
+        abateTetoComposicao: state.abateTetoComposicao,
         commissionProfile: state.commissionProfile,
         cargo: state.cargo,
         padrao: state.padrao,

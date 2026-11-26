@@ -191,6 +191,12 @@ export const hydrateCalculatorState = (snapshot: unknown, savedRows: PayslipResu
         ...INITIAL_STATE,
         ...safeSnapshot,
         abateTetoVersion: safeSnapshot.abateTetoVersion === 1 ? 1 as const : undefined,
+        abateTetoComposicao: safeSnapshot.abateTetoComposicao && typeof safeSnapshot.abateTetoComposicao === 'object' && !Array.isArray(safeSnapshot.abateTetoComposicao)
+            ? Object.fromEntries(
+                Object.entries(safeSnapshot.abateTetoComposicao)
+                    .filter((entry): entry is [string, boolean] => typeof entry[0] === 'string' && typeof entry[1] === 'boolean')
+            )
+            : undefined,
         // Legacy manual deduction fields are reset to 0; custom discounts belong in Rubricas Manuais.
         emprestimos: 0,
         planoSaude: 0,
