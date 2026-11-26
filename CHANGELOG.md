@@ -3,6 +3,7 @@
 - O piloto da JMU e do CJF calcula o abate-teto em novas folhas mensais de servidores efetivos ativos, para um vínculo, a partir de novembro de 2026, com ativação por órgão.
 - O abate reduz as bases de RPPS e IRRF antes das retenções. Holerite, memória, PDF e Excel registram o desconto e sua apuração. Incidências mistas com excesso bloqueiam a conclusão.
 - A migration versiona a matriz do PJU, prepara os órgãos com ativação desabilitada e inclui os fundamentos em Normas e vigências. Veja o [recorte e a homologação](src/docs/regras/TETO_REMUNERATORIO.md#homologação-sintética).
+- Piloto ativado e homologado em produção na JMU e no CJF para competências a partir de novembro de 2026. Aplica os arts. 1º a 4º da Resolução CNJ nº 14/2006, a tese do Tema 639 do STF e, na JMU, os arts. 2º, parágrafo único, 9º e 18 do ATN STM nº 863/2025. Nas duas rotas, o caso sintético com base de R$ 49.776,71 gerou desconto único de R$ 3.410,52 e reduziu as bases de IRRF e RPPS para R$ 46.366,19. A memória foi conferida no holerite, PDF e Excel. As evidências constam em Normas e vigências.
 
 ## Teto federal de referência — 24/11/2026
 
